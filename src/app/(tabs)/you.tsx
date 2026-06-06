@@ -55,7 +55,7 @@ export default function YouScreen() {
           </View>
 
           {isAdmin ? (
-            <Pressable onPress={() => toast.show('Admin tools coming next')} className="mt-3 flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3">
+            <Pressable onPress={() => router.push('/admin')} className="mt-3 flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3">
               <Ionicons name="shield-checkmark-outline" size={18} color={c.accent} />
               <Text className="flex-1 font-sans-sb text-[13px] text-ink">Admin · manage members & roles</Text>
               <Ionicons name="chevron-forward" size={18} color={c.muted} />

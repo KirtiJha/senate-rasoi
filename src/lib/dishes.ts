@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 import * as ImageManipulator from 'expo-image-manipulator';
 import {
@@ -7,6 +8,26 @@ import {
   supabase,
 } from './supabase';
 import type { ChefOrder, DishRow, OrderStatus, Profile, Slot, VegType } from './types';
+
+// ── Instant cold-start: cache the last feed on-device ───────────────
+const FEED_CACHE_KEY = 'senate-rasoi:feed-cache';
+
+export async function getCachedDishes(): Promise<DishRow[]> {
+  try {
+    const raw = await AsyncStorage.getItem(FEED_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as DishRow[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function cacheDishes(dishes: DishRow[]): Promise<void> {
+  try {
+    await AsyncStorage.setItem(FEED_CACHE_KEY, JSON.stringify(dishes));
+  } catch {
+    /* best-effort */
+  }
+}
 
 // ── Read the board ──────────────────────────────────────────────────
 /** Today's + upcoming dishes (past serve-dates are hidden). */
@@ -20,7 +41,9 @@ export async function fetchDishes(): Promise<DishRow[]> {
     .order('serve_date', { ascending: true })
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []) as DishRow[];
+  const rows = (data ?? []) as DishRow[];
+  cacheDishes(rows); // fire-and-forget for next cold-start
+  return rows;
 }
 
 /**

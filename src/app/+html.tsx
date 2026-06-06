@@ -32,7 +32,16 @@ export default function Root({ children }: PropsWithChildren) {
         {/* Disable body scrolling on web so ScrollViews behave like native. */}
         <ScrollViewStyleReset />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Register the offline service worker (web only). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})});}",
+          }}
+        />
+      </body>
     </html>
   );
 }

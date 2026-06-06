@@ -67,6 +67,7 @@ export default function RootLayout() {
               <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="(auth)" />
+                <Stack.Screen name="admin" />
               </Stack>
             </View>
           </ToastProvider>

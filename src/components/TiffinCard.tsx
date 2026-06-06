@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { DOW_LABELS, SLOT_EMOJI, TiffinPlanWithChef } from '../lib/types';
 import { Avatar, Badge, VegMark } from './ui';
@@ -18,7 +19,7 @@ interface TiffinCardProps {
   width?: number;
 }
 
-export function TiffinCard({ plan, subscribed, onPress, width }: TiffinCardProps) {
+function TiffinCardBase({ plan, subscribed, onPress, width }: TiffinCardProps) {
   return (
     <Pressable
       onPress={() => onPress(plan)}
@@ -70,3 +71,5 @@ export function TiffinCard({ plan, subscribed, onPress, width }: TiffinCardProps
     </Pressable>
   );
 }
+
+export const TiffinCard = memo(TiffinCardBase);

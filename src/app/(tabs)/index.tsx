@@ -26,6 +26,7 @@ import {
   buildWhatsAppOrderLink,
   deleteDish,
   fetchDishes,
+  getCachedDishes,
   placeOrder,
   subscribeToDishes,
   waLink,
@@ -79,9 +80,20 @@ export default function DiscoverScreen() {
   }, [toast, userId]);
 
   useEffect(() => {
+    // Paint instantly from the last cached feed, then refresh from the network.
+    let alive = true;
+    getCachedDishes().then((cached) => {
+      if (alive && cached.length) {
+        setDishes(cached);
+        setLoading(false);
+      }
+    });
     load();
     const unsub = subscribeToDishes(() => load());
-    return unsub;
+    return () => {
+      alive = false;
+      unsub();
+    };
   }, [load]);
 
   const onRefresh = useCallback(async () => {
