@@ -1,0 +1,44 @@
+import { useEffect, useRef } from 'react';
+import { Animated, View, ViewStyle } from 'react-native';
+import { useThemeColors } from '../../theme';
+
+export function Skeleton({ style, radius = 8 }: { style?: ViewStyle; radius?: number }) {
+  const c = useThemeColors();
+  const opacity = useRef(new Animated.Value(0.5)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [opacity]);
+
+  return <Animated.View style={[{ opacity, backgroundColor: c.inset, borderRadius: radius }, style]} />;
+}
+
+export function DishCardSkeleton() {
+  return (
+    <View className="overflow-hidden rounded-3xl border border-line bg-surface">
+      <Skeleton style={{ height: 180 }} radius={0} />
+      <View className="p-4">
+        <View className="flex-row items-center gap-2.5">
+          <Skeleton style={{ width: 36, height: 36 }} radius={18} />
+          <View style={{ gap: 6 }}>
+            <Skeleton style={{ width: 120, height: 11 }} />
+            <Skeleton style={{ width: 70, height: 9 }} />
+          </View>
+        </View>
+        <Skeleton style={{ width: '75%', height: 20, marginTop: 14 }} />
+        <Skeleton style={{ width: '50%', height: 12, marginTop: 10 }} />
+        <View className="mt-4 flex-row items-center justify-between">
+          <Skeleton style={{ width: 64, height: 22 }} />
+          <Skeleton style={{ width: 96, height: 40, borderRadius: 14 }} />
+        </View>
+      </View>
+    </View>
+  );
+}

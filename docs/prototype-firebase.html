@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Senate Chef Board</title>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SETUP INSTRUCTIONS (one-time, takes 5 minutes, completely free)
+     ══════════════════════════════════════════════════════════════════
+  1. Go to https://console.firebase.google.com
+  2. Click "Create a project" → name it "senate-chef-board" → Continue
+  3. Disable Google Analytics (not needed) → Create project
+  4. In left sidebar click "Build" → "Realtime Database"
+  5. Click "Create Database" → choose any location → Start in TEST MODE → Enable
+  6. Copy the database URL shown (looks like: https://senate-chef-board-xxxxx-default-rtdb.firebaseio.com)
+  7. Replace https://senate-chef-board-default-rtdb.asia-southeast1.firebasedatabase.app below with that URL
+  8. Share this HTML file with everyone in the society — done!
+     (They just open it in any browser — Chrome, Safari, etc.)
+═══════════════════════════════════════════════════════════════════ -->
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gd:#1B5E20;--gm:#2E7D32;--gl:#E8F5E9;--ga:#4CAF50;--bdr:#C8E6C9;
+  --bg:#FAFAF7;--text:#1a1a1a;--muted:#666;--surface:#fff;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;padding-bottom:4rem}
+
+/* hero */
+.hero{background:var(--gd);border-bottom:4px solid var(--ga);padding:1.8rem 1rem 1.4rem;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.02) 40px,rgba(255,255,255,.02) 80px)}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(1.4rem,5vw,2.1rem);color:#fff;position:relative}
+.hero p{color:#A5D6A7;font-size:.84rem;font-weight:300;margin-top:.35rem;position:relative}
+.hero-badge{display:inline-block;background:var(--ga);color:#fff;font-size:.68rem;font-weight:500;padding:2px 12px;border-radius:20px;margin-top:.6rem;letter-spacing:.06em;text-transform:uppercase;position:relative}
+.pulse{display:inline-block;width:7px;height:7px;background:#fff;border-radius:50%;animation:pulse 2s infinite;margin-right:4px;vertical-align:middle}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
+
+/* tabs */
+.tabs{display:flex;background:var(--gm);position:sticky;top:0;z-index:20}
+.tab{flex:1;padding:.8rem .4rem;text-align:center;font-size:.78rem;font-weight:500;color:#A5D6A7;cursor:pointer;border:none;background:none;font-family:'DM Sans',sans-serif;border-bottom:3px solid transparent;transition:all .2s;letter-spacing:.02em}
+.tab.active{color:#fff;border-bottom-color:var(--ga);background:rgba(255,255,255,.07)}
+
+/* sections */
+.section{display:none}.section.active{display:block}
+.container{max-width:560px;margin:0 auto;padding:1.3rem 1rem}
+
+/* sync bar */
+.sync-bar{background:var(--gl);border-bottom:1px solid var(--bdr);padding:.5rem 1rem;font-size:.73rem;color:var(--gd);display:flex;align-items:center;justify-content:space-between;gap:.5rem;position:sticky;top:42px;z-index:10}
+.rbtn{font-size:.7rem;padding:.25rem .7rem;background:var(--gd);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
+
+/* form cards */
+.fc{background:var(--surface);border-radius:14px;border:1px solid var(--bdr);overflow:hidden;margin-bottom:.85rem}
+.fch{background:var(--gl);padding:.65rem 1rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:.5rem;font-size:.82rem;font-weight:500;color:var(--gd)}
+.fcb{padding:1rem}
+.field{margin-bottom:.85rem}.field:last-child{margin-bottom:0}
+label{display:block;font-size:.72rem;font-weight:500;color:var(--gd);margin-bottom:.35rem;letter-spacing:.04em;text-transform:uppercase}
+.req::after{content:' *';color:#c62828}
+input[type=text],input[type=tel],input[type=number],textarea,select{
+  width:100%;padding:.65rem .85rem;border:1.5px solid var(--bdr);border-radius:9px;
+  font-size:.92rem;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--bg);
+  outline:none;transition:border-color .2s;-webkit-appearance:none
+}
+input:focus,textarea:focus,select:focus{border-color:var(--ga);background:#fff}
+textarea{height:72px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.rg{display:flex;flex-direction:column;gap:.4rem}
+.ro{display:flex;align-items:center;gap:.6rem;padding:.52rem .85rem;border:1.5px solid var(--bdr);border-radius:9px;cursor:pointer;background:var(--bg);transition:all .15s;font-size:.88rem;color:var(--text)}
+.ro:hover{border-color:var(--ga);background:var(--gl)}
+.ro input{accent-color:var(--gd);width:15px;height:15px;cursor:pointer}
+.ro.sel{border-color:var(--gd);background:var(--gl);font-weight:500}
+
+/* photo zone */
+.photo-zone{border:2px dashed var(--bdr);border-radius:9px;padding:1.1rem;text-align:center;cursor:pointer;background:var(--bg);transition:all .2s}
+.photo-zone:hover{border-color:var(--ga);background:var(--gl)}
+.pz-icon{font-size:1.5rem;display:block;margin-bottom:.3rem}
+.photo-zone p{font-size:.78rem;color:var(--muted)}
+.photo-preview{width:100%;border-radius:9px;margin-top:.6rem;display:none;max-height:160px;object-fit:cover}
+
+/* submit button */
+.btn-post{width:100%;padding:.9rem;background:var(--gd);color:#fff;border:none;border-radius:11px;font-size:.95rem;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;letter-spacing:.04em;transition:background .2s,opacity .2s;margin-top:.9rem;display:flex;align-items:center;justify-content:center;gap:.5rem}
+.btn-post:hover{background:var(--gm)}
+.btn-post:disabled{opacity:.6;cursor:not-allowed}
+
+/* board */
+.board-filter{display:flex;gap:.45rem;margin-bottom:1rem;flex-wrap:wrap}
+.pill{font-size:.74rem;padding:.3rem .85rem;border-radius:20px;border:1.5px solid var(--bdr);background:#fff;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s}
+.pill.on{background:var(--gd);color:#fff;border-color:var(--gd)}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--bdr);border-radius:13px;overflow:hidden;margin-bottom:.8rem;animation:fi .3s ease}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.card-img{width:100%;height:120px;background:var(--gl);display:flex;align-items:center;justify-content:center;font-size:2.8rem}
+.card-body{padding:.85rem .95rem}
+.card-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem}
+.chefinfo{display:flex;align-items:center;gap:.45rem}
+.avatar{width:26px;height:26px;border-radius:50%;background:var(--gd);color:#fff;font-size:.65rem;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cname{font-size:.76rem;font-weight:500;color:var(--gd)}
+.cflat{font-size:.68rem;color:var(--muted)}
+.slot-badge{font-size:.64rem;padding:2px 8px;border-radius:10px;font-weight:500}
+.sl-Breakfast{background:#FFF8E1;color:#E65100}
+.sl-Lunch{background:#E3F2FD;color:#1565C0}
+.sl-Dinner{background:#EDE7F6;color:#4527A0}
+.sl-Snack{background:#FCE4EC;color:#880E4F}
+.dname{font-family:'Playfair Display',serif;font-size:1rem;color:var(--text);margin-bottom:.25rem}
+.ddesc{font-size:.77rem;color:var(--muted);line-height:1.5;margin-bottom:.5rem}
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding:.55rem .95rem;border-top:1px solid var(--gl);background:var(--gl)}
+.price{font-size:.95rem;font-weight:500;color:var(--gd)}
+.pleft{font-size:.7rem;color:var(--muted)}
+.obtn{font-size:.76rem;padding:.4rem 1rem;background:var(--gd);color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:background .15s}
+.obtn:hover{background:var(--gm)}
+.del-btn{font-size:.67rem;padding:.22rem .65rem;background:none;border:1px solid #c62828;color:#c62828;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:.35rem}
+.empty{text-align:center;padding:2.8rem 1rem;color:var(--muted)}
+.empty-icon{font-size:2.6rem;display:block;margin-bottom:.6rem}
+.empty p{font-size:.88rem;line-height:1.6}
+
+/* setup warning */
+.setup-warning{background:#FFF3E0;border:1.5px solid #FFB74D;border-radius:12px;padding:1rem;margin-bottom:1rem;font-size:.82rem;color:#E65100;line-height:1.6}
+.setup-warning strong{display:block;font-size:.9rem;margin-bottom:.3rem}
+
+/* info box */
+.info-box{background:var(--gl);border-radius:9px;padding:.65rem .9rem;margin-bottom:.9rem;font-size:.78rem;color:#1B5E20;line-height:1.5}
+
+/* modal */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:18px 18px 0 0;padding:1.4rem 1.1rem 2rem;width:100%;max-width:480px;animation:su .25s ease}
+@keyframes su{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.modal h3{font-family:'Playfair Display',serif;font-size:1.05rem;margin-bottom:.8rem}
+.modal-chef{font-size:.78rem;color:var(--muted);margin-bottom:.9rem}
+.qty-row{display:flex;align-items:center;gap:.9rem;margin-bottom:.9rem}
+.qbtn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--bdr);background:none;font-size:1.2rem;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center}
+.qval{font-size:1.1rem;font-weight:500;min-width:26px;text-align:center}
+.mtotal{font-size:.82rem;color:var(--muted);margin-bottom:1.1rem}
+.mtotal span{font-weight:500;font-size:.95rem;color:var(--gd)}
+.mwa{width:100%;padding:.82rem;background:#25D366;color:#fff;border:none;border-radius:11px;font-size:.9rem;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:.45rem}
+.mcancel{width:100%;padding:.7rem;background:none;border:1.5px solid var(--bdr);border-radius:11px;font-size:.84rem;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* toast */
+.toast{position:fixed;bottom:1.3rem;left:50%;transform:translateX(-50%);background:var(--gd);color:#fff;padding:.6rem 1.3rem;border-radius:20px;font-size:.82rem;font-weight:500;display:none;z-index:200;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.stitle{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--gd);margin-bottom:.2rem}
+.ssub{font-size:.77rem;color:var(--muted);margin-bottom:.9rem}
+.note{font-size:.7rem;color:var(--muted);text-align:center;margin-top:.5rem;line-height:1.4}
+.pin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+.pin-overlay.open{display:flex}
+.pin-box{background:#fff;border-radius:16px;padding:1.5rem 1.2rem;width:90%;max-width:320px;text-align:center}
+.pin-box h4{font-family:'Playfair Display',serif;font-size:1rem;color:var(--gd);margin-bottom:.4rem}
+.pin-box p{font-size:.78rem;color:var(--muted);margin-bottom:1rem;line-height:1.5}
+.pin-input{width:100%;padding:.65rem;border:1.5px solid var(--bdr);border-radius:9px;font-size:1.1rem;text-align:center;letter-spacing:.3rem;font-family:'DM Sans',sans-serif;outline:none}
+.pin-input:focus{border-color:var(--ga)}
+.pin-confirm{width:100%;margin-top:.8rem;padding:.75rem;background:var(--gd);color:#fff;border:none;border-radius:9px;font-size:.9rem;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer}
+.pin-cancel{width:100%;margin-top:.4rem;padding:.65rem;background:none;border:1.5px solid var(--bdr);border-radius:9px;font-size:.85rem;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif}
+</style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<div class="hero">
+  <h1>🍽️ Senate Chef Board</h1>
+  <p>Post your dish · Let neighbours order · Cook the right amount</p>
+  <span class="hero-badge"><span class="pulse"></span>Live — shared board</span>
+</div>
+
+<!-- ══ TABS ══ -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('board',this)">🏠 Today's Menu</button>
+  <button class="tab" onclick="switchTab('post',this)">➕ Post a Dish</button>
+  <button class="tab" onclick="switchTab('orders',this)">📋 My Orders</button>
+</div>
+
+<!-- ══ BOARD ══ -->
+<div id="board" class="section active">
+  <div class="sync-bar">
+    <span id="sync-status"><span class="pulse"></span> Connecting to live board...</span>
+    <button class="rbtn" onclick="loadBoard()">↺ Refresh</button>
+  </div>
+  <div class="container">
+    <div class="stitle">Today's dishes</div>
+    <div class="ssub" id="board-date"></div>
+    <div id="db-warning" class="setup-warning" style="display:none">
+      ⚙️ <strong>Setup needed — takes 5 minutes, completely free!</strong>
+      Open this file in a text editor, find <code>https://senate-chef-board-default-rtdb.asia-southeast1.firebasedatabase.app</code> near the top of the &lt;script&gt; and replace it with your Firebase Realtime Database URL.<br><br>
+      Steps: <a href="https://console.firebase.google.com" target="_blank" style="color:#E65100">console.firebase.google.com</a> → Create project → Build → Realtime Database → Create Database → Test mode → copy the URL.
+    </div>
+    <div class="info-box">📢 <strong>How it works:</strong> Chefs post what they're cooking today. Neighbours order plates before cooking starts. Chef makes exactly the right amount — no waste, no guessing!</div>
+    <div class="board-filter">
+      <button class="pill on" onclick="filterBoard('All',this)">All</button>
+      <button class="pill" onclick="filterBoard('Breakfast',this)">☀️ Breakfast</button>
+      <button class="pill" onclick="filterBoard('Lunch',this)">🍛 Lunch</button>
+      <button class="pill" onclick="filterBoard('Dinner',this)">🌙 Dinner</button>
+      <button class="pill" onclick="filterBoard('Snack',this)">🫙 Snack</button>
+    </div>
+    <div id="board-list"><div class="empty"><span class="empty-icon">⏳</span><p>Connecting to live board...</p></div></div>
+  </div>
+</div>
+
+<!-- ══ POST FORM ══ -->
+<div id="post" class="section">
+  <div class="container">
+    <div class="stitle">Post your dish</div>
+    <div class="ssub">Everyone in the society will see it live the moment you post!</div>
+    <div class="fc">
+      <div class="fch">👤 Your details</div>
+      <div class="fcb">
+        <div class="row2">
+          <div class="field"><label class="req">Chef Name</label><input type="text" id="f-chef" placeholder="Priya Sharma"></div>
+          <div class="field"><label class="req">Flat No.</label><input type="text" id="f-flat" placeholder="A-204"></div>
+        </div>
+        <div class="field"><label class="req">WhatsApp Number</label><input type="tel" id="f-wa" placeholder="98765 43210"></div>
+        <div class="field">
+          <label>UPI ID <span style="color:var(--muted);text-transform:none;font-weight:400">(optional)</span></label>
+          <input type="text" id="f-upi" placeholder="priya@ybl">
+        </div>
+      </div>
+    </div>
+    <div class="fc">
+      <div class="fch">🍽️ About your dish</div>
+      <div class="fcb">
+        <div class="field"><label class="req">Dish Name</label><input type="text" id="f-dish" placeholder="Masala Dosa with Sambar"></div>
+        <div class="field">
+          <label class="req">Meal Slot</label>
+          <div class="rg">
+            <label class="ro"><input type="radio" name="slot" value="Breakfast"> ☀️ Breakfast (7 – 10 AM)</label>
+            <label class="ro"><input type="radio" name="slot" value="Lunch"> 🍛 Lunch (12 – 2 PM)</label>
+            <label class="ro"><input type="radio" name="slot" value="Dinner"> 🌙 Dinner (7 – 9 PM)</label>
+            <label class="ro"><input type="radio" name="slot" value="Snack"> 🫙 Snack / Tiffin (anytime)</label>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field"><label class="req">Price per portion (₹)</label><input type="number" id="f-price" placeholder="80" min="0"></div>
+          <div class="field"><label class="req">Max plates you can make</label><input type="number" id="f-qty" placeholder="5" min="1"></div>
+        </div>
+        <div class="field">
+          <label class="req">Veg / Non-veg</label>
+          <div class="rg">
+            <label class="ro"><input type="radio" name="veg" value="Veg"> 🟢 Veg</label>
+            <label class="ro"><input type="radio" name="veg" value="Non-veg"> 🔴 Non-veg</label>
+            <label class="ro"><input type="radio" name="veg" value="Egg"> 🟡 Egg</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Description <span style="color:var(--muted);text-transform:none;font-weight:400">(optional)</span></label>
+          <textarea id="f-desc" placeholder="Ingredients, spice level, allergens, ready time..."></textarea>
+        </div>
+        <div class="field">
+          <label class="req">Your PIN <span style="color:var(--muted);text-transform:none;font-weight:400">(to delete your post later from any phone)</span></label>
+          <input type="number" id="f-pin" placeholder="e.g. 1234" maxlength="6">
+          <p style="font-size:.7rem;color:var(--muted);margin-top:.3rem">Remember this PIN — you'll need it to remove your post anytime from any device.</p>
+        </div>
+        <div class="field">
+          <label>Photo <span style="color:var(--muted);text-transform:none;font-weight:400">(optional)</span></label>
+          <div class="photo-zone" onclick="document.getElementById('f-photo').click()">
+            <span class="pz-icon">📷</span>
+            <p>Tap to add a photo of your dish</p>
+          </div>
+          <input type="file" id="f-photo" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+          <img id="photo-preview" class="photo-preview" alt="dish photo">
+        </div>
+      </div>
+    </div>
+    <button class="btn-post" id="post-btn" onclick="postDish()">✅ Post My Dish to the Board</button>
+    <p class="note">Your dish will be visible live to all society members who open this board.</p>
+  </div>
+</div>
+
+<!-- ══ MY ORDERS ══ -->
+<div id="orders" class="section">
+  <div class="container">
+    <div class="stitle">My orders</div>
+    <div class="ssub">Orders you placed via WhatsApp today</div>
+    <div id="orders-list"></div>
+  </div>
+</div>
+
+<!-- ══ ORDER MODAL ══ -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3 id="m-dish"></h3>
+    <div class="modal-chef" id="m-chef"></div>
+    <div class="qty-row">
+      <button class="qbtn" onclick="changeQty(-1)">−</button>
+      <span class="qval" id="m-qty">1</span>
+      <button class="qbtn" onclick="changeQty(1)">+</button>
+      <span style="font-size:.82rem;color:var(--muted)">plates</span>
+    </div>
+    <div class="mtotal">Total: <span id="m-total">₹0</span></div>
+    <button class="mwa" onclick="orderViaWA()">📲 Order via WhatsApp</button>
+    <button class="mcancel" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ PIN DELETE MODAL ══ -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-box">
+    <h4>🔐 Enter your PIN</h4>
+    <p>Enter the PIN you set when you posted this dish to remove it from the board.</p>
+    <input class="pin-input" type="number" id="pin-input" placeholder="••••" maxlength="6">
+    <button class="pin-confirm" onclick="confirmPinDelete()">Remove my post</button>
+    <button class="pin-cancel" onclick="closePinModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══ FIREBASE SDK ══ -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  🔧 PASTE YOUR FIREBASE DATABASE URL BELOW
+//  Example: https://senate-chef-board-default-rtdb.firebaseio.com
+// ═══════════════════════════════════════════════════════════════════
+const DATABASE_URL = 'https://senate-chef-board-default-rtdb.asia-southeast1.firebasedatabase.app';
+// ═══════════════════════════════════════════════════════════════════
+
+const SE={Breakfast:'☀️',Lunch:'🍛',Dinner:'🌙',Snack:'🫙'};
+const VM={Veg:{dot:'🟢'},'Non-veg':{dot:'🔴'},Egg:{dot:'🟡'}};
+
+let posts=[];
+let myOrders=[];
+let modalPost=null,mQty=1;
+let activeFilter='All';
+let db=null;
+let dbRef=null;
+let liveListener=null;
+
+let pendingDeleteId=null;
+
+function initDate(){
+  const d=new Date();
+  document.getElementById('board-date').textContent=
+    d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+function initFirebase(){
+  if(!DATABASE_URL){
+    document.getElementById('db-warning').style.display='block';
+    document.getElementById('sync-status').innerHTML='⚠️ Database not configured yet';
+    document.getElementById('board-list').innerHTML=
+      '<div class="empty"><span class="empty-icon">⚙️</span><p>Please complete the one-time Firebase setup.<br>See the yellow box above.</p></div>';
+    return;
+  }
+  try{
+    const app=firebase.initializeApp({databaseURL:DATABASE_URL});
+    db=firebase.database(app);
+    dbRef=db.ref('senate-chef-board/posts');
+    startLiveListener();
+  }catch(e){
+    document.getElementById('sync-status').innerHTML='❌ Connection error — check your database URL';
+    console.error(e);
+  }
+}
+
+function startLiveListener(){
+  if(liveListener){dbRef.off('value',liveListener);}
+  liveListener=dbRef.on('value',snapshot=>{
+    const data=snapshot.val();
+    if(data){
+      posts=Object.values(data).sort((a,b)=>b.postedAt-a.postedAt);
+    }else{
+      posts=[];
+    }
+    renderBoard();
+    const now=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('sync-status').innerHTML=
+      '<span class="pulse"></span> Live · Last updated '+now;
+  },err=>{
+    document.getElementById('sync-status').innerHTML='❌ Could not connect — check URL & internet';
+    console.error(err);
+  });
+}
+
+function loadBoard(){
+  if(!db){initFirebase();return;}
+  // Firebase listener auto-updates; manual refresh just reassures user
+  showToast('Board refreshed ↺');
+}
+
+// ── RENDER BOARD ──────────────────────────────────────────────────
+function renderBoard(){
+  const list=document.getElementById('board-list');
+  const filtered=activeFilter==='All'?posts:posts.filter(p=>p.slot===activeFilter);
+  if(!filtered.length){
+    list.innerHTML='<div class="empty"><span class="empty-icon">🍳</span><p>No dishes for this slot yet.<br><strong style="color:var(--gd)">Go to "Post a Dish"</strong> to let your neighbours know what you\'re making!</p></div>';
+    return;
+  }
+  list.innerHTML=filtered.map(p=>{
+    const v=VM[p.veg]||VM['Veg'];
+    const ini=p.chef.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    return `<div class="card">
+      <div class="card-img" style="${p.img?'padding:0':''}">
+        ${p.img?`<img src="${p.img}" style="width:100%;height:120px;object-fit:cover">`:SE[p.slot]||'🍽️'}
+      </div>
+      <div class="card-body">
+        <div class="card-meta">
+          <div class="chefinfo">
+            <div class="avatar">${ini}</div>
+            <div><div class="cname">${p.chef}</div><div class="cflat">Flat ${p.flat}</div></div>
+          </div>
+          <span class="slot-badge sl-${p.slot}">${SE[p.slot]} ${p.slot}</span>
+        </div>
+        <div class="dname">${v.dot} ${p.dish}</div>
+        ${p.desc?`<div class="ddesc">${p.desc}</div>`:''}
+      </div>
+      <div class="card-footer">
+        <div>
+          <div class="price">₹${p.price} <span style="font-size:.68rem;font-weight:400;color:var(--muted)">/ portion</span></div>
+          <div class="pleft">${p.qty} plate${p.qty!==1?'s':''} available${p.upi?' · UPI: '+p.upi:''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem">
+          ${p.qty>0
+            ?`<button class="obtn" onclick="openModal('${p.id}')">Order now</button>`
+            :`<span style="font-size:.72rem;color:#c62828;font-weight:500">Sold out</span>`}
+          <button class="del-btn" onclick="openPinModal('${p.id}')">✕ Remove post</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterBoard(slot,btn){
+  activeFilter=slot;
+  document.querySelectorAll('.pill').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderBoard();
+}
+
+function switchTab(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='orders')renderOrders();
+}
+
+// ── RADIO HIGHLIGHT ──────────────────────────────────────────────
+document.querySelectorAll('.ro input').forEach(inp=>{
+  inp.addEventListener('change',()=>{
+    document.querySelectorAll(`[name="${inp.name}"]`).forEach(r=>r.closest('.ro').classList.remove('sel'));
+    inp.closest('.ro').classList.add('sel');
+  });
+});
+
+// ── PHOTO PREVIEW ────────────────────────────────────────────────
+function previewPhoto(input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>1.5*1024*1024){showToast('Photo too large — pick one under 1.5 MB');input.value='';return;}
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=document.getElementById('photo-preview');
+    img.src=e.target.result;img.style.display='block';
+  };
+  r.readAsDataURL(file);
+}
+
+// ── POST DISH ────────────────────────────────────────────────────
+async function postDish(){
+  if(!db){showToast('Database not set up yet ⚠️');return;}
+  const chef=document.getElementById('f-chef').value.trim();
+  const flat=document.getElementById('f-flat').value.trim();
+  const wa=document.getElementById('f-wa').value.trim();
+  const dish=document.getElementById('f-dish').value.trim();
+  const slot=document.querySelector('input[name="slot"]:checked')?.value;
+  const price=parseInt(document.getElementById('f-price').value)||0;
+  const qty=parseInt(document.getElementById('f-qty').value)||0;
+  const veg=document.querySelector('input[name="veg"]:checked')?.value;
+  const desc=document.getElementById('f-desc').value.trim();
+  const upi=document.getElementById('f-upi').value.trim();
+  const imgEl=document.getElementById('photo-preview');
+  const img=imgEl.src&&imgEl.src.startsWith('data')?imgEl.src:'';
+
+  const pin=document.getElementById('f-pin').value.trim();
+
+  if(!chef||!flat||!wa||!dish||!slot||!price||!qty||!veg||!pin){
+    showToast('Please fill all required fields including PIN ⚠️');return;
+  }
+  if(pin.length<3){showToast('PIN must be at least 3 digits ⚠️');return;}
+
+  const btn=document.getElementById('post-btn');
+  btn.textContent='Posting…';btn.disabled=true;
+
+  const id='p-'+Date.now();
+  const newPost={id,chef,flat,wa,dish,slot,price,qty,origQty:qty,veg,desc,upi,img,pin,postedAt:Date.now()};
+
+  try{
+    await dbRef.child(id).set(newPost);
+    // clear form
+    ['f-chef','f-flat','f-wa','f-upi','f-dish','f-price','f-qty','f-desc','f-pin'].forEach(i=>document.getElementById(i).value='');
+    document.querySelectorAll('input[type=radio]').forEach(r=>{r.checked=false;r.closest('.ro').classList.remove('sel')});
+    imgEl.style.display='none';imgEl.src='';
+    showToast('Your dish is live on the board! 🎉');
+    switchTab('board',document.querySelectorAll('.tab')[0]);
+    activeFilter='All';
+    document.querySelectorAll('.pill').forEach((b,i)=>b.classList.toggle('on',i===0));
+  }catch(e){
+    showToast('Could not post — check internet connection');
+    console.error(e);
+  }
+  btn.textContent='✅ Post My Dish to the Board';btn.disabled=false;
+}
+
+// ── PIN DELETE ───────────────────────────────────────────────────
+function openPinModal(id){
+  pendingDeleteId=id;
+  document.getElementById('pin-input').value='';
+  document.getElementById('pin-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('pin-input').focus(),200);
+}
+function closePinModal(){
+  document.getElementById('pin-overlay').classList.remove('open');
+  pendingDeleteId=null;
+}
+async function confirmPinDelete(){
+  const entered=document.getElementById('pin-input').value.trim();
+  const post=posts.find(p=>p.id===pendingDeleteId);
+  if(!post){closePinModal();return;}
+  if(String(post.pin)!==String(entered)){
+    showToast('Wrong PIN — try again ❌');
+    document.getElementById('pin-input').value='';
+    document.getElementById('pin-input').focus();
+    return;
+  }
+  try{
+    await dbRef.child(pendingDeleteId).remove();
+    closePinModal();
+    showToast('Your dish has been removed ✅');
+  }catch(e){
+    showToast('Could not remove — check connection');
+  }
+}
+
+// ── ORDER MODAL ──────────────────────────────────────────────────
+function openModal(id){
+  modalPost=posts.find(p=>p.id===id);if(!modalPost)return;
+  mQty=1;
+  document.getElementById('m-dish').textContent=modalPost.dish;
+  document.getElementById('m-chef').textContent='by '+modalPost.chef+' · Flat '+modalPost.flat;
+  document.getElementById('m-qty').textContent=1;
+  document.getElementById('m-total').textContent='₹'+modalPost.price;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');}
+function changeQty(d){
+  mQty=Math.max(1,Math.min(modalPost.qty,mQty+d));
+  document.getElementById('m-qty').textContent=mQty;
+  document.getElementById('m-total').textContent='₹'+(modalPost.price*mQty);
+}
+
+async function orderViaWA(){
+  const p=modalPost;
+  const msg=`Hi ${p.chef}! I'd like to order from Senate Chef Board.\n\n🍽️ *${p.dish}*\n🔢 Plates: ${mQty}\n💰 Total: ₹${p.price*mQty}\n\nPlease confirm my order. Thanks!`;
+  const url=`https://wa.me/91${p.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
+  myOrders.push({dish:p.dish,chef:p.chef,flat:p.flat,qty:mQty,price:p.price*mQty,slot:p.slot});
+  // Update remaining qty in Firebase
+  try{
+    const newQty=p.qty-mQty;
+    await dbRef.child(p.id).update({qty:newQty});
+  }catch(e){console.error(e);}
+  closeModal();
+  showToast('Opening WhatsApp to place order 📲');
+  window.open(url,'_blank');
+}
+
+// ── MY ORDERS ────────────────────────────────────────────────────
+function renderOrders(){
+  const list=document.getElementById('orders-list');
+  if(!myOrders.length){
+    list.innerHTML='<div class="empty"><span class="empty-icon">📋</span><p>No orders yet.<br>Browse the menu and place your first order!</p></div>';
+    return;
+  }
+  list.innerHTML=myOrders.map(o=>`
+    <div class="card">
+      <div class="card-body" style="padding:.85rem .95rem">
+        <div class="dname" style="margin-bottom:.25rem">${o.dish}</div>
+        <div style="font-size:.76rem;color:var(--muted)">by ${o.chef} · Flat ${o.flat} · ${SE[o.slot]} ${o.slot}</div>
+        <div style="font-size:.76rem;color:var(--muted);margin-top:.2rem">${o.qty} plate${o.qty!==1?'s':''}</div>
+      </div>
+      <div class="card-footer">
+        <div class="price">₹${o.price}</div>
+        <span style="font-size:.7rem;background:#E8F5E9;color:#1B5E20;padding:3px 9px;border-radius:9px;font-weight:500">Ordered via WhatsApp</span>
+      </div>
+    </div>`).join('');
+}
+
+// ── TOAST ────────────────────────────────────────────────────────
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.display='block';
+  setTimeout(()=>t.style.display='none',3000);
+}
+
+// ── INIT ─────────────────────────────────────────────────────────
+initDate();
+initFirebase();
+</script>
+</body>
+</html>
