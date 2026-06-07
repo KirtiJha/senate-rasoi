@@ -145,7 +145,7 @@ export default function FoodScreen() {
   const handleShare = async (dish: DishRow) => {
     haptics.tap();
     const res = await shareDish(dish);
-    if (res === 'unsupported') toast.show('Sharing isn't available here — try on your phone');
+    if (res === 'unsupported') toast.show("Sharing isn't available here — try on your phone");
   };
 
   const handleRemove = (dish: DishRow) => {
