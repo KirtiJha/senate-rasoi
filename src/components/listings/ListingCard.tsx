@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { getService } from '../../lib/services';
 import { ListingRow } from '../../lib/types';
@@ -11,7 +12,7 @@ interface ListingCardProps {
   onPress: (listing: ListingRow) => void;
 }
 
-export function ListingCard({ listing, onPress }: ListingCardProps) {
+export const ListingCard = memo(function ListingCard({ listing, onPress }: ListingCardProps) {
   const c = useThemeColors();
   const cat = getService(listing.category);
   const photo = listing.photos[0];
@@ -84,4 +85,4 @@ export function ListingCard({ listing, onPress }: ListingCardProps) {
       </View>
     </Pressable>
   );
-}
+});

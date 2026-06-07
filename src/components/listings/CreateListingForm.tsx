@@ -27,7 +27,7 @@ export function CreateListingForm({ cat, onBack }: Props) {
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { userId, profile } = useAuth();
+  const { userId, profile, communityId } = useAuth();
 
   const isDirectory = cat.listingType === 'recommendation';
 
@@ -105,6 +105,7 @@ export function CreateListingForm({ cat, onBack }: Props) {
       const priceNum = price.trim() ? parseInt(price, 10) : null;
       await postListing({
         category: cat.key,
+        communityId: communityId ?? undefined,
         ownerUserId: userId,
         title: isDirectory ? `${referralName} – ${attrs['trade'] ?? ''}`.trim() : effectiveTitle,
         description,

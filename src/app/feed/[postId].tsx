@@ -1,0 +1,277 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  KeyboardAvoidingView, Platform, Pressable,
+  ScrollView, Text, TextInput, View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Avatar, Container } from '../../components/ui';
+import { useAuth } from '../../context/auth';
+import { useToast } from '../../context/toast';
+import {
+  CommentRow, POST_CATEGORY_COLORS, POST_CATEGORY_ICONS, POST_CATEGORY_LABELS,
+  PostRow, createComment, deleteComment, deletePost,
+  fetchComments, fetchPostById, setPinned, setResolved, subscribeToComments,
+} from '../../lib/posts';
+import { useThemeColors } from '../../theme';
+
+export default function PostThreadScreen() {
+  const { postId } = useLocalSearchParams<{ postId: string }>();
+  const router = useRouter();
+  const toast = useToast();
+  const c = useThemeColors();
+  const insets = useSafeAreaInsets();
+  const { userId, isAdmin } = useAuth();
+
+  const [post, setPost] = useState<PostRow | null>(null);
+  const [comments, setComments] = useState<CommentRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [commentBody, setCommentBody] = useState('');
+  const [sending, setSending] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+
+  const loadPost = useCallback(async () => {
+    if (!postId) return;
+    try {
+      const [p, cmts] = await Promise.all([fetchPostById(postId), fetchComments(postId)]);
+      setPost(p);
+      setComments(cmts);
+    } catch { toast.show('Could not load post'); }
+    finally { setLoading(false); }
+  }, [postId, toast]);
+
+  useEffect(() => { loadPost(); }, [loadPost]);
+
+  useEffect(() => {
+    if (!postId) return;
+    const unsub = subscribeToComments(postId, () => {
+      fetchComments(postId).then(setComments).catch(() => {});
+    });
+    return unsub;
+  }, [postId]);
+
+  const sendComment = async () => {
+    if (!commentBody.trim() || !userId || !postId) return;
+    setSending(true);
+    try {
+      const c = await createComment(postId, userId, commentBody.trim());
+      setComments((prev) => [...prev, c]);
+      setCommentBody('');
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    } catch { toast.show('Could not send comment'); }
+    finally { setSending(false); }
+  };
+
+  const handleDeletePost = async () => {
+    if (!postId) return;
+    try {
+      await deletePost(postId);
+      router.back();
+    } catch { toast.show('Could not delete post'); }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      await deleteComment(commentId);
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+    } catch { toast.show('Could not delete comment'); }
+  };
+
+  if (loading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-bg">
+        <Text className="text-muted">Loading…</Text>
+      </View>
+    );
+  }
+
+  if (!post) {
+    return (
+      <View className="flex-1 items-center justify-center bg-bg">
+        <Text className="text-muted">Post not found.</Text>
+      </View>
+    );
+  }
+
+  const color = POST_CATEGORY_COLORS[post.category];
+  const icon = POST_CATEGORY_ICONS[post.category];
+  const isOwner = post.author_id === userId;
+  const canManage = isOwner || isAdmin;
+
+  return (
+    <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* Header */}
+      <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
+        <View className="flex-row items-center gap-2">
+          <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+            <Ionicons name="chevron-back" size={22} color={c.ink} />
+          </Pressable>
+          <View className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1" style={{ backgroundColor: color + '20' }}>
+            <Ionicons name={icon as any} size={13} color={color} />
+            <Text className="text-[12px] font-sans-sb" style={{ color }}>{POST_CATEGORY_LABELS[post.category]}</Text>
+          </View>
+          <View className="flex-1" />
+          {canManage ? (
+            <PostMenu post={post} isOwner={isOwner} isAdmin={!!isAdmin} onDelete={handleDeletePost} onPinToggle={async () => { await setPinned(post.id, !post.pinned); loadPost(); }} onResolveToggle={async () => { await setResolved(post.id, !post.resolved); loadPost(); }} c={c} />
+          ) : null}
+        </View>
+      </View>
+
+      <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
+        <Container narrow>
+          {/* Post body */}
+          <View className="mb-6">
+            {post.pinned ? (
+              <View className="mb-2 flex-row items-center gap-1.5">
+                <Ionicons name="pin" size={13} color="#D97706" />
+                <Text className="text-[12px] font-sans-sb text-amber-600">Pinned by admin</Text>
+              </View>
+            ) : null}
+            {post.resolved ? (
+              <View className="mb-2 flex-row items-center gap-1.5">
+                <Ionicons name="checkmark-circle" size={13} color="#059669" />
+                <Text className="text-[12px] font-sans-sb text-green-600">Marked as resolved</Text>
+              </View>
+            ) : null}
+
+            {post.title ? (
+              <Text className="mb-2 font-display-x text-[22px] text-ink">{post.title}</Text>
+            ) : null}
+            <Text className="text-[15px] leading-6 text-ink">{post.body}</Text>
+
+            {/* Author */}
+            <View className="mt-4 flex-row items-center gap-2.5">
+              <Avatar name={post.author?.name ?? '?'} size={32} />
+              <View>
+                <Text className="font-sans-sb text-[13px] text-ink">
+                  {post.author_id === userId ? 'You' : post.author?.name ?? 'Someone'}
+                </Text>
+                <Text className="text-[11px] text-faint">
+                  {post.author?.flat ? `Flat ${post.author.flat} · ` : ''}{formatTimeAgo(post.created_at)}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Comments */}
+          <View className="mb-4">
+            <Text className="mb-3 text-[13px] font-sans-sb text-muted">
+              {comments.length === 0 ? 'No comments yet' : `${comments.length} comment${comments.length === 1 ? '' : 's'}`}
+            </Text>
+            <View className="gap-3">
+              {comments.map((comment) => (
+                <CommentBubble key={comment.id} comment={comment} userId={userId} isAdmin={!!isAdmin} onDelete={() => handleDeleteComment(comment.id)} c={c} />
+              ))}
+            </View>
+          </View>
+        </Container>
+      </ScrollView>
+
+      {/* Reply bar */}
+      <View style={{ paddingBottom: insets.bottom + 8 }} className="border-t border-line bg-bg px-4 pt-3">
+        <View className="flex-row items-end gap-2">
+          <Avatar name={userId ? 'Me' : '?'} size={32} />
+          <View className="flex-1 rounded-2xl border border-line bg-inset px-3 py-2">
+            <TextInput
+              value={commentBody}
+              onChangeText={setCommentBody}
+              placeholder="Add a comment…"
+              placeholderTextColor={c.faint}
+              multiline
+              maxLength={500}
+              className="max-h-24 text-[14px] text-ink"
+              style={{ outline: 'none' } as any}
+            />
+          </View>
+          <Pressable
+            onPress={sendComment}
+            disabled={sending || !commentBody.trim()}
+            className={`h-10 w-10 items-center justify-center rounded-full ${commentBody.trim() ? 'bg-accent' : 'bg-inset'}`}
+          >
+            <Ionicons name="send" size={18} color={commentBody.trim() ? c.onAccent : c.faint} />
+          </Pressable>
+        </View>
+      </View>
+    </KeyboardAvoidingView>
+  );
+}
+
+function CommentBubble({ comment, userId, isAdmin, onDelete, c }: {
+  comment: CommentRow; userId: string | null; isAdmin: boolean; onDelete: () => void; c: ReturnType<typeof useThemeColors>;
+}) {
+  const isOwn = comment.author_id === userId;
+  return (
+    <View className="flex-row gap-2.5">
+      <Avatar name={comment.author?.name ?? '?'} size={28} />
+      <View className="flex-1">
+        <View className="flex-row items-center gap-2 mb-0.5">
+          <Text className="font-sans-sb text-[12px] text-ink">{isOwn ? 'You' : comment.author?.name ?? 'Someone'}</Text>
+          {comment.author?.flat ? <Text className="text-[11px] text-faint">Flat {comment.author.flat}</Text> : null}
+          <Text className="ml-auto text-[11px] text-faint">{formatTimeAgo(comment.created_at)}</Text>
+        </View>
+        <Text className="text-[13px] leading-5 text-ink">{comment.body}</Text>
+      </View>
+      {(isOwn || isAdmin) ? (
+        <Pressable onPress={onDelete} hitSlop={8} className="mt-0.5">
+          <Ionicons name="trash-outline" size={14} color={c.faint} />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function PostMenu({ post, isOwner, isAdmin, onDelete, onPinToggle, onResolveToggle, c }: {
+  post: PostRow; isOwner: boolean; isAdmin: boolean;
+  onDelete: () => void; onPinToggle: () => void; onResolveToggle: () => void;
+  c: ReturnType<typeof useThemeColors>;
+}) {
+  const [open, setOpen] = useState(false);
+  const isIssue = post.category === 'issue' || post.category === 'feedback';
+
+  return (
+    <View>
+      <Pressable onPress={() => setOpen(!open)} hitSlop={8} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+        <Ionicons name="ellipsis-horizontal" size={20} color={c.muted} />
+      </Pressable>
+      {open ? (
+        <View
+          className="absolute right-0 top-10 z-50 min-w-[180px] rounded-2xl border border-line bg-surface shadow-sm"
+          style={{ elevation: 8 }}
+        >
+          {isAdmin ? (
+            <MenuItem icon="pin-outline" label={post.pinned ? 'Unpin' : 'Pin to top'} onPress={() => { setOpen(false); onPinToggle(); }} c={c} />
+          ) : null}
+          {isAdmin && isIssue ? (
+            <MenuItem icon="checkmark-circle-outline" label={post.resolved ? 'Reopen' : 'Mark resolved'} onPress={() => { setOpen(false); onResolveToggle(); }} c={c} />
+          ) : null}
+          {(isOwner || isAdmin) ? (
+            <MenuItem icon="trash-outline" label="Delete post" onPress={() => { setOpen(false); onDelete(); }} c={c} danger />
+          ) : null}
+          <MenuItem icon="close-outline" label="Cancel" onPress={() => setOpen(false)} c={c} />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function MenuItem({ icon, label, onPress, c, danger }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void; c: ReturnType<typeof useThemeColors>; danger?: boolean }) {
+  return (
+    <Pressable onPress={onPress} className="flex-row items-center gap-2.5 px-4 py-3 active:bg-inset">
+      <Ionicons name={icon} size={16} color={danger ? '#DC2626' : c.muted} />
+      <Text className={`text-[14px] font-sans-md ${danger ? 'text-red-600' : 'text-ink'}`}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function formatTimeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}

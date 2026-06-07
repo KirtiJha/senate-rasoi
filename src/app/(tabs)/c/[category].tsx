@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ListingCard } from '../../../components/listings/ListingCard';
 import { Empty } from '../../../components/Empty';
@@ -20,28 +20,40 @@ export default function CategoryScreen() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { userId } = useAuth();
+  const { userId, communityId } = useAuth();
   const c = useThemeColors();
 
+  const PAGE = 20;
   const cat = getService(category ?? '');
   const [listings, setListings] = useState<ListingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (pageIndex = 0) => {
     if (!isSupabaseConfigured || !category) {
       setLoading(false);
       return;
     }
     try {
-      setListings(await fetchListings(category));
+      const rows = await fetchListings(category, communityId ?? undefined, pageIndex * PAGE, PAGE);
+      if (pageIndex === 0) {
+        setListings(rows);
+      } else {
+        setListings((prev) => [...prev, ...rows]);
+      }
+      setHasMore(rows.length === PAGE);
+      setPage(pageIndex);
     } catch (e) {
       console.error(e);
       toast.show('Could not load listings — check your connection');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [category, toast]);
+  }, [category, communityId, toast]);
 
   useEffect(() => {
     if (!category) return;
@@ -49,16 +61,22 @@ export default function CategoryScreen() {
     getCachedListings(category).then((cached) => {
       if (alive && cached.length) { setListings(cached); setLoading(false); }
     });
-    load();
-    const unsub = subscribeToListings(category, load);
+    load(0);
+    const unsub = subscribeToListings(category, () => load(0));
     return () => { alive = false; unsub(); };
   }, [category, load]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await load();
+    await load(0);
     setRefreshing(false);
   }, [load]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    await load(page + 1);
+  }, [load, loadingMore, hasMore, page]);
 
   if (!cat) {
     return (
@@ -103,16 +121,29 @@ export default function CategoryScreen() {
               Neighbours can post {cat.listingType === 'product' ? 'items' : cat.listingType === 'recommendation' ? 'recommendations' : 'services'} here and connect directly. Tap + to be first.
             </Empty>
           ) : (
-            <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
-              {listings.map((l) => (
-                <View key={l.id} style={{ width: `${100 / cols}%`, padding: 6 }}>
-                  <ListingCard
-                    listing={l}
-                    onPress={() => router.push(`/listing/${l.id}` as any)}
-                  />
-                </View>
-              ))}
-            </View>
+            <>
+              <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
+                {listings.map((l) => (
+                  <View key={l.id} style={{ width: `${100 / cols}%`, padding: 6 }}>
+                    <ListingCard
+                      listing={l}
+                      onPress={() => router.push(`/listing/${l.id}` as any)}
+                    />
+                  </View>
+                ))}
+              </View>
+              {hasMore ? (
+                <Pressable
+                  onPress={loadMore}
+                  disabled={loadingMore}
+                  className="mt-4 items-center rounded-2xl border border-line bg-surface py-3"
+                >
+                  <Text className="text-[13px] font-sans-md text-muted">
+                    {loadingMore ? 'Loading…' : 'Load more'}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </>
           )}
         </Container>
       </ScrollView>

@@ -11,6 +11,8 @@ type Item = { href: string; label: string; icon: keyof typeof Ionicons.glyphMap;
 
 const ITEMS: Item[] = [
   { href: '/', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
+  { href: '/feed', label: 'Feed', icon: 'chatbubbles-outline', activeIcon: 'chatbubbles' },
+  { href: '/search', label: 'Search', icon: 'search-outline', activeIcon: 'search' },
   { href: '/you', label: 'You', icon: 'person-outline', activeIcon: 'person' },
 ];
 
@@ -54,14 +56,12 @@ export function NavRail() {
         );
       })}
 
-      {isChef ? (
-        <Link href="/post" asChild>
-          <Pressable className="mt-3 flex-row items-center justify-center gap-2 rounded-2xl bg-accent px-4 py-3 active:bg-accent-press">
-            <Ionicons name="add" size={20} color={c.onAccent} />
-            <Text className="font-sans-sb text-[15px] text-on-accent">Post</Text>
-          </Pressable>
-        </Link>
-      ) : null}
+      <Link href="/post" asChild>
+        <Pressable className="mt-3 flex-row items-center justify-center gap-2 rounded-2xl bg-accent px-4 py-3 active:bg-accent-press">
+          <Ionicons name="add" size={20} color={c.onAccent} />
+          <Text className="font-sans-sb text-[15px] text-on-accent">Post</Text>
+        </Pressable>
+      </Link>
 
       {isAdmin ? (
         <Link href="/admin" asChild>
@@ -84,6 +84,24 @@ export function NavRail() {
 
       <View className="flex-1" />
 
+      {/* About */}
+      <Link href="/about" asChild>
+        <Pressable
+          className={`mb-1 flex-row items-center gap-3 rounded-2xl px-3 py-2.5 ${
+            path === '/about' ? 'bg-inset' : 'active:bg-inset'
+          }`}
+        >
+          <Ionicons
+            name={path === '/about' ? 'information-circle' : 'information-circle-outline'}
+            size={21}
+            color={path === '/about' ? c.accent : c.muted}
+          />
+          <Text className={`text-[15px] ${path === '/about' ? 'font-sans-bold text-ink' : 'font-sans-md text-muted'}`}>
+            About
+          </Text>
+        </Pressable>
+      </Link>
+
       {/* Theme toggle */}
       <Pressable
         onPress={toggle}
@@ -94,7 +112,7 @@ export function NavRail() {
         <Text className="font-sans-md text-[13px] text-muted">{isDark ? 'Light mode' : 'Dark mode'}</Text>
       </Pressable>
 
-      <Text className="px-2 text-[11px] text-faint">Senate Society · community hub</Text>
+      <Text className="px-2 text-[11px] text-faint">Aangan · community hub</Text>
     </View>
   );
 }

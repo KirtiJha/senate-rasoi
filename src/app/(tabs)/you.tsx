@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -11,6 +11,8 @@ import { OrdersSection } from '../../components/OrdersSection';
 import { Avatar, Badge, Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { Community, fetchCommunityById } from '../../lib/communities';
+import { isSupabaseConfigured } from '../../lib/supabase';
 import { useThemeColors } from '../../theme';
 
 type Tab = 'orders' | 'tiffins' | 'listings' | 'kitchen';
@@ -21,8 +23,15 @@ export default function YouScreen() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { profile, isChef, isAdmin, addRole, signOut } = useAuth();
+  const { profile, communityId, isChef, isAdmin, addRole, signOut } = useAuth();
   const [tab, setTab] = useState<Tab>('orders');
+  const [community, setCommunity] = useState<Community | null>(null);
+
+  useEffect(() => {
+    if (communityId && isSupabaseConfigured) {
+      fetchCommunityById(communityId).then(setCommunity).catch(() => {});
+    }
+  }, [communityId]);
 
   const becomeChef = async () => {
     await addRole('chef');
@@ -36,15 +45,23 @@ export default function YouScreen() {
         <Container narrow>
           {/* account header */}
           <View className="flex-row items-center gap-3">
-            <Avatar name={profile?.name ?? 'You'} size={46} />
+            <Pressable onPress={() => router.push('/profile/me' as any)}>
+              <Avatar name={profile?.name ?? 'You'} size={46} />
+            </Pressable>
             <View className="flex-1">
               <Text className="font-display-x text-[22px] text-ink" numberOfLines={1}>
                 {profile?.name ?? 'You'}
               </Text>
               <Text className="text-[12px] text-muted">{profile?.phone ?? ''}</Text>
+              {community ? (
+                <View className="mt-0.5 flex-row items-center gap-1">
+                  <Ionicons name="business-outline" size={11} color={c.faint} />
+                  <Text className="text-[11px] text-faint" numberOfLines={1}>{community.name}</Text>
+                </View>
+              ) : null}
             </View>
-            <Pressable onPress={signOut} hitSlop={8} className="h-10 w-10 items-center justify-center rounded-full bg-inset active:opacity-70">
-              <Ionicons name="log-out-outline" size={20} color={c.muted} />
+            <Pressable onPress={() => router.push('/profile/me' as any)} hitSlop={8} className="h-10 w-10 items-center justify-center rounded-full bg-inset active:opacity-70">
+              <Ionicons name="person-outline" size={20} color={c.muted} />
             </Pressable>
           </View>
 

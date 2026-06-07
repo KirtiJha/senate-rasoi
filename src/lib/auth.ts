@@ -13,6 +13,7 @@ export interface SignUpInput {
   whatsapp: string;
   upi: string;
   roles: Role[];
+  communityId?: string; // selected at sign-up; falls back to the seeded default
 }
 
 export async function signUp(input: SignUpInput): Promise<DbProfile> {
@@ -38,7 +39,7 @@ export async function signUp(input: SignUpInput): Promise<DbProfile> {
     whatsapp: input.whatsapp.trim() || null,
     upi: input.upi.trim() || null,
     roles: input.roles.length ? input.roles : (['foodie'] as Role[]),
-    community_id: COMMUNITY_ID,
+    community_id: input.communityId ?? COMMUNITY_ID,
   };
   const { data: profile, error: pErr } = await supabase
     .from('profiles')
@@ -76,6 +77,21 @@ export async function updateProfile(userId: string, patch: Partial<DbProfile>): 
 export async function addRole(profile: DbProfile, role: Role): Promise<void> {
   if (profile.roles.includes(role)) return;
   await updateProfile(profile.id, { roles: [...profile.roles, role] });
+}
+
+/** Change the user's 6-digit PIN (Supabase password). */
+export async function changePin(newCode: string): Promise<void> {
+  if (!/^\d{6}$/.test(newCode)) throw new Error('New code must be exactly 6 digits.');
+  const { error } = await supabase.auth.updateUser({ password: newCode });
+  if (error) throw new Error(error.message);
+}
+
+/** Hard-delete the current user's auth record (cascades to profile via FK). */
+export async function deleteAccount(): Promise<void> {
+  // Call an RPC that deletes auth.users row using service-role privileges.
+  // If this RPC doesn't exist yet, fall back to signing out (account stays).
+  const { error } = await supabase.rpc('delete_own_account');
+  if (error) throw new Error(error.message);
 }
 
 function mapAuthError(msg: string): Error {

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { Brandfull } from '../../components/Brand';
 import { Field } from '../../components/forms';
@@ -8,6 +8,7 @@ import { Button, Container, VegMark } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { signIn, signUp } from '../../lib/auth';
+import { Community, fetchCommunities, submitJoinRequest } from '../../lib/communities';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import type { Role } from '../../lib/types';
 import { useThemeColors } from '../../theme';
@@ -27,12 +28,34 @@ export default function SignInScreen() {
   const [roles, setRoles] = useState<Role[]>(['foodie']);
   const [busy, setBusy] = useState(false);
 
+  // Society picker
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const [communitySearch, setCommunitySearch] = useState('');
+  const [showJoinRequest, setShowJoinRequest] = useState(false);
+  const [jrSocietyName, setJrSocietyName] = useState('');
+  const [jrSocietyAddress, setJrSocietyAddress] = useState('');
+  const [jrSubmitting, setJrSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isSupabaseConfigured) {
+      fetchCommunities().then(setCommunities).catch(() => {});
+    }
+  }, []);
+
+  const filteredCommunities = communities.filter(
+    (c) =>
+      c.name.toLowerCase().includes(communitySearch.toLowerCase()) ||
+      (c.address ?? '').toLowerCase().includes(communitySearch.toLowerCase())
+  );
+
   const toggleRole = (r: Role) =>
     setRoles((cur) => (cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r]));
 
   const submit = async () => {
     if (!isSupabaseConfigured) {
-      toast.show('Supabase isn’t configured yet ⚙️');
+      toast.show("Supabase isn't configured yet ⚙️");
       return;
     }
     const digits = phone.replace(/\D/g, '');
@@ -44,19 +67,40 @@ export default function SignInScreen() {
       if (mode === 'in') {
         await signIn(phone, code);
       } else {
-        if (!name.trim()) {
-          setBusy(false);
-          return toast.show('Please enter your name');
-        }
+        if (!name.trim()) { setBusy(false); return toast.show('Please enter your name'); }
+        if (!selectedCommunity) { setBusy(false); return toast.show('Please select your society'); }
         const chosen = roles.length ? roles : (['foodie'] as Role[]);
-        await signUp({ phone, code, name, flat, whatsapp, upi, roles: chosen });
+        await signUp({ phone, code, name, flat, whatsapp, upi, roles: chosen, communityId: selectedCommunity.id });
       }
       await refreshProfile();
-      // (auth)/_layout will redirect once the session is live.
     } catch (e) {
       toast.show(e instanceof Error ? e.message : 'Something went wrong');
     } finally {
       setBusy(false);
+    }
+  };
+
+  const submitJoinReq = async () => {
+    if (!jrSocietyName.trim() || !jrSocietyAddress.trim()) {
+      return toast.show('Please fill society name and address');
+    }
+    if (!name.trim() || !phone.trim()) {
+      return toast.show('Please fill your name and phone first');
+    }
+    setJrSubmitting(true);
+    try {
+      await submitJoinRequest({
+        societyName: jrSocietyName,
+        societyAddress: jrSocietyAddress,
+        requesterName: name,
+        requesterPhone: phone,
+      });
+      setShowJoinRequest(false);
+      toast.show("Request submitted! We'll add your society soon 🏘️");
+    } catch {
+      toast.show('Could not submit — try again');
+    } finally {
+      setJrSubmitting(false);
     }
   };
 
@@ -68,8 +112,8 @@ export default function SignInScreen() {
             <Brandfull />
             <Text className="mt-3 text-center text-[14px] leading-5 text-muted">
               {mode === 'in'
-                ? 'Welcome back to our society’s kitchen 🍲\nSign in with your phone & 6-digit code.'
-                : 'Good home food, cooked by neighbours you know 🍲\nJoin with your phone & a 6-digit code.'}
+                ? 'Welcome back to your society hub 🏘️\nSign in with your phone & 6-digit code.'
+                : 'Your neighbourhood, all in one place 🏘️\nJoin with your phone & a 6-digit code.'}
             </Text>
           </View>
 
@@ -88,7 +132,7 @@ export default function SignInScreen() {
           <Field
             label="6-digit code"
             required
-            hint={mode === 'up' ? 'Choose any 6 digits — your secret code to sign in.' : undefined}
+            hint={mode === 'up' ? 'Choose any 6 digits — your secret PIN to sign in.' : undefined}
             placeholder="••••••"
             keyboardType="number-pad"
             secureTextEntry
@@ -99,6 +143,28 @@ export default function SignInScreen() {
 
           {mode === 'up' ? (
             <>
+              {/* Society picker */}
+              <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Your Society</Text>
+              <Pressable
+                onPress={() => setShowPicker(true)}
+                className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3.5"
+              >
+                <Ionicons name="business-outline" size={18} color={selectedCommunity ? c.accent : c.faint} />
+                <View className="flex-1">
+                  {selectedCommunity ? (
+                    <>
+                      <Text className="font-sans-sb text-[14px] text-ink">{selectedCommunity.name}</Text>
+                      {selectedCommunity.address ? (
+                        <Text className="text-[12px] text-faint" numberOfLines={1}>{selectedCommunity.address}</Text>
+                      ) : null}
+                    </>
+                  ) : (
+                    <Text className="text-[14px] text-faint">Select your society…</Text>
+                  )}
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={c.faint} />
+              </Pressable>
+
               <View className="flex-row gap-3">
                 <View className="flex-1">
                   <Field label="Your name" required placeholder="Priya Sharma" value={name} onChangeText={setName} />
@@ -107,12 +173,12 @@ export default function SignInScreen() {
                   <Field label="Flat" placeholder="A-204" value={flat} onChangeText={setFlat} />
                 </View>
               </View>
-              <Field label="WhatsApp" hint="For order coordination" placeholder="98765 43210" keyboardType="phone-pad" value={whatsapp} onChangeText={setWhatsapp} />
+              <Field label="WhatsApp" hint="For coordination with neighbours" placeholder="98765 43210" keyboardType="phone-pad" value={whatsapp} onChangeText={setWhatsapp} />
               <Field label="UPI ID" hint="Optional — so neighbours can pay you" autoCapitalize="none" placeholder="priya@ybl" value={upi} onChangeText={setUpi} />
 
               <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">I want to…</Text>
               <View className="mb-4 flex-row gap-2.5">
-                <RolePick label="Order food" sublabel="as a Foodie" icon="bag-handle-outline" active={roles.includes('foodie')} onPress={() => toggleRole('foodie')} c={c} />
+                <RolePick label="Order & discover" sublabel="as a Member" icon="bag-handle-outline" active={roles.includes('foodie')} onPress={() => toggleRole('foodie')} c={c} />
                 <RolePick label="Cook & sell" sublabel="as a Chef" leading={<VegMark type="Veg" size={16} />} active={roles.includes('chef')} onPress={() => toggleRole('chef')} c={c} />
               </View>
             </>
@@ -128,31 +194,98 @@ export default function SignInScreen() {
 
           <Pressable onPress={() => setMode(mode === 'in' ? 'up' : 'in')} className="mt-4">
             <Text className="text-center text-[13px] text-muted">
-              {mode === 'in' ? "New here? " : 'Already have an account? '}
+              {mode === 'in' ? 'New here? ' : 'Already have an account? '}
               <Text className="font-sans-sb text-accent">{mode === 'in' ? 'Create an account' : 'Sign in'}</Text>
             </Text>
           </Pressable>
         </Container>
       </ScrollView>
+
+      {/* Society picker modal */}
+      <Modal visible={showPicker} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowPicker(false)}>
+        <View className="flex-1 bg-bg">
+          <View className="border-b border-line px-4 pb-3 pt-5">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="font-display-x text-[20px] text-ink">Select Society</Text>
+              <Pressable onPress={() => setShowPicker(false)} hitSlop={10}>
+                <Ionicons name="close" size={24} color={c.muted} />
+              </Pressable>
+            </View>
+            <View className="flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
+              <Ionicons name="search-outline" size={16} color={c.faint} />
+              <TextInput
+                value={communitySearch}
+                onChangeText={setCommunitySearch}
+                placeholder="Search by name or area…"
+                placeholderTextColor={c.faint}
+                className="flex-1 font-sans text-[14px] text-ink"
+                style={{ outline: 'none' } as any}
+                autoFocus
+              />
+            </View>
+          </View>
+
+          <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
+            {filteredCommunities.map((comm) => (
+              <Pressable
+                key={comm.id}
+                onPress={() => { setSelectedCommunity(comm); setShowPicker(false); }}
+                className={`mb-2 flex-row items-center gap-3 rounded-2xl border px-4 py-3.5 ${
+                  selectedCommunity?.id === comm.id ? 'border-accent bg-accent-soft' : 'border-line bg-surface'
+                }`}
+              >
+                <Ionicons name="business-outline" size={20} color={selectedCommunity?.id === comm.id ? c.accent : c.muted} />
+                <View className="flex-1">
+                  <Text className="font-sans-sb text-[14px] text-ink">{comm.name}</Text>
+                  {comm.address ? <Text className="text-[12px] text-faint" numberOfLines={1}>{comm.address}</Text> : null}
+                </View>
+                {selectedCommunity?.id === comm.id ? (
+                  <Ionicons name="checkmark-circle" size={20} color={c.accent} />
+                ) : null}
+              </Pressable>
+            ))}
+
+            {filteredCommunities.length === 0 && communitySearch.length > 0 ? (
+              <Text className="py-6 text-center text-[14px] text-muted">No society found for "{communitySearch}"</Text>
+            ) : null}
+
+            {/* Request to add society */}
+            {!showJoinRequest ? (
+              <Pressable
+                onPress={() => setShowJoinRequest(true)}
+                className="mt-4 flex-row items-center justify-center gap-2 rounded-2xl border border-dashed border-line py-4"
+              >
+                <Ionicons name="add-circle-outline" size={18} color={c.muted} />
+                <Text className="font-sans-md text-[14px] text-muted">My society isn't listed — request to add it</Text>
+              </Pressable>
+            ) : (
+              <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
+                <Text className="mb-3 font-sans-sb text-[15px] text-ink">Request to Add Society</Text>
+                <Field label="Society / Building name" required placeholder="Green Meadows CHS" value={jrSocietyName} onChangeText={setJrSocietyName} />
+                <Field label="Address" required placeholder="Sector 12, Andheri West, Mumbai" value={jrSocietyAddress} onChangeText={setJrSocietyAddress} />
+                <Text className="mb-3 text-[12px] text-faint">We'll use your name and phone from the sign-up form to contact you.</Text>
+                <View className="flex-row gap-2">
+                  <View className="flex-1">
+                    <Button label="Cancel" variant="outline" size="sm" onPress={() => setShowJoinRequest(false)} />
+                  </View>
+                  <View className="flex-1">
+                    <Button label={jrSubmitting ? 'Sending…' : 'Submit Request'} size="sm" loading={jrSubmitting} onPress={submitJoinReq} />
+                  </View>
+                </View>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
 
 function RolePick({
-  label,
-  sublabel,
-  icon,
-  leading,
-  active,
-  onPress,
-  c,
+  label, sublabel, icon, leading, active, onPress, c,
 }: {
-  label: string;
-  sublabel: string;
-  icon?: keyof typeof Ionicons.glyphMap;
-  leading?: React.ReactNode;
-  active: boolean;
-  onPress: () => void;
+  label: string; sublabel: string; icon?: keyof typeof Ionicons.glyphMap;
+  leading?: React.ReactNode; active: boolean; onPress: () => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
   return (

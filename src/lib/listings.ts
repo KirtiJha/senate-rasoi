@@ -28,18 +28,39 @@ async function cacheListings(category: string, rows: ListingRow[]): Promise<void
 
 // ── Feed ────────────────────────────────────────────────────────────
 
-export async function fetchListings(category: string): Promise<ListingRow[]> {
+export async function fetchListings(
+  category: string,
+  communityId: string = COMMUNITY_ID,
+  offset = 0,
+  limit = 20,
+): Promise<ListingRow[]> {
   const { data, error } = await supabase
     .from('listings')
     .select('*, owner:profiles!listings_owner_user_id_fkey(name,flat,whatsapp,phone)')
-    .eq('community_id', COMMUNITY_ID)
+    .eq('community_id', communityId)
     .eq('category', category)
     .eq('status', 'active')
-    .order('bump_at', { ascending: false });
+    .order('bump_at', { ascending: false })
+    .range(offset, offset + limit - 1);
   if (error) throw error;
   const rows = (data ?? []) as ListingRow[];
-  cacheListings(category, rows);
+  if (offset === 0) cacheListings(category, rows);
   return rows;
+}
+
+export async function searchListings(query: string, communityId: string = COMMUNITY_ID, category?: string): Promise<ListingRow[]> {
+  let q = supabase
+    .from('listings')
+    .select('*, owner:profiles!listings_owner_user_id_fkey(name,flat,whatsapp,phone)')
+    .eq('community_id', communityId)
+    .eq('status', 'active')
+    .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+    .order('bump_at', { ascending: false })
+    .limit(40);
+  if (category) q = q.eq('category', category);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as ListingRow[];
 }
 
 export { getCachedListings };
@@ -96,6 +117,7 @@ export async function uploadListingPhoto(localUri: string, listingId: string): P
 
 export interface NewListingInput {
   category: string;
+  communityId?: string; // defaults to COMMUNITY_ID
   ownerUserId: string;
   title: string;
   description: string;
@@ -120,7 +142,7 @@ export async function postListing(input: NewListingInput): Promise<ListingRow> {
 
   const row = {
     id,
-    community_id: COMMUNITY_ID,
+    community_id: input.communityId ?? COMMUNITY_ID,
     category: input.category,
     owner_user_id: input.ownerUserId,
     title: input.title.trim(),
