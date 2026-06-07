@@ -109,7 +109,7 @@ export default function FeedScreen() {
             </View>
           ) : (
             <View className="gap-3">
-              {posts.map((post) => (
+              {posts.map((post: PostRow) => (
                 <PostCard key={post.id} post={post} userId={userId} onPress={() => router.push(`/feed/${post.id}` as any)} c={c} />
               ))}
             </View>

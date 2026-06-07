@@ -8,9 +8,22 @@
     "scheme": "aangan",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#F7F7F5",
+    "updates": {
+      "enabled": true,
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/aangan"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.aangan.app"
+      "bundleIdentifier": "com.aangan.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Aangan needs photo access so you can add a picture to your listing.",
+        "NSCameraUsageDescription": "Aangan needs camera access to take photos for your listing.",
+        "NSContactsUsageDescription": "Aangan needs contacts access to help you connect with neighbours."
+      }
     },
     "android": {
       "package": "com.aangan.app",
@@ -18,7 +31,14 @@
         "backgroundColor": "#FF5A3C",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
     },
     "web": {
       "output": "static",

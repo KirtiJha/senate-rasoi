@@ -48,7 +48,7 @@ export const POST_CATEGORY_LABELS: Record<PostCategory, string> = {
   lost_found: 'Lost & Found',
 };
 
-export const POST_CATEGORY_ICONS: Record<PostCategory, keyof typeof import('@expo/vector-icons').Ionicons.glyphMap> = {
+export const POST_CATEGORY_ICONS: Record<PostCategory, string> = {
   general: 'chatbubble-outline',
   announcement: 'megaphone-outline',
   issue: 'warning-outline',

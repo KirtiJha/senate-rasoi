@@ -42,7 +42,7 @@ export default function CategoryScreen() {
       if (pageIndex === 0) {
         setListings(rows);
       } else {
-        setListings((prev) => [...prev, ...rows]);
+        setListings((prev: ListingRow[]) => [...prev, ...rows]);
       }
       setHasMore(rows.length === PAGE);
       setPage(pageIndex);
@@ -123,7 +123,7 @@ export default function CategoryScreen() {
           ) : (
             <>
               <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
-                {listings.map((l) => (
+                {listings.map((l: ListingRow) => (
                   <View key={l.id} style={{ width: `${100 / cols}%`, padding: 6 }}>
                     <ListingCard
                       listing={l}
