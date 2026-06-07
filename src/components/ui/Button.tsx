@@ -79,7 +79,7 @@ export function Button({
       <Pressable
         onPress={onPress}
         disabled={isDisabled}
-        className={`overflow-hidden ${PAD[size]} ${fullWidth ? 'w-full' : 'self-start'} ${isDisabled ? 'opacity-50' : ''} ${className}`}
+        className={`overflow-hidden ${PAD[size]} ${fullWidth ? 'w-full' : 'self-center'} ${isDisabled ? 'opacity-50' : ''} ${className}`}
       >
         <LinearGradient
           colors={gradients.primary}
