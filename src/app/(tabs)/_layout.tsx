@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Slot, Tabs } from 'expo-router';
 import { ColorValue, Platform, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavRail } from '../../components/NavRail';
 import { TopBar } from '../../components/TopBar';
 import { useResponsive } from '../../components/ui';
@@ -42,6 +43,14 @@ function tabIcon(focused: IoniconName, unfocused: IoniconName) {
 
 function PhoneTabs({ isChef }: { isChef: boolean }) {
   const c = useThemeColors();
+  const insets = useSafeAreaInsets();
+
+  // On web the tab bar must accommodate the browser's chrome at the bottom.
+  // Avoid a fixed height — it fights React Navigation's internal safe-area
+  // padding and leaves no room for the label. Instead just pad generously.
+  const isWeb = Platform.OS === 'web';
+  const webBottomPad = isWeb ? Math.max(insets.bottom + 8, 16) : 0;
+
   return (
     <Tabs
       screenOptions={{
@@ -52,12 +61,10 @@ function PhoneTabs({ isChef }: { isChef: boolean }) {
           backgroundColor: c.bg,
           borderTopColor: c.line,
           borderTopWidth: 1,
-          height: Platform.OS === 'web' ? 72 : undefined,
-          paddingTop: 8,
-          paddingBottom: Platform.OS === 'web' ? 10 : 0,
+          paddingTop: isWeb ? 10 : 0,
+          paddingBottom: webBottomPad,
         },
         tabBarLabelStyle: { fontSize: 11, fontFamily: 'HankenGrotesk_600SemiBold', marginTop: 2 },
-        tabBarItemStyle: { paddingVertical: 2 },
         sceneStyle: { backgroundColor: c.bg },
       }}
     >
