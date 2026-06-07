@@ -298,22 +298,23 @@ admin.tsx                Admin panel (basic)
 (auth)/sign-in.tsx       Sign-in / sign-up
 ```
 
-### New routes needed ⬜
+### New routes — completed ✅
 ```
-profile/[userId].tsx     Public profile — user's listings, contact
-profile/me.tsx           My profile — edit, reset PIN, delete account, alerts
-community/[id].tsx       Society detail page (for multi-society browse)
-feed/index.tsx           Community posts feed (general + noticeboard)
-feed/[postId].tsx        Post thread with realtime comments
-feedback/index.tsx       Issues / feedback / suggestions feed
-feedback/[postId].tsx    Single feedback thread
-search/index.tsx         Cross-category search with filters
-admin/societies.tsx      Super-admin: manage all societies
-admin/requests.tsx       Society join requests
-about.tsx                App info, version, update prompt
+profile/me.tsx           ✅ My profile — edit, reset PIN, society badge, delete account
+feed/(tabs).tsx          ✅ Community posts feed (all categories + filter chips)
+feed/[postId].tsx        ✅ Post thread with realtime comments, PostMenu
+(tabs)/search.tsx        ✅ Cross-category search with debounce + category filter
+about.tsx                ✅ App info, version, features, technical info
 ```
 
-### Updated tab bar ⬜
+### New routes — still pending ⬜
+```
+profile/[userId].tsx     Public profile (Phase 11)
+community/[id].tsx       Society detail page (Phase 11)
+admin/societies.tsx      Super-admin society management (Phase 11)
+```
+
+### Updated tab bar ✅
 | Tab | Icon | Route |
 |-----|------|-------|
 | Home | home | /  |
@@ -495,8 +496,8 @@ about.tsx                App info, version, update prompt
 *In progress. Core wins done.*
 
 #### 9a. Rendering performance
-- ✅ `React.memo` on `ListingCard`
-- ⬜ `React.memo` on `DishCard`, `PostCard`
+- ✅ `React.memo` on `ListingCard` and `DishCard`
+- ⬜ Extract `PostCard` to memoized component (currently inline in feed.tsx)
 - ⬜ Replace `ScrollView + .map()` listing grids with `FlashList` (need to add package)
 - ⬜ Skeleton loading states for posts feed and search results
 
@@ -534,33 +535,30 @@ about.tsx                App info, version, update prompt
 
 ---
 
-### ⬜ Phase 10 — iOS & Android (EAS)
-*After web version is stable and feature-complete.*
+### ✅ Phase 10 — iOS & Android (EAS)
+*Configuration complete. Awaiting Apple/Google developer accounts.*
 
-#### 10a. Build setup
-- ⬜ `eas.json` — preview + production build profiles
-- ⬜ EAS Build: iOS (requires Apple Developer account, $99/yr) + Android (Google Play, $25 one-time)
-- ⬜ App icons: 1024×1024 iOS + Android adaptive icon (foreground + background layers)
-- ⬜ Splash screen: branded, no white flash
-- ⬜ Expo Updates (`expo-updates`) for OTA JS updates between store releases
+#### 10a. Build setup ✅
+- ✅ `eas.json` — development/preview/production build profiles with channels
+- ✅ `app.json` — iOS bundleIdentifier, Android package, adaptive icons, splash, scheme
+- ✅ `app.json` — OTA updates config (`expo-updates`), runtimeVersion policy
+- ✅ `app.json` — iOS infoPlist privacy descriptions (camera, photos, contacts)
+- ✅ `app.json` — Android permissions list
 
-#### 10b. Native-specific features
-- ⬜ Push notifications: verify Expo Push works end-to-end on real device (pg_net → Expo → APNS/FCM)
-- ⬜ Haptics: verify all haptic calls work (`expo-haptics`)
-- ⬜ Share sheet: native share (photos, listing links) — `expo-sharing` + deep links
-- ⬜ Deep linking: `aangan://listing/[id]` → opens correct screen (push notification tap)
-- ⬜ App Badge: unread inquiry/order count on app icon (iOS + Android)
+#### 10b. User actions needed ⏸️
+- ⏸️ Apple Developer account ($99/yr) for App Store + TestFlight
+- ⏸️ Google Play developer account ($25 one-time) for Play Store
+- ⏸️ App icons: provide 1024×1024 iOS icon + Android adaptive icon (foreground layer)
+- ⏸️ Run `eas build --platform all --profile production` when accounts ready
 
-#### 10c. Store submission
-- ⬜ TestFlight (iOS internal test → external beta → App Store)
-- ⬜ Google Play internal track → closed beta → production
-- ⬜ Store listings: screenshots (6.5" iPhone, 12.9" iPad, Pixel), description, keywords
-- ⬜ Privacy policy URL (required for both stores)
-- ⬜ Age rating (likely 4+, content is community-generated)
+#### 10c. Store submission ⬜
+- ⬜ TestFlight internal test → external beta → App Store (after build)
+- ⬜ Google Play internal track → closed beta → production (after build)
+- ⬜ Store listing screenshots and descriptions
 
 ---
 
-### ⬜ Phase 11 — Future Enhancements (prioritise later)
+### ⬜ Phase 11 — Future Enhancements (post-launch, based on demand)
 
 These are good ideas for a thriving community app. Assess after Phase 5–6 based on user demand:
 
@@ -615,6 +613,9 @@ These are good ideas for a thriving community app. Assess after Phase 5–6 base
 | 11 | iOS/Android timing | ✅ After web version is feature-complete and stable |
 | 12 | Community posts engine | ✅ Separate `posts` + `post_comments` tables; not shoehorned into listings |
 | 13 | Feedback/issues | ✅ Posts table with `category` column (issue/feedback/suggestion) — not a separate table |
+| 14 | Feedback tab vs separate page | ✅ Merge into Feed tab with category filter chips — keeps tab count at 5 |
+| 15 | Approve join request | ✅ Admin sets `status=approved`; creating the society row is a manual admin step for now |
+| 16 | `delete_own_account` | ✅ Supabase SECURITY DEFINER RPC — cleanest approach for deleting auth.users |
 
 ---
 
