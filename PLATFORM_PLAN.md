@@ -1,12 +1,19 @@
 # Community Platform — Architecture & Expansion Plan
 
-> **Status:** Draft for review · **Date:** 2026-06-07
-> **From:** A single-purpose home-food app (current "Senate Rasoi")
-> **To:** A multi-service community platform for a residential society
->
-> This document proposes how to evolve the existing app into a general
-> community services platform without throwing away the working food vertical.
-> Nothing here is built yet — review, adjust, confirm, then we implement.
+> **Status:** DECISIONS LOCKED — ready to implement · **Date:** 2026-06-07
+> **From:** A single-purpose home-food app ("Senate Rasoi")
+> **To:** **Aangan** — a multi-service community platform for a residential society
+
+### Decisions record
+
+| Decision | Choice |
+|----------|--------|
+| **Name** | **Aangan** (आँगन — courtyard) |
+| **Auth email-alias domain** | Keep `@senate.app` forever (invisible to users; zero migration risk) |
+| **Posting model** | Open posting + admin moderation; verified-provider badge later |
+| **Inquiries** | In-app (`inquiries` table) + WhatsApp deep-link |
+| **Phase 2 rollout** | Launch **all** listing categories together after the engine is built |
+| **Multi-society** | Architect properly for multi-society from the start (dynamic `community_id`, not a hard-coded constant) |
 
 ---
 
@@ -269,6 +276,37 @@ triggers, and realtime all stay exactly as they are. The food category in the
 registry has `kind: 'food'` and routes to the existing Discover/Kitchen
 screens. Zero risk to the working product.
 
+### 4.5b Multi-society architecture (LOCKED: build from the start)
+
+The decision to *architect for multi-society now* requires making
+`community_id` **dynamic** rather than the current hardcoded constant
+(`COMMUNITY_ID = '00000000-0000-0000-0000-000000000001'` in `supabase.ts`).
+
+**Changes needed:**
+
+1. **Profile gets a `community_id` column** (or a join table for multi-membership
+   later): `profiles.community_id uuid references communities(id)` — set at
+   sign-up, determines which society's feed the member sees.
+
+2. **`COMMUNITY_ID` constant removed** from `supabase.ts`. Service layer reads
+   `auth.context` / `profile.community_id` instead.
+
+3. **RLS hardening**: all existing policies already filter by `community_id`
+   via FK. The new `listings` and `inquiries` tables do the same. Good as-is.
+
+4. **`communities` table gets a display name + short code** for admin UX:
+   add `slug text unique`, `address text` columns (safe migration).
+
+5. **`community_services` table** (Phase 4 polish, but design for it):
+   `(community_id, category_key, enabled, sort)` — each society picks their
+   own service menu. Leave the table out of v1 but don't hard-code the
+   category list in a way that blocks it.
+
+6. **Sign-up flow** gains a **community selector** or **invite-code** field
+   so a new user joins the right society (`communities.slug`).
+
+This is a 1-day lift upfront that prevents a painful refactor later.
+
 ### 4.6 Storage
 
 Generalize the `dish-photos` bucket to a shared `listing-photos` bucket
@@ -473,23 +511,16 @@ Each phase is independently shippable and leaves the app working.
 
 ---
 
-## 11. Open decisions (need your input before we build)
+## 11. Decisions — all locked ✅
 
-1. **Name & logo** — go with **Aangan**, or pick from the shortlist / propose
-   your own? (Blocks Phase 1 rebrand.)
-2. **Posting model** — open posting for all non-food categories with admin
-   moderation (recommended), or should some categories (clinic/tax) be
-   provider-gated/vetted?
-3. **In-app inquiries** — build the `inquiries` table for "interested" counts +
-   owner notifications (recommended), or v1 = pure WhatsApp deep-link to ship
-   faster?
-4. **First services to launch in Phase 2** — I propose **Directory** + **Buy &
-   Sell**. Agree, or lead with something else (e.g. Tuitions)?
-5. **Email-alias domain** — keep `@senate.app` for auth forever (invisible,
-   zero-risk) — confirm you're fine with that despite the rename.
-6. **Single society vs multi-society** — stay single-community for now
-   (current assumption), or is multi-society on the near horizon (affects how
-   hard we lean on `community_id` everywhere)?
+| # | Decision | Resolution |
+|---|----------|-----------|
+| 1 | **Name** | ✅ **Aangan** |
+| 2 | **Posting model** | ✅ Open posting + admin moderation; verified badge in Phase 4 |
+| 3 | **In-app inquiries** | ✅ Build `inquiries` table + WhatsApp deep-link |
+| 4 | **Phase 2 rollout** | ✅ Launch **all** listing categories together after engine is built |
+| 5 | **Email-alias domain** | ✅ Keep `@senate.app` forever (invisible to users) |
+| 6 | **Multi-society** | ✅ Architect for multi-society from the start (dynamic `community_id`, invite-code sign-up) |
 
 ---
 
