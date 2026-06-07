@@ -2,7 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { addRole as addRoleSvc, getProfile, signOut as signOutSvc, updateProfile } from '../lib/auth';
 import { registerPush } from '../lib/push';
-import { supabase } from '../lib/supabase';
+import { COMMUNITY_ID, supabase } from '../lib/supabase';
 import type { DbProfile, Profile, Role } from '../lib/types';
 
 interface AuthValue {
@@ -10,6 +10,7 @@ interface AuthValue {
   session: Session | null;
   userId: string | null;
   profile: DbProfile | null;
+  communityId: string;
   roles: Role[];
   isChef: boolean;
   isFoodie: boolean;
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthValue>({
   session: null,
   userId: null,
   profile: null,
+  communityId: COMMUNITY_ID,
   roles: [],
   isChef: false,
   isFoodie: false,
@@ -89,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userId,
       profile,
       roles,
+      communityId: profile?.community_id ?? COMMUNITY_ID,
       isChef: roles.includes('chef'),
       isFoodie: roles.includes('foodie'),
       isAdmin: roles.includes('admin'),

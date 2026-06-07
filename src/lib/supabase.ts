@@ -46,3 +46,6 @@ export const COMMUNITY_ID = '00000000-0000-0000-0000-000000000001';
 
 /** Storage bucket for dish photos (create it in the Supabase dashboard). */
 export const DISH_PHOTOS_BUCKET = 'dish-photos';
+
+/** Storage bucket for listing photos (create in Supabase dashboard as a public bucket). */
+export const LISTING_PHOTOS_BUCKET = 'listing-photos';

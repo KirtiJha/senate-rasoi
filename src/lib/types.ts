@@ -89,6 +89,7 @@ export interface DbProfile {
   whatsapp: string | null;
   upi: string | null;
   roles: Role[];
+  community_id: string | null;
   created_at: string;
 }
 
@@ -158,3 +159,51 @@ export const VEG_DOT: Record<VegType, string> = {
   'Non-veg': '🔴',
   Egg: '🟡',
 };
+
+// ── Listings engine ─────────────────────────────────────────────────
+
+export type ListingStatus = 'active' | 'closed' | 'sold' | 'expired';
+
+/** Minimal owner shape joined from profiles on listing queries. */
+export interface ListingOwner {
+  name: string;
+  flat: string | null;
+  whatsapp: string | null;
+  phone: string;
+}
+
+/** A listing row as returned from Supabase (incl. joined owner). */
+export interface ListingRow {
+  id: string;
+  community_id: string;
+  category: string;
+  owner_user_id: string;
+  title: string;
+  description: string | null;
+  photos: string[];
+  price: number | null;
+  price_unit: string | null;
+  contact_whatsapp: string | null;
+  contact_phone: string | null;
+  location: string | null;
+  status: ListingStatus;
+  is_referral: boolean;
+  referral_name: string | null;
+  referral_phone: string | null;
+  attributes: Record<string, unknown>;
+  expires_at: string | null;
+  bump_at: string;
+  created_at: string;
+  owner?: ListingOwner;
+}
+
+/** An inquiry row (optionally joined with the inquirer's name). */
+export interface InquiryRow {
+  id: string;
+  listing_id: string;
+  from_user_id: string;
+  message: string | null;
+  status: 'open' | 'closed';
+  created_at: string;
+  from_user?: { name: string; flat: string | null; whatsapp: string | null };
+}

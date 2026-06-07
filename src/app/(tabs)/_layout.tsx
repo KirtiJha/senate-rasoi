@@ -85,7 +85,6 @@ function PhoneTabs({ isChef }: { isChef: boolean }) {
         options={{
           title: 'Post',
           tabBarIcon: tabIcon('add-circle', 'add-circle-outline'),
-          href: isChef ? '/post' : null, // only chefs get the Post tab
         }}
       />
       <Tabs.Screen

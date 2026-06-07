@@ -9,12 +9,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Empty } from '../../components/Empty';
 import { Field, Label, SectionCard } from '../../components/forms';
+import { CreateListingForm } from '../../components/listings/CreateListingForm';
 import { Avatar, Button, ChoiceTiles, Container, Stepper, useResponsive, VegMark } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useProfile } from '../../context/profile';
 import { useToast } from '../../context/toast';
 import { fetchMyRecentDishes, postDish } from '../../lib/dishes';
 import { haptics } from '../../lib/haptics';
+import { SERVICES, getService } from '../../lib/services';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { createTiffinPlan } from '../../lib/tiffin';
 import { slotOrderBy } from '../../lib/time';
@@ -37,6 +39,59 @@ export default function PostScreen() {
   const { userId, isChef, addRole } = useAuth();
   const { profile, ready, update } = useProfile();
 
+  // Category picker — pre-select from route param (e.g. from FAB in category feed)
+  const params = useLocalSearchParams<{ category?: string; kind?: string }>();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    params.category && params.category !== 'food' ? params.category : null
+  );
+
+  // If a non-food category is pre-selected, show its form directly.
+  if (selectedCategory && selectedCategory !== 'food') {
+    const cat = getService(selectedCategory);
+    if (cat) {
+      return <CreateListingForm cat={cat} onBack={() => setSelectedCategory(null)} />;
+    }
+  }
+
+  // Category picker screen
+  if (!selectedCategory) {
+    return (
+      <ScrollView
+        className="flex-1 bg-bg"
+        contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 24, paddingHorizontal: 16, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Container narrow>
+          <Text className="mb-1 text-[13px] font-sans-md text-accent">Share with your society</Text>
+          <Text className="mb-6 font-display-x text-[28px] text-ink">What are you posting?</Text>
+          <View className="flex-row flex-wrap" style={{ marginHorizontal: -5 }}>
+            {SERVICES.map((cat) => (
+              <View key={cat.key} style={{ width: '50%', padding: 5 }}>
+                <Pressable
+                  onPress={() => setSelectedCategory(cat.key)}
+                  className="overflow-hidden rounded-2xl bg-surface active:opacity-75"
+                  style={{ borderWidth: 1, borderColor: c.line }}
+                >
+                  <View style={{ height: 3, backgroundColor: cat.color }} />
+                  <View className="p-3.5">
+                    <View
+                      className="mb-2.5 h-10 w-10 items-center justify-center rounded-xl"
+                      style={{ backgroundColor: cat.color + '20' }}
+                    >
+                      <Ionicons name={cat.icon as any} size={20} color={cat.color} />
+                    </View>
+                    <Text className="font-sans-bold text-[13px] text-ink" numberOfLines={1}>{cat.label}</Text>
+                    <Text className="mt-0.5 text-[11px] font-sans-md text-muted" numberOfLines={2}>{cat.blurb}</Text>
+                  </View>
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        </Container>
+      </ScrollView>
+    );
+  }
+
   const [chefName, setChefName] = useState('');
   const [flat, setFlat] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -55,7 +110,6 @@ export default function PostScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   // one-off dish vs recurring tiffin
-  const params = useLocalSearchParams<{ kind?: string }>();
   const [mode, setMode] = useState<'dish' | 'tiffin'>(params.kind === 'tiffin' ? 'tiffin' : 'dish');
 
   // tiffin fields
@@ -212,10 +266,17 @@ export default function PostScreen() {
     }
   };
 
-  // Only chefs can post. Foodies see a one-tap "become a chef" prompt.
+  // Food posting is chef-only. Show upgrade prompt for non-chefs.
   if (!isChef) {
     return (
       <View className="flex-1 bg-bg" style={{ paddingTop: isDesktop ? insets.top + 18 : 18 }}>
+        <Pressable
+          onPress={() => setSelectedCategory(null)}
+          className="mx-4 mb-2 flex-row items-center gap-1 self-start active:opacity-60"
+        >
+          <Ionicons name="chevron-back" size={18} color={c.muted} />
+          <Text className="font-sans-md text-[14px] text-muted">Post</Text>
+        </Pressable>
         <Empty
           icon="👨‍🍳"
           title="Start cooking?"
@@ -224,8 +285,8 @@ export default function PostScreen() {
               label="Become a chef"
               icon="restaurant-outline"
               onPress={async () => {
-                await addRole('chef');
-                toast.show('You’re a chef now — post your first dish! 🎉');
+                await addRole(‘chef’);
+                toast.show(‘You’re a chef now — post your first dish! 🎉’);
               }}
             />
           }

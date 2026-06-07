@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { KitchenSection } from '../../components/KitchenSection';
+import { MyListingsSection } from '../../components/MyListingsSection';
 import { MyTiffinsSection } from '../../components/MyTiffinsSection';
 import { OrdersSection } from '../../components/OrdersSection';
 import { Avatar, Badge, Container, useResponsive } from '../../components/ui';
@@ -12,7 +13,7 @@ import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useThemeColors } from '../../theme';
 
-type Tab = 'orders' | 'tiffins' | 'kitchen';
+type Tab = 'orders' | 'tiffins' | 'listings' | 'kitchen';
 
 export default function YouScreen() {
   const router = useRouter();
@@ -78,6 +79,7 @@ export default function YouScreen() {
           <View className="mt-3 flex-row rounded-2xl bg-inset p-1">
             <Segment label="Orders" icon="receipt-outline" active={tab === 'orders'} onPress={() => setTab('orders')} c={c} />
             <Segment label="Tiffins" icon="repeat-outline" active={tab === 'tiffins'} onPress={() => setTab('tiffins')} c={c} />
+            <Segment label="Listings" icon="list-outline" active={tab === 'listings'} onPress={() => setTab('listings')} c={c} />
             {isChef ? <Segment label="Kitchen" icon="restaurant-outline" active={tab === 'kitchen'} onPress={() => setTab('kitchen')} c={c} /> : null}
           </View>
         </Container>
@@ -87,6 +89,8 @@ export default function YouScreen() {
         <KitchenSection />
       ) : tab === 'tiffins' ? (
         <MyTiffinsSection />
+      ) : tab === 'listings' ? (
+        <MyListingsSection />
       ) : (
         <OrdersSection />
       )}

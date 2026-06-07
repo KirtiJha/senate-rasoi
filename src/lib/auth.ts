@@ -1,4 +1,4 @@
-import { phoneToEmail, supabase } from './supabase';
+import { COMMUNITY_ID, phoneToEmail, supabase } from './supabase';
 import type { DbProfile, Role } from './types';
 
 // Phone + 6-digit code auth, implemented on top of Supabase Auth via an
@@ -38,6 +38,7 @@ export async function signUp(input: SignUpInput): Promise<DbProfile> {
     whatsapp: input.whatsapp.trim() || null,
     upi: input.upi.trim() || null,
     roles: input.roles.length ? input.roles : (['foodie'] as Role[]),
+    community_id: COMMUNITY_ID,
   };
   const { data: profile, error: pErr } = await supabase
     .from('profiles')
