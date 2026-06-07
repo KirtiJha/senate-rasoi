@@ -1,4 +1,16 @@
-# Senate Rasoi — End-to-End Plan
+# Senate Rasoi — Original Plan (superseded)
+
+> **This document covers the original food-only app (Phases A–C, migrations 0001–0007).**
+> The app has since been rebranded to **Aangan** and expanded into a full community platform.
+>
+> **The canonical plan is now [`PLATFORM_PLAN.md`](./PLATFORM_PLAN.md).**
+> All future planning, status tracking, and feature work is tracked there.
+
+---
+
+*Original content preserved below for historical reference.*
+
+---
 
 > A home-food network for one residential society. Neighbours who cook ("chefs")
 > post dishes — one-off or a daily tiffin service; neighbours who eat reserve
