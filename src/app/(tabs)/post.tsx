@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -39,58 +39,10 @@ export default function PostScreen() {
   const { userId, isChef, addRole } = useAuth();
   const { profile, ready, update } = useProfile();
 
-  // Category picker — pre-select from route param (e.g. from FAB in category feed)
+  // ── All hooks unconditionally at top (Rules of Hooks) ────────────────
   const params = useLocalSearchParams<{ category?: string; kind?: string }>();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    params.category && params.category !== 'food' ? params.category : null
-  );
-
-  // If a non-food category is pre-selected, show its form directly.
-  if (selectedCategory && selectedCategory !== 'food') {
-    const cat = getService(selectedCategory);
-    if (cat) {
-      return <CreateListingForm cat={cat} onBack={() => setSelectedCategory(null)} />;
-    }
-  }
-
-  // Category picker screen
-  if (!selectedCategory) {
-    return (
-      <ScrollView
-        className="flex-1 bg-bg"
-        contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 24, paddingHorizontal: 16, paddingBottom: 40 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <Container narrow>
-          <Text className="mb-1 text-[13px] font-sans-md text-accent">Share with your society</Text>
-          <Text className="mb-6 font-display-x text-[28px] text-ink">What are you posting?</Text>
-          <View className="flex-row flex-wrap" style={{ marginHorizontal: -5 }}>
-            {SERVICES.map((cat) => (
-              <View key={cat.key} style={{ width: '50%', padding: 5 }}>
-                <Pressable
-                  onPress={() => setSelectedCategory(cat.key)}
-                  className="overflow-hidden rounded-2xl bg-surface active:opacity-75"
-                  style={{ borderWidth: 1, borderColor: c.line }}
-                >
-                  <View style={{ height: 3, backgroundColor: cat.color }} />
-                  <View className="p-3.5">
-                    <View
-                      className="mb-2.5 h-10 w-10 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: cat.color + '20' }}
-                    >
-                      <Ionicons name={cat.icon as any} size={20} color={cat.color} />
-                    </View>
-                    <Text className="font-sans-bold text-[13px] text-ink" numberOfLines={1}>{cat.label}</Text>
-                    <Text className="mt-0.5 text-[11px] font-sans-md text-muted" numberOfLines={2}>{cat.blurb}</Text>
-                  </View>
-                </Pressable>
-              </View>
-            ))}
-          </View>
-        </Container>
-      </ScrollView>
-    );
-  }
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [mode, setMode] = useState<'dish' | 'tiffin'>('dish');
 
   const [chefName, setChefName] = useState('');
   const [flat, setFlat] = useState('');
@@ -105,14 +57,10 @@ export default function PostScreen() {
   const [maxPlates, setMaxPlates] = useState(5);
   const [description, setDescription] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [serveOffset, setServeOffset] = useState(0); // days from today
+  const [serveOffset, setServeOffset] = useState(0);
   const [cutoff, setCutoff] = useState<CutoffKey>('auto');
   const [submitting, setSubmitting] = useState(false);
 
-  // one-off dish vs recurring tiffin
-  const [mode, setMode] = useState<'dish' | 'tiffin'>(params.kind === 'tiffin' ? 'tiffin' : 'dish');
-
-  // tiffin fields
   const [tTitle, setTTitle] = useState('');
   const [tDesc, setTDesc] = useState('');
   const [tVeg, setTVeg] = useState<VegType | null>(null);
@@ -122,8 +70,18 @@ export default function PostScreen() {
   const [tMax, setTMax] = useState(5);
   const [tCutoff, setTCutoff] = useState('');
 
-  // recent dishes for quick re-posting
   const [recent, setRecent] = useState<DishRow[]>([]);
+
+  // Tab screens stay mounted — sync category & mode from params on every focus
+  // (useState initializer only runs once, so it would go stale between navigations)
+  useFocusEffect(
+    useCallback(() => {
+      const cat = params.category;
+      setSelectedCategory(cat && cat !== 'food' ? cat : null);
+      setMode(params.kind === 'tiffin' ? 'tiffin' : 'dish');
+    }, [params.category, params.kind])
+  );
+
   useEffect(() => {
     if (isChef && userId) fetchMyRecentDishes(userId).then(setRecent).catch(() => {});
   }, [isChef, userId]);
@@ -265,6 +223,55 @@ export default function PostScreen() {
       setSubmitting(false);
     }
   };
+
+  // ── Conditional renders (after all hooks) ─────────────────────────────
+
+  // Non-food listing category → show its create form
+  if (selectedCategory && selectedCategory !== 'food') {
+    const listingCat = getService(selectedCategory);
+    if (listingCat) {
+      return <CreateListingForm key={selectedCategory} cat={listingCat} onBack={() => setSelectedCategory(null)} />;
+    }
+  }
+
+  // No category selected → show category picker
+  if (!selectedCategory) {
+    return (
+      <ScrollView
+        className="flex-1 bg-bg"
+        contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 24, paddingHorizontal: 16, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Container narrow>
+          <Text className="mb-1 text-[13px] font-sans-md text-accent">Share with your society</Text>
+          <Text className="mb-6 font-display-x text-[28px] text-ink">What are you posting?</Text>
+          <View className="flex-row flex-wrap" style={{ marginHorizontal: -5 }}>
+            {SERVICES.map((svc) => (
+              <View key={svc.key} style={{ width: '50%', padding: 5 }}>
+                <Pressable
+                  onPress={() => setSelectedCategory(svc.key)}
+                  className="overflow-hidden rounded-2xl bg-surface active:opacity-75"
+                  style={{ borderWidth: 1, borderColor: c.line }}
+                >
+                  <View style={{ height: 3, backgroundColor: svc.color }} />
+                  <View className="p-3.5">
+                    <View
+                      className="mb-2.5 h-10 w-10 items-center justify-center rounded-xl"
+                      style={{ backgroundColor: svc.color + '20' }}
+                    >
+                      <Ionicons name={svc.icon as any} size={20} color={svc.color} />
+                    </View>
+                    <Text className="font-sans-bold text-[13px] text-ink" numberOfLines={1}>{svc.label}</Text>
+                    <Text className="mt-0.5 text-[11px] font-sans-md text-muted" numberOfLines={2}>{svc.blurb}</Text>
+                  </View>
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        </Container>
+      </ScrollView>
+    );
+  }
 
   // Food posting is chef-only. Show upgrade prompt for non-chefs.
   if (!isChef) {
