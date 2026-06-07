@@ -5,7 +5,7 @@ import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ListingCard } from '../../../components/listings/ListingCard';
 import { Empty } from '../../../components/Empty';
-import { Container, useResponsive } from '../../../components/ui';
+import { Button, Container, useResponsive } from '../../../components/ui';
 import { useAuth } from '../../../context/auth';
 import { useToast } from '../../../context/toast';
 import { fetchListings, getCachedListings, subscribeToListings } from '../../../lib/listings';
