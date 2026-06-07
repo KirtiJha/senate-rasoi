@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "Senate Rasoi",
-    "slug": "senate-rasoi",
+    "name": "Aangan",
+    "slug": "aangan",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "senaterasoi",
+    "scheme": "aangan",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#F7F7F5",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.senaterasoi.app"
+      "bundleIdentifier": "com.aangan.app"
     },
     "android": {
-      "package": "com.senaterasoi.app",
+      "package": "com.aangan.app",
       "adaptiveIcon": {
         "backgroundColor": "#FF5A3C",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
@@ -38,7 +38,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Senate Rasoi needs photo access so you can add a picture of your dish."
+          "photosPermission": "Aangan needs photo access so you can add a picture of your listing."
         }
       ],
       "expo-font"

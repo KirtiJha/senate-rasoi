@@ -1,7 +1,7 @@
 {
-  "name": "Senate Rasoi",
-  "short_name": "Senate Rasoi",
-  "description": "Home-cooked food from your society — see what your neighbours are cooking and reserve plates before they start.",
+  "name": "Aangan",
+  "short_name": "Aangan",
+  "description": "Your society's community hub — food, services, and more from your neighbours.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

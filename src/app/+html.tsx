@@ -15,16 +15,16 @@ export default function Root({ children }: PropsWithChildren) {
         />
 
         {/* PWA / installability */}
-        <meta name="application-name" content="Senate Rasoi" />
+        <meta name="application-name" content="Aangan" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Senate Rasoi" />
+        <meta name="apple-mobile-web-app-title" content="Aangan" />
         {/* theme-color follows the system scheme so the browser chrome blends in */}
         <meta name="theme-color" content="#F7F7F5" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#0E0F12" media="(prefers-color-scheme: dark)" />
         <meta
           name="description"
-          content="Home-cooked food from your society — see what your neighbours are cooking and reserve plates before they start."
+          content="Your society's community hub — home food, services, and more from your neighbours."
         />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon-512.png" />
