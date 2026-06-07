@@ -31,7 +31,7 @@
 | Post screen (all categories) | ✅ | Category picker → correct form (hook bug fixed) |
 | Multi-society DB schema | ✅ | community_id on profiles + listings (migrations 0008–0011) |
 | Multi-society UI | ⬜ | COMMUNITY_ID still hardcoded; no society picker at sign-up |
-| New categories (Day Care, Yoga, Arts) | ✅ | daycare, fitness, arts in services.ts |
+| New categories (Day Care, Yoga, Arts, Astrology) | ✅ | daycare, fitness, arts, astrology in services.ts |
 | User profile page | ⬜ | No dedicated profile screen |
 | Society onboarding (admin) | ⬜ | Not started |
 | Request to add society | ⬜ | Not started |
@@ -84,6 +84,7 @@ from each other: home food, services, buy & sell, community posts, and a trusted
 | 10 | `daycare` | Day Care | Childcare services in the society; high demand |
 | 11 | `fitness` | Yoga & Fitness | Yoga, gym trainers, Zumba, meditation |
 | 12 | `arts` | Arts & Activities | Dance, painting, music, craft — all creative classes |
+| 13 | `astrology` | Astrology | Horoscope, kundali, vastu, numerology, tarot |
 
 **On dance & painting:** Recommend **one combined "Arts & Activities" category** rather than
 two separate categories or folding into Tuitions. Reasons:
@@ -392,8 +393,9 @@ about.tsx                App info, version, update prompt
 - ✅ Added `daycare` (Day Care) to `services.ts` — age range, timings, capacity, meals, pickup
 - ✅ Added `fitness` (Yoga & Fitness) to `services.ts` — type, level, format, timings, gender
 - ✅ Added `arts` (Arts & Activities) to `services.ts` — dance/painting/music/craft combined; type, age group, format, style, timings
-- ✅ `CreateListingForm` renders all 3 correctly (attribute-driven, no code changes needed)
-- ✅ Home hub grid now shows 13 categories
+- ✅ Added `astrology` (Astrology) to `services.ts` — horoscope, kundali, vastu, numerology, tarot; mode, experience, languages
+- ✅ `CreateListingForm` renders all 4 correctly (attribute-driven, no code changes needed)
+- ✅ Home hub grid now shows 14 categories
 
 ---
 
@@ -644,6 +646,7 @@ These are good ideas for a thriving community app. Assess after Phase 5–6 base
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-07 | Added astrology (Astrology) to services.ts. Home hub now shows 14 categories. |
 | 2026-06-07 | Phase 3 complete: added daycare (Day Care), fitness (Yoga & Fitness), arts (Arts & Activities) to services.ts. Home hub now shows 13 categories. |
 | 2026-06-07 | Plan fully rewritten. Phases 1 + 2 marked complete. Added: 3 new categories (Day Care, Yoga & Fitness, Arts & Activities), multi-society UI, full user profile, society onboarding, community posts/threads, issues/feedback page, search & filter, access control hardening, about page, version update notification, performance phase (Phase 9), iOS/Android phase (Phase 10), future enhancements (Phase 11). |
 | 2026-06-07 | Phase 2 complete: listings engine, all 10 categories, inquiry flow, bug fixes (post.tsx hooks, category blank page). |

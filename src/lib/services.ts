@@ -280,6 +280,26 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     enabled: true,
     order: 12,
   },
+  {
+    key: 'astrology',
+    label: 'Astrology',
+    blurb: 'Horoscopes, kundali & vastu from neighbours',
+    icon: 'planet',
+    color: '#7C3AED',
+    kind: 'listing',
+    listingType: 'service',
+    cta: 'book',
+    ctaLabel: 'Book consultation',
+    priceLabel: 'per session',
+    attributes: [
+      { key: 'services', label: 'Services offered', type: 'multiselect', required: true, options: ['Horoscope reading', 'Kundali matching', 'Vastu consultation', 'Numerology', 'Tarot', 'Palmistry', 'Gemstone advice', 'Other'] },
+      { key: 'mode', label: 'Consultation mode', type: 'select', options: ['In-person', 'Phone / video call', 'Both'] },
+      { key: 'experience', label: 'Experience', type: 'select', options: ['1–3 years', '3–5 years', '5–10 years', '10+ years'] },
+      { key: 'languages', label: 'Languages', type: 'text', placeholder: 'Hindi, English, Gujarati…' },
+    ],
+    enabled: true,
+    order: 13,
+  },
 ];
 
 /** Look up a service category by its key. */
