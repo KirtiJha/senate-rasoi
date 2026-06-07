@@ -285,8 +285,8 @@ export default function PostScreen() {
               label="Become a chef"
               icon="restaurant-outline"
               onPress={async () => {
-                await addRole(‘chef’);
-                toast.show(‘You’re a chef now — post your first dish! 🎉’);
+                await addRole('chef');
+                toast.show("You're a chef now — post your first dish! 🎉");
               }}
             />
           }

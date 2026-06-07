@@ -237,7 +237,7 @@ export function CreateListingForm({ cat, onBack }: Props) {
 
             <Field
               label={isDirectory ? 'Why do you recommend them?' : 'Description'}
-              placeholder={isDirectory ? 'Reliable, professional, fair pricing…' : 'More details, timings, what's included…'}
+              placeholder={isDirectory ? 'Reliable, professional, fair pricing…' : "More details, timings, what's included…"}
               hint="Optional"
               multiline
               value={description}
