@@ -31,7 +31,7 @@
 | Post screen (all categories) | ✅ | Category picker → correct form (hook bug fixed) |
 | Multi-society DB schema | ✅ | community_id on profiles + listings (migrations 0008–0011) |
 | Multi-society UI | ⬜ | COMMUNITY_ID still hardcoded; no society picker at sign-up |
-| New categories (Day Care, Yoga, Arts) | ⬜ | Not in services.ts yet |
+| New categories (Day Care, Yoga, Arts) | ✅ | daycare, fitness, arts in services.ts |
 | User profile page | ⬜ | No dedicated profile screen |
 | Society onboarding (admin) | ⬜ | Not started |
 | Request to add society | ⬜ | Not started |
@@ -386,14 +386,14 @@ about.tsx                App info, version, update prompt
 
 ---
 
-### ⬜ Phase 3 — New Categories
-*Small — add to services.ts + verify forms.*
+### ✅ Phase 3 — New Categories
+*Complete. Deployed to main.*
 
-- ⬜ Add `daycare` category to `services.ts` (with attributes above)
-- ⬜ Add `fitness` category (Yoga & Fitness) to `services.ts`
-- ⬜ Add `arts` category (Arts & Activities — dance, painting, music) to `services.ts`
-- ⬜ Verify `CreateListingForm` renders each correctly (no code changes expected — pure config)
-- ⬜ Update Home hub grid (13 categories, check layout at different screen sizes)
+- ✅ Added `daycare` (Day Care) to `services.ts` — age range, timings, capacity, meals, pickup
+- ✅ Added `fitness` (Yoga & Fitness) to `services.ts` — type, level, format, timings, gender
+- ✅ Added `arts` (Arts & Activities) to `services.ts` — dance/painting/music/craft combined; type, age group, format, style, timings
+- ✅ `CreateListingForm` renders all 3 correctly (attribute-driven, no code changes needed)
+- ✅ Home hub grid now shows 13 categories
 
 ---
 
@@ -627,7 +627,7 @@ These are good ideas for a thriving community app. Assess after Phase 5–6 base
 
 ## 10. Immediate Next Steps (ordered)
 
-1. **⬜ Phase 3** — Add 3 new categories to `services.ts` (1–2 hours, pure config)
+1. **✅ Phase 3** — 3 new categories added to `services.ts`
 2. **⏸️ Supabase** — User runs migrations 0008–0011 + creates `listing-photos` bucket
 3. **⬜ Phase 4** — Multi-society UI: society picker at sign-up, remove hardcoded COMMUNITY_ID
 4. **⬜ Phase 4** — User profile page (`profile/me.tsx`) + society display in header
@@ -644,6 +644,7 @@ These are good ideas for a thriving community app. Assess after Phase 5–6 base
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-07 | Phase 3 complete: added daycare (Day Care), fitness (Yoga & Fitness), arts (Arts & Activities) to services.ts. Home hub now shows 13 categories. |
 | 2026-06-07 | Plan fully rewritten. Phases 1 + 2 marked complete. Added: 3 new categories (Day Care, Yoga & Fitness, Arts & Activities), multi-society UI, full user profile, society onboarding, community posts/threads, issues/feedback page, search & filter, access control hardening, about page, version update notification, performance phase (Phase 9), iOS/Android phase (Phase 10), future enhancements (Phase 11). |
 | 2026-06-07 | Phase 2 complete: listings engine, all 10 categories, inquiry flow, bug fixes (post.tsx hooks, category blank page). |
 | 2026-06-07 | Phase 1 complete: Aangan rebrand, Home hub, service registry, nav restructure. |
