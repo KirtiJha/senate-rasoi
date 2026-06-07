@@ -70,7 +70,15 @@ function PhoneTabs({ isChef }: { isChef: boolean }) {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'Discover', tabBarIcon: tabIcon('compass', 'compass-outline') }}
+        options={{ title: 'Home', tabBarIcon: tabIcon('home', 'home-outline') }}
+      />
+      <Tabs.Screen
+        name="food"
+        options={{ title: 'Food', tabBarIcon: tabIcon('restaurant', 'restaurant-outline'), href: null }}
+      />
+      <Tabs.Screen
+        name="c/[category]"
+        options={{ href: null, title: '' }}
       />
       <Tabs.Screen
         name="post"

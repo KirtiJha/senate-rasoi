@@ -7,10 +7,10 @@ import { Wordmark } from './Brand';
 import { useAuth } from '../context/auth';
 import { layout, useThemeColors } from '../theme';
 
-type Item = { href: '/' | '/post' | '/you'; label: string; icon: keyof typeof Ionicons.glyphMap; activeIcon: keyof typeof Ionicons.glyphMap };
+type Item = { href: string; label: string; icon: keyof typeof Ionicons.glyphMap; activeIcon: keyof typeof Ionicons.glyphMap };
 
 const ITEMS: Item[] = [
-  { href: '/', label: 'Discover', icon: 'compass-outline', activeIcon: 'compass' },
+  { href: '/', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
   { href: '/you', label: 'You', icon: 'person-outline', activeIcon: 'person' },
 ];
 
@@ -58,7 +58,7 @@ export function NavRail() {
         <Link href="/post" asChild>
           <Pressable className="mt-3 flex-row items-center justify-center gap-2 rounded-2xl bg-accent px-4 py-3 active:bg-accent-press">
             <Ionicons name="add" size={20} color={c.onAccent} />
-            <Text className="font-sans-sb text-[15px] text-on-accent">Post a dish</Text>
+            <Text className="font-sans-sb text-[15px] text-on-accent">Post</Text>
           </Pressable>
         </Link>
       ) : null}
@@ -94,7 +94,7 @@ export function NavRail() {
         <Text className="font-sans-md text-[13px] text-muted">{isDark ? 'Light mode' : 'Dark mode'}</Text>
       </Pressable>
 
-      <Text className="px-2 text-[11px] text-faint">Senate Society · home kitchens</Text>
+      <Text className="px-2 text-[11px] text-faint">Senate Society · community hub</Text>
     </View>
   );
 }
