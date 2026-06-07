@@ -1,4 +1,4 @@
-import { useColorScheme } from 'react-native';
+import { useThemePreference } from './context/theme';
 
 // Imperative palette for places that can't use NativeWind classNames:
 // vector-icon colors, navigation options, gradients, StatusBar.
@@ -56,12 +56,13 @@ export type ThemeColors = { [K in keyof typeof light]: string } & {
 };
 
 export function useThemeColors(): ThemeColors {
-  const scheme = useColorScheme();
-  return { ...(scheme === 'dark' ? dark : light), ...fixed };
+  const { resolved } = useThemePreference();
+  return { ...(resolved === 'dark' ? dark : light), ...fixed };
 }
 
 export function useIsDark() {
-  return useColorScheme() === 'dark';
+  const { resolved } = useThemePreference();
+  return resolved === 'dark';
 }
 
 export const fonts = {

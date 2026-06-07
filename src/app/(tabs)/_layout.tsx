@@ -52,11 +52,12 @@ function PhoneTabs({ isChef }: { isChef: boolean }) {
           backgroundColor: c.bg,
           borderTopColor: c.line,
           borderTopWidth: 1,
-          height: Platform.OS === 'web' ? 64 : undefined,
-          paddingTop: 6,
+          height: Platform.OS === 'web' ? 72 : undefined,
+          paddingTop: 8,
+          paddingBottom: Platform.OS === 'web' ? 10 : 0,
         },
         tabBarLabelStyle: { fontSize: 11, fontFamily: 'HankenGrotesk_600SemiBold', marginTop: 2 },
-        tabBarItemStyle: { paddingVertical: 4 },
+        tabBarItemStyle: { paddingVertical: 2 },
         sceneStyle: { backgroundColor: c.bg },
       }}
     >

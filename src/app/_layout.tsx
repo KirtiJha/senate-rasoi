@@ -22,8 +22,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider } from '../context/auth';
+import { ThemeProvider } from '../context/theme';
 import { ToastProvider } from '../context/toast';
-import { useThemeColors } from '../theme';
+import { useIsDark, useThemeColors } from '../theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -40,7 +41,6 @@ if (Platform.OS !== 'web') {
 }
 
 export default function RootLayout() {
-  const c = useThemeColors();
   const [fontsLoaded] = useFonts({
     BricolageGrotesque_600SemiBold,
     BricolageGrotesque_700Bold,
@@ -57,12 +57,23 @@ export default function RootLayout() {
 
   if (!fontsLoaded) return null;
 
+  // ThemeProvider must wrap everything so useThemeColors / useIsDark work throughout.
+  return (
+    <ThemeProvider>
+      <AppShell />
+    </ThemeProvider>
+  );
+}
+
+function AppShell() {
+  const c = useThemeColors();
+  const isDark = useIsDark();
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.bg }}>
       <SafeAreaProvider>
         <AuthProvider>
           <ToastProvider>
-            <StatusBar style="auto" />
+            <StatusBar style={isDark ? 'light' : 'dark'} />
             <View style={{ flex: 1, backgroundColor: c.bg }}>
               <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
                 <Stack.Screen name="(tabs)" />

@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 /* ── Semantic theme tokens (RGB triplets for <alpha-value> support) ──
-   Light is the default; dark flips automatically with the system scheme. */
+   Light is the default. Dark applies via system preference OR explicit
+   data-theme="dark" attribute (set by the in-app toggle). */
 @layer base {
   :root {
     --bg: 251 247 242; /* warm cream page */
@@ -20,21 +21,36 @@
     --on-accent: 255 255 255;
   }
 
+  /* System preference dark (when no explicit override) */
   @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: 14 15 18; /* near-black */
-      --surface: 25 27 31; /* cards */
-      --inset: 33 36 42; /* filled areas */
+    :root:not([data-theme='light']) {
+      --bg: 14 15 18;
+      --surface: 25 27 31;
+      --inset: 33 36 42;
       --ink: 244 245 247;
       --muted: 165 171 181;
       --faint: 110 116 126;
       --line: 41 44 51;
-
-      --accent: 255 108 80; /* slightly brighter coral on dark */
+      --accent: 255 108 80;
       --accent-press: 255 90 60;
       --accent-soft: 43 25 20;
       --on-accent: 255 255 255;
     }
+  }
+
+  /* Explicit dark — set by the toggle (persisted in localStorage) */
+  :root[data-theme='dark'] {
+    --bg: 14 15 18;
+    --surface: 25 27 31;
+    --inset: 33 36 42;
+    --ink: 244 245 247;
+    --muted: 165 171 181;
+    --faint: 110 116 126;
+    --line: 41 44 51;
+    --accent: 255 108 80;
+    --accent-press: 255 90 60;
+    --accent-soft: 43 25 20;
+    --on-accent: 255 255 255;
   }
 
   html,

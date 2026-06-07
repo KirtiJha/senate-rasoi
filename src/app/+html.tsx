@@ -31,6 +31,12 @@ export default function Root({ children }: PropsWithChildren) {
 
         {/* Disable body scrolling on web so ScrollViews behave like native. */}
         <ScrollViewStyleReset />
+        {/* Apply saved theme before React mounts to avoid a flash of wrong color. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('senate_theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`,
+          }}
+        />
       </head>
       <body>
         {children}
