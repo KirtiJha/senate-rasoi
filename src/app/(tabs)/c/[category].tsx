@@ -5,7 +5,7 @@ import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ListingCard } from '../../../components/listings/ListingCard';
 import { Empty } from '../../../components/Empty';
-import { Button, Container, useResponsive } from '../../../components/ui';
+import { Container, useResponsive } from '../../../components/ui';
 import { useAuth } from '../../../context/auth';
 import { useToast } from '../../../context/toast';
 import { fetchListings, getCachedListings, subscribeToListings } from '../../../lib/listings';
@@ -99,15 +99,8 @@ export default function CategoryScreen() {
             <Empty
               icon={cat.icon.includes('construct') ? '🔧' : cat.icon.includes('bag') ? '🛍️' : '📋'}
               title={`No ${cat.label} yet`}
-              action={
-                <Button
-                  label={`Be the first to post`}
-                  icon="add"
-                  onPress={() => router.push({ pathname: '/post', params: { category: cat.key } } as any)}
-                />
-              }
             >
-              Neighbours can post {cat.listingType === 'product' ? 'items' : cat.listingType === 'recommendation' ? 'recommendations' : 'services'} here and connect directly.
+              Neighbours can post {cat.listingType === 'product' ? 'items' : cat.listingType === 'recommendation' ? 'recommendations' : 'services'} here and connect directly. Tap + to be first.
             </Empty>
           ) : (
             <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
