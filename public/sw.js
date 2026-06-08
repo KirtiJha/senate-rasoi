@@ -1,10 +1,22 @@
-/* Senate Rasoi service worker — offline shell + fast repeat loads.
+/* Aangan service worker — offline shell + fast repeat loads.
    Only same-origin GETs are touched; Supabase API/realtime (cross-origin)
    always go straight to the network. */
-const CACHE = 'senate-rasoi-v1';
+const CACHE = 'aangan-v2';
+const SHELL = ['/', '/manifest.json', '/favicon.png', '/icon-512.png'];
 
-self.addEventListener('install', () => {
-  self.skipWaiting();
+self.addEventListener('install', (event) => {
+  // Pre-cache the app shell so the very first offline visit still loads.
+  event.waitUntil(
+    (async () => {
+      try {
+        const cache = await caches.open(CACHE);
+        await cache.addAll(SHELL);
+      } catch {
+        /* best-effort — never block install on a missing asset */
+      }
+      await self.skipWaiting();
+    })()
+  );
 });
 
 self.addEventListener('activate', (event) => {

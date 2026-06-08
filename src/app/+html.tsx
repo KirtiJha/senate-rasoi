@@ -29,6 +29,14 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon-512.png" />
 
+        {/* Warm up the Supabase connection early so the first data fetch is faster. */}
+        {process.env.EXPO_PUBLIC_SUPABASE_URL ? (
+          <>
+            <link rel="preconnect" href={process.env.EXPO_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={process.env.EXPO_PUBLIC_SUPABASE_URL} />
+          </>
+        ) : null}
+
         {/* Disable body scrolling on web so ScrollViews behave like native. */}
         <ScrollViewStyleReset />
         {/* Apply saved theme before React mounts to avoid a flash of wrong color. */}

@@ -16,6 +16,14 @@ type CommunityTile = { key: string; label: string; blurb: string; icon: string; 
 
 const COMMUNITY_TILES: CommunityTile[] = [
   {
+    key: 'messages',
+    label: 'Messages',
+    blurb: 'Private chats with neighbours',
+    icon: 'mail',
+    color: '#0EA5E9',
+    href: '/messages',
+  },
+  {
     key: 'polls',
     label: 'Polls',
     blurb: 'Vote on community decisions',

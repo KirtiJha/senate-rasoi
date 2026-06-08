@@ -48,17 +48,44 @@ export async function fetchListings(
   return rows;
 }
 
+const LISTING_SELECT = '*, owner:profiles!listings_owner_user_id_fkey(name,flat,whatsapp,phone)';
+
+/**
+ * Search active listings in a community. Uses the full-text index (migration
+ * 0022, stemmed + ranked) first; falls back to substring `ilike` for partial
+ * tokens FTS can't stem. With no query (category-only) returns the newest.
+ */
 export async function searchListings(query: string, communityId: string = COMMUNITY_ID, category?: string): Promise<ListingRow[]> {
-  let q = supabase
-    .from('listings')
-    .select('*, owner:profiles!listings_owner_user_id_fkey(name,flat,whatsapp,phone)')
-    .eq('community_id', communityId)
-    .eq('status', 'active')
-    .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+  const q = query.trim();
+  const base = () => {
+    let b = supabase
+      .from('listings')
+      .select(LISTING_SELECT)
+      .eq('community_id', communityId)
+      .eq('status', 'active');
+    if (category) b = b.eq('category', category);
+    return b;
+  };
+
+  if (!q) {
+    const { data, error } = await base().order('bump_at', { ascending: false }).limit(40);
+    if (error) throw error;
+    return (data ?? []) as ListingRow[];
+  }
+
+  // Full-text first (GIN index, stemmed).
+  const { data: fts, error: ftsErr } = await base()
+    .textSearch('search_tsv', q, { type: 'websearch', config: 'english' })
     .order('bump_at', { ascending: false })
     .limit(40);
-  if (category) q = q.eq('category', category);
-  const { data, error } = await q;
+  if (ftsErr) throw ftsErr;
+  if (fts && fts.length) return fts as ListingRow[];
+
+  // Fallback: substring match for partial tokens.
+  const { data, error } = await base()
+    .or(`title.ilike.%${q}%,description.ilike.%${q}%`)
+    .order('bump_at', { ascending: false })
+    .limit(40);
   if (error) throw error;
   return (data ?? []) as ListingRow[];
 }

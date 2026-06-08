@@ -93,6 +93,45 @@ export async function fetchPosts(
   return (data ?? []) as PostRow[];
 }
 
+const POST_SELECT = '*, author:profiles!posts_author_id_fkey(name, flat)';
+
+/**
+ * Search community posts. Full-text first (migration 0022, stemmed + ranked),
+ * falling back to substring `ilike` for partial tokens. Optional category filter.
+ */
+export async function searchPosts(
+  query: string,
+  communityId: string,
+  category?: PostCategory,
+): Promise<PostRow[]> {
+  const q = query.trim();
+  const base = () => {
+    let b = supabase.from('posts').select(POST_SELECT).eq('community_id', communityId);
+    if (category) b = b.eq('category', category);
+    return b;
+  };
+
+  if (!q) {
+    const { data, error } = await base().order('created_at', { ascending: false }).limit(40);
+    if (error) throw error;
+    return (data ?? []) as PostRow[];
+  }
+
+  const { data: fts, error: ftsErr } = await base()
+    .textSearch('search_tsv', q, { type: 'websearch', config: 'english' })
+    .order('created_at', { ascending: false })
+    .limit(40);
+  if (ftsErr) throw ftsErr;
+  if (fts && fts.length) return fts as PostRow[];
+
+  const { data, error } = await base()
+    .or(`title.ilike.%${q}%,body.ilike.%${q}%`)
+    .order('created_at', { ascending: false })
+    .limit(40);
+  if (error) throw error;
+  return (data ?? []) as PostRow[];
+}
+
 export async function fetchPostById(id: string): Promise<PostRow | null> {
   const { data, error } = await supabase
     .from('posts')

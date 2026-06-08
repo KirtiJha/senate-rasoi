@@ -3,8 +3,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Container, useResponsive } from '../../components/ui';
+import { Avatar, Button, Container, useResponsive } from '../../components/ui';
+import { useAuth } from '../../context/auth';
+import { useToast } from '../../context/toast';
 import { getProfile } from '../../lib/auth';
+import { getOrCreateThread } from '../../lib/dm';
 import { fetchMyListings } from '../../lib/listings';
 import { getService } from '../../lib/services';
 import { DbProfile, ListingRow } from '../../lib/types';
@@ -13,13 +16,26 @@ import { useThemeColors } from '../../theme';
 export default function PublicProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const router = useRouter();
+  const toast = useToast();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
+  const { userId: meId } = useAuth();
 
   const [profile, setProfile] = useState<DbProfile | null>(null);
   const [listings, setListings] = useState<ListingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [starting, setStarting] = useState(false);
+
+  const startChat = useCallback(async () => {
+    if (!userId || starting) return;
+    setStarting(true);
+    try {
+      const threadId = await getOrCreateThread(userId);
+      router.push(`/messages/${threadId}` as any);
+    } catch { toast.show('Could not start chat'); }
+    finally { setStarting(false); }
+  }, [userId, starting, router, toast]);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -87,6 +103,19 @@ export default function PublicProfileScreen() {
                 </View>
               ))}
             </View>
+
+            {/* Message this neighbour (not shown on your own profile) */}
+            {meId && meId !== userId ? (
+              <View className="mt-4 w-full">
+                <Button
+                  label={starting ? 'Opening…' : 'Message'}
+                  icon="chatbubble-outline"
+                  fullWidth
+                  disabled={starting}
+                  onPress={startChat}
+                />
+              </View>
+            ) : null}
           </View>
 
           {/* Active listings */}

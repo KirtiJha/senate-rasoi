@@ -1,7 +1,7 @@
 # Aangan — Community Platform Plan
 > **Living document.** Always kept in sync with the codebase. Update on every significant commit.
 > **App:** Aangan (आँगन — courtyard) · **From:** Senate Rasoi (single-society food app)
-> **Last updated:** 2026-06-08 (Phase 12a per-listing chat shipped; perf polish: FlashList grids, image caching, search skeletons, inquiry-count badge; NavRail collapse fix; tsc clean)
+> **Last updated:** 2026-06-08 (Phase 12b DMs + full-text search built; PWA preconnect/shell-precache; food resize confirmed already-done. Migrations 0022–0023 ⏸️ need running)
 
 ---
 
@@ -63,12 +63,15 @@
 | Push token capture | ✅ | `registerPush()` in lib/push.ts, called from auth.tsx on login; upserts to push_tokens (native-only, web no-op) |
 | Supabase backend live | ✅ | All migrations 0001–0020 run; `listing-photos` bucket created; first community seeded; admin granted |
 | Web deploy (GitHub + Vercel) | ✅ | Deployed to main / Vercel |
-| Per-listing chat threads | ✅ | Phase 12a — `listing_messages` (migration 0021) + realtime + push; collapsible ListingChat on listing detail ⏸️ needs migration 0021 run in Supabase |
+| Per-listing chat threads | ✅ | Phase 12a — `listing_messages` (migration 0021, run) + realtime + push; collapsible ListingChat — LIVE & verified |
 | Listing-grid FlashList | ✅ | Category feed + search results now FlashList (numColumns, centered maxWidth) |
 | Search-result skeletons | ✅ | ListingCardSkeleton grid while searching |
 | Image caching + blurhash | ✅ | IMAGE_CACHE_PROPS (memory-disk + neutral blurhash + fade) on ListingCard, listing hero, DishCard |
 | Inquiry-count badge (My Listings) | ✅ | "N interested" badge per card via fetchInquiryCountsForOwner |
-| Direct messages (DMs) | ⬜ | Phase 12b — deferred after 12a stable |
+| Direct messages (DMs) | ✅ built | Phase 12b — `dm_threads`/`dm_messages` (0023) + RLS + realtime + push; inbox + thread screens, Message btn on profile, NavRail + Home tile — ⏸️ run migration 0023 |
+| Full-text search | ✅ built | `search_tsv` GIN indexes (0022); FTS-first searchListings + searchPosts; Search Listings/Posts toggle — ⏸️ run migration 0022 |
+| Food photo resize | ✅ | Already done — uploadDishPhoto resizes 1000px/JPEG-0.7 |
+| PWA preconnect + shell precache | ✅ | Supabase preconnect/dns-prefetch in +html; sw.js precaches shell on install (cache → aangan-v2) |
 | Sentry / PostHog monitoring | ⬜ | Requires external accounts |
 | iOS / Android (EAS) | ⬜ | After web version is stable |
 | App store submissions | ⬜ | After iOS/Android phase |
@@ -240,7 +243,9 @@ scoped to that society. Admins of a society can manage that society only. Platfo
 | 0018 | saved_listings table + RLS | ✅ |
 | 0019 | emergency_contacts table + RLS | ✅ |
 | 0020 | polls + poll_options + poll_votes tables + RLS + realtime | ✅ |
-| 0021 | listing_messages (per-listing chat) + RLS + realtime + push trigger | ⏸️ written — run in Supabase |
+| 0021 | listing_messages (per-listing chat) + RLS + realtime + push trigger | ✅ |
+| 0022 | full-text search: search_tsv generated cols + GIN indexes (listings, posts) | ⏸️ written — run in Supabase |
+| 0023 | direct messages: dm_threads + dm_messages + RLS + realtime + push + dm_get_or_create_thread RPC | ⏸️ written — run in Supabase |
 
 **Pending (future):**
 - `listing_reports` — moderation queue (schema designed; UI not yet built)
@@ -432,9 +437,9 @@ admin/societies.tsx      Super-admin society management (future)
   - Empty states: initial, searching, no results
   - Results in 2/3-col responsive grid using ListingCard
 - ✅ `searchListings()` in `listings.ts` — communityId-scoped, category-filterable
-- ⬜ Posts search (future — needs full-text index)
-- ⬜ Supabase full-text indexes (migration 0018 — planned for Phase 9)
-- ⬜ Recent searches in AsyncStorage (Phase 9)
+- ✅ Posts search — `searchPosts()` (FTS-first + ilike fallback); Search screen now has a **Listings / Posts** toggle
+- ✅ Supabase full-text indexes — `search_tsv` GIN on listings + posts (migration `0022`); `searchListings` upgraded to FTS-first
+- ⬜ Recent searches in AsyncStorage (future)
 
 ---
 
@@ -486,13 +491,13 @@ admin/societies.tsx      Super-admin society management (future)
 #### 9c. Image performance
 - ✅ `expo-image` with `cachePolicy="memory-disk"` on ListingCard, listing hero, DishCard (shared `IMAGE_CACHE_PROPS` in `lib/image.ts`)
 - ✅ Blurhash placeholders + 200ms fade while images load (one neutral hash; no per-image hashing)
-- ⬜ Upload pipeline: resize to 1000px width + JPEG 0.7 (already done for listings; apply to food)
+- ✅ Upload pipeline: resize to 1000px width + JPEG 0.7 — done for **both** listings (`uploadListingPhoto`) and food (`uploadDishPhoto`)
 - ⬜ Supabase Storage image transforms (`?width=400&quality=75` URL param) for thumbnails vs full
 
 #### 9d. Web / PWA
-- ⬜ Service worker: offline shell + asset caching (Expo's built-in SW + `expo-router`'s static export)
+- ✅ Service worker: offline shell + asset caching (`public/sw.js` — network-first nav, SWR assets, shell precached on install; cache `aangan-v2`)
 - ⬜ Route code-splitting (Expo Router does this by default — verify bundles)
-- ⬜ `preconnect` to Supabase URL in `+html.tsx`
+- ✅ `preconnect` + `dns-prefetch` to Supabase URL in `+html.tsx`
 - ⬜ Lighthouse audit: target ≥ 90 performance, ≥ 90 PWA, ≥ 90 accessibility
 
 #### 9e. Native performance (post-EAS)
@@ -687,12 +692,18 @@ Useful for private conversation that isn't tied to a listing (e.g., "Hey, can I 
 - ✅ Push on new message: neighbour→owner, and owner-reply→all other thread participants (reuses `notify_user` + pg_net)
 - ✅ UI: collapsible "Chat with owner" section (`components/listings/ListingChat.tsx`) on listing detail, lazy-loads + subscribes on first open
 - ✅ Service layer: `src/lib/listingMessages.ts` (fetch/send/delete/subscribe)
-- ⏸️ **User action:** run `0021_listing_messages.sql` in Supabase SQL editor to activate
+- ✅ Migration `0021_listing_messages.sql` run in Supabase — **feature is LIVE**
 
-**Phase 12b (direct messages — DEFER):**
-- Tables: `dm_conversations (id, participant_a, participant_b, last_message_at)`, `dm_messages (id, conversation_id, author_id, body, read_at, created_at)`
-- UI: Messages icon in tab bar / NavRail, conversation list, chat thread
-- Complex — save for after Phase 12a is stable and used
+**Phase 12b (direct messages — ✅ BUILT):**
+- ✅ Tables (migration `0023_direct_messages.sql`): `dm_threads (id, community_id, user_a, user_b, last_message, last_message_at)` with canonical `user_a < user_b` + unique pair; `dm_messages (id, thread_id, sender_id, body, read_at, created_at)`
+- ✅ RLS: only the two participants read/write; `dm_messages.update` lets a participant set `read_at`
+- ✅ `dm_get_or_create_thread(p_other)` SECURITY DEFINER RPC — atomic, same-community enforced
+- ✅ Trigger on new message: bumps thread `last_message`/`last_message_at` + push-notifies the recipient (reuses `notify_user`)
+- ✅ Realtime on `dm_messages` + `dm_threads`
+- ✅ Service layer: `src/lib/dm.ts` (getOrCreateThread, fetchInbox, fetchThread, fetchMessages, sendMessage, markThreadRead, fetchUnreadThreadCount, subscribe)
+- ✅ UI: inbox `src/app/messages/index.tsx`, thread `src/app/messages/[threadId].tsx` (realtime, read receipts, profile link in header)
+- ✅ Entry points: "Message" button on `profile/[userId]`, "Messages" in NavRail (desktop) + Home Community tile (mobile); routes registered in `_layout`
+- ⏸️ **User action:** run `0023_direct_messages.sql` in Supabase to activate
 
 ---
 
@@ -723,7 +734,9 @@ Open **Supabase Dashboard → SQL Editor** and run these in order. Each file is 
 0018_saved_listings.sql      ← saved_listings table
 0019_emergency_contacts.sql  ← emergency_contacts table
 0020_polls.sql               ← polls + poll_options + poll_votes
-0021_listing_messages.sql    ← per-listing chat threads + push  (NEW — run this)
+0021_listing_messages.sql    ← per-listing chat threads + push  ✅ run
+0022_fulltext_search.sql     ← search_tsv + GIN indexes         (NEW — run this)
+0023_direct_messages.sql     ← DMs: threads, messages, RPC      (NEW — run this)
 ```
 
 ### Step 2 — Create Supabase Storage bucket
@@ -840,17 +853,25 @@ Reload the app. You should now see:
 4. ✅ Web deployed to GitHub + Vercel (main)
 
 **Code — recently shipped (2026-06-08):**
-5. ✅ **Phase 12a: Per-listing chat threads** — migration `0021_listing_messages.sql`, `lib/listingMessages.ts`, collapsible `ListingChat` on listing detail (realtime + push). ⏸️ run migration 0021 in Supabase to activate.
+5. ✅ **Phase 12a: Per-listing chat threads** — migration `0021_listing_messages.sql` (run), `lib/listingMessages.ts`, collapsible `ListingChat` on listing detail (realtime + push). **LIVE.**
 6. ✅ Push token capture — `getExpoPushTokenAsync()` wired in lib/push.ts; end-to-end delivery to verify on native build (Phase 10)
 7. ✅ Skeleton loaders for search results (`ListingCardSkeleton` grid)
 8. ✅ Inquiry-count badge — "N interested" on MyListingsSection cards
 9. ✅ Perf: category + search grids → FlashList; expo-image memory-disk cache + blurhash placeholders
+10. ✅ **Phase 12b: Direct messages** — migration `0023`, `lib/dm.ts`, inbox + thread screens, Message button + NavRail/Home entry points.
+11. ✅ **Full-text search** — migration `0022`, FTS `searchListings`/`searchPosts`, Search Listings/Posts toggle.
+12. ✅ **PWA** — Supabase preconnect + service-worker shell precache. (Service worker already existed; food resize already shipped.)
+
+**⏸️ User action — run these two migrations in Supabase to activate the new features:**
+- `0022_fulltext_search.sql` (search indexes)
+- `0023_direct_messages.sql` (DMs)
+Then I can runtime-verify DMs (two-account flow) + FTS, same as I did for 12a.
 
 **Code — next candidates:**
-- ⬜ Phase 12b: 1:1 direct messages (after 12a proves stable in use)
-- ⬜ Web service worker offline shell + Lighthouse ≥90 pass
-- ⬜ Supabase full-text search index for posts + listings
-- ⬜ Apply 1000px/JPEG-0.7 upload resize to food photos (already done for listings)
+- ⬜ Lighthouse ≥90 audit pass (PWA/perf/a11y) — needs a deployed build to measure
+- ⬜ Recent searches (AsyncStorage) + Supabase Storage image transforms for thumbnails
+- ⬜ Unread-DM badge surfaced on the Messages nav entry (count fn `fetchUnreadThreadCount` exists)
+- ⚠️ **Security:** `listings_read` RLS is `auth.role()='authenticated'` (NOT community-scoped) — a cross-society read leak for listings; tighten to match posts/chat scoping.
 
 **When ready for native (Phase 10):**
 8. **⏸️ Apple Developer account** ($99/yr) → TestFlight → App Store
@@ -864,6 +885,7 @@ Reload the app. You should now see:
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-08 | **Phase 12b DMs + full-text search + PWA polish.** (1) Verified Phase 12a chat end-to-end against prod Supabase (insert/select RLS, persistence, realtime publication — PASS). (2) **DMs (12b):** migration `0023` (dm_threads/dm_messages + RLS + realtime + push + `dm_get_or_create_thread` RPC), `lib/dm.ts`, inbox + thread screens, Message button on profile, NavRail "Messages" + Home tile. (3) **Full-text search:** migration `0022` (search_tsv GIN on listings+posts), FTS-first `searchListings` + new `searchPosts`, Search screen Listings/Posts toggle. (4) **PWA:** Supabase preconnect/dns-prefetch in +html, sw.js precaches shell on install (cache→aangan-v2). Confirmed food photo resize already shipped. `tsc --noEmit` clean. ⏸️ run migrations 0022 + 0023. |
 | 2026-06-08 | **NavRail collapse fix + tsc clean.** Collapsed left rail: "New Post" CTA and theme-toggle labels were missing `numberOfLines={1}`, so at `maxWidth:0` the hidden text wrapped vertically and ballooned the coral button height — added `numberOfLines={1}` to both (matches NavItemRow). Fixed the 2 remaining `tsc` errors: `router.push('/food' as any)` in index.tsx (Expo typed-routes) and `resolved` in theme.tsx now collapses `ColorSchemeName` (incl. `unspecified`/null) to `'light'\|'dark'`. `npx tsc --noEmit` now fully clean. |
 | 2026-06-08 | **Phase 12a + polish shipped.** Per-listing chat: migration `0021_listing_messages.sql` (RLS, realtime, push trigger), `lib/listingMessages.ts`, collapsible `ListingChat` on listing detail. Polish: category + search grids → `FlashList` (numColumns, centered maxWidth; dropped `estimatedItemSize` for FlashList v2, incl. feed.tsx); `ListingCardSkeleton` for search; `IMAGE_CACHE_PROPS` (memory-disk + neutral blurhash + fade) on ListingCard/listing hero/DishCard; "N interested" inquiry-count badge on My Listings. Installed missing local dep `@shopify/flash-list`. ⏸️ user must run migration 0021. |
 | 2026-06-08 | **Plan sync to reality:** backend live (all migrations 0001–0020 run, `listing-photos` bucket, community seeded, admin granted); web deployed to GitHub + Vercel. Corrected push token capture from "MISSING" to ✅ (wired in lib/push.ts, called from auth.tsx). Reconciled Phase 9 prose with dashboard (PostCard memo / posts FlashList / posts skeletons / posts pagination all ✅; listing-grid FlashList + search skeletons remain ⬜). Next code feature: Phase 12a per-listing chat. |

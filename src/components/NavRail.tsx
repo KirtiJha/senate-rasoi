@@ -23,6 +23,7 @@ const PRIMARY_ITEMS: NavItem[] = [
   { href: '/', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
   { href: '/feed', label: 'Feed', icon: 'chatbubbles-outline', activeIcon: 'chatbubbles' },
   { href: '/search', label: 'Search', icon: 'search-outline', activeIcon: 'search' },
+  { href: '/messages', label: 'Messages', icon: 'mail-outline', activeIcon: 'mail' },
   { href: '/you', label: 'You', icon: 'person-outline', activeIcon: 'person' },
 ];
 
