@@ -21,9 +21,12 @@ import { Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { NavRail } from '../components/NavRail';
+import { useResponsive } from '../components/ui';
 import { AuthProvider } from '../context/auth';
 import { ThemeProvider } from '../context/theme';
 import { ToastProvider } from '../context/toast';
+import { useAuth } from '../context/auth';
 import { useIsDark, useThemeColors } from '../theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -57,7 +60,6 @@ export default function RootLayout() {
 
   if (!fontsLoaded) return null;
 
-  // ThemeProvider must wrap everything so useThemeColors / useIsDark work throughout.
   return (
     <ThemeProvider>
       <AppShell />
@@ -74,23 +76,48 @@ function AppShell() {
         <AuthProvider>
           <ToastProvider>
             <StatusBar style={isDark ? 'light' : 'dark'} />
-            <View style={{ flex: 1, backgroundColor: c.bg }}>
-              <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="admin" />
-                <Stack.Screen name="about" />
-                <Stack.Screen name="profile/me" />
-                <Stack.Screen name="profile/[userId]" />
-                <Stack.Screen name="feed/[postId]" />
-                <Stack.Screen name="listing/[id]" />
-                <Stack.Screen name="emergency" />
-                <Stack.Screen name="polls" />
-              </Stack>
-            </View>
+            <DesktopShell />
           </ToastProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
+  );
+}
+
+/**
+ * On desktop: renders the persistent NavRail alongside the Stack navigator so
+ * that navigating to admin/polls/emergency/about never hides the sidebar.
+ * On mobile: just renders the Stack (bottom tabs handle navigation there).
+ */
+function DesktopShell() {
+  const c = useThemeColors();
+  const { isDesktop } = useResponsive();
+  const { ready, session } = useAuth();
+  const showRail = isDesktop && ready && !!session;
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        flexDirection: showRail ? 'row' : 'column',
+        backgroundColor: c.bg,
+      }}
+    >
+      {showRail ? <NavRail /> : null}
+      <View style={{ flex: 1, backgroundColor: c.bg }}>
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="admin" />
+          <Stack.Screen name="about" />
+          <Stack.Screen name="profile/me" />
+          <Stack.Screen name="profile/[userId]" />
+          <Stack.Screen name="feed/[postId]" />
+          <Stack.Screen name="listing/[id]" />
+          <Stack.Screen name="emergency" />
+          <Stack.Screen name="polls" />
+        </Stack>
+      </View>
+    </View>
   );
 }
