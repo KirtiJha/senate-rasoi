@@ -6,6 +6,7 @@ import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
+import { useUnreadDms } from '../../context/unread';
 import { Community, fetchCommunityById } from '../../lib/communities';
 import { SERVICES, ServiceCategory } from '../../lib/services';
 import { isSupabaseConfigured } from '../../lib/supabase';
@@ -47,6 +48,7 @@ export default function HomeScreen() {
   const { isDesktop } = useResponsive();
   const { profile, communityId } = useAuth();
   const c = useThemeColors();
+  const unread = useUnreadDms();
   const [community, setCommunity] = useState<Community | null>(null);
   const [updateBanner, setUpdateBanner] = useState<AppVersion | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -187,6 +189,16 @@ export default function HomeScreen() {
                     <Text className="font-sans-bold text-[15px] text-ink" numberOfLines={1}>{tile.label}</Text>
                     <Text className="mt-0.5 text-[12px] font-sans-md leading-[18px] text-muted" numberOfLines={2}>{tile.blurb}</Text>
                   </View>
+                  {tile.key === 'messages' && unread > 0 ? (
+                    <View
+                      className="absolute items-center justify-center rounded-full px-1.5"
+                      style={{ top: 12, right: 12, minWidth: 20, height: 20, backgroundColor: tile.color }}
+                    >
+                      <Text className="font-sans-bold text-white" style={{ fontSize: 11 }}>
+                        {unread > 9 ? '9+' : unread}
+                      </Text>
+                    </View>
+                  ) : null}
                 </Pressable>
               </View>
             ))}

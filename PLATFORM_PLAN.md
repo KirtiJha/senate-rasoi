@@ -1,7 +1,7 @@
 # Aangan — Community Platform Plan
 > **Living document.** Always kept in sync with the codebase. Update on every significant commit.
 > **App:** Aangan (आँगन — courtyard) · **From:** Senate Rasoi (single-society food app)
-> **Last updated:** 2026-06-08 (DMs + FTS run & runtime-verified; listings cross-society RLS fix in migration 0024 ⏸️ needs running)
+> **Last updated:** 2026-06-08 (migrations 0022–0024 all run; polish: unread-DM badge + recent searches. All web work to date is live)
 
 ---
 
@@ -70,7 +70,9 @@
 | Inquiry-count badge (My Listings) | ✅ | "N interested" badge per card via fetchInquiryCountsForOwner |
 | Direct messages (DMs) | ✅ | Phase 12b — `dm_threads`/`dm_messages` (0023, run) + RLS + realtime + push; inbox + thread screens, Message btn, NavRail + Home tile — LIVE & verified (dedupe, realtime, participant-only RLS) |
 | Full-text search | ✅ | `search_tsv` GIN indexes (0022, run); FTS-first searchListings + searchPosts; Search Listings/Posts toggle — LIVE & verified (stem match) |
-| Listings cross-society RLS fix | ✅ built | `listings_read` tightened to community scope (migration 0024) — ⏸️ run migration 0024 |
+| Listings cross-society RLS fix | ✅ | `listings_read` tightened to community scope (migration 0024, run) |
+| Unread-DM badge | ✅ | Shared `UnreadDmsProvider` (one realtime sub); badge on NavRail Messages + Home tile |
+| Recent searches | ✅ | `lib/recentSearches.ts` (AsyncStorage); chips in Search empty state |
 | Food photo resize | ✅ | Already done — uploadDishPhoto resizes 1000px/JPEG-0.7 |
 | PWA preconnect + shell precache | ✅ | Supabase preconnect/dns-prefetch in +html; sw.js precaches shell on install (cache → aangan-v2) |
 | Sentry / PostHog monitoring | ⬜ | Requires external accounts |
@@ -247,7 +249,7 @@ scoped to that society. Admins of a society can manage that society only. Platfo
 | 0021 | listing_messages (per-listing chat) + RLS + realtime + push trigger | ✅ |
 | 0022 | full-text search: search_tsv generated cols + GIN indexes (listings, posts) | ✅ run + verified |
 | 0023 | direct messages: dm_threads + dm_messages + RLS + realtime + push + dm_get_or_create_thread RPC | ✅ run + verified |
-| 0024 | tighten listings_read RLS to community scope (security fix) | ⏸️ written — run in Supabase |
+| 0024 | tighten listings_read RLS to community scope (security fix) | ✅ run |
 
 **Pending (future):**
 - `listing_reports` — moderation queue (schema designed; UI not yet built)
@@ -441,7 +443,7 @@ admin/societies.tsx      Super-admin society management (future)
 - ✅ `searchListings()` in `listings.ts` — communityId-scoped, category-filterable
 - ✅ Posts search — `searchPosts()` (FTS-first + ilike fallback); Search screen now has a **Listings / Posts** toggle
 - ✅ Supabase full-text indexes — `search_tsv` GIN on listings + posts (migration `0022`); `searchListings` upgraded to FTS-first
-- ⬜ Recent searches in AsyncStorage (future)
+- ✅ Recent searches in AsyncStorage (`lib/recentSearches.ts`) — chips in the Search empty state
 
 ---
 
@@ -739,7 +741,7 @@ Open **Supabase Dashboard → SQL Editor** and run these in order. Each file is 
 0021_listing_messages.sql    ← per-listing chat threads + push  ✅ run
 0022_fulltext_search.sql     ← search_tsv + GIN indexes         ✅ run
 0023_direct_messages.sql     ← DMs: threads, messages, RPC      ✅ run
-0024_listings_read_scope.sql ← community-scope listings_read    (NEW — run this)
+0024_listings_read_scope.sql ← community-scope listings_read    ✅ run
 ```
 
 ### Step 2 — Create Supabase Storage bucket
@@ -871,11 +873,16 @@ last-message bump, mark-read; FTS stem-matching on listings ("dancing"→"dance"
 
 **⏸️ User action — run `0024_listings_read_scope.sql`** to apply the listings cross-society RLS fix.
 
-**Code — next candidates:**
-- ⬜ Lighthouse ≥90 audit pass (PWA/perf/a11y) — needs a deployed build to measure
-- ⬜ Recent searches (AsyncStorage) + Supabase Storage image transforms for thumbnails
-- ⬜ Unread-DM badge surfaced on the Messages nav entry (count fn `fetchUnreadThreadCount` exists)
-- ✅ **Security:** `listings_read` cross-society leak fixed — community-scoped in migration `0024` (⏸️ run it).
+**Code — polish shipped (2026-06-08):**
+- ✅ **Unread-DM badge** — shared `UnreadDmsProvider` (one realtime sub) → badge on NavRail "Messages" + Home Messages tile (`9+` cap)
+- ✅ **Recent searches** — `lib/recentSearches.ts` (AsyncStorage, deduped, max 8); tappable chips in the Search empty state with Clear; saved on submit + result tap
+- ✅ **Security:** `listings_read` cross-society leak fixed — community-scoped in migration `0024` (run)
+- ⏭️ **Skipped — Supabase Storage image transforms:** the render/transform endpoint is a paid (Pro) feature; on the free tier it 400s and would break thumbnails. 1000px upload + memory-disk cache already cover the win.
+
+**Code — remaining candidates:**
+- ⬜ Lighthouse ≥90 audit pass (PWA/perf/a11y) — needs a deployed build + the Lighthouse tool to measure
+- ⬜ Per-thread unread indicators inside the DM inbox (nav badge done)
+- ⬜ Tighten other `auth.role()='authenticated'`-only reads if any remain (audit dishes/tiffin)
 
 **When ready for native (Phase 10):**
 8. **⏸️ Apple Developer account** ($99/yr) → TestFlight → App Store
@@ -889,6 +896,7 @@ last-message bump, mark-read; FTS stem-matching on listings ("dancing"→"dance"
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-08 | **Polish: unread-DM badge + recent searches.** Migration 0024 run (listings RLS scoped). `UnreadDmsProvider` (one shared realtime sub) drives an unread-count badge on the NavRail "Messages" item + Home Messages tile. `lib/recentSearches.ts` (AsyncStorage, deduped, max 8) → tappable Recent chips in the Search empty state, saved on submit + result tap. Skipped Supabase Storage image transforms (paid Pro feature — would 400/break thumbnails on free tier). tsc clean. |
 | 2026-06-08 | **DMs + FTS verified; listings RLS security fix.** Migrations 0022 (FTS) + 0023 (DMs) run and **runtime-verified against prod** (DM thread dedupe, realtime, participant-only RLS with non-participant blocked, inbox bump, mark-read; FTS stem-match on listings + posts). Added migration `0024_listings_read_scope.sql` tightening `listings_read` from `auth.role()='authenticated'` to community-scoped (matches posts/listing_messages) — closes a cross-society listings read leak. ⏸️ run 0024. |
 | 2026-06-08 | **Phase 12b DMs + full-text search + PWA polish.** (1) Verified Phase 12a chat end-to-end against prod Supabase (insert/select RLS, persistence, realtime publication — PASS). (2) **DMs (12b):** migration `0023` (dm_threads/dm_messages + RLS + realtime + push + `dm_get_or_create_thread` RPC), `lib/dm.ts`, inbox + thread screens, Message button on profile, NavRail "Messages" + Home tile. (3) **Full-text search:** migration `0022` (search_tsv GIN on listings+posts), FTS-first `searchListings` + new `searchPosts`, Search screen Listings/Posts toggle. (4) **PWA:** Supabase preconnect/dns-prefetch in +html, sw.js precaches shell on install (cache→aangan-v2). Confirmed food photo resize already shipped. `tsc --noEmit` clean. ⏸️ run migrations 0022 + 0023. |
 | 2026-06-08 | **NavRail collapse fix + tsc clean.** Collapsed left rail: "New Post" CTA and theme-toggle labels were missing `numberOfLines={1}`, so at `maxWidth:0` the hidden text wrapped vertically and ballooned the coral button height — added `numberOfLines={1}` to both (matches NavItemRow). Fixed the 2 remaining `tsc` errors: `router.push('/food' as any)` in index.tsx (Expo typed-routes) and `resolved` in theme.tsx now collapses `ColorSchemeName` (incl. `unspecified`/null) to `'light'\|'dark'`. `npx tsc --noEmit` now fully clean. |

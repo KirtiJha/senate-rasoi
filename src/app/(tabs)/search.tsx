@@ -11,6 +11,7 @@ import { searchListings } from '../../lib/listings';
 import {
   POST_CATEGORY_COLORS, POST_CATEGORY_ICONS, POST_CATEGORY_LABELS, PostRow, searchPosts,
 } from '../../lib/posts';
+import { addRecentSearch, clearRecentSearches, getRecentSearches } from '../../lib/recentSearches';
 import { SERVICES } from '../../lib/services';
 import { ListingRow } from '../../lib/types';
 import { layout, useThemeColors } from '../../theme';
@@ -31,7 +32,14 @@ export default function SearchScreen() {
   const [postResults, setPostResults] = useState<PostRow[]>([]);
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [recent, setRecent] = useState<string[]>([]);
   const inputRef = useRef<TextInput>(null);
+
+  useEffect(() => { getRecentSearches().then(setRecent); }, []);
+
+  const commitSearch = useCallback((term: string) => {
+    if (term.trim()) addRecentSearch(term).then(setRecent);
+  }, []);
 
   const doSearch = useCallback(async (q: string, cat: string | null, m: Mode) => {
     if (!q.trim() && !(m === 'listings' && cat)) {
@@ -77,6 +85,7 @@ export default function SearchScreen() {
             style={{ outline: 'none' } as any}
             returnKeyType="search"
             clearButtonMode="while-editing"
+            onSubmitEditing={() => commitSearch(query)}
             autoFocus
           />
           {query.length > 0 ? (
@@ -141,7 +150,7 @@ export default function SearchScreen() {
             keyExtractor={(item: ListingRow) => item.id}
             renderItem={({ item }: { item: ListingRow }) => (
               <View style={{ flex: 1, padding: 6 }}>
-                <ListingCard listing={item} onPress={() => router.push(`/listing/${item.id}` as any)} />
+                <ListingCard listing={item} onPress={() => { commitSearch(query); router.push(`/listing/${item.id}` as any); }} />
               </View>
             )}
             contentContainerStyle={{ padding: 10, paddingBottom: 40 }}
@@ -158,14 +167,38 @@ export default function SearchScreen() {
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
             {!hasSearched ? (
-              <View className="items-center py-20">
-                <Ionicons name="search-outline" size={44} color={c.faint} />
-                <Text className="mt-3 font-display text-xl text-ink">Search your society</Text>
-                <Text className="mt-1 max-w-xs text-center text-[14px] text-muted">
-                  {mode === 'listings'
-                    ? 'Find services, items for sale, tutors, and more posted by your neighbours.'
-                    : 'Find announcements, issues, events, and discussions from the community feed.'}
-                </Text>
+              <View>
+                {recent.length > 0 ? (
+                  <View className="mb-6">
+                    <View className="mb-2.5 flex-row items-center justify-between">
+                      <Text className="text-[12px] font-sans-sb uppercase tracking-wider text-muted">Recent</Text>
+                      <Pressable onPress={() => { clearRecentSearches(); setRecent([]); }} hitSlop={8}>
+                        <Text className="text-[12px] font-sans-sb text-accent">Clear</Text>
+                      </Pressable>
+                    </View>
+                    <View className="flex-row flex-wrap gap-2">
+                      {recent.map((term) => (
+                        <Pressable
+                          key={term}
+                          onPress={() => { setQuery(term); commitSearch(term); }}
+                          className="flex-row items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 active:opacity-70"
+                        >
+                          <Ionicons name="time-outline" size={13} color={c.faint} />
+                          <Text className="text-[13px] font-sans-md text-ink">{term}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                ) : null}
+                <View className="items-center py-16">
+                  <Ionicons name="search-outline" size={44} color={c.faint} />
+                  <Text className="mt-3 font-display text-xl text-ink">Search your society</Text>
+                  <Text className="mt-1 max-w-xs text-center text-[14px] text-muted">
+                    {mode === 'listings'
+                      ? 'Find services, items for sale, tutors, and more posted by your neighbours.'
+                      : 'Find announcements, issues, events, and discussions from the community feed.'}
+                  </Text>
+                </View>
               </View>
             ) : searching ? (
               mode === 'listings' ? (
@@ -186,7 +219,7 @@ export default function SearchScreen() {
                 </Text>
                 <View style={{ gap: 10 }}>
                   {postResults.map((p) => (
-                    <PostResultRow key={p.id} post={p} onPress={() => router.push(`/feed/${p.id}` as any)} c={c} />
+                    <PostResultRow key={p.id} post={p} onPress={() => { commitSearch(query); router.push(`/feed/${p.id}` as any); }} c={c} />
                   ))}
                 </View>
               </>

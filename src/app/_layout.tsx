@@ -26,6 +26,7 @@ import { useResponsive } from '../components/ui';
 import { AuthProvider } from '../context/auth';
 import { ThemeProvider } from '../context/theme';
 import { ToastProvider } from '../context/toast';
+import { UnreadDmsProvider } from '../context/unread';
 import { useAuth } from '../context/auth';
 import { useIsDark, useThemeColors } from '../theme';
 
@@ -74,10 +75,12 @@ function AppShell() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.bg }}>
       <SafeAreaProvider>
         <AuthProvider>
-          <ToastProvider>
-            <StatusBar style={isDark ? 'light' : 'dark'} />
-            <DesktopShell />
-          </ToastProvider>
+          <UnreadDmsProvider>
+            <ToastProvider>
+              <StatusBar style={isDark ? 'light' : 'dark'} />
+              <DesktopShell />
+            </ToastProvider>
+          </UnreadDmsProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

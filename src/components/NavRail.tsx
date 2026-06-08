@@ -5,6 +5,7 @@ import { Animated, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/auth';
 import { useThemePreference } from '../context/theme';
+import { useUnreadDms } from '../context/unread';
 import { useThemeColors } from '../theme';
 import { Wordmark } from './Brand';
 
@@ -50,11 +51,13 @@ function NavItemRow({
   path,
   colors,
   av,
+  badge = 0,
 }: {
   item: NavItem;
   path: string;
   colors: ReturnType<typeof useThemeColors>;
   av: AnimVals;
+  badge?: number;
 }) {
   const active = item.href === '/' ? path === '/' : path.startsWith(item.href);
   const iconColor = item.color
@@ -92,11 +95,33 @@ function NavItemRow({
         <Animated.View
           style={{ marginLeft: av.iconMarginL, paddingVertical: 10, paddingLeft: 12 }}
         >
-          <Ionicons
-            name={active ? item.activeIcon : item.icon}
-            size={21}
-            color={iconColor}
-          />
+          <View>
+            <Ionicons
+              name={active ? item.activeIcon : item.icon}
+              size={21}
+              color={iconColor}
+            />
+            {badge > 0 ? (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: -5,
+                  right: -9,
+                  minWidth: 16,
+                  height: 16,
+                  borderRadius: 8,
+                  paddingHorizontal: 3,
+                  backgroundColor: colors.accent,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ color: '#fff', fontSize: 9, fontFamily: 'HankenGrotesk_700Bold' }}>
+                  {badge > 9 ? '9+' : badge}
+                </Text>
+              </View>
+            ) : null}
+          </View>
         </Animated.View>
         {/* Label fades out as rail collapses */}
         <Animated.View
@@ -155,6 +180,7 @@ export function NavRail() {
   const { isAdmin } = useAuth();
   const { resolved, toggle: toggleTheme } = useThemePreference();
   const isDark = resolved === 'dark';
+  const unread = useUnreadDms();
 
   const [collapsed, setCollapsed] = useState(false);
   const anim = useRef(new Animated.Value(0)).current; // 0 = expanded, 1 = collapsed
@@ -250,7 +276,14 @@ export function NavRail() {
         {/* ── Primary nav ── */}
         <View style={{ paddingHorizontal: 10 }}>
           {PRIMARY_ITEMS.map((item) => (
-            <NavItemRow key={item.href} item={item} path={path} colors={colors} av={av} />
+            <NavItemRow
+              key={item.href}
+              item={item}
+              path={path}
+              colors={colors}
+              av={av}
+              badge={item.href === '/messages' ? unread : 0}
+            />
           ))}
         </View>
 
