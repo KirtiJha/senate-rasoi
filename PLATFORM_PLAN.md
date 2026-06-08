@@ -49,9 +49,16 @@
 | About page + version | ✅ | about.tsx with version, features, technical info |
 | Pagination (category feeds) | ✅ | limit/offset + Load more in c/[category].tsx |
 | React.memo (ListingCard) | ✅ | ListingCard wrapped in memo |
-| Mobile nav to Polls/Emergency | ⬜ | Only on desktop NavRail — need mobile entry points |
-| Posts feed pagination | ⬜ | Currently loads all posts; needs limit/offset + Load more |
-| Full performance (FlashList, Sentry) | ⬜ | Phase 9 items — planned |
+| Mobile nav to Polls/Emergency | ✅ | Community section on Home hub with Polls + Emergency tiles |
+| Posts feed pagination | ✅ | PAGE=20, Load more button, "You're all caught up" footer |
+| Announce-only for admins | ✅ | Announcement filtered from ComposeModal for non-admins |
+| PostCard memo + FlashList | ✅ | PostCard wrapped in memo; posts feed uses FlashList |
+| Skeleton loaders (posts feed) | ✅ | Animated pulsing PostCardSkeleton |
+| Update notification banner | ✅ | Checks app_versions on Home load; dismissable / force-update modes |
+| Push token capture | ⬜ | Architecture exists (migration 0005); registration code missing |
+| Per-listing chat threads | ⬜ | Phase 12a — highest priority next feature |
+| Direct messages (DMs) | ⬜ | Phase 12b — deferred after 12a stable |
+| Sentry / PostHog monitoring | ⬜ | Requires external accounts |
 | iOS / Android (EAS) | ⬜ | After web version is stable |
 | App store submissions | ⬜ | After iOS/Android phase |
 
@@ -588,30 +595,246 @@ admin/societies.tsx      Super-admin society management (future)
 | 17 | Polls voting model | ✅ Upsert with `onConflict: poll_id,user_id` — users can change their vote; one vote per poll |
 | 18 | Carpooling | ✅ Added as listing service category (not a separate posts engine) — same CRUD pattern |
 | 19 | Saved listings | ✅ Composite PK `(user_id, listing_id)`; 23505 conflict silently swallowed on duplicate save |
+| 20 | In-app chat model | ✅ WhatsApp deep-link covers Phase 1–11; Phase 12a adds per-listing threads; full DMs deferred to 12b |
+| 21 | Push notifications | ✅ DB architecture complete (pg_net triggers); token capture deferred to after native builds (Phase 10) |
+| 22 | SMS / OTP | ✅ Auth uses PIN (not SMS OTP); no SMS gateway needed — intentional, keeps infra simple |
 
 ---
 
-## 10. Immediate Next Steps (ordered)
+## 10. Notifications — Current State
 
-**User must do (blocking):**
-1. **⏸️ Run migrations 0018–0020** in Supabase SQL editor (saved_listings, emergency_contacts, polls)
-2. **⏸️ Run migrations 0012–0017** if not already done (posts, comments, join_requests, delete_account, app_versions, is_admin)
-3. **⏸️ Create `listing-photos` bucket** in Supabase Storage (public bucket)
+### WhatsApp (deep-link, NOT API)
+WhatsApp is used as a **deep-link redirect** (opens `https://wa.me/<number>?text=...`), NOT an API integration.
 
-**Code — high priority:**
-4. **⬜ Mobile nav to Polls/Emergency** — add entry points reachable from mobile (You tab quick links or Home hub tiles)
-5. **⬜ Posts feed pagination** — currently loads all; add limit/offset + Load more (same pattern as c/[category].tsx)
-6. **⬜ Announcement-only for admins** — filter `announcement` category out of ComposeModal for non-admins
+| Trigger | Status | How it works |
+|---------|--------|-------------|
+| Buyer orders food | ✅ | `buildWhatsAppOrderLink()` — opens WhatsApp with pre-filled order message to chef's number |
+| Buyer enquires about listing | ✅ | `buildInquiryWhatsAppLink()` — opens WhatsApp to listing owner's number |
+| Any other action | ❌ | No WhatsApp API integration exists |
 
-**Code — performance (Phase 9):**
-7. **⬜ Memoize PostCard** — extract from inline in feed.tsx, wrap in React.memo
-8. **⬜ FlashList** — replace ScrollView+map in category feeds and posts feed
-9. **⬜ Skeleton loaders** — for posts feed and search results
-10. **⬜ Update notification banner** — check app_versions table on Home load; show banner if newer version exists
+**Intentional design:** No paid WhatsApp Business API needed. Works via `wa.me` URL which every Indian smartphone user understands.
 
-**When ready for native:**
-11. **⏸️ Apple Developer account** ($99/yr) → TestFlight → App Store
-12. **⏸️ Google Play account** ($25) → internal track → Play Store
+**Gap:** Users must have WhatsApp installed, and must have shared their WhatsApp number on their profile. If a number is missing, the button silently does nothing useful.
+
+### SMS / OTP
+Auth uses phone number as a **fake email alias** (`phone@senate.app`) with a **6-digit PIN as password**. There is **no real SMS OTP** — the user sets a PIN at signup and uses it to sign in. No SMS gateway (Twilio, MSG91, etc.) is integrated.
+
+### Expo Push Notifications (native iOS/Android only)
+The architecture exists but registration is **incomplete**:
+
+| Component | Status |
+|-----------|--------|
+| `push_tokens` table (migration 0005) | ✅ Exists |
+| `notify_user()` Postgres function via `pg_net` | ✅ Exists |
+| Order status change → buyer notified | ✅ DB trigger fires |
+| New inquiry → listing owner notified | ✅ DB trigger fires |
+| **Token capture code in app** | ❌ **MISSING** — no call to `Notifications.getExpoPushTokenAsync()` |
+| New post/comment notification | ❌ Not implemented |
+| New poll notification | ❌ Not implemented |
+| Web push | ❌ Not supported (Expo tokens are native-only) |
+
+**What's missing:** When the app starts on a native device, it needs to call `Notifications.getExpoPushTokenAsync()` (with the EAS project ID) and upsert the result into `push_tokens`. This one missing step means all existing DB triggers are silently firing but have no token to deliver to.
+
+This only matters after native iOS/Android builds are ready (Phase 10). On web, push simply doesn't apply.
+
+---
+
+## 11. In-App Chat — Analysis & Plan
+
+### What exists today
+| Feature | Chat capability |
+|---------|----------------|
+| Feed posts | ✅ Realtime comment threads (post_comments) |
+| Listing contact | ⚡ WhatsApp deep-link only — no in-app history |
+| Food orders | ⚡ WhatsApp deep-link only |
+| Direct messages | ❌ None |
+| Carpool coordination | ⚡ WhatsApp only |
+
+### Where in-app chat adds real value
+
+**1. Per-listing inquiry threads (high value, low complexity)**
+Right now, when a user enquires about a tutor or service, it opens WhatsApp. This loses the conversation from the app and requires the person to share their personal phone. A **per-listing thread** (same pattern as post_comments but scoped to a listing) lets:
+- Buyer ask: "Are you available on Saturdays?"
+- Owner reply in-app
+- Both sides see the history in the app
+- Admin can moderate if needed
+
+**2. Carpool coordination threads (high value)**
+Carpool listings inherently need multi-turn conversation (pickup point changes, last-minute cancellations). A thread per carpool listing is the right model.
+
+**3. Direct messages / neighbour DMs (medium value, high complexity)**
+Useful for private conversation that isn't tied to a listing (e.g., "Hey, can I borrow your parking slot this weekend?"). Full N-to-N DM system requires a `conversations` + `messages` schema, read receipts, notification infrastructure. Defer until after per-listing threads are stable.
+
+### Recommendation — Phase 12: In-App Chat
+
+**Phase 12a (per-listing threads — DO THIS FIRST):**
+- New table: `listing_messages (id, listing_id, author_id, body, created_at)`
+- RLS: community members of the listing's society can read; listing owner + inquirer can write
+- Realtime subscription on `listing_id`
+- UI: collapsible "Chat with owner" section at the bottom of listing detail, push notification on new message
+- Migration: `0021_listing_messages.sql`
+
+**Phase 12b (direct messages — DEFER):**
+- Tables: `dm_conversations (id, participant_a, participant_b, last_message_at)`, `dm_messages (id, conversation_id, author_id, body, read_at, created_at)`
+- UI: Messages icon in tab bar / NavRail, conversation list, chat thread
+- Complex — save for after Phase 12a is stable and used
+
+---
+
+## 12. End-to-End Testing Guide
+
+### Step 1 — Run all Supabase migrations
+
+Open **Supabase Dashboard → SQL Editor** and run these in order. Each file is in `/supabase/migrations/`:
+
+```
+0001_init.sql                ← communities, profiles, dishes, orders
+0002_orders.sql              ← order RPCs
+0003_auth_profiles.sql       ← auth + roles
+0004_order_lifecycle.sql     ← full order lifecycle
+0005_push.sql                ← push_tokens, notify_user() trigger
+0006_serve_date.sql          ← serve_date on dishes
+0007_tiffin.sql              ← tiffin_plans, subscriptions
+0008_communities_meta.sql    ← communities.slug + address
+0009_profile_community.sql   ← profiles.community_id FK
+0010_listings.sql            ← listings table + RLS + realtime
+0011_inquiries.sql           ← inquiries table + push trigger
+0012_posts.sql               ← posts table + RLS + realtime
+0013_post_comments.sql       ← post_comments + realtime
+0014_society_requests.sql    ← society_join_requests
+0015_delete_account_rpc.sql  ← delete_own_account() RPC
+0016_app_versions.sql        ← app_versions table + seed row
+0017_is_admin_fn.sql         ← is_admin() function + RLS updates
+0018_saved_listings.sql      ← saved_listings table
+0019_emergency_contacts.sql  ← emergency_contacts table
+0020_polls.sql               ← polls + poll_options + poll_votes
+```
+
+### Step 2 — Create Supabase Storage bucket
+
+In **Supabase Dashboard → Storage → New bucket**:
+- Name: `listing-photos`
+- Public: **Yes** (check the toggle)
+- Click Create
+
+### Step 3 — Create a test society (community)
+
+In **Supabase → SQL Editor**:
+```sql
+insert into public.communities (name, slug, address)
+values ('Green Valley Apartments', 'green-valley', 'Sector 12, Noida, UP')
+returning id;
+```
+Copy the returned UUID — you'll use it in Step 5.
+
+### Step 4 — Sign up your first user (yourself)
+
+1. Open the web app (`npx expo start --web` or deployed URL)
+2. Enter your phone number and create a 6-digit PIN
+3. Fill in name, flat number, WhatsApp
+4. In the society picker, select the society you just created
+5. Complete sign-up
+
+### Step 5 — Grant admin role to your account
+
+In **Supabase → SQL Editor** (replace `<phone>` with your number):
+```sql
+update public.profiles
+set roles = array['foodie', 'chef', 'admin']
+where phone = '<your-phone-number>';
+```
+
+Or by user ID (find it in the auth.users table or profiles table):
+```sql
+update public.profiles
+set roles = array['foodie', 'chef', 'admin']
+where id = '<your-uuid>';
+```
+
+### Step 6 — Verify admin access in the app
+
+Reload the app. You should now see:
+- ✅ "Admin · manage members & roles" row in the You tab
+- ✅ "Admin" link in the desktop NavRail
+- ✅ Admin shield icon in the You tab header area
+- ✅ "+" button on Emergency Contacts screen
+- ✅ "Announcement" category available in Feed compose
+- ✅ Can close/delete polls
+
+### Step 7 — Feature test checklist
+
+**Home Hub:**
+- [ ] 15 service tiles visible (food + 14 categories)
+- [ ] "Community" section shows Polls + Emergency tiles
+- [ ] Tapping tiles navigates to correct screen
+- [ ] Society badge shows your society name
+- [ ] Greeting changes based on time of day
+
+**Food engine:**
+- [ ] Post a dish (as chef): name, slot, veg type, price, photo (optional)
+- [ ] Order a dish (as another account or same in food tab): qty, confirm
+- [ ] Order lifecycle: accept → cooking → delivered (Kitchen section)
+- [ ] Tiffin: create a recurring tiffin service
+
+**Listings:**
+- [ ] Post a listing in any of the 14 categories
+- [ ] Photo upload (tap camera area in CreateListingForm)
+- [ ] View listing detail — bookmark button (top-right of hero)
+- [ ] Tap "Contact on WhatsApp" — should open WhatsApp with pre-filled message
+- [ ] Saved listings appear in You → Saved tab
+- [ ] Search: type keywords in Search tab, filter by category chip
+
+**Community Feed:**
+- [ ] Post a General/Issue/Feedback/Event/Lost & Found message
+- [ ] Admin: post an Announcement (non-admin shouldn't see this option)
+- [ ] Comment on a post (from the post thread screen)
+- [ ] Admin: pin a post, mark issue as resolved
+- [ ] Realtime: open Feed in two tabs/devices, post from one → appears in the other
+
+**Polls:**
+- [ ] Home → Polls tile → polls screen
+- [ ] Create a poll (any member) with 2+ options
+- [ ] Vote on a poll — results bar appears
+- [ ] Admin: close a poll, delete a poll
+
+**Emergency Contacts:**
+- [ ] Home → Emergency tile → emergency screen
+- [ ] Admin: tap "+" → add a contact with name, phone, role type
+- [ ] Tap dial button → should trigger a phone call (`tel:` link)
+- [ ] Admin: delete a contact
+
+**Profile:**
+- [ ] You tab → tap avatar → profile/me.tsx
+- [ ] Edit name, flat, WhatsApp, UPI → Save Changes
+- [ ] Tap any listing owner's name → public profile page (profile/[userId])
+
+**Admin panel (admin only):**
+- [ ] You tab → Admin row → admin.tsx
+- [ ] Members tab: see all members, toggle chef/admin roles
+- [ ] Requests tab: see join requests (submit one from a second account to test)
+
+---
+
+## 13. Immediate Next Steps (updated)
+
+**You must do (blocking — nothing works without these):**
+1. **⏸️ Run all migrations 0001–0020** in Supabase SQL editor (see Section 12 for exact order)
+2. **⏸️ Create `listing-photos` storage bucket** in Supabase (public, see Section 12 Step 2)
+3. **⏸️ Seed a test community row** and grant yourself admin (see Section 12 Steps 3–5)
+
+**Code — next features:**
+4. **⬜ Phase 12a: Per-listing chat threads** — `listing_messages` table + in-app chat on listing detail (highest value, enables all service coordination without WhatsApp dependency)
+5. **⬜ Push token capture** — add `Notifications.getExpoPushTokenAsync()` call at app startup, save to `push_tokens` (only needed once native builds are ready — Phase 10)
+
+**Code — polish:**
+6. **⬜ Skeleton loaders for search results** — currently shows "Searching…" text; could have shimmer cards
+7. **⬜ Inquiry count badge on listing owner's listings** — "3 neighbours interested" on MyListingsSection cards
+
+**When ready for native (Phase 10):**
+8. **⏸️ Apple Developer account** ($99/yr) → TestFlight → App Store
+9. **⏸️ Google Play account** ($25) → internal track → Play Store
+10. **⏸️ Push token registration** — add on app startup after native build confirmed working
+11. **⏸️ App icons** — 1024×1024 iOS icon + Android adaptive icon foreground layer
 
 ---
 
@@ -619,6 +842,7 @@ admin/societies.tsx      Super-admin society management (future)
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-08 | Plan major update: added E2E testing guide (Section 12), notifications analysis (Section 10), in-app chat analysis + Phase 12 plan (Section 11). Phase 9 items all complete: mobile nav to community features, posts pagination, announcement admin-only, PostCard memo, FlashList, skeletons, update banner. |
 | 2026-06-08 | Phase 11 complete: Polls, Emergency Contacts, Saved Listings, Carpooling, Public Profile, NavRail updates, bookmark button on listing detail. Migrations 0018–0020 added. |
 | 2026-06-07 | Added astrology (Astrology) to services.ts. Home hub now shows 14 categories. |
 | 2026-06-07 | Phase 3 complete: added daycare (Day Care), fitness (Yoga & Fitness), arts (Arts & Activities) to services.ts. Home hub now shows 13 categories. |
