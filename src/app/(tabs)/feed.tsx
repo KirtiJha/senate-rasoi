@@ -1,12 +1,13 @@
+import { FlashList } from '@shopify/flash-list';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView, Modal, Platform, Pressable,
+  ActivityIndicator, Animated, KeyboardAvoidingView, Modal, Platform, Pressable,
   RefreshControl, ScrollView, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Button, Container, useResponsive } from '../../components/ui';
+import { Avatar, Button, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import {
@@ -34,22 +35,44 @@ export default function FeedScreen() {
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { userId, communityId, profile } = useAuth();
+  const { userId, communityId, profile, isAdmin } = useAuth();
+
+  const PAGE = 20;
 
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [activeFilter, setActiveFilter] = useState<PostCategory | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(0);
   const [showCompose, setShowCompose] = useState(false);
 
   const load = useCallback(async () => {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
     try {
       const cat = activeFilter === 'all' ? undefined : activeFilter;
-      setPosts(await fetchPosts(communityId, cat));
+      const rows = await fetchPosts(communityId, cat, 0, PAGE);
+      setPosts(rows);
+      setPage(0);
+      setHasMore(rows.length === PAGE);
     } catch { toast.show('Could not load posts'); }
     finally { setLoading(false); }
   }, [communityId, activeFilter, toast]);
+
+  const loadMore = useCallback(async () => {
+    if (!communityId || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const cat = activeFilter === 'all' ? undefined : activeFilter;
+      const nextPage = page + 1;
+      const rows = await fetchPosts(communityId, cat, nextPage * PAGE, PAGE);
+      setPosts((prev) => [...prev, ...rows]);
+      setPage(nextPage);
+      setHasMore(rows.length === PAGE);
+    } catch { toast.show('Could not load more posts'); }
+    finally { setLoadingMore(false); }
+  }, [communityId, activeFilter, loadingMore, hasMore, page]);
 
   useEffect(() => {
     setLoading(true);
@@ -85,19 +108,21 @@ export default function FeedScreen() {
         </ScrollView>
       </View>
 
-      <ScrollView
+      <FlashList
+        data={loading ? [] : posts}
+        keyExtractor={(item: PostRow) => item.id}
+        renderItem={({ item }: { item: PostRow }) => <PostCard post={item} userId={userId} />}
+        estimatedItemSize={140}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
-      >
-        <Container>
-          {loading ? (
-            <View className="gap-3">
-              {[1, 2, 3].map((i) => (
-                <View key={i} className="h-28 rounded-3xl bg-surface" />
-              ))}
+        ListEmptyComponent={
+          loading ? (
+            <View style={{ gap: 12 }}>
+              {[1, 2, 3].map((i) => <PostCardSkeleton key={i} />)}
             </View>
-          ) : posts.length === 0 ? (
+          ) : (
             <View className="items-center py-20">
               <Text style={{ fontSize: 44 }} className="mb-3">💬</Text>
               <Text className="font-display text-xl text-ink mb-1">
@@ -107,15 +132,24 @@ export default function FeedScreen() {
                 Be the first to start a conversation in your society.
               </Text>
             </View>
-          ) : (
-            <View className="gap-3">
-              {posts.map((post) => (
-                <PostCard key={post.id} post={post} userId={userId} onPress={() => router.push(`/feed/${post.id}` as any)} c={c} />
-              ))}
-            </View>
-          )}
-        </Container>
-      </ScrollView>
+          )
+        }
+        ListFooterComponent={
+          hasMore ? (
+            <Pressable
+              onPress={loadMore}
+              disabled={loadingMore}
+              className="mt-3 items-center rounded-2xl border border-line bg-surface py-3.5 active:opacity-70"
+            >
+              {loadingMore
+                ? <ActivityIndicator size="small" color={c.muted} />
+                : <Text className="font-sans-sb text-[14px] text-muted">Load more</Text>}
+            </Pressable>
+          ) : posts.length > 0 ? (
+            <Text className="py-4 text-center text-[12px] text-faint">You're all caught up</Text>
+          ) : null
+        }
+      />
 
       {/* FAB */}
       <View className="absolute bottom-5 right-5">
@@ -136,19 +170,67 @@ export default function FeedScreen() {
         communityId={communityId}
         authorId={userId}
         authorName={profile?.name}
+        isAdmin={isAdmin}
       />
     </View>
   );
 }
 
-function PostCard({ post, userId, onPress, c }: { post: PostRow; userId: string | null; onPress: () => void; c: ReturnType<typeof useThemeColors> }) {
+function PostCardSkeleton() {
+  const c = useThemeColors();
+  const opacity = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 750, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 750, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [opacity]);
+
+  const S = ({ w, h, r = 6 }: { w: string | number; h: number; r?: number }) => (
+    <View style={{ width: w as any, height: h, borderRadius: r, backgroundColor: c.inset }} />
+  );
+
+  return (
+    <Animated.View style={[{ opacity, borderWidth: 1, borderColor: c.line, borderRadius: 24, overflow: 'hidden' }]}>
+      {/* colour strip */}
+      <View style={{ height: 3, backgroundColor: c.inset }} />
+      <View style={{ padding: 16 }}>
+        {/* category chip + timestamp */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <S w={80} h={18} r={20} />
+          <S w={40} h={12} r={6} />
+        </View>
+        {/* body lines */}
+        <S w="90%" h={13} r={6} />
+        <View style={{ height: 5 }} />
+        <S w="70%" h={13} r={6} />
+        <View style={{ height: 5 }} />
+        <S w="55%" h={13} r={6} />
+        {/* author row */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 }}>
+          <S w={22} h={22} r={11} />
+          <S w={100} h={11} r={6} />
+        </View>
+      </View>
+    </Animated.View>
+  );
+}
+
+const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userId: string | null }) {
+  const router = useRouter();
+  const c = useThemeColors();
   const color = POST_CATEGORY_COLORS[post.category];
   const icon = POST_CATEGORY_ICONS[post.category];
   const isOwn = post.author_id === userId;
   const timeAgo = formatTimeAgo(post.created_at);
 
   return (
-    <Pressable onPress={onPress} className="rounded-3xl bg-surface active:opacity-85" style={{ borderWidth: 1, borderColor: c.line }}>
+    <Pressable onPress={() => router.push(`/feed/${post.id}` as any)} className="rounded-3xl bg-surface active:opacity-85" style={{ borderWidth: 1, borderColor: c.line }}>
       {/* Category accent strip */}
       <View style={{ height: 3, backgroundColor: color, borderTopLeftRadius: 20, borderTopRightRadius: 20 }} />
 
@@ -192,14 +274,17 @@ function PostCard({ post, userId, onPress, c }: { post: PostRow; userId: string 
       </View>
     </Pressable>
   );
-}
+});
 
-function ComposeModal({ visible, onClose, onPosted, communityId, authorId, authorName }: {
+function ComposeModal({ visible, onClose, onPosted, communityId, authorId, authorName, isAdmin }: {
   visible: boolean; onClose: () => void; onPosted: () => void;
-  communityId: string; authorId: string | null; authorName?: string;
+  communityId: string; authorId: string | null; authorName?: string; isAdmin: boolean;
 }) {
   const toast = useToast();
   const c = useThemeColors();
+  const availableCategories = ALL_POST_CATEGORIES.filter(
+    (cat) => cat !== 'announcement' || isAdmin,
+  );
   const [category, setCategory] = useState<PostCategory>('general');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -221,13 +306,13 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {/* Header */}
+        {/* Header — close + title only, no post button here */}
         <View className="flex-row items-center justify-between border-b border-line px-4 py-4">
           <Pressable onPress={onClose} hitSlop={10}>
             <Ionicons name="close" size={24} color={c.muted} />
           </Pressable>
           <Text className="font-sans-sb text-[16px] text-ink">New Post</Text>
-          <Button label={posting ? 'Posting…' : 'Post'} size="sm" loading={posting} onPress={handlePost} />
+          <View style={{ width: 24 }} />
         </View>
 
         <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
@@ -235,7 +320,7 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
           <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Category</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
             <View className="flex-row gap-2">
-              {ALL_POST_CATEGORIES.map((cat) => {
+              {availableCategories.map((cat) => {
                 const color = POST_CATEGORY_COLORS[cat];
                 const on = category === cat;
                 return (
@@ -285,6 +370,19 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
             autoFocus
           />
         </ScrollView>
+
+        {/* Sticky footer — Post button lives here, just above the keyboard */}
+        <View className="border-t border-line px-4 py-3">
+          <Button
+            label={posting ? 'Posting…' : 'Post to feed'}
+            icon="send"
+            size="lg"
+            fullWidth
+            loading={posting}
+            disabled={!body.trim()}
+            onPress={handlePost}
+          />
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   );

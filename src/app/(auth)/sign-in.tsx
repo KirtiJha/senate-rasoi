@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { Brandfull } from '../../components/Brand';
@@ -45,13 +45,13 @@ export default function SignInScreen() {
   }, []);
 
   const filteredCommunities = communities.filter(
-    (c) =>
-      c.name.toLowerCase().includes(communitySearch.toLowerCase()) ||
-      (c.address ?? '').toLowerCase().includes(communitySearch.toLowerCase())
+    (comm: Community) =>
+      comm.name.toLowerCase().includes(communitySearch.toLowerCase()) ||
+      (comm.address ?? '').toLowerCase().includes(communitySearch.toLowerCase())
   );
 
   const toggleRole = (r: Role) =>
-    setRoles((cur) => (cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r]));
+    setRoles((cur: Role[]) => (cur.includes(r) ? cur.filter((x: Role) => x !== r) : [...cur, r]));
 
   const submit = async () => {
     if (!isSupabaseConfigured) {
@@ -138,7 +138,7 @@ export default function SignInScreen() {
             secureTextEntry
             maxLength={6}
             value={code}
-            onChangeText={(t) => setCode(t.replace(/\D/g, ''))}
+            onChangeText={(t: string) => setCode(t.replace(/\D/g, ''))}
           />
 
           {mode === 'up' ? (
@@ -226,7 +226,7 @@ export default function SignInScreen() {
           </View>
 
           <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-            {filteredCommunities.map((comm) => (
+            {filteredCommunities.map((comm: Community) => (
               <Pressable
                 key={comm.id}
                 onPress={() => { setSelectedCommunity(comm); setShowPicker(false); }}

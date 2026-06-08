@@ -8,6 +8,7 @@ import { KitchenSection } from '../../components/KitchenSection';
 import { MyListingsSection } from '../../components/MyListingsSection';
 import { MyTiffinsSection } from '../../components/MyTiffinsSection';
 import { OrdersSection } from '../../components/OrdersSection';
+import { SavedSection } from '../../components/SavedSection';
 import { Avatar, Badge, Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -15,7 +16,7 @@ import { Community, fetchCommunityById } from '../../lib/communities';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useThemeColors } from '../../theme';
 
-type Tab = 'orders' | 'tiffins' | 'listings' | 'kitchen';
+type Tab = 'orders' | 'tiffins' | 'listings' | 'kitchen' | 'saved';
 
 export default function YouScreen() {
   const router = useRouter();
@@ -97,6 +98,7 @@ export default function YouScreen() {
             <Segment label="Orders" icon="receipt-outline" active={tab === 'orders'} onPress={() => setTab('orders')} c={c} />
             <Segment label="Tiffins" icon="repeat-outline" active={tab === 'tiffins'} onPress={() => setTab('tiffins')} c={c} />
             <Segment label="Listings" icon="list-outline" active={tab === 'listings'} onPress={() => setTab('listings')} c={c} />
+            <Segment label="Saved" icon="bookmark-outline" active={tab === 'saved'} onPress={() => setTab('saved')} c={c} />
             {isChef ? <Segment label="Kitchen" icon="restaurant-outline" active={tab === 'kitchen'} onPress={() => setTab('kitchen')} c={c} /> : null}
           </View>
         </Container>
@@ -108,6 +110,8 @@ export default function YouScreen() {
         <MyTiffinsSection />
       ) : tab === 'listings' ? (
         <MyListingsSection />
+      ) : tab === 'saved' ? (
+        <SavedSection />
       ) : (
         <OrdersSection />
       )}

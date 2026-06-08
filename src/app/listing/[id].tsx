@@ -11,6 +11,7 @@ import { useToast } from '../../context/toast';
 import { haptics } from '../../lib/haptics';
 import { sendInquiry } from '../../lib/inquiries';
 import { buildInquiryWhatsAppLink, deleteListing, fetchListingById, setListingStatus } from '../../lib/listings';
+import { isListingSaved, saveListing, unsaveListing } from '../../lib/saved';
 import { getService } from '../../lib/services';
 import { ListingRow } from '../../lib/types';
 import { useThemeColors } from '../../theme';
@@ -27,6 +28,7 @@ export default function ListingDetailScreen() {
   const [listing, setListing] = useState<ListingRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [inquiryListing, setInquiryListing] = useState<ListingRow | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -41,6 +43,28 @@ export default function ListingDetailScreen() {
   }, [id, toast]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (userId && id) {
+      isListingSaved(userId, id).then(setSaved).catch(() => {});
+    }
+  }, [userId, id]);
+
+  const toggleSave = async () => {
+    if (!userId || !id) return;
+    try {
+      if (saved) {
+        await unsaveListing(userId, id);
+        setSaved(false);
+        haptics.tap();
+      } else {
+        await saveListing(userId, id);
+        setSaved(true);
+        haptics.success();
+        toast.show('Saved to bookmarks');
+      }
+    } catch { toast.show('Could not update bookmark'); }
+  };
 
   const handleInquiryConfirm = async (l: ListingRow, message: string) => {
     setInquiryListing(null);
@@ -121,6 +145,16 @@ export default function ListingDetailScreen() {
             >
               <Ionicons name="chevron-back" size={22} color="#fff" />
             </Pressable>
+            {/* Bookmark button */}
+            {userId ? (
+              <Pressable
+                onPress={toggleSave}
+                className="absolute items-center justify-center rounded-full bg-black/40"
+                style={{ top: insets.top + 12, right: 16, width: 40, height: 40 }}
+              >
+                <Ionicons name={saved ? 'bookmark' : 'bookmark-outline'} size={20} color="#fff" />
+              </Pressable>
+            ) : null}
           </View>
         ) : (
           <View style={{ height: 140, backgroundColor: (cat?.color ?? '#888') + '20' }}>
@@ -135,6 +169,16 @@ export default function ListingDetailScreen() {
             >
               <Ionicons name="chevron-back" size={22} color={c.ink} />
             </Pressable>
+            {/* Bookmark button */}
+            {userId ? (
+              <Pressable
+                onPress={toggleSave}
+                className="absolute items-center justify-center rounded-full bg-black/20"
+                style={{ top: insets.top + 12, right: 16, width: 40, height: 40 }}
+              >
+                <Ionicons name={saved ? 'bookmark' : 'bookmark-outline'} size={20} color={c.ink} />
+              </Pressable>
+            ) : null}
           </View>
         )}
 

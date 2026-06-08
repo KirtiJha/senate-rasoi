@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Slot, Tabs } from 'expo-router';
 import { ColorValue, Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NavRail } from '../../components/NavRail';
 import { TopBar } from '../../components/TopBar';
 import { useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
@@ -19,16 +18,10 @@ export default function TabsLayout() {
   if (!ready) return <View style={{ flex: 1, backgroundColor: c.bg }} />;
   if (!session) return <Redirect href="/sign-in" />;
 
-  // Desktop / wide: left rail + content outlet.
+  // Desktop / wide: NavRail is rendered at root layout level (persists across all
+  // stack screens). Just render the tab content here.
   if (isDesktop) {
-    return (
-      <View className="flex-1 flex-row bg-bg">
-        <NavRail />
-        <View className="flex-1">
-          <Slot />
-        </View>
-      </View>
-    );
+    return <Slot />;
   }
 
   // Phone: bottom tab bar with a header brand bar.

@@ -1,7 +1,7 @@
 # Aangan — Community Platform Plan
 > **Living document.** Always kept in sync with the codebase. Update on every significant commit.
 > **App:** Aangan (आँगन — courtyard) · **From:** Senate Rasoi (single-society food app)
-> **Last updated:** 2026-06-07 (session 2)
+> **Last updated:** 2026-06-08 (NavRail redesign + feed blank screen fix)
 
 ---
 
@@ -23,28 +23,47 @@
 | Rebrand to Aangan | ✅ | app.json, manifest, Brand, NavRail, HTML meta |
 | Home hub | ✅ | Service tile grid at index.tsx |
 | Food engine | ✅ | Unchanged: dishes, orders, tiffin, subscriptions |
-| Service registry (10 cats) | ✅ | services.ts with attributes |
+| Service registry (15 cats) | ✅ | services.ts — 14 listing cats + food; incl. carpooling |
 | Listings engine | ✅ | listings.ts, ListingCard, CreateListingForm, InquiryModal |
-| Category feeds | ✅ | c/[category].tsx with realtime + cache |
-| Listing detail + contact | ✅ | listing/[id].tsx |
+| Category feeds | ✅ | c/[category].tsx with realtime + cache + pagination |
+| Listing detail + contact | ✅ | listing/[id].tsx + bookmark button |
 | My Listings (You tab) | ✅ | MyListingsSection |
+| Saved / Bookmarks | ✅ | saved_listings (migration 0018), bookmark on detail, Saved tab in You |
 | Post screen (all categories) | ✅ | Category picker → correct form (hook bug fixed) |
 | Multi-society DB schema | ✅ | community_id on profiles + listings (migrations 0008–0011) |
 | Multi-society UI | ✅ | Society picker at sign-up; dynamic communityId in all feeds |
-| New categories (Day Care, Yoga, Arts, Astrology) | ✅ | daycare, fitness, arts, astrology in services.ts |
-| User profile page | ✅ | profile/me.tsx — edit, PIN change, delete account |
+| New categories (Day Care, Yoga, Arts, Astrology, Carpooling) | ✅ | 5 new cats in services.ts |
+| User profile page (own) | ✅ | profile/me.tsx — edit, PIN change, delete account |
+| Public profile page | ✅ | profile/[userId].tsx — name, flat, roles, active listings |
 | Community display | ✅ | Society badge on Home, You, Profile, NavRail |
 | Society join request | ✅ | Form in sign-in; migration 0014; Admin Requests tab |
 | Admin: join requests view | ✅ | Requests tab in admin.tsx |
 | Society onboarding (admin) | ⏸️ | Approve button in admin→Requests; creating community row needs manual DB step |
 | Community posts / threads | ✅ | posts.ts, feed.tsx, feed/[postId].tsx, migrations 0012–0013 |
+| Feed compose UX | ✅ | Post button moved to sticky footer above keyboard |
 | Search & filter | ✅ | search.tsx, searchListings(), category filter chips |
 | Issues / feedback page | ✅ | Feed tab with category filter (issue/feedback/suggestion) |
+| Polls & Surveys | ✅ | polls.tsx, realtime voting, create/close/delete (migration 0020) |
+| Emergency Contacts | ✅ | emergency.tsx, 7 role types, admin add/delete, direct dial (migration 0019) |
 | Society-based access control | ✅ | RLS on all tables; is_admin fn (migration 0017); communityId in all queries |
 | About page + version | ✅ | about.tsx with version, features, technical info |
 | Pagination (category feeds) | ✅ | limit/offset + Load more in c/[category].tsx |
 | React.memo (ListingCard) | ✅ | ListingCard wrapped in memo |
-| Full performance (FlashList, Sentry) | ⬜ | Phase 9 items — planned |
+| Mobile nav to Polls/Emergency | ✅ | Community section on Home hub with Polls + Emergency tiles |
+| Posts feed pagination | ✅ | PAGE=20, Load more button, "You're all caught up" footer |
+| Announce-only for admins | ✅ | Announcement filtered from ComposeModal for non-admins |
+| PostCard memo + FlashList | ✅ | PostCard wrapped in memo; posts feed uses FlashList |
+| Skeleton loaders (posts feed) | ✅ | Animated pulsing PostCardSkeleton |
+| Update notification banner | ✅ | Checks app_versions on Home load; dismissable / force-update modes |
+| Feed blank screen fix | ✅ | ScrollView missing from react-native import after FlashList migration |
+| NavRail — persistent (all screens) | ✅ | Moved to root _layout.tsx; admin/polls/emergency/about no longer hide it |
+| NavRail — collapsible | ✅ | 220px ↔ 64px icon-only; spring animation; chevron rotates 180° |
+| NavRail — restructured sections | ✅ | Primary → Community → Admin → spacer → New Post CTA → About/Theme |
+| NavRail — active left-bar indicator | ✅ | 3px accent bar on active item (VS Code / Linear style) |
+| Push token capture | ⬜ | Architecture exists (migration 0005); registration code missing |
+| Per-listing chat threads | ⬜ | Phase 12a — highest priority next feature |
+| Direct messages (DMs) | ⬜ | Phase 12b — deferred after 12a stable |
+| Sentry / PostHog monitoring | ⬜ | Requires external accounts |
 | iOS / Android (EAS) | ⬜ | After web version is stable |
 | App store submissions | ⬜ | After iOS/Android phase |
 
@@ -81,14 +100,15 @@ from each other: home food, services, buy & sell, community posts, and a trusted
 | 8 | `market` | Buy & Sell | Product | ✅ |
 | 9 | `directory` | Service Directory | Recommendation | ✅ |
 
-### 2b. New categories to add — ⬜
+### 2b. Added categories — ✅ All in services.ts
 
-| # | Key | Label | Rationale |
-|---|-----|-------|-----------|
-| 10 | `daycare` | Day Care | Childcare services in the society; high demand |
-| 11 | `fitness` | Yoga & Fitness | Yoga, gym trainers, Zumba, meditation |
-| 12 | `arts` | Arts & Activities | Dance, painting, music, craft — all creative classes |
-| 13 | `astrology` | Astrology | Horoscope, kundali, vastu, numerology, tarot |
+| # | Key | Label | Status |
+|---|-----|-------|--------|
+| 10 | `daycare` | Day Care | ✅ Phase 3 |
+| 11 | `fitness` | Yoga & Fitness | ✅ Phase 3 |
+| 12 | `arts` | Arts & Activities | ✅ Phase 3 |
+| 13 | `astrology` | Astrology | ✅ Phase 3 |
+| 14 | `carpooling` | Carpooling | ✅ Phase 11 |
 
 **On dance & painting:** Recommend **one combined "Arts & Activities" category** rather than
 two separate categories or folding into Tuitions. Reasons:
@@ -139,7 +159,7 @@ arts:
 ```
 ┌─────────────────────────────────────────────────────┐
 │                    HOME HUB                          │
-│         service tile grid (13 categories)            │
+│         service tile grid (15 categories)            │
 └──────────────────┬──────────────────────────────────┘
          ┌─────────┴──────────┐
          ▼                    ▼
@@ -190,96 +210,34 @@ scoped to that society. Admins of a society can manage that society only. Platfo
 | 0010 | listings table + RLS + realtime |
 | 0011 | inquiries table + RLS + push trigger |
 
-### 4b. Pending tables (new migrations needed)
+### 4b. All migrations — ✅ Complete (0001–0020)
 
-**0012 — `posts` (community thread / noticeboard)**
-```sql
-create table public.posts (
-  id           uuid primary key default gen_random_uuid(),
-  community_id uuid not null references communities(id) on delete cascade,
-  author_id    uuid not null references profiles(id) on delete cascade,
-  category     text not null default 'general'
-                 check (category in ('general','issue','feedback','suggestion','event','lost_found')),
-  title        text,
-  body         text not null,
-  photos       text[] not null default '{}',
-  pinned       boolean not null default false,
-  resolved     boolean not null default false,  -- for issues/feedback
-  created_at   timestamptz not null default now(),
-  updated_at   timestamptz not null default now()
-);
-create index posts_feed_idx on posts (community_id, category, created_at desc);
-alter table posts enable row level security;
--- read: community members; write: owner or admin
-alter publication supabase_realtime add table posts;
-```
+| Migration | Contents | Status |
+|-----------|----------|--------|
+| 0001 | communities, profiles, dishes, orders | ✅ |
+| 0002 | order RPCs (place, accept, cancel) | ✅ |
+| 0003 | auth via Supabase + roles | ✅ |
+| 0004 | full order lifecycle, Kitchen RPCs | ✅ |
+| 0005 | push_tokens, pg_net → Expo Push | ✅ |
+| 0006 | serve_date on dishes | ✅ |
+| 0007 | tiffin_plans, subscriptions, subscription_skips | ✅ |
+| 0008 | communities.slug + address | ✅ |
+| 0009 | profiles.community_id FK | ✅ |
+| 0010 | listings table + RLS + realtime | ✅ |
+| 0011 | inquiries table + RLS + push trigger | ✅ |
+| 0012 | posts table + RLS + realtime | ✅ |
+| 0013 | post_comments table + RLS + realtime | ✅ |
+| 0014 | society_join_requests table | ✅ |
+| 0015 | delete_own_account SECURITY DEFINER RPC | ✅ |
+| 0016 | app_versions table (for update notifications) | ✅ |
+| 0017 | is_admin(uid) DB function + updated RLS policies | ✅ |
+| 0018 | saved_listings table + RLS | ✅ |
+| 0019 | emergency_contacts table + RLS | ✅ |
+| 0020 | polls + poll_options + poll_votes tables + RLS + realtime | ✅ |
 
-**0013 — `post_comments`**
-```sql
-create table public.post_comments (
-  id         uuid primary key default gen_random_uuid(),
-  post_id    uuid not null references posts(id) on delete cascade,
-  author_id  uuid not null references profiles(id) on delete cascade,
-  body       text not null,
-  created_at timestamptz not null default now()
-);
-create index comments_post_idx on post_comments (post_id, created_at);
-alter table post_comments enable row level security;
-alter publication supabase_realtime add table post_comments;
-```
-
-**0014 — `society_join_requests`**
-```sql
-create table public.society_join_requests (
-  id              uuid primary key default gen_random_uuid(),
-  society_name    text not null,
-  society_address text not null,
-  requester_name  text not null,
-  requester_phone text not null,
-  requester_email text,
-  status          text not null default 'pending'
-                    check (status in ('pending','approved','rejected')),
-  admin_note      text,
-  created_at      timestamptz not null default now()
-);
--- Visible to super-admins only; writable by anyone (unauthenticated allowed for request submission)
-```
-
-**0015 — `app_versions`** (for update notifications)
-```sql
-create table public.app_versions (
-  id           serial primary key,
-  version      text not null,       -- e.g. "1.2.0"
-  build_number integer not null,
-  platform     text not null check (platform in ('web','ios','android','all')),
-  force_update boolean not null default false,
-  release_notes text,
-  created_at   timestamptz not null default now()
-);
--- Read-only for all authenticated users
-```
-
-**0016 — `saved_listings`** (bookmarks)
-```sql
-create table public.saved_listings (
-  user_id    uuid references profiles(id) on delete cascade,
-  listing_id uuid references listings(id) on delete cascade,
-  saved_at   timestamptz not null default now(),
-  primary key (user_id, listing_id)
-);
-```
-
-**0017 — `listing_reports`** (moderation)
-```sql
-create table public.listing_reports (
-  id         uuid primary key default gen_random_uuid(),
-  listing_id uuid not null references listings(id) on delete cascade,
-  reporter_id uuid not null references profiles(id) on delete cascade,
-  reason     text not null,
-  created_at timestamptz not null default now(),
-  unique (listing_id, reporter_id)
-);
-```
+**Pending (future):**
+- `listing_reports` — moderation queue (schema designed; UI not yet built)
+- Full-text search indexes on listings + posts (Phase 9)
 
 ---
 
@@ -298,22 +256,29 @@ admin.tsx                Admin panel (basic)
 (auth)/sign-in.tsx       Sign-in / sign-up
 ```
 
-### New routes needed ⬜
+### New routes — completed ✅
 ```
-profile/[userId].tsx     Public profile — user's listings, contact
-profile/me.tsx           My profile — edit, reset PIN, delete account, alerts
-community/[id].tsx       Society detail page (for multi-society browse)
-feed/index.tsx           Community posts feed (general + noticeboard)
-feed/[postId].tsx        Post thread with realtime comments
-feedback/index.tsx       Issues / feedback / suggestions feed
-feedback/[postId].tsx    Single feedback thread
-search/index.tsx         Cross-category search with filters
-admin/societies.tsx      Super-admin: manage all societies
-admin/requests.tsx       Society join requests
-about.tsx                App info, version, update prompt
+profile/me.tsx           ✅ My profile — edit, reset PIN, society badge, delete account
+feed/(tabs).tsx          ✅ Community posts feed (all categories + filter chips)
+feed/[postId].tsx        ✅ Post thread with realtime comments, PostMenu
+(tabs)/search.tsx        ✅ Cross-category search with debounce + category filter
+about.tsx                ✅ App info, version, features, technical info
 ```
 
-### Updated tab bar ⬜
+### New routes — added ✅
+```
+profile/[userId].tsx     Public profile — name, flat, roles, active listings
+emergency.tsx            Emergency Contacts screen (admin add/delete, direct call)
+polls.tsx                Polls & Surveys screen (create, vote, realtime)
+```
+
+### New routes — still pending ⬜
+```
+community/[id].tsx       Society detail page (future)
+admin/societies.tsx      Super-admin society management (future)
+```
+
+### Updated tab bar ✅
 | Tab | Icon | Route |
 |-----|------|-------|
 | Home | home | /  |
@@ -495,8 +460,8 @@ about.tsx                App info, version, update prompt
 *In progress. Core wins done.*
 
 #### 9a. Rendering performance
-- ✅ `React.memo` on `ListingCard`
-- ⬜ `React.memo` on `DishCard`, `PostCard`
+- ✅ `React.memo` on `ListingCard` and `DishCard`
+- ⬜ Extract `PostCard` to memoized component (currently inline in feed.tsx)
 - ⬜ Replace `ScrollView + .map()` listing grids with `FlashList` (need to add package)
 - ⬜ Skeleton loading states for posts feed and search results
 
@@ -534,49 +499,63 @@ about.tsx                App info, version, update prompt
 
 ---
 
-### ⬜ Phase 10 — iOS & Android (EAS)
-*After web version is stable and feature-complete.*
+### ✅ Phase 10 — iOS & Android (EAS)
+*Configuration complete. Awaiting Apple/Google developer accounts.*
 
-#### 10a. Build setup
-- ⬜ `eas.json` — preview + production build profiles
-- ⬜ EAS Build: iOS (requires Apple Developer account, $99/yr) + Android (Google Play, $25 one-time)
-- ⬜ App icons: 1024×1024 iOS + Android adaptive icon (foreground + background layers)
-- ⬜ Splash screen: branded, no white flash
-- ⬜ Expo Updates (`expo-updates`) for OTA JS updates between store releases
+#### 10a. Build setup ✅
+- ✅ `eas.json` — development/preview/production build profiles with channels
+- ✅ `app.json` — iOS bundleIdentifier, Android package, adaptive icons, splash, scheme
+- ✅ `app.json` — OTA updates config (`expo-updates`), runtimeVersion policy
+- ✅ `app.json` — iOS infoPlist privacy descriptions (camera, photos, contacts)
+- ✅ `app.json` — Android permissions list
 
-#### 10b. Native-specific features
-- ⬜ Push notifications: verify Expo Push works end-to-end on real device (pg_net → Expo → APNS/FCM)
-- ⬜ Haptics: verify all haptic calls work (`expo-haptics`)
-- ⬜ Share sheet: native share (photos, listing links) — `expo-sharing` + deep links
-- ⬜ Deep linking: `aangan://listing/[id]` → opens correct screen (push notification tap)
-- ⬜ App Badge: unread inquiry/order count on app icon (iOS + Android)
+#### 10b. User actions needed ⏸️
+- ⏸️ Apple Developer account ($99/yr) for App Store + TestFlight
+- ⏸️ Google Play developer account ($25 one-time) for Play Store
+- ⏸️ App icons: provide 1024×1024 iOS icon + Android adaptive icon (foreground layer)
+- ⏸️ Run `eas build --platform all --profile production` when accounts ready
 
-#### 10c. Store submission
-- ⬜ TestFlight (iOS internal test → external beta → App Store)
-- ⬜ Google Play internal track → closed beta → production
-- ⬜ Store listings: screenshots (6.5" iPhone, 12.9" iPad, Pixel), description, keywords
-- ⬜ Privacy policy URL (required for both stores)
-- ⬜ Age rating (likely 4+, content is community-generated)
+#### 10c. Store submission ⬜
+- ⬜ TestFlight internal test → external beta → App Store (after build)
+- ⬜ Google Play internal track → closed beta → production (after build)
+- ⬜ Store listing screenshots and descriptions
 
 ---
 
-### ⬜ Phase 11 — Future Enhancements (prioritise later)
+### ✅ Phase 11 — Community Features (COMPLETE)
 
-These are good ideas for a thriving community app. Assess after Phase 5–6 based on user demand:
+| Feature | Status | Notes |
+|---------|--------|-------|
+| **Events & Calendar** | ✅ Covered | Feed's `event` post category handles event posts |
+| **Lost & Found** | ✅ Covered | Feed's `lost_found` post category handles lost/found posts |
+| **Carpooling** | ✅ Done | Added as service category 14 in `services.ts` (color #0EA5E9, icon `car-outline`) |
+| **Polls & Surveys** | ✅ Done | `polls`, `poll_options`, `poll_votes` tables (migration 0020); full UI in `src/app/polls.tsx`; realtime subscription; admin can close/delete; any member can create |
+| **Emergency Contacts** | ✅ Done | `emergency_contacts` table (migration 0019); full UI in `src/app/emergency.tsx`; 7 role types with color/icon; admin add/delete; direct tel: call |
+| **Saved / Bookmarks** | ✅ Done | `saved_listings` table (migration 0018); save/unsave button on listing detail; `SavedSection` in You tab |
+| **Endorsements** | ⬜ Deferred | Post-launch — requires `listing_endorsements` table |
+| **Reviews & Ratings** | ⬜ Deferred | Post-launch — trust layer after critical mass |
+| **Appointments** | ⬜ Deferred | Post-launch — calendar slot picker complexity |
+| **Verified Provider Badge** | ⬜ Deferred | Post-launch — admin workflow required |
+| **Society Newsletter** | ⬜ Deferred | Post-launch — Supabase Edge Function + email infra |
 
-| Feature | What it is |
-|---------|-----------|
-| **Events & Calendar** | Society can post events (Diwali puja, maintenance notice, AGM); community calendar view |
-| **Lost & Found** | Separate category for lost keys, pets, items within listing engine (already `feed` category) |
-| **Carpooling** | Residents going same direction offer rides; post format similar to jobs |
-| **Polls & Surveys** | Society admin creates a poll; residents vote; realtime results |
-| **Emergency Contacts** | Society-level pinned directory: security number, maintenance, doctor on call |
-| **Saved / Bookmarks** | Save listings across categories (`saved_listings` — migration 0016 ready) |
-| **Endorsements** | "12 neighbours verified this" for Service Directory (`listing_endorsements` table) |
-| **Reviews & Ratings** | Star rating on completed services/orders; trust layer |
-| **Appointments** | Basic scheduling for clinic/tuition (calendar slot picker → WhatsApp confirm) |
-| **Verified Provider Badge** | Admin-granted badge for vetted service providers (doctor, CA, etc.) |
-| **Society Newsletter** | Weekly digest of new listings + posts → email or push |
+**New files (Phase 11):**
+- `supabase/migrations/0018_saved_listings.sql` — saved_listings table with RLS
+- `supabase/migrations/0019_emergency_contacts.sql` — emergency_contacts table with RLS
+- `supabase/migrations/0020_polls.sql` — polls + poll_options + poll_votes tables with RLS + realtime
+- `src/lib/saved.ts` — save/unsave/isSaved/fetchSaved helpers
+- `src/lib/emergency.ts` — fetchEmergencyContacts/addEmergencyContact/deleteEmergencyContact
+- `src/lib/polls.ts` — fetchPolls/createPoll/votePoll/closePoll/deletePoll/subscribeToPolls
+- `src/app/emergency.tsx` — Emergency Contacts screen with admin add/delete UI
+- `src/app/polls.tsx` — Polls screen with voting, create poll modal, realtime
+- `src/app/profile/[userId].tsx` — Public profile showing name, flat, roles, active listings
+- `src/components/SavedSection.tsx` — Saved listings list for You tab
+
+**Modified files (Phase 11):**
+- `src/lib/services.ts` — Added carpooling (category 14)
+- `src/app/listing/[id].tsx` — Added bookmark toggle button (save/unsave)
+- `src/app/(tabs)/you.tsx` — Added Saved tab (SavedSection)
+- `src/components/NavRail.tsx` — Added Polls + Emergency links in sidebar
+- `src/app/_layout.tsx` — Registered emergency, polls, profile/[userId] routes
 
 ---
 
@@ -615,21 +594,252 @@ These are good ideas for a thriving community app. Assess after Phase 5–6 base
 | 11 | iOS/Android timing | ✅ After web version is feature-complete and stable |
 | 12 | Community posts engine | ✅ Separate `posts` + `post_comments` tables; not shoehorned into listings |
 | 13 | Feedback/issues | ✅ Posts table with `category` column (issue/feedback/suggestion) — not a separate table |
+| 14 | Feedback tab vs separate page | ✅ Merge into Feed tab with category filter chips — keeps tab count at 5 |
+| 15 | Approve join request | ✅ Admin sets `status=approved`; creating the society row is a manual admin step for now |
+| 16 | `delete_own_account` | ✅ Supabase SECURITY DEFINER RPC — cleanest approach for deleting auth.users |
+| 17 | Polls voting model | ✅ Upsert with `onConflict: poll_id,user_id` — users can change their vote; one vote per poll |
+| 18 | Carpooling | ✅ Added as listing service category (not a separate posts engine) — same CRUD pattern |
+| 19 | Saved listings | ✅ Composite PK `(user_id, listing_id)`; 23505 conflict silently swallowed on duplicate save |
+| 20 | In-app chat model | ✅ WhatsApp deep-link covers Phase 1–11; Phase 12a adds per-listing threads; full DMs deferred to 12b |
+| 21 | Push notifications | ✅ DB architecture complete (pg_net triggers); token capture deferred to after native builds (Phase 10) |
+| 22 | SMS / OTP | ✅ Auth uses PIN (not SMS OTP); no SMS gateway needed — intentional, keeps infra simple |
 
 ---
 
-## 10. Immediate Next Steps (ordered)
+## 10. Notifications — Current State
 
-1. **✅ Phase 3** — 3 new categories added to `services.ts`
-2. **⏸️ Supabase** — User runs migrations 0008–0011 + creates `listing-photos` bucket
-3. **⬜ Phase 4** — Multi-society UI: society picker at sign-up, remove hardcoded COMMUNITY_ID
-4. **⬜ Phase 4** — User profile page (`profile/me.tsx`) + society display in header
-5. **⬜ Phase 5** — Posts/threads engine (migrations 0012–0013 + feed screens)
-6. **⬜ Phase 6** — Search & filter
-7. **⬜ Phase 7** — Access control hardening + admin tools
-8. **⬜ Phase 8** — About page + version/update notification
-9. **⬜ Phase 9** — Performance (FlashList, pagination, Lighthouse)
-10. **⬜ Phase 10** — iOS/Android (EAS builds, store submission)
+### WhatsApp (deep-link, NOT API)
+WhatsApp is used as a **deep-link redirect** (opens `https://wa.me/<number>?text=...`), NOT an API integration.
+
+| Trigger | Status | How it works |
+|---------|--------|-------------|
+| Buyer orders food | ✅ | `buildWhatsAppOrderLink()` — opens WhatsApp with pre-filled order message to chef's number |
+| Buyer enquires about listing | ✅ | `buildInquiryWhatsAppLink()` — opens WhatsApp to listing owner's number |
+| Any other action | ❌ | No WhatsApp API integration exists |
+
+**Intentional design:** No paid WhatsApp Business API needed. Works via `wa.me` URL which every Indian smartphone user understands.
+
+**Gap:** Users must have WhatsApp installed, and must have shared their WhatsApp number on their profile. If a number is missing, the button silently does nothing useful.
+
+### SMS / OTP
+Auth uses phone number as a **fake email alias** (`phone@senate.app`) with a **6-digit PIN as password**. There is **no real SMS OTP** — the user sets a PIN at signup and uses it to sign in. No SMS gateway (Twilio, MSG91, etc.) is integrated.
+
+### Expo Push Notifications (native iOS/Android only)
+The architecture exists but registration is **incomplete**:
+
+| Component | Status |
+|-----------|--------|
+| `push_tokens` table (migration 0005) | ✅ Exists |
+| `notify_user()` Postgres function via `pg_net` | ✅ Exists |
+| Order status change → buyer notified | ✅ DB trigger fires |
+| New inquiry → listing owner notified | ✅ DB trigger fires |
+| **Token capture code in app** | ❌ **MISSING** — no call to `Notifications.getExpoPushTokenAsync()` |
+| New post/comment notification | ❌ Not implemented |
+| New poll notification | ❌ Not implemented |
+| Web push | ❌ Not supported (Expo tokens are native-only) |
+
+**What's missing:** When the app starts on a native device, it needs to call `Notifications.getExpoPushTokenAsync()` (with the EAS project ID) and upsert the result into `push_tokens`. This one missing step means all existing DB triggers are silently firing but have no token to deliver to.
+
+This only matters after native iOS/Android builds are ready (Phase 10). On web, push simply doesn't apply.
+
+---
+
+## 11. In-App Chat — Analysis & Plan
+
+### What exists today
+| Feature | Chat capability |
+|---------|----------------|
+| Feed posts | ✅ Realtime comment threads (post_comments) |
+| Listing contact | ⚡ WhatsApp deep-link only — no in-app history |
+| Food orders | ⚡ WhatsApp deep-link only |
+| Direct messages | ❌ None |
+| Carpool coordination | ⚡ WhatsApp only |
+
+### Where in-app chat adds real value
+
+**1. Per-listing inquiry threads (high value, low complexity)**
+Right now, when a user enquires about a tutor or service, it opens WhatsApp. This loses the conversation from the app and requires the person to share their personal phone. A **per-listing thread** (same pattern as post_comments but scoped to a listing) lets:
+- Buyer ask: "Are you available on Saturdays?"
+- Owner reply in-app
+- Both sides see the history in the app
+- Admin can moderate if needed
+
+**2. Carpool coordination threads (high value)**
+Carpool listings inherently need multi-turn conversation (pickup point changes, last-minute cancellations). A thread per carpool listing is the right model.
+
+**3. Direct messages / neighbour DMs (medium value, high complexity)**
+Useful for private conversation that isn't tied to a listing (e.g., "Hey, can I borrow your parking slot this weekend?"). Full N-to-N DM system requires a `conversations` + `messages` schema, read receipts, notification infrastructure. Defer until after per-listing threads are stable.
+
+### Recommendation — Phase 12: In-App Chat
+
+**Phase 12a (per-listing threads — DO THIS FIRST):**
+- New table: `listing_messages (id, listing_id, author_id, body, created_at)`
+- RLS: community members of the listing's society can read; listing owner + inquirer can write
+- Realtime subscription on `listing_id`
+- UI: collapsible "Chat with owner" section at the bottom of listing detail, push notification on new message
+- Migration: `0021_listing_messages.sql`
+
+**Phase 12b (direct messages — DEFER):**
+- Tables: `dm_conversations (id, participant_a, participant_b, last_message_at)`, `dm_messages (id, conversation_id, author_id, body, read_at, created_at)`
+- UI: Messages icon in tab bar / NavRail, conversation list, chat thread
+- Complex — save for after Phase 12a is stable and used
+
+---
+
+## 12. End-to-End Testing Guide
+
+### Step 1 — Run all Supabase migrations
+
+Open **Supabase Dashboard → SQL Editor** and run these in order. Each file is in `/supabase/migrations/`:
+
+```
+0001_init.sql                ← communities, profiles, dishes, orders
+0002_orders.sql              ← order RPCs
+0003_auth_profiles.sql       ← auth + roles
+0004_order_lifecycle.sql     ← full order lifecycle
+0005_push.sql                ← push_tokens, notify_user() trigger
+0006_serve_date.sql          ← serve_date on dishes
+0007_tiffin.sql              ← tiffin_plans, subscriptions
+0008_communities_meta.sql    ← communities.slug + address
+0009_profile_community.sql   ← profiles.community_id FK
+0010_listings.sql            ← listings table + RLS + realtime
+0011_inquiries.sql           ← inquiries table + push trigger
+0012_posts.sql               ← posts table + RLS + realtime
+0013_post_comments.sql       ← post_comments + realtime
+0014_society_requests.sql    ← society_join_requests
+0015_delete_account_rpc.sql  ← delete_own_account() RPC
+0016_app_versions.sql        ← app_versions table + seed row
+0017_is_admin_fn.sql         ← is_admin() function + RLS updates
+0018_saved_listings.sql      ← saved_listings table
+0019_emergency_contacts.sql  ← emergency_contacts table
+0020_polls.sql               ← polls + poll_options + poll_votes
+```
+
+### Step 2 — Create Supabase Storage bucket
+
+In **Supabase Dashboard → Storage → New bucket**:
+- Name: `listing-photos`
+- Public: **Yes** (check the toggle)
+- Click Create
+
+### Step 3 — Create a test society (community)
+
+In **Supabase → SQL Editor**:
+```sql
+insert into public.communities (name, slug, address)
+values ('Green Valley Apartments', 'green-valley', 'Sector 12, Noida, UP')
+returning id;
+```
+Copy the returned UUID — you'll use it in Step 5.
+
+### Step 4 — Sign up your first user (yourself)
+
+1. Open the web app (`npx expo start --web` or deployed URL)
+2. Enter your phone number and create a 6-digit PIN
+3. Fill in name, flat number, WhatsApp
+4. In the society picker, select the society you just created
+5. Complete sign-up
+
+### Step 5 — Grant admin role to your account
+
+In **Supabase → SQL Editor** (replace `<phone>` with your number):
+```sql
+update public.profiles
+set roles = array['foodie', 'chef', 'admin']
+where phone = '<your-phone-number>';
+```
+
+Or by user ID (find it in the auth.users table or profiles table):
+```sql
+update public.profiles
+set roles = array['foodie', 'chef', 'admin']
+where id = '<your-uuid>';
+```
+
+### Step 6 — Verify admin access in the app
+
+Reload the app. You should now see:
+- ✅ "Admin · manage members & roles" row in the You tab
+- ✅ "Admin" link in the desktop NavRail
+- ✅ Admin shield icon in the You tab header area
+- ✅ "+" button on Emergency Contacts screen
+- ✅ "Announcement" category available in Feed compose
+- ✅ Can close/delete polls
+
+### Step 7 — Feature test checklist
+
+**Home Hub:**
+- [ ] 15 service tiles visible (food + 14 categories)
+- [ ] "Community" section shows Polls + Emergency tiles
+- [ ] Tapping tiles navigates to correct screen
+- [ ] Society badge shows your society name
+- [ ] Greeting changes based on time of day
+
+**Food engine:**
+- [ ] Post a dish (as chef): name, slot, veg type, price, photo (optional)
+- [ ] Order a dish (as another account or same in food tab): qty, confirm
+- [ ] Order lifecycle: accept → cooking → delivered (Kitchen section)
+- [ ] Tiffin: create a recurring tiffin service
+
+**Listings:**
+- [ ] Post a listing in any of the 14 categories
+- [ ] Photo upload (tap camera area in CreateListingForm)
+- [ ] View listing detail — bookmark button (top-right of hero)
+- [ ] Tap "Contact on WhatsApp" — should open WhatsApp with pre-filled message
+- [ ] Saved listings appear in You → Saved tab
+- [ ] Search: type keywords in Search tab, filter by category chip
+
+**Community Feed:**
+- [ ] Post a General/Issue/Feedback/Event/Lost & Found message
+- [ ] Admin: post an Announcement (non-admin shouldn't see this option)
+- [ ] Comment on a post (from the post thread screen)
+- [ ] Admin: pin a post, mark issue as resolved
+- [ ] Realtime: open Feed in two tabs/devices, post from one → appears in the other
+
+**Polls:**
+- [ ] Home → Polls tile → polls screen
+- [ ] Create a poll (any member) with 2+ options
+- [ ] Vote on a poll — results bar appears
+- [ ] Admin: close a poll, delete a poll
+
+**Emergency Contacts:**
+- [ ] Home → Emergency tile → emergency screen
+- [ ] Admin: tap "+" → add a contact with name, phone, role type
+- [ ] Tap dial button → should trigger a phone call (`tel:` link)
+- [ ] Admin: delete a contact
+
+**Profile:**
+- [ ] You tab → tap avatar → profile/me.tsx
+- [ ] Edit name, flat, WhatsApp, UPI → Save Changes
+- [ ] Tap any listing owner's name → public profile page (profile/[userId])
+
+**Admin panel (admin only):**
+- [ ] You tab → Admin row → admin.tsx
+- [ ] Members tab: see all members, toggle chef/admin roles
+- [ ] Requests tab: see join requests (submit one from a second account to test)
+
+---
+
+## 13. Immediate Next Steps (updated)
+
+**You must do (blocking — nothing works without these):**
+1. **⏸️ Run all migrations 0001–0020** in Supabase SQL editor (see Section 12 for exact order)
+2. **⏸️ Create `listing-photos` storage bucket** in Supabase (public, see Section 12 Step 2)
+3. **⏸️ Seed a test community row** and grant yourself admin (see Section 12 Steps 3–5)
+
+**Code — next features:**
+4. **⬜ Phase 12a: Per-listing chat threads** — `listing_messages` table + in-app chat on listing detail (highest value, enables all service coordination without WhatsApp dependency)
+5. **⬜ Push token capture** — add `Notifications.getExpoPushTokenAsync()` call at app startup, save to `push_tokens` (only needed once native builds are ready — Phase 10)
+
+**Code — polish:**
+6. **⬜ Skeleton loaders for search results** — currently shows "Searching…" text; could have shimmer cards
+7. **⬜ Inquiry count badge on listing owner's listings** — "3 neighbours interested" on MyListingsSection cards
+
+**When ready for native (Phase 10):**
+8. **⏸️ Apple Developer account** ($99/yr) → TestFlight → App Store
+9. **⏸️ Google Play account** ($25) → internal track → Play Store
+10. **⏸️ Push token registration** — add on app startup after native build confirmed working
+11. **⏸️ App icons** — 1024×1024 iOS icon + Android adaptive icon foreground layer
 
 ---
 
@@ -637,6 +847,8 @@ These are good ideas for a thriving community app. Assess after Phase 5–6 base
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-08 | Plan major update: added E2E testing guide (Section 12), notifications analysis (Section 10), in-app chat analysis + Phase 12 plan (Section 11). Phase 9 items all complete: mobile nav to community features, posts pagination, announcement admin-only, PostCard memo, FlashList, skeletons, update banner. |
+| 2026-06-08 | Phase 11 complete: Polls, Emergency Contacts, Saved Listings, Carpooling, Public Profile, NavRail updates, bookmark button on listing detail. Migrations 0018–0020 added. |
 | 2026-06-07 | Added astrology (Astrology) to services.ts. Home hub now shows 14 categories. |
 | 2026-06-07 | Phase 3 complete: added daycare (Day Care), fitness (Yoga & Fitness), arts (Arts & Activities) to services.ts. Home hub now shows 13 categories. |
 | 2026-06-07 | Plan fully rewritten. Phases 1 + 2 marked complete. Added: 3 new categories (Day Care, Yoga & Fitness, Arts & Activities), multi-society UI, full user profile, society onboarding, community posts/threads, issues/feedback page, search & filter, access control hardening, about page, version update notification, performance phase (Phase 9), iOS/Android phase (Phase 10), future enhancements (Phase 11). |

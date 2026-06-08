@@ -102,7 +102,7 @@ export default function AdminScreen() {
     try {
       const ok = await setUserRoles(m.id, next);
       if (!ok) { toast.show('Not allowed'); return; }
-      setMembers((cur) => cur.map((x) => (x.id === m.id ? { ...x, roles: next } : x)));
+      setMembers((cur: DbProfile[]) => cur.map((x: DbProfile) => (x.id === m.id ? { ...x, roles: next } : x)));
       if (m.id === userId) await refreshProfile();
     } catch (e) {
       console.error(e);
@@ -119,7 +119,7 @@ export default function AdminScreen() {
         .update({ status, admin_note: note ?? null })
         .eq('id', id);
       if (error) throw error;
-      setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
+      setRequests((prev: JoinRequest[]) => prev.map((r: JoinRequest) => r.id === id ? { ...r, status } : r));
       toast.show(status === 'approved' ? 'Request approved' : 'Request rejected');
     } catch {
       toast.show('Could not update request');
@@ -128,23 +128,23 @@ export default function AdminScreen() {
 
   const stats = useMemo(() => ({
     total: members.length,
-    chefs: members.filter((m) => m.roles.includes('chef')).length,
-    foodies: members.filter((m) => m.roles.includes('foodie')).length,
-    admins: members.filter((m) => m.roles.includes('admin')).length,
+    chefs: members.filter((m: DbProfile) => m.roles.includes('chef')).length,
+    foodies: members.filter((m: DbProfile) => m.roles.includes('foodie')).length,
+    admins: members.filter((m: DbProfile) => m.roles.includes('admin')).length,
   }), [members]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return members;
     return members.filter(
-      (m) =>
+      (m: DbProfile) =>
         m.name?.toLowerCase().includes(q) ||
         m.phone?.includes(q) ||
         m.flat?.toLowerCase().includes(q),
     );
   }, [members, query]);
 
-  const pendingCount = requests.filter((r) => r.status === 'pending').length;
+  const pendingCount = requests.filter((r: JoinRequest) => r.status === 'pending').length;
 
   return (
     <View className="flex-1 bg-bg">
@@ -231,7 +231,7 @@ export default function AdminScreen() {
               </View>
             ) : null}
 
-            {filtered.map((m) => (
+            {filtered.map((m: DbProfile) => (
               <View key={m.id} className="mb-3 rounded-3xl border border-line bg-surface p-4">
                 <View className="flex-row items-center gap-3">
                   <Avatar name={m.name} size={44} />
@@ -296,7 +296,7 @@ export default function AdminScreen() {
               </View>
             ) : null}
 
-            {requests.map((req) => (
+            {requests.map((req: JoinRequest) => (
               <JoinRequestCard key={req.id} req={req} onUpdate={updateRequestStatus} c={c} />
             ))}
           </Container>
@@ -312,7 +312,7 @@ function JoinRequestCard({
   c,
 }: {
   req: JoinRequest;
-  onUpdate: (id: string, status: 'approved' | 'rejected') => void;
+  onUpdate: (id: string, status: 'approved' | 'rejected', note?: string) => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
   const statusColor = req.status === 'pending' ? '#F59E0B' : req.status === 'approved' ? '#10B981' : '#EF4444';

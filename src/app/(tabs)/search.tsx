@@ -121,7 +121,7 @@ export default function SearchScreen() {
             <>
               <Text className="mb-3 text-[13px] font-sans-md text-muted">{results.length} result{results.length === 1 ? '' : 's'}</Text>
               <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
-                {results.map((l) => (
+                {results.map((l: ListingRow) => (
                   <View key={l.id} style={{ width: `${100 / cols}%`, padding: 6 }}>
                     <ListingCard listing={l} onPress={() => router.push(`/listing/${l.id}` as any)} />
                   </View>

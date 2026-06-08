@@ -300,9 +300,29 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     enabled: true,
     order: 13,
   },
+  {
+    key: 'carpooling',
+    label: 'Carpooling',
+    blurb: 'Share rides and split costs with neighbours going your way',
+    icon: 'car-outline',
+    color: '#0EA5E9',
+    kind: 'listing',
+    listingType: 'service',
+    cta: 'inquire',
+    ctaLabel: 'Join ride',
+    priceLabel: '/trip',
+    attributes: [
+      { key: 'from', label: 'Departure point', type: 'text', required: true, placeholder: 'Society gate, nearest landmark…' },
+      { key: 'to', label: 'Destination', type: 'text', required: true, placeholder: 'Office, railway station, airport…' },
+      { key: 'schedule', label: 'Schedule', type: 'select', required: true, options: ['Daily', 'Weekdays only', 'Weekends only', 'One-time'] },
+      { key: 'departure_time', label: 'Departure time', type: 'text', required: true, placeholder: '8:30 AM' },
+      { key: 'seats', label: 'Seats available', type: 'number', placeholder: '2' },
+      { key: 'preference', label: 'Preference', type: 'select', options: ['All welcome', 'Women only', 'Men only'] },
+    ],
+    enabled: true,
+    order: 14,
+  },
 ];
-
-/** Look up a service category by its key. */
 export function getService(key: string): ServiceCategory | undefined {
   return SERVICE_CATEGORIES.find((s) => s.key === key);
 }

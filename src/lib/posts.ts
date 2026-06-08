@@ -48,7 +48,7 @@ export const POST_CATEGORY_LABELS: Record<PostCategory, string> = {
   lost_found: 'Lost & Found',
 };
 
-export const POST_CATEGORY_ICONS: Record<PostCategory, keyof typeof import('@expo/vector-icons').Ionicons.glyphMap> = {
+export const POST_CATEGORY_ICONS: Record<PostCategory, string> = {
   general: 'chatbubble-outline',
   announcement: 'megaphone-outline',
   issue: 'warning-outline',
@@ -74,14 +74,19 @@ export const ALL_POST_CATEGORIES: PostCategory[] = [
 
 // ── Feed ─────────────────────────────────────────────────────────────
 
-export async function fetchPosts(communityId: string, category?: PostCategory): Promise<PostRow[]> {
+export async function fetchPosts(
+  communityId: string,
+  category?: PostCategory,
+  offset = 0,
+  limit = 20,
+): Promise<PostRow[]> {
   let q = supabase
     .from('posts')
     .select('*, author:profiles!posts_author_id_fkey(name, flat)')
     .eq('community_id', communityId)
     .order('pinned', { ascending: false })
     .order('created_at', { ascending: false })
-    .limit(60);
+    .range(offset, offset + limit - 1);
   if (category) q = q.eq('category', category);
   const { data, error } = await q;
   if (error) throw error;
