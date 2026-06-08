@@ -1,12 +1,13 @@
+import { FlashList } from '@shopify/flash-list';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, Animated, KeyboardAvoidingView, Modal, Platform, Pressable,
-  RefreshControl, ScrollView, Text, TextInput, View,
+  RefreshControl, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Button, Container, useResponsive } from '../../components/ui';
+import { Avatar, Button, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import {
@@ -107,17 +108,21 @@ export default function FeedScreen() {
         </ScrollView>
       </View>
 
-      <ScrollView
+      <FlashList
+        data={loading ? [] : posts}
+        keyExtractor={(item: PostRow) => item.id}
+        renderItem={({ item }: { item: PostRow }) => <PostCard post={item} userId={userId} />}
+        estimatedItemSize={140}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
-      >
-        <Container>
-          {loading ? (
-            <View className="gap-3">
+        ListEmptyComponent={
+          loading ? (
+            <View style={{ gap: 12 }}>
               {[1, 2, 3].map((i) => <PostCardSkeleton key={i} />)}
             </View>
-          ) : posts.length === 0 ? (
+          ) : (
             <View className="items-center py-20">
               <Text style={{ fontSize: 44 }} className="mb-3">💬</Text>
               <Text className="font-display text-xl text-ink mb-1">
@@ -127,28 +132,24 @@ export default function FeedScreen() {
                 Be the first to start a conversation in your society.
               </Text>
             </View>
-          ) : (
-            <View className="gap-3">
-              {posts.map((post: PostRow) => (
-                <PostCard key={post.id} post={post} userId={userId} />
-              ))}
-              {hasMore ? (
-                <Pressable
-                  onPress={loadMore}
-                  disabled={loadingMore}
-                  className="mt-1 items-center rounded-2xl border border-line bg-surface py-3.5 active:opacity-70"
-                >
-                  {loadingMore
-                    ? <ActivityIndicator size="small" color={c.muted} />
-                    : <Text className="font-sans-sb text-[14px] text-muted">Load more</Text>}
-                </Pressable>
-              ) : posts.length > 0 ? (
-                <Text className="py-4 text-center text-[12px] text-faint">You're all caught up</Text>
-              ) : null}
-            </View>
-          )}
-        </Container>
-      </ScrollView>
+          )
+        }
+        ListFooterComponent={
+          hasMore ? (
+            <Pressable
+              onPress={loadMore}
+              disabled={loadingMore}
+              className="mt-3 items-center rounded-2xl border border-line bg-surface py-3.5 active:opacity-70"
+            >
+              {loadingMore
+                ? <ActivityIndicator size="small" color={c.muted} />
+                : <Text className="font-sans-sb text-[14px] text-muted">Load more</Text>}
+            </Pressable>
+          ) : posts.length > 0 ? (
+            <Text className="py-4 text-center text-[12px] text-faint">You're all caught up</Text>
+          ) : null
+        }
+      />
 
       {/* FAB */}
       <View className="absolute bottom-5 right-5">

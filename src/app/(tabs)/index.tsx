@@ -1,13 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { Community, fetchCommunityById } from '../../lib/communities';
 import { SERVICES, ServiceCategory } from '../../lib/services';
 import { isSupabaseConfigured } from '../../lib/supabase';
+import { AppVersion, fetchLatestVersion, isNewer } from '../../lib/appVersion';
 import { useThemeColors } from '../../theme';
 
 type CommunityTile = { key: string; label: string; blurb: string; icon: string; color: string; href: string };
@@ -38,12 +40,24 @@ export default function HomeScreen() {
   const { profile, communityId } = useAuth();
   const c = useThemeColors();
   const [community, setCommunity] = useState<Community | null>(null);
+  const [updateBanner, setUpdateBanner] = useState<AppVersion | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   useEffect(() => {
     if (communityId && isSupabaseConfigured) {
       fetchCommunityById(communityId).then(setCommunity).catch(() => {});
     }
   }, [communityId]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    const currentVersion = Constants.expoConfig?.version ?? '0.0.0';
+    fetchLatestVersion().then((latest) => {
+      if (latest && isNewer(latest.version, currentVersion)) {
+        setUpdateBanner(latest);
+      }
+    }).catch(() => {});
+  }, []);
 
   const greeting = getGreeting();
 
@@ -91,6 +105,50 @@ export default function HomeScreen() {
             What can your society help you with today?
           </Text>
         </View>
+
+        {/* Update banner */}
+        {updateBanner && !bannerDismissed ? (
+          <View
+            className="mb-5 overflow-hidden rounded-2xl"
+            style={{ backgroundColor: updateBanner.force_update ? '#EF444420' : c.surface, borderWidth: 1, borderColor: updateBanner.force_update ? '#EF4444' : c.line }}
+          >
+            <View style={{ height: 3, backgroundColor: updateBanner.force_update ? '#EF4444' : c.accent }} />
+            <View className="flex-row items-start gap-3 p-4">
+              <View
+                className="h-9 w-9 items-center justify-center rounded-xl flex-shrink-0"
+                style={{ backgroundColor: (updateBanner.force_update ? '#EF4444' : c.accent) + '20' }}
+              >
+                <Ionicons name="arrow-up-circle-outline" size={20} color={updateBanner.force_update ? '#EF4444' : c.accent} />
+              </View>
+              <View className="flex-1">
+                <Text className="font-sans-sb text-[14px] text-ink">
+                  {updateBanner.force_update ? 'Update required' : `Version ${updateBanner.version} available`}
+                </Text>
+                <Text className="mt-0.5 text-[12px] text-muted">
+                  {updateBanner.release_notes ?? (updateBanner.force_update ? 'Please update to continue.' : 'Refresh to get the latest version.')}
+                </Text>
+                <View className="mt-3 flex-row gap-2">
+                  {Platform.OS === 'web' ? (
+                    <Pressable
+                      onPress={() => window.location.reload()}
+                      className="rounded-xl bg-accent px-3.5 py-2 active:opacity-80"
+                    >
+                      <Text className="font-sans-sb text-[12px] text-on-accent">Refresh now</Text>
+                    </Pressable>
+                  ) : null}
+                  {!updateBanner.force_update ? (
+                    <Pressable
+                      onPress={() => setBannerDismissed(true)}
+                      className="rounded-xl border border-line bg-inset px-3.5 py-2 active:opacity-70"
+                    >
+                      <Text className="font-sans-sb text-[12px] text-muted">Dismiss</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              </View>
+            </View>
+          </View>
+        ) : null}
 
         {/* Service grid */}
         <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
