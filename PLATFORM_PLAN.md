@@ -1,7 +1,7 @@
 # Aangan — Community Platform Plan
 > **Living document.** Always kept in sync with the codebase. Update on every significant commit.
 > **App:** Aangan (आँगन — courtyard) · **From:** Senate Rasoi (single-society food app)
-> **Last updated:** 2026-06-07 (session 2)
+> **Last updated:** 2026-06-08 (phase 11 complete)
 
 ---
 
@@ -23,27 +23,34 @@
 | Rebrand to Aangan | ✅ | app.json, manifest, Brand, NavRail, HTML meta |
 | Home hub | ✅ | Service tile grid at index.tsx |
 | Food engine | ✅ | Unchanged: dishes, orders, tiffin, subscriptions |
-| Service registry (10 cats) | ✅ | services.ts with attributes |
+| Service registry (15 cats) | ✅ | services.ts — 14 listing cats + food; incl. carpooling |
 | Listings engine | ✅ | listings.ts, ListingCard, CreateListingForm, InquiryModal |
-| Category feeds | ✅ | c/[category].tsx with realtime + cache |
-| Listing detail + contact | ✅ | listing/[id].tsx |
+| Category feeds | ✅ | c/[category].tsx with realtime + cache + pagination |
+| Listing detail + contact | ✅ | listing/[id].tsx + bookmark button |
 | My Listings (You tab) | ✅ | MyListingsSection |
+| Saved / Bookmarks | ✅ | saved_listings (migration 0018), bookmark on detail, Saved tab in You |
 | Post screen (all categories) | ✅ | Category picker → correct form (hook bug fixed) |
 | Multi-society DB schema | ✅ | community_id on profiles + listings (migrations 0008–0011) |
 | Multi-society UI | ✅ | Society picker at sign-up; dynamic communityId in all feeds |
-| New categories (Day Care, Yoga, Arts, Astrology) | ✅ | daycare, fitness, arts, astrology in services.ts |
-| User profile page | ✅ | profile/me.tsx — edit, PIN change, delete account |
+| New categories (Day Care, Yoga, Arts, Astrology, Carpooling) | ✅ | 5 new cats in services.ts |
+| User profile page (own) | ✅ | profile/me.tsx — edit, PIN change, delete account |
+| Public profile page | ✅ | profile/[userId].tsx — name, flat, roles, active listings |
 | Community display | ✅ | Society badge on Home, You, Profile, NavRail |
 | Society join request | ✅ | Form in sign-in; migration 0014; Admin Requests tab |
 | Admin: join requests view | ✅ | Requests tab in admin.tsx |
 | Society onboarding (admin) | ⏸️ | Approve button in admin→Requests; creating community row needs manual DB step |
 | Community posts / threads | ✅ | posts.ts, feed.tsx, feed/[postId].tsx, migrations 0012–0013 |
+| Feed compose UX | ✅ | Post button moved to sticky footer above keyboard |
 | Search & filter | ✅ | search.tsx, searchListings(), category filter chips |
 | Issues / feedback page | ✅ | Feed tab with category filter (issue/feedback/suggestion) |
+| Polls & Surveys | ✅ | polls.tsx, realtime voting, create/close/delete (migration 0020) |
+| Emergency Contacts | ✅ | emergency.tsx, 7 role types, admin add/delete, direct dial (migration 0019) |
 | Society-based access control | ✅ | RLS on all tables; is_admin fn (migration 0017); communityId in all queries |
 | About page + version | ✅ | about.tsx with version, features, technical info |
 | Pagination (category feeds) | ✅ | limit/offset + Load more in c/[category].tsx |
 | React.memo (ListingCard) | ✅ | ListingCard wrapped in memo |
+| Mobile nav to Polls/Emergency | ⬜ | Only on desktop NavRail — need mobile entry points |
+| Posts feed pagination | ⬜ | Currently loads all posts; needs limit/offset + Load more |
 | Full performance (FlashList, Sentry) | ⬜ | Phase 9 items — planned |
 | iOS / Android (EAS) | ⬜ | After web version is stable |
 | App store submissions | ⬜ | After iOS/Android phase |
@@ -81,14 +88,15 @@ from each other: home food, services, buy & sell, community posts, and a trusted
 | 8 | `market` | Buy & Sell | Product | ✅ |
 | 9 | `directory` | Service Directory | Recommendation | ✅ |
 
-### 2b. New categories to add — ⬜
+### 2b. Added categories — ✅ All in services.ts
 
-| # | Key | Label | Rationale |
-|---|-----|-------|-----------|
-| 10 | `daycare` | Day Care | Childcare services in the society; high demand |
-| 11 | `fitness` | Yoga & Fitness | Yoga, gym trainers, Zumba, meditation |
-| 12 | `arts` | Arts & Activities | Dance, painting, music, craft — all creative classes |
-| 13 | `astrology` | Astrology | Horoscope, kundali, vastu, numerology, tarot |
+| # | Key | Label | Status |
+|---|-----|-------|--------|
+| 10 | `daycare` | Day Care | ✅ Phase 3 |
+| 11 | `fitness` | Yoga & Fitness | ✅ Phase 3 |
+| 12 | `arts` | Arts & Activities | ✅ Phase 3 |
+| 13 | `astrology` | Astrology | ✅ Phase 3 |
+| 14 | `carpooling` | Carpooling | ✅ Phase 11 |
 
 **On dance & painting:** Recommend **one combined "Arts & Activities" category** rather than
 two separate categories or folding into Tuitions. Reasons:
@@ -139,7 +147,7 @@ arts:
 ```
 ┌─────────────────────────────────────────────────────┐
 │                    HOME HUB                          │
-│         service tile grid (13 categories)            │
+│         service tile grid (15 categories)            │
 └──────────────────┬──────────────────────────────────┘
          ┌─────────┴──────────┐
          ▼                    ▼
@@ -190,96 +198,34 @@ scoped to that society. Admins of a society can manage that society only. Platfo
 | 0010 | listings table + RLS + realtime |
 | 0011 | inquiries table + RLS + push trigger |
 
-### 4b. Pending tables (new migrations needed)
+### 4b. All migrations — ✅ Complete (0001–0020)
 
-**0012 — `posts` (community thread / noticeboard)**
-```sql
-create table public.posts (
-  id           uuid primary key default gen_random_uuid(),
-  community_id uuid not null references communities(id) on delete cascade,
-  author_id    uuid not null references profiles(id) on delete cascade,
-  category     text not null default 'general'
-                 check (category in ('general','issue','feedback','suggestion','event','lost_found')),
-  title        text,
-  body         text not null,
-  photos       text[] not null default '{}',
-  pinned       boolean not null default false,
-  resolved     boolean not null default false,  -- for issues/feedback
-  created_at   timestamptz not null default now(),
-  updated_at   timestamptz not null default now()
-);
-create index posts_feed_idx on posts (community_id, category, created_at desc);
-alter table posts enable row level security;
--- read: community members; write: owner or admin
-alter publication supabase_realtime add table posts;
-```
+| Migration | Contents | Status |
+|-----------|----------|--------|
+| 0001 | communities, profiles, dishes, orders | ✅ |
+| 0002 | order RPCs (place, accept, cancel) | ✅ |
+| 0003 | auth via Supabase + roles | ✅ |
+| 0004 | full order lifecycle, Kitchen RPCs | ✅ |
+| 0005 | push_tokens, pg_net → Expo Push | ✅ |
+| 0006 | serve_date on dishes | ✅ |
+| 0007 | tiffin_plans, subscriptions, subscription_skips | ✅ |
+| 0008 | communities.slug + address | ✅ |
+| 0009 | profiles.community_id FK | ✅ |
+| 0010 | listings table + RLS + realtime | ✅ |
+| 0011 | inquiries table + RLS + push trigger | ✅ |
+| 0012 | posts table + RLS + realtime | ✅ |
+| 0013 | post_comments table + RLS + realtime | ✅ |
+| 0014 | society_join_requests table | ✅ |
+| 0015 | delete_own_account SECURITY DEFINER RPC | ✅ |
+| 0016 | app_versions table (for update notifications) | ✅ |
+| 0017 | is_admin(uid) DB function + updated RLS policies | ✅ |
+| 0018 | saved_listings table + RLS | ✅ |
+| 0019 | emergency_contacts table + RLS | ✅ |
+| 0020 | polls + poll_options + poll_votes tables + RLS + realtime | ✅ |
 
-**0013 — `post_comments`**
-```sql
-create table public.post_comments (
-  id         uuid primary key default gen_random_uuid(),
-  post_id    uuid not null references posts(id) on delete cascade,
-  author_id  uuid not null references profiles(id) on delete cascade,
-  body       text not null,
-  created_at timestamptz not null default now()
-);
-create index comments_post_idx on post_comments (post_id, created_at);
-alter table post_comments enable row level security;
-alter publication supabase_realtime add table post_comments;
-```
-
-**0014 — `society_join_requests`**
-```sql
-create table public.society_join_requests (
-  id              uuid primary key default gen_random_uuid(),
-  society_name    text not null,
-  society_address text not null,
-  requester_name  text not null,
-  requester_phone text not null,
-  requester_email text,
-  status          text not null default 'pending'
-                    check (status in ('pending','approved','rejected')),
-  admin_note      text,
-  created_at      timestamptz not null default now()
-);
--- Visible to super-admins only; writable by anyone (unauthenticated allowed for request submission)
-```
-
-**0015 — `app_versions`** (for update notifications)
-```sql
-create table public.app_versions (
-  id           serial primary key,
-  version      text not null,       -- e.g. "1.2.0"
-  build_number integer not null,
-  platform     text not null check (platform in ('web','ios','android','all')),
-  force_update boolean not null default false,
-  release_notes text,
-  created_at   timestamptz not null default now()
-);
--- Read-only for all authenticated users
-```
-
-**0016 — `saved_listings`** (bookmarks)
-```sql
-create table public.saved_listings (
-  user_id    uuid references profiles(id) on delete cascade,
-  listing_id uuid references listings(id) on delete cascade,
-  saved_at   timestamptz not null default now(),
-  primary key (user_id, listing_id)
-);
-```
-
-**0017 — `listing_reports`** (moderation)
-```sql
-create table public.listing_reports (
-  id         uuid primary key default gen_random_uuid(),
-  listing_id uuid not null references listings(id) on delete cascade,
-  reporter_id uuid not null references profiles(id) on delete cascade,
-  reason     text not null,
-  created_at timestamptz not null default now(),
-  unique (listing_id, reporter_id)
-);
-```
+**Pending (future):**
+- `listing_reports` — moderation queue (schema designed; UI not yet built)
+- Full-text search indexes on listings + posts (Phase 9)
 
 ---
 
@@ -647,16 +593,25 @@ admin/societies.tsx      Super-admin society management (future)
 
 ## 10. Immediate Next Steps (ordered)
 
-1. **✅ Phase 3** — 3 new categories added to `services.ts`
-2. **⏸️ Supabase** — User runs migrations 0008–0011 + creates `listing-photos` bucket
-3. **⬜ Phase 4** — Multi-society UI: society picker at sign-up, remove hardcoded COMMUNITY_ID
-4. **⬜ Phase 4** — User profile page (`profile/me.tsx`) + society display in header
-5. **⬜ Phase 5** — Posts/threads engine (migrations 0012–0013 + feed screens)
-6. **⬜ Phase 6** — Search & filter
-7. **⬜ Phase 7** — Access control hardening + admin tools
-8. **⬜ Phase 8** — About page + version/update notification
-9. **⬜ Phase 9** — Performance (FlashList, pagination, Lighthouse)
-10. **⬜ Phase 10** — iOS/Android (EAS builds, store submission)
+**User must do (blocking):**
+1. **⏸️ Run migrations 0018–0020** in Supabase SQL editor (saved_listings, emergency_contacts, polls)
+2. **⏸️ Run migrations 0012–0017** if not already done (posts, comments, join_requests, delete_account, app_versions, is_admin)
+3. **⏸️ Create `listing-photos` bucket** in Supabase Storage (public bucket)
+
+**Code — high priority:**
+4. **⬜ Mobile nav to Polls/Emergency** — add entry points reachable from mobile (You tab quick links or Home hub tiles)
+5. **⬜ Posts feed pagination** — currently loads all; add limit/offset + Load more (same pattern as c/[category].tsx)
+6. **⬜ Announcement-only for admins** — filter `announcement` category out of ComposeModal for non-admins
+
+**Code — performance (Phase 9):**
+7. **⬜ Memoize PostCard** — extract from inline in feed.tsx, wrap in React.memo
+8. **⬜ FlashList** — replace ScrollView+map in category feeds and posts feed
+9. **⬜ Skeleton loaders** — for posts feed and search results
+10. **⬜ Update notification banner** — check app_versions table on Home load; show banner if newer version exists
+
+**When ready for native:**
+11. **⏸️ Apple Developer account** ($99/yr) → TestFlight → App Store
+12. **⏸️ Google Play account** ($25) → internal track → Play Store
 
 ---
 
