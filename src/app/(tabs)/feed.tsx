@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable,
   RefreshControl, ScrollView, Text, TextInput, View,
@@ -132,7 +132,7 @@ export default function FeedScreen() {
           ) : (
             <View className="gap-3">
               {posts.map((post: PostRow) => (
-                <PostCard key={post.id} post={post} userId={userId} onPress={() => router.push(`/feed/${post.id}` as any)} c={c} />
+                <PostCard key={post.id} post={post} userId={userId} />
               ))}
               {hasMore ? (
                 <Pressable
@@ -177,14 +177,16 @@ export default function FeedScreen() {
   );
 }
 
-function PostCard({ post, userId, onPress, c }: { post: PostRow; userId: string | null; onPress: () => void; c: ReturnType<typeof useThemeColors> }) {
+const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userId: string | null }) {
+  const router = useRouter();
+  const c = useThemeColors();
   const color = POST_CATEGORY_COLORS[post.category];
   const icon = POST_CATEGORY_ICONS[post.category];
   const isOwn = post.author_id === userId;
   const timeAgo = formatTimeAgo(post.created_at);
 
   return (
-    <Pressable onPress={onPress} className="rounded-3xl bg-surface active:opacity-85" style={{ borderWidth: 1, borderColor: c.line }}>
+    <Pressable onPress={() => router.push(`/feed/${post.id}` as any)} className="rounded-3xl bg-surface active:opacity-85" style={{ borderWidth: 1, borderColor: c.line }}>
       {/* Category accent strip */}
       <View style={{ height: 3, backgroundColor: color, borderTopLeftRadius: 20, borderTopRightRadius: 20 }} />
 
@@ -228,7 +230,7 @@ function PostCard({ post, userId, onPress, c }: { post: PostRow; userId: string 
       </View>
     </Pressable>
   );
-}
+});
 
 function ComposeModal({ visible, onClose, onPosted, communityId, authorId, authorName, isAdmin }: {
   visible: boolean; onClose: () => void; onPosted: () => void;
