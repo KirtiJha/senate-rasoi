@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView, Modal, Platform, Pressable,
+  ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable,
   RefreshControl, ScrollView, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,20 +36,42 @@ export default function FeedScreen() {
   const { isDesktop } = useResponsive();
   const { userId, communityId, profile } = useAuth();
 
+  const PAGE = 20;
+
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [activeFilter, setActiveFilter] = useState<PostCategory | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(0);
   const [showCompose, setShowCompose] = useState(false);
 
   const load = useCallback(async () => {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
     try {
       const cat = activeFilter === 'all' ? undefined : activeFilter;
-      setPosts(await fetchPosts(communityId, cat));
+      const rows = await fetchPosts(communityId, cat, 0, PAGE);
+      setPosts(rows);
+      setPage(0);
+      setHasMore(rows.length === PAGE);
     } catch { toast.show('Could not load posts'); }
     finally { setLoading(false); }
   }, [communityId, activeFilter, toast]);
+
+  const loadMore = useCallback(async () => {
+    if (!communityId || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const cat = activeFilter === 'all' ? undefined : activeFilter;
+      const nextPage = page + 1;
+      const rows = await fetchPosts(communityId, cat, nextPage * PAGE, PAGE);
+      setPosts((prev) => [...prev, ...rows]);
+      setPage(nextPage);
+      setHasMore(rows.length === PAGE);
+    } catch { toast.show('Could not load more posts'); }
+    finally { setLoadingMore(false); }
+  }, [communityId, activeFilter, loadingMore, hasMore, page]);
 
   useEffect(() => {
     setLoading(true);
@@ -112,6 +134,19 @@ export default function FeedScreen() {
               {posts.map((post: PostRow) => (
                 <PostCard key={post.id} post={post} userId={userId} onPress={() => router.push(`/feed/${post.id}` as any)} c={c} />
               ))}
+              {hasMore ? (
+                <Pressable
+                  onPress={loadMore}
+                  disabled={loadingMore}
+                  className="mt-1 items-center rounded-2xl border border-line bg-surface py-3.5 active:opacity-70"
+                >
+                  {loadingMore
+                    ? <ActivityIndicator size="small" color={c.muted} />
+                    : <Text className="font-sans-sb text-[14px] text-muted">Load more</Text>}
+                </Pressable>
+              ) : posts.length > 0 ? (
+                <Text className="py-4 text-center text-[12px] text-faint">You're all caught up</Text>
+              ) : null}
             </View>
           )}
         </Container>
