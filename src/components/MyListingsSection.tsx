@@ -5,6 +5,7 @@ import { Alert, Platform, ScrollView, Text, View } from 'react-native';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { haptics } from '../lib/haptics';
+import { fetchInquiryCountsForOwner } from '../lib/inquiries';
 import { deleteListing, fetchMyListings, setListingStatus } from '../lib/listings';
 import { getService } from '../lib/services';
 import { ListingRow } from '../lib/types';
@@ -18,12 +19,17 @@ export function MyListingsSection() {
   const c = useThemeColors();
 
   const [listings, setListings] = useState<ListingRow[]>([]);
+  const [inquiryCounts, setInquiryCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!userId) return;
     try {
-      setListings(await fetchMyListings(userId));
+      const rows = await fetchMyListings(userId);
+      setListings(rows);
+      fetchInquiryCountsForOwner(rows.map((l) => l.id))
+        .then(setInquiryCounts)
+        .catch(() => {});
     } catch (e) {
       console.error(e);
     } finally {
@@ -117,6 +123,14 @@ export function MyListingsSection() {
                         {l.status}
                       </Text>
                     </View>
+                    {(inquiryCounts[l.id] ?? 0) > 0 && (
+                      <View className="flex-row items-center gap-1 rounded-full px-1.5 py-0.5" style={{ backgroundColor: c.accent + '1A' }}>
+                        <Ionicons name="people" size={10} color={c.accent} />
+                        <Text className="text-[10px] font-sans-sb" style={{ color: c.accent }}>
+                          {inquiryCounts[l.id]} interested
+                        </Text>
+                      </View>
+                    )}
                   </View>
                 </View>
 

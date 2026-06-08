@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useThemeColors } from '../theme';
+import { IMAGE_CACHE_PROPS } from '../lib/image';
 import { countdown } from '../lib/time';
 import { DishRow, SLOT_EMOJI } from '../lib/types';
 import { Avatar, Badge, Button, VegMark } from './ui';
@@ -56,7 +57,7 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCar
       {/* ── Photo ─────────────────────────────────────────────────── */}
       <View style={{ height: hero ? 230 : 180 }} className="w-full">
         {dish.photo_url ? (
-          <Image source={{ uri: dish.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" transition={200} />
+          <Image source={{ uri: dish.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" recyclingKey={dish.photo_url} {...IMAGE_CACHE_PROPS} />
         ) : (
           <LinearGradient colors={[g1, g2]} style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ fontSize: hero ? 66 : 54 }}>{SLOT_EMOJI[dish.slot] ?? '🍽️'}</Text>

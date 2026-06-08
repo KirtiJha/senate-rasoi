@@ -63,7 +63,7 @@ export default function HomeScreen() {
 
   const handleCategoryPress = (cat: ServiceCategory) => {
     if (cat.key === 'food') {
-      router.push('/food');
+      router.push('/food' as any);
     } else {
       router.push(`/c/${cat.key}` as any);
     }

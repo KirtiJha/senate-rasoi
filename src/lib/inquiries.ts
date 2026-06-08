@@ -26,6 +26,28 @@ export async function fetchMyInquiries(userId: string): Promise<InquiryRow[]> {
   return (data ?? []) as InquiryRow[];
 }
 
+/**
+ * How many neighbours have enquired on each of the given listings.
+ * Returns a map of listing_id → count. RLS lets a listing owner read the
+ * inquiries on their own listings, so this is safe to call for one's own ids.
+ */
+export async function fetchInquiryCountsForOwner(
+  listingIds: string[]
+): Promise<Record<string, number>> {
+  if (!isSupabaseConfigured || listingIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from('inquiries')
+    .select('listing_id')
+    .in('listing_id', listingIds);
+  if (error) throw error;
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    const id = (row as { listing_id: string }).listing_id;
+    counts[id] = (counts[id] ?? 0) + 1;
+  }
+  return counts;
+}
+
 /** All inquiries on a listing (owner-only; RLS enforces this). */
 export async function fetchListingInquiries(listingId: string): Promise<InquiryRow[]> {
   const { data, error } = await supabase

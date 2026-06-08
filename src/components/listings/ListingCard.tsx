@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { getService } from '../../lib/services';
 import { ListingRow } from '../../lib/types';
 import { useThemeColors } from '../../theme';
@@ -31,7 +32,13 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
 
       {/* Photo or icon placeholder */}
       {photo ? (
-        <Image source={{ uri: photo }} style={{ width: '100%', height: 140 }} contentFit="cover" />
+        <Image
+          source={{ uri: photo }}
+          style={{ width: '100%', height: 140 }}
+          contentFit="cover"
+          recyclingKey={photo}
+          {...IMAGE_CACHE_PROPS}
+        />
       ) : (
         <View
           className="items-center justify-center"

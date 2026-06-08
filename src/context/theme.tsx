@@ -38,7 +38,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [preference, setPref] = useState<ThemePreference>('system');
 
   const resolved: 'light' | 'dark' =
-    preference === 'system' ? (system ?? 'light') : preference;
+    preference === 'system' ? (system === 'dark' ? 'dark' : 'light') : preference;
 
   useEffect(() => {
     AsyncStorage.getItem(KEY).then((v) => {

@@ -299,6 +299,7 @@ export function NavRail() {
                 }}
               >
                 <Text
+                  numberOfLines={1}
                   style={{
                     fontFamily: 'HankenGrotesk_600SemiBold',
                     fontSize: 15,
@@ -356,6 +357,7 @@ export function NavRail() {
             }}
           >
             <Text
+              numberOfLines={1}
               style={{
                 fontFamily: 'HankenGrotesk_500Medium',
                 fontSize: 13,

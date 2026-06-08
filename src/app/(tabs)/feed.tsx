@@ -112,7 +112,6 @@ export default function FeedScreen() {
         data={loading ? [] : posts}
         keyExtractor={(item: PostRow) => item.id}
         renderItem={({ item }: { item: PostRow }) => <PostCard post={item} userId={userId} />}
-        estimatedItemSize={140}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}

@@ -20,6 +20,23 @@ export function Skeleton({ style, radius = 8 }: { style?: ViewStyle; radius?: nu
   return <Animated.View style={[{ opacity, backgroundColor: c.inset, borderRadius: radius }, style]} />;
 }
 
+export function ListingCardSkeleton() {
+  return (
+    <View className="overflow-hidden rounded-2xl border border-line bg-surface">
+      <Skeleton style={{ height: 140 }} radius={0} />
+      <View className="p-3" style={{ gap: 8 }}>
+        <Skeleton style={{ width: '80%', height: 14 }} />
+        <Skeleton style={{ width: '40%', height: 12 }} />
+        <View className="flex-row items-center gap-1.5">
+          <Skeleton style={{ width: 18, height: 18 }} radius={9} />
+          <Skeleton style={{ width: '55%', height: 10 }} />
+        </View>
+        <Skeleton style={{ height: 30, marginTop: 2 }} radius={12} />
+      </View>
+    </View>
+  );
+}
+
 export function DishCardSkeleton() {
   return (
     <View className="overflow-hidden rounded-3xl border border-line bg-surface">

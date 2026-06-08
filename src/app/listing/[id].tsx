@@ -5,10 +5,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { InquiryModal } from '../../components/listings/InquiryModal';
+import { ListingChat } from '../../components/listings/ListingChat';
 import { Avatar, Badge, Button, Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { haptics } from '../../lib/haptics';
+import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { sendInquiry } from '../../lib/inquiries';
 import { buildInquiryWhatsAppLink, deleteListing, fetchListingById, setListingStatus } from '../../lib/listings';
 import { isListingSaved, saveListing, unsaveListing } from '../../lib/saved';
@@ -136,7 +138,7 @@ export default function ListingDetailScreen() {
         {/* Hero image or colour block */}
         {photo ? (
           <View style={{ height: 280 }}>
-            <Image source={{ uri: photo }} style={{ width: '100%', height: 280 }} contentFit="cover" />
+            <Image source={{ uri: photo }} style={{ width: '100%', height: 280 }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
             {/* Back button overlaid on photo */}
             <Pressable
               onPress={() => router.back()}
@@ -288,6 +290,14 @@ export default function ListingDetailScreen() {
                 />
               </View>
             )}
+
+            {/* In-app chat thread (Phase 12a) */}
+            <ListingChat
+              listingId={listing.id}
+              ownerUserId={listing.owner_user_id}
+              ownerName={ownerName}
+              accent={cat?.color ?? c.accent}
+            />
           </Container>
         </View>
       </ScrollView>

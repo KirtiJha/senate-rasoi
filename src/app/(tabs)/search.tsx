@@ -1,15 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
+import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ListingCard } from '../../components/listings/ListingCard';
-import { Container, useResponsive } from '../../components/ui';
+import { ListingCardSkeleton, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { searchListings } from '../../lib/listings';
 import { SERVICES } from '../../lib/services';
 import { ListingRow } from '../../lib/types';
-import { useThemeColors } from '../../theme';
+import { layout, useThemeColors } from '../../theme';
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -45,6 +46,7 @@ export default function SearchScreen() {
 
   const cols = isDesktop ? 3 : 2;
   const listingServices = SERVICES.filter((s) => s.kind === 'listing');
+  const showGrid = hasSearched && !searching && results.length > 0;
 
   return (
     <View className="flex-1 bg-bg">
@@ -95,42 +97,59 @@ export default function SearchScreen() {
         </ScrollView>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <Container>
-          {!hasSearched ? (
-            <View className="items-center py-20">
-              <Ionicons name="search-outline" size={44} color={c.faint} />
-              <Text className="mt-3 font-display text-xl text-ink">Search your society</Text>
-              <Text className="mt-1 max-w-xs text-center text-[14px] text-muted">
-                Find services, items for sale, tutors, and more posted by your neighbours.
+      {showGrid ? (
+        <View style={{ flex: 1, width: '100%', maxWidth: layout.maxContent, alignSelf: 'center' }}>
+          <FlashList
+            key={cols}
+            data={results}
+            numColumns={cols}
+            keyExtractor={(item: ListingRow) => item.id}
+            renderItem={({ item }: { item: ListingRow }) => (
+              <View style={{ flex: 1, padding: 6 }}>
+                <ListingCard listing={item} onPress={() => router.push(`/listing/${item.id}` as any)} />
+              </View>
+            )}
+            contentContainerStyle={{ padding: 10, paddingBottom: 40 }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            ListHeaderComponent={
+              <Text className="mb-2 text-[13px] font-sans-md text-muted" style={{ paddingHorizontal: 6 }}>
+                {results.length} result{results.length === 1 ? '' : 's'}
               </Text>
-            </View>
-          ) : searching ? (
-            <View className="items-center py-10">
-              <Text className="text-[14px] text-muted">Searching…</Text>
-            </View>
-          ) : results.length === 0 ? (
-            <View className="items-center py-16">
-              <Text style={{ fontSize: 38 }} className="mb-3">🔍</Text>
-              <Text className="font-display text-xl text-ink mb-1">No results found</Text>
-              <Text className="text-[14px] text-muted text-center max-w-xs">
-                Try different keywords or clear the category filter.
-              </Text>
-            </View>
-          ) : (
-            <>
-              <Text className="mb-3 text-[13px] font-sans-md text-muted">{results.length} result{results.length === 1 ? '' : 's'}</Text>
+            }
+          />
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
+            {!hasSearched ? (
+              <View className="items-center py-20">
+                <Ionicons name="search-outline" size={44} color={c.faint} />
+                <Text className="mt-3 font-display text-xl text-ink">Search your society</Text>
+                <Text className="mt-1 max-w-xs text-center text-[14px] text-muted">
+                  Find services, items for sale, tutors, and more posted by your neighbours.
+                </Text>
+              </View>
+            ) : searching ? (
               <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
-                {results.map((l: ListingRow) => (
-                  <View key={l.id} style={{ width: `${100 / cols}%`, padding: 6 }}>
-                    <ListingCard listing={l} onPress={() => router.push(`/listing/${l.id}` as any)} />
+                {Array.from({ length: cols * 2 }).map((_, i) => (
+                  <View key={i} style={{ width: `${100 / cols}%`, padding: 6 }}>
+                    <ListingCardSkeleton />
                   </View>
                 ))}
               </View>
-            </>
-          )}
-        </Container>
-      </ScrollView>
+            ) : (
+              <View className="items-center py-16">
+                <Text style={{ fontSize: 38 }} className="mb-3">🔍</Text>
+                <Text className="font-display text-xl text-ink mb-1">No results found</Text>
+                <Text className="text-[14px] text-muted text-center max-w-xs">
+                  Try different keywords or clear the category filter.
+                </Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      )}
     </View>
   );
 }

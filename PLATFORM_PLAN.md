@@ -1,7 +1,7 @@
 # Aangan — Community Platform Plan
 > **Living document.** Always kept in sync with the codebase. Update on every significant commit.
 > **App:** Aangan (आँगन — courtyard) · **From:** Senate Rasoi (single-society food app)
-> **Last updated:** 2026-06-08 (NavRail redesign + feed blank screen fix)
+> **Last updated:** 2026-06-08 (Phase 12a per-listing chat shipped; perf polish: FlashList grids, image caching, search skeletons, inquiry-count badge; NavRail collapse fix; tsc clean)
 
 ---
 
@@ -38,7 +38,7 @@
 | Community display | ✅ | Society badge on Home, You, Profile, NavRail |
 | Society join request | ✅ | Form in sign-in; migration 0014; Admin Requests tab |
 | Admin: join requests view | ✅ | Requests tab in admin.tsx |
-| Society onboarding (admin) | ⏸️ | Approve button in admin→Requests; creating community row needs manual DB step |
+| Society onboarding (admin) | ⏸️ | Approve button in admin→Requests; creating community row needs manual DB step (first society seeded manually ✅) |
 | Community posts / threads | ✅ | posts.ts, feed.tsx, feed/[postId].tsx, migrations 0012–0013 |
 | Feed compose UX | ✅ | Post button moved to sticky footer above keyboard |
 | Search & filter | ✅ | search.tsx, searchListings(), category filter chips |
@@ -60,8 +60,14 @@
 | NavRail — collapsible | ✅ | 220px ↔ 64px icon-only; spring animation; chevron rotates 180° |
 | NavRail — restructured sections | ✅ | Primary → Community → Admin → spacer → New Post CTA → About/Theme |
 | NavRail — active left-bar indicator | ✅ | 3px accent bar on active item (VS Code / Linear style) |
-| Push token capture | ⬜ | Architecture exists (migration 0005); registration code missing |
-| Per-listing chat threads | ⬜ | Phase 12a — highest priority next feature |
+| Push token capture | ✅ | `registerPush()` in lib/push.ts, called from auth.tsx on login; upserts to push_tokens (native-only, web no-op) |
+| Supabase backend live | ✅ | All migrations 0001–0020 run; `listing-photos` bucket created; first community seeded; admin granted |
+| Web deploy (GitHub + Vercel) | ✅ | Deployed to main / Vercel |
+| Per-listing chat threads | ✅ | Phase 12a — `listing_messages` (migration 0021) + realtime + push; collapsible ListingChat on listing detail ⏸️ needs migration 0021 run in Supabase |
+| Listing-grid FlashList | ✅ | Category feed + search results now FlashList (numColumns, centered maxWidth) |
+| Search-result skeletons | ✅ | ListingCardSkeleton grid while searching |
+| Image caching + blurhash | ✅ | IMAGE_CACHE_PROPS (memory-disk + neutral blurhash + fade) on ListingCard, listing hero, DishCard |
+| Inquiry-count badge (My Listings) | ✅ | "N interested" badge per card via fetchInquiryCountsForOwner |
 | Direct messages (DMs) | ⬜ | Phase 12b — deferred after 12a stable |
 | Sentry / PostHog monitoring | ⬜ | Requires external accounts |
 | iOS / Android (EAS) | ⬜ | After web version is stable |
@@ -234,6 +240,7 @@ scoped to that society. Admins of a society can manage that society only. Platfo
 | 0018 | saved_listings table + RLS | ✅ |
 | 0019 | emergency_contacts table + RLS | ✅ |
 | 0020 | polls + poll_options + poll_votes tables + RLS + realtime | ✅ |
+| 0021 | listing_messages (per-listing chat) + RLS + realtime + push trigger | ⏸️ written — run in Supabase |
 
 **Pending (future):**
 - `listing_reports` — moderation queue (schema designed; UI not yet built)
@@ -350,9 +357,9 @@ admin/societies.tsx      Super-admin society management (future)
 - ✅ Post screen: category picker → correct form (Rules of Hooks + stale state bugs fixed)
 - ✅ All 10 categories registered and functional end-to-end
 
-**Still needed from Phase 2 (user action required):**
-- ⏸️ Run migrations 0008–0011 in Supabase SQL editor
-- ⏸️ Create `listing-photos` public storage bucket in Supabase
+**Phase 2 backend setup — ✅ Done:**
+- ✅ Migrations 0008–0011 run in Supabase
+- ✅ `listing-photos` public storage bucket created
 
 ---
 
@@ -385,7 +392,8 @@ admin/societies.tsx      Super-admin society management (future)
 
 #### 4c. Admin society onboarding ⏸️
 - ✅ Requests tab with approve/reject UI
-- ⏸️ Approving creates community row (needs manual DB creation for now — approve button updates status only)
+- ✅ First community seeded manually in DB (test society live)
+- ⏸️ Approving a join request still needs a manual DB step to create the community row (approve button updates status only)
 - ⬜ `admin/societies.tsx` — full society management (future)
 
 #### 4d. Full user profile page ✅
@@ -461,22 +469,24 @@ admin/societies.tsx      Super-admin society management (future)
 
 #### 9a. Rendering performance
 - ✅ `React.memo` on `ListingCard` and `DishCard`
-- ⬜ Extract `PostCard` to memoized component (currently inline in feed.tsx)
-- ⬜ Replace `ScrollView + .map()` listing grids with `FlashList` (need to add package)
-- ⬜ Skeleton loading states for posts feed and search results
+- ✅ `PostCard` extracted to a memoized component (feed.tsx:224)
+- ✅ Posts feed uses `FlashList` (`@shopify/flash-list` installed; feed.tsx)
+- ✅ Skeleton loaders for posts feed (`PostCardSkeleton`)
+- ✅ Category feed + search results now use `FlashList` (numColumns, centered maxWidth; `estimatedItemSize` removed for FlashList v2)
+- ✅ Skeleton loading states for **search** results (`ListingCardSkeleton` grid)
 
 #### 9b. Data & caching
 - ✅ Paginate category feeds: `limit(20)` + "Load more" in `c/[category].tsx`
 - ✅ Stale-while-revalidate (AsyncStorage cache already in category feed)
 - ✅ Search debounce (350ms) in search.tsx
-- ⬜ Paginate posts feed (currently loads all)
-- ⬜ Supabase full-text search indexes (migration 0018)
+- ✅ Paginate posts feed (PAGE=20 + "Load more"; feed.tsx)
+- ⬜ Supabase full-text search indexes (future migration — note: 0018 is already `saved_listings`)
 - ⬜ Debounce realtime refetch (50ms)
 
 #### 9c. Image performance
-- ⬜ `expo-image` with `cachePolicy="memory-disk"` everywhere (no raw `<Image>` from RN)
+- ✅ `expo-image` with `cachePolicy="memory-disk"` on ListingCard, listing hero, DishCard (shared `IMAGE_CACHE_PROPS` in `lib/image.ts`)
+- ✅ Blurhash placeholders + 200ms fade while images load (one neutral hash; no per-image hashing)
 - ⬜ Upload pipeline: resize to 1000px width + JPEG 0.7 (already done for listings; apply to food)
-- ⬜ Blurhash placeholders while images load
 - ⬜ Supabase Storage image transforms (`?width=400&quality=75` URL param) for thumbnails vs full
 
 #### 9d. Web / PWA
@@ -600,8 +610,8 @@ admin/societies.tsx      Super-admin society management (future)
 | 17 | Polls voting model | ✅ Upsert with `onConflict: poll_id,user_id` — users can change their vote; one vote per poll |
 | 18 | Carpooling | ✅ Added as listing service category (not a separate posts engine) — same CRUD pattern |
 | 19 | Saved listings | ✅ Composite PK `(user_id, listing_id)`; 23505 conflict silently swallowed on duplicate save |
-| 20 | In-app chat model | ✅ WhatsApp deep-link covers Phase 1–11; Phase 12a adds per-listing threads; full DMs deferred to 12b |
-| 21 | Push notifications | ✅ DB architecture complete (pg_net triggers); token capture deferred to after native builds (Phase 10) |
+| 20 | In-app chat model | ✅ Phase 12a per-listing threads built (society-readable, like post_comments); full 1:1 DMs deferred to 12b |
+| 21 | Push notifications | ✅ DB architecture (pg_net triggers) + client token capture both complete; end-to-end delivery verifiable only on a native build (Phase 10) |
 | 22 | SMS / OTP | ✅ Auth uses PIN (not SMS OTP); no SMS gateway needed — intentional, keeps infra simple |
 
 ---
@@ -633,14 +643,12 @@ The architecture exists but registration is **incomplete**:
 | `notify_user()` Postgres function via `pg_net` | ✅ Exists |
 | Order status change → buyer notified | ✅ DB trigger fires |
 | New inquiry → listing owner notified | ✅ DB trigger fires |
-| **Token capture code in app** | ❌ **MISSING** — no call to `Notifications.getExpoPushTokenAsync()` |
+| **Token capture code in app** | ✅ **Done** — `registerPush()` (lib/push.ts) calls `getExpoPushTokenAsync()` and upserts to `push_tokens`; invoked from auth.tsx on login |
 | New post/comment notification | ❌ Not implemented |
 | New poll notification | ❌ Not implemented |
 | Web push | ❌ Not supported (Expo tokens are native-only) |
 
-**What's missing:** When the app starts on a native device, it needs to call `Notifications.getExpoPushTokenAsync()` (with the EAS project ID) and upsert the result into `push_tokens`. This one missing step means all existing DB triggers are silently firing but have no token to deliver to.
-
-This only matters after native iOS/Android builds are ready (Phase 10). On web, push simply doesn't apply.
+**Status:** Token capture is wired (`lib/push.ts` → `getExpoPushTokenAsync()` with EAS project ID → upsert into `push_tokens`, called from `auth.tsx` on login). It is a **native-only no-op on web** (`Platform.OS === 'web' || !Device.isDevice` early-return), so end-to-end delivery can only be verified once a native build exists (Phase 10). The DB triggers (order status, new inquiry) will then have a token to deliver to. On web, push simply doesn't apply.
 
 ---
 
@@ -672,12 +680,14 @@ Useful for private conversation that isn't tied to a listing (e.g., "Hey, can I 
 
 ### Recommendation — Phase 12: In-App Chat
 
-**Phase 12a (per-listing threads — DO THIS FIRST):**
-- New table: `listing_messages (id, listing_id, author_id, body, created_at)`
-- RLS: community members of the listing's society can read; listing owner + inquirer can write
-- Realtime subscription on `listing_id`
-- UI: collapsible "Chat with owner" section at the bottom of listing detail, push notification on new message
-- Migration: `0021_listing_messages.sql`
+**Phase 12a (per-listing threads — ✅ BUILT):**
+- ✅ New table: `listing_messages (id, listing_id, author_id, body, created_at)` — migration `0021_listing_messages.sql`
+- ✅ RLS: society members can read; members post as themselves (author_id = auth.uid()); author or admin deletes
+- ✅ Realtime subscription on `listing_id` (`subscribeToListingMessages`)
+- ✅ Push on new message: neighbour→owner, and owner-reply→all other thread participants (reuses `notify_user` + pg_net)
+- ✅ UI: collapsible "Chat with owner" section (`components/listings/ListingChat.tsx`) on listing detail, lazy-loads + subscribes on first open
+- ✅ Service layer: `src/lib/listingMessages.ts` (fetch/send/delete/subscribe)
+- ⏸️ **User action:** run `0021_listing_messages.sql` in Supabase SQL editor to activate
 
 **Phase 12b (direct messages — DEFER):**
 - Tables: `dm_conversations (id, participant_a, participant_b, last_message_at)`, `dm_messages (id, conversation_id, author_id, body, read_at, created_at)`
@@ -713,6 +723,7 @@ Open **Supabase Dashboard → SQL Editor** and run these in order. Each file is 
 0018_saved_listings.sql      ← saved_listings table
 0019_emergency_contacts.sql  ← emergency_contacts table
 0020_polls.sql               ← polls + poll_options + poll_votes
+0021_listing_messages.sql    ← per-listing chat threads + push  (NEW — run this)
 ```
 
 ### Step 2 — Create Supabase Storage bucket
@@ -822,23 +833,29 @@ Reload the app. You should now see:
 
 ## 13. Immediate Next Steps (updated)
 
-**You must do (blocking — nothing works without these):**
-1. **⏸️ Run all migrations 0001–0020** in Supabase SQL editor (see Section 12 for exact order)
-2. **⏸️ Create `listing-photos` storage bucket** in Supabase (public, see Section 12 Step 2)
-3. **⏸️ Seed a test community row** and grant yourself admin (see Section 12 Steps 3–5)
+**Backend setup — ✅ Done (2026-06-08):**
+1. ✅ All migrations 0001–0020 run in Supabase
+2. ✅ `listing-photos` public storage bucket created
+3. ✅ Test community seeded + admin granted
+4. ✅ Web deployed to GitHub + Vercel (main)
 
-**Code — next features:**
-4. **⬜ Phase 12a: Per-listing chat threads** — `listing_messages` table + in-app chat on listing detail (highest value, enables all service coordination without WhatsApp dependency)
-5. **⬜ Push token capture** — add `Notifications.getExpoPushTokenAsync()` call at app startup, save to `push_tokens` (only needed once native builds are ready — Phase 10)
+**Code — recently shipped (2026-06-08):**
+5. ✅ **Phase 12a: Per-listing chat threads** — migration `0021_listing_messages.sql`, `lib/listingMessages.ts`, collapsible `ListingChat` on listing detail (realtime + push). ⏸️ run migration 0021 in Supabase to activate.
+6. ✅ Push token capture — `getExpoPushTokenAsync()` wired in lib/push.ts; end-to-end delivery to verify on native build (Phase 10)
+7. ✅ Skeleton loaders for search results (`ListingCardSkeleton` grid)
+8. ✅ Inquiry-count badge — "N interested" on MyListingsSection cards
+9. ✅ Perf: category + search grids → FlashList; expo-image memory-disk cache + blurhash placeholders
 
-**Code — polish:**
-6. **⬜ Skeleton loaders for search results** — currently shows "Searching…" text; could have shimmer cards
-7. **⬜ Inquiry count badge on listing owner's listings** — "3 neighbours interested" on MyListingsSection cards
+**Code — next candidates:**
+- ⬜ Phase 12b: 1:1 direct messages (after 12a proves stable in use)
+- ⬜ Web service worker offline shell + Lighthouse ≥90 pass
+- ⬜ Supabase full-text search index for posts + listings
+- ⬜ Apply 1000px/JPEG-0.7 upload resize to food photos (already done for listings)
 
 **When ready for native (Phase 10):**
 8. **⏸️ Apple Developer account** ($99/yr) → TestFlight → App Store
 9. **⏸️ Google Play account** ($25) → internal track → Play Store
-10. **⏸️ Push token registration** — add on app startup after native build confirmed working
+10. **⏸️ Verify push delivery end-to-end** — token registration is already wired (lib/push.ts); confirm tokens upsert + triggers deliver on a real native build
 11. **⏸️ App icons** — 1024×1024 iOS icon + Android adaptive icon foreground layer
 
 ---
@@ -847,6 +864,9 @@ Reload the app. You should now see:
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-08 | **NavRail collapse fix + tsc clean.** Collapsed left rail: "New Post" CTA and theme-toggle labels were missing `numberOfLines={1}`, so at `maxWidth:0` the hidden text wrapped vertically and ballooned the coral button height — added `numberOfLines={1}` to both (matches NavItemRow). Fixed the 2 remaining `tsc` errors: `router.push('/food' as any)` in index.tsx (Expo typed-routes) and `resolved` in theme.tsx now collapses `ColorSchemeName` (incl. `unspecified`/null) to `'light'\|'dark'`. `npx tsc --noEmit` now fully clean. |
+| 2026-06-08 | **Phase 12a + polish shipped.** Per-listing chat: migration `0021_listing_messages.sql` (RLS, realtime, push trigger), `lib/listingMessages.ts`, collapsible `ListingChat` on listing detail. Polish: category + search grids → `FlashList` (numColumns, centered maxWidth; dropped `estimatedItemSize` for FlashList v2, incl. feed.tsx); `ListingCardSkeleton` for search; `IMAGE_CACHE_PROPS` (memory-disk + neutral blurhash + fade) on ListingCard/listing hero/DishCard; "N interested" inquiry-count badge on My Listings. Installed missing local dep `@shopify/flash-list`. ⏸️ user must run migration 0021. |
+| 2026-06-08 | **Plan sync to reality:** backend live (all migrations 0001–0020 run, `listing-photos` bucket, community seeded, admin granted); web deployed to GitHub + Vercel. Corrected push token capture from "MISSING" to ✅ (wired in lib/push.ts, called from auth.tsx). Reconciled Phase 9 prose with dashboard (PostCard memo / posts FlashList / posts skeletons / posts pagination all ✅; listing-grid FlashList + search skeletons remain ⬜). Next code feature: Phase 12a per-listing chat. |
 | 2026-06-08 | Plan major update: added E2E testing guide (Section 12), notifications analysis (Section 10), in-app chat analysis + Phase 12 plan (Section 11). Phase 9 items all complete: mobile nav to community features, posts pagination, announcement admin-only, PostCard memo, FlashList, skeletons, update banner. |
 | 2026-06-08 | Phase 11 complete: Polls, Emergency Contacts, Saved Listings, Carpooling, Public Profile, NavRail updates, bookmark button on listing detail. Migrations 0018–0020 added. |
 | 2026-06-07 | Added astrology (Astrology) to services.ts. Home hub now shows 14 categories. |
