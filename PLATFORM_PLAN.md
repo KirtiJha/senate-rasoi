@@ -1,7 +1,7 @@
 # Aangan — Community Platform Plan
 > **Living document.** Always kept in sync with the codebase. Update on every significant commit.
 > **App:** Aangan (आँगन — courtyard) · **From:** Senate Rasoi (single-society food app)
-> **Last updated:** 2026-06-08 (phase 11 complete)
+> **Last updated:** 2026-06-08 (NavRail redesign + feed blank screen fix)
 
 ---
 
@@ -55,6 +55,11 @@
 | PostCard memo + FlashList | ✅ | PostCard wrapped in memo; posts feed uses FlashList |
 | Skeleton loaders (posts feed) | ✅ | Animated pulsing PostCardSkeleton |
 | Update notification banner | ✅ | Checks app_versions on Home load; dismissable / force-update modes |
+| Feed blank screen fix | ✅ | ScrollView missing from react-native import after FlashList migration |
+| NavRail — persistent (all screens) | ✅ | Moved to root _layout.tsx; admin/polls/emergency/about no longer hide it |
+| NavRail — collapsible | ✅ | 220px ↔ 64px icon-only; spring animation; chevron rotates 180° |
+| NavRail — restructured sections | ✅ | Primary → Community → Admin → spacer → New Post CTA → About/Theme |
+| NavRail — active left-bar indicator | ✅ | 3px accent bar on active item (VS Code / Linear style) |
 | Push token capture | ⬜ | Architecture exists (migration 0005); registration code missing |
 | Per-listing chat threads | ⬜ | Phase 12a — highest priority next feature |
 | Direct messages (DMs) | ⬜ | Phase 12b — deferred after 12a stable |
