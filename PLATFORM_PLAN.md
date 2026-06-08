@@ -307,11 +307,17 @@ feed/[postId].tsx        ✅ Post thread with realtime comments, PostMenu
 about.tsx                ✅ App info, version, features, technical info
 ```
 
+### New routes — added ✅
+```
+profile/[userId].tsx     Public profile — name, flat, roles, active listings
+emergency.tsx            Emergency Contacts screen (admin add/delete, direct call)
+polls.tsx                Polls & Surveys screen (create, vote, realtime)
+```
+
 ### New routes — still pending ⬜
 ```
-profile/[userId].tsx     Public profile (Phase 11)
-community/[id].tsx       Society detail page (Phase 11)
-admin/societies.tsx      Super-admin society management (Phase 11)
+community/[id].tsx       Society detail page (future)
+admin/societies.tsx      Super-admin society management (future)
 ```
 
 ### Updated tab bar ✅
@@ -558,23 +564,40 @@ admin/societies.tsx      Super-admin society management (Phase 11)
 
 ---
 
-### ⬜ Phase 11 — Future Enhancements (post-launch, based on demand)
+### ✅ Phase 11 — Community Features (COMPLETE)
 
-These are good ideas for a thriving community app. Assess after Phase 5–6 based on user demand:
+| Feature | Status | Notes |
+|---------|--------|-------|
+| **Events & Calendar** | ✅ Covered | Feed's `event` post category handles event posts |
+| **Lost & Found** | ✅ Covered | Feed's `lost_found` post category handles lost/found posts |
+| **Carpooling** | ✅ Done | Added as service category 14 in `services.ts` (color #0EA5E9, icon `car-outline`) |
+| **Polls & Surveys** | ✅ Done | `polls`, `poll_options`, `poll_votes` tables (migration 0020); full UI in `src/app/polls.tsx`; realtime subscription; admin can close/delete; any member can create |
+| **Emergency Contacts** | ✅ Done | `emergency_contacts` table (migration 0019); full UI in `src/app/emergency.tsx`; 7 role types with color/icon; admin add/delete; direct tel: call |
+| **Saved / Bookmarks** | ✅ Done | `saved_listings` table (migration 0018); save/unsave button on listing detail; `SavedSection` in You tab |
+| **Endorsements** | ⬜ Deferred | Post-launch — requires `listing_endorsements` table |
+| **Reviews & Ratings** | ⬜ Deferred | Post-launch — trust layer after critical mass |
+| **Appointments** | ⬜ Deferred | Post-launch — calendar slot picker complexity |
+| **Verified Provider Badge** | ⬜ Deferred | Post-launch — admin workflow required |
+| **Society Newsletter** | ⬜ Deferred | Post-launch — Supabase Edge Function + email infra |
 
-| Feature | What it is |
-|---------|-----------|
-| **Events & Calendar** | Society can post events (Diwali puja, maintenance notice, AGM); community calendar view |
-| **Lost & Found** | Separate category for lost keys, pets, items within listing engine (already `feed` category) |
-| **Carpooling** | Residents going same direction offer rides; post format similar to jobs |
-| **Polls & Surveys** | Society admin creates a poll; residents vote; realtime results |
-| **Emergency Contacts** | Society-level pinned directory: security number, maintenance, doctor on call |
-| **Saved / Bookmarks** | Save listings across categories (`saved_listings` — migration 0016 ready) |
-| **Endorsements** | "12 neighbours verified this" for Service Directory (`listing_endorsements` table) |
-| **Reviews & Ratings** | Star rating on completed services/orders; trust layer |
-| **Appointments** | Basic scheduling for clinic/tuition (calendar slot picker → WhatsApp confirm) |
-| **Verified Provider Badge** | Admin-granted badge for vetted service providers (doctor, CA, etc.) |
-| **Society Newsletter** | Weekly digest of new listings + posts → email or push |
+**New files (Phase 11):**
+- `supabase/migrations/0018_saved_listings.sql` — saved_listings table with RLS
+- `supabase/migrations/0019_emergency_contacts.sql` — emergency_contacts table with RLS
+- `supabase/migrations/0020_polls.sql` — polls + poll_options + poll_votes tables with RLS + realtime
+- `src/lib/saved.ts` — save/unsave/isSaved/fetchSaved helpers
+- `src/lib/emergency.ts` — fetchEmergencyContacts/addEmergencyContact/deleteEmergencyContact
+- `src/lib/polls.ts` — fetchPolls/createPoll/votePoll/closePoll/deletePoll/subscribeToPolls
+- `src/app/emergency.tsx` — Emergency Contacts screen with admin add/delete UI
+- `src/app/polls.tsx` — Polls screen with voting, create poll modal, realtime
+- `src/app/profile/[userId].tsx` — Public profile showing name, flat, roles, active listings
+- `src/components/SavedSection.tsx` — Saved listings list for You tab
+
+**Modified files (Phase 11):**
+- `src/lib/services.ts` — Added carpooling (category 14)
+- `src/app/listing/[id].tsx` — Added bookmark toggle button (save/unsave)
+- `src/app/(tabs)/you.tsx` — Added Saved tab (SavedSection)
+- `src/components/NavRail.tsx` — Added Polls + Emergency links in sidebar
+- `src/app/_layout.tsx` — Registered emergency, polls, profile/[userId] routes
 
 ---
 
@@ -616,6 +639,9 @@ These are good ideas for a thriving community app. Assess after Phase 5–6 base
 | 14 | Feedback tab vs separate page | ✅ Merge into Feed tab with category filter chips — keeps tab count at 5 |
 | 15 | Approve join request | ✅ Admin sets `status=approved`; creating the society row is a manual admin step for now |
 | 16 | `delete_own_account` | ✅ Supabase SECURITY DEFINER RPC — cleanest approach for deleting auth.users |
+| 17 | Polls voting model | ✅ Upsert with `onConflict: poll_id,user_id` — users can change their vote; one vote per poll |
+| 18 | Carpooling | ✅ Added as listing service category (not a separate posts engine) — same CRUD pattern |
+| 19 | Saved listings | ✅ Composite PK `(user_id, listing_id)`; 23505 conflict silently swallowed on duplicate save |
 
 ---
 
@@ -638,6 +664,7 @@ These are good ideas for a thriving community app. Assess after Phase 5–6 base
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-08 | Phase 11 complete: Polls, Emergency Contacts, Saved Listings, Carpooling, Public Profile, NavRail updates, bookmark button on listing detail. Migrations 0018–0020 added. |
 | 2026-06-07 | Added astrology (Astrology) to services.ts. Home hub now shows 14 categories. |
 | 2026-06-07 | Phase 3 complete: added daycare (Day Care), fitness (Yoga & Fitness), arts (Arts & Activities) to services.ts. Home hub now shows 13 categories. |
 | 2026-06-07 | Plan fully rewritten. Phases 1 + 2 marked complete. Added: 3 new categories (Day Care, Yoga & Fitness, Arts & Activities), multi-society UI, full user profile, society onboarding, community posts/threads, issues/feedback page, search & filter, access control hardening, about page, version update notification, performance phase (Phase 9), iOS/Android phase (Phase 10), future enhancements (Phase 11). |

@@ -82,6 +82,41 @@ export function NavRail() {
         </Link>
       ) : null}
 
+      {/* Community tools */}
+      <Link href="/polls" asChild>
+        <Pressable
+          className={`mt-1 flex-row items-center gap-3 rounded-2xl px-3 py-2.5 ${
+            path === '/polls' ? 'bg-inset' : 'active:bg-inset'
+          }`}
+        >
+          <Ionicons
+            name={path === '/polls' ? 'stats-chart' : 'stats-chart-outline'}
+            size={21}
+            color={path === '/polls' ? c.accent : c.muted}
+          />
+          <Text className={`text-[15px] ${path === '/polls' ? 'font-sans-bold text-ink' : 'font-sans-md text-muted'}`}>
+            Polls
+          </Text>
+        </Pressable>
+      </Link>
+
+      <Link href="/emergency" asChild>
+        <Pressable
+          className={`mt-1 flex-row items-center gap-3 rounded-2xl px-3 py-2.5 ${
+            path === '/emergency' ? 'bg-inset' : 'active:bg-inset'
+          }`}
+        >
+          <Ionicons
+            name={path === '/emergency' ? 'call' : 'call-outline'}
+            size={21}
+            color={path === '/emergency' ? '#EF4444' : c.muted}
+          />
+          <Text className={`text-[15px] ${path === '/emergency' ? 'font-sans-bold text-red-500' : 'font-sans-md text-muted'}`}>
+            Emergency
+          </Text>
+        </Pressable>
+      </Link>
+
       <View className="flex-1" />
 
       {/* About */}

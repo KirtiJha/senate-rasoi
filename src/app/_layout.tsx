@@ -81,8 +81,11 @@ function AppShell() {
                 <Stack.Screen name="admin" />
                 <Stack.Screen name="about" />
                 <Stack.Screen name="profile/me" />
+                <Stack.Screen name="profile/[userId]" />
                 <Stack.Screen name="feed/[postId]" />
                 <Stack.Screen name="listing/[id]" />
+                <Stack.Screen name="emergency" />
+                <Stack.Screen name="polls" />
               </Stack>
             </View>
           </ToastProvider>
