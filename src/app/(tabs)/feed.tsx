@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable,
+  ActivityIndicator, Animated, KeyboardAvoidingView, Modal, Platform, Pressable,
   RefreshControl, ScrollView, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -115,9 +115,7 @@ export default function FeedScreen() {
         <Container>
           {loading ? (
             <View className="gap-3">
-              {[1, 2, 3].map((i) => (
-                <View key={i} className="h-28 rounded-3xl bg-surface" />
-              ))}
+              {[1, 2, 3].map((i) => <PostCardSkeleton key={i} />)}
             </View>
           ) : posts.length === 0 ? (
             <View className="items-center py-20">
@@ -174,6 +172,51 @@ export default function FeedScreen() {
         isAdmin={isAdmin}
       />
     </View>
+  );
+}
+
+function PostCardSkeleton() {
+  const c = useThemeColors();
+  const opacity = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 750, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 750, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [opacity]);
+
+  const S = ({ w, h, r = 6 }: { w: string | number; h: number; r?: number }) => (
+    <View style={{ width: w as any, height: h, borderRadius: r, backgroundColor: c.inset }} />
+  );
+
+  return (
+    <Animated.View style={[{ opacity, borderWidth: 1, borderColor: c.line, borderRadius: 24, overflow: 'hidden' }]}>
+      {/* colour strip */}
+      <View style={{ height: 3, backgroundColor: c.inset }} />
+      <View style={{ padding: 16 }}>
+        {/* category chip + timestamp */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <S w={80} h={18} r={20} />
+          <S w={40} h={12} r={6} />
+        </View>
+        {/* body lines */}
+        <S w="90%" h={13} r={6} />
+        <View style={{ height: 5 }} />
+        <S w="70%" h={13} r={6} />
+        <View style={{ height: 5 }} />
+        <S w="55%" h={13} r={6} />
+        {/* author row */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 }}>
+          <S w={22} h={22} r={11} />
+          <S w={100} h={11} r={6} />
+        </View>
+      </View>
+    </Animated.View>
   );
 }
 
