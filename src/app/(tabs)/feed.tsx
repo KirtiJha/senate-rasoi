@@ -34,7 +34,7 @@ export default function FeedScreen() {
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { userId, communityId, profile } = useAuth();
+  const { userId, communityId, profile, isAdmin } = useAuth();
 
   const PAGE = 20;
 
@@ -171,6 +171,7 @@ export default function FeedScreen() {
         communityId={communityId}
         authorId={userId}
         authorName={profile?.name}
+        isAdmin={isAdmin}
       />
     </View>
   );
@@ -229,12 +230,15 @@ function PostCard({ post, userId, onPress, c }: { post: PostRow; userId: string 
   );
 }
 
-function ComposeModal({ visible, onClose, onPosted, communityId, authorId, authorName }: {
+function ComposeModal({ visible, onClose, onPosted, communityId, authorId, authorName, isAdmin }: {
   visible: boolean; onClose: () => void; onPosted: () => void;
-  communityId: string; authorId: string | null; authorName?: string;
+  communityId: string; authorId: string | null; authorName?: string; isAdmin: boolean;
 }) {
   const toast = useToast();
   const c = useThemeColors();
+  const availableCategories = ALL_POST_CATEGORIES.filter(
+    (cat) => cat !== 'announcement' || isAdmin,
+  );
   const [category, setCategory] = useState<PostCategory>('general');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -270,7 +274,7 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
           <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Category</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
             <View className="flex-row gap-2">
-              {ALL_POST_CATEGORIES.map((cat) => {
+              {availableCategories.map((cat) => {
                 const color = POST_CATEGORY_COLORS[cat];
                 const on = category === cat;
                 return (
