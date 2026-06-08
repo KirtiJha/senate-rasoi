@@ -221,13 +221,13 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {/* Header */}
+        {/* Header — close + title only, no post button here */}
         <View className="flex-row items-center justify-between border-b border-line px-4 py-4">
           <Pressable onPress={onClose} hitSlop={10}>
             <Ionicons name="close" size={24} color={c.muted} />
           </Pressable>
           <Text className="font-sans-sb text-[16px] text-ink">New Post</Text>
-          <Button label={posting ? 'Posting…' : 'Post'} size="sm" loading={posting} onPress={handlePost} />
+          <View style={{ width: 24 }} />
         </View>
 
         <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
@@ -285,6 +285,19 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
             autoFocus
           />
         </ScrollView>
+
+        {/* Sticky footer — Post button lives here, just above the keyboard */}
+        <View className="border-t border-line px-4 py-3">
+          <Button
+            label={posting ? 'Posting…' : 'Post to feed'}
+            icon="send"
+            size="lg"
+            fullWidth
+            loading={posting}
+            disabled={!body.trim()}
+            onPress={handlePost}
+          />
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   );
