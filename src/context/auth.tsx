@@ -117,7 +117,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isChef: !!profile,
       isFoodie: !!profile,
       isAdmin: roles.includes('admin'),
-      refreshProfile: () => loadProfile(userId ?? undefined),
+      // Read the live session id from Supabase rather than the closed-over
+      // `userId`. Right after sign-up the closure can still hold the stale
+      // pre-auth value (null), which would wipe the freshly-inserted profile.
+      refreshProfile: async () => {
+        const { data } = await supabase.auth.getSession();
+        await loadProfile(data.session?.user.id);
+      },
       saveProfile: async (patch) => {
         if (!userId) return;
         await updateProfile(userId, patch);
