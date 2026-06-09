@@ -1,3 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -6,7 +9,7 @@ import { SportGroupBody } from '../components/SportGroupBody';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { SPORTS, Sport, SportGroupWithMeta, createGroup, fetchGroups, getSport } from '../lib/sports';
+import { SPORTS, Sport, SportGroupWithMeta, createGroup, fetchGroups, getSport, updateGroup, uploadGroupLogo } from '../lib/sports';
 import { useThemeColors } from '../theme';
 
 const COLORS = ['#16A34A', '#2563EB', '#EA580C', '#DC2626', '#9333EA', '#0891B2', '#CA8A04', '#DB2777'];
@@ -109,8 +112,13 @@ export default function SportsScreen() {
         c={c}
         onCreate={async (form) => {
           if (!communityId || !userId) return;
+          const { logoUri, ...groupForm } = form;
           try {
-            await createGroup({ communityId, createdBy: userId, ...form });
+            const g = await createGroup({ communityId, createdBy: userId, ...groupForm });
+            if (logoUri) {
+              try { await updateGroup(g.id, { logo_url: await uploadGroupLogo(logoUri, g.id) }); }
+              catch { toast.show('Logo upload failed — you can add it later'); }
+            }
             setShowCreate(false);
             setActiveSport(form.sport);
             toast.show('Group created 🎉');
@@ -128,13 +136,14 @@ function CreateGroupSheet({
   visible: boolean;
   sports: Sport[];
   onClose: () => void;
-  onCreate: (form: { sport: string; name: string; emoji: string | null; color: string; description: string | null; practiceDays: string | null; practiceTime: string | null; practiceDuration: string | null; practiceLocation: string | null }) => void;
+  onCreate: (form: { sport: string; name: string; emoji: string | null; color: string; logoUri: string | null; description: string | null; practiceDays: string | null; practiceTime: string | null; practiceDuration: string | null; practiceLocation: string | null }) => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
   const [sport, setSport] = useState(sports[0]?.key ?? SPORTS[0].key);
   const [name, setName] = useState('');
   const [emoji, setEmoji] = useState('');
   const [color, setColor] = useState(COLORS[0]);
+  const [logoUri, setLogoUri] = useState<string | null>(null);
   const [days, setDays] = useState('');
   const [time, setTime] = useState('');
   const [duration, setDuration] = useState('');
@@ -149,11 +158,16 @@ function CreateGroupSheet({
   const input = 'rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink';
   const lbl = 'mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted';
 
+  const pickLogo = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true, aspect: [1, 1] });
+    if (!result.canceled) setLogoUri(result.assets[0].uri);
+  };
+
   const submit = () => {
     if (!name.trim()) return;
     setBusy(true);
     onCreate({
-      sport: pickedSport, name, emoji: emoji.trim() || null, color,
+      sport: pickedSport, name, emoji: emoji.trim() || null, color, logoUri,
       description: description || null, practiceDays: days || null, practiceTime: time || null,
       practiceDuration: duration || null, practiceLocation: location || null,
     });
@@ -175,7 +189,16 @@ function CreateGroupSheet({
       <Text className={lbl}>Group / team name</Text>
       <TextInput value={name} onChangeText={setName} placeholder="e.g. Morning Smashers" placeholderTextColor={c.faint} className={`mb-4 ${input}`} style={{ outline: 'none' } as any} />
 
-      <Text className={lbl}>Badge</Text>
+      <Text className={lbl}>Logo (optional)</Text>
+      <View className="mb-4 flex-row items-center gap-3">
+        <Pressable onPress={pickLogo} className="h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-inset active:opacity-80">
+          {logoUri ? <Image source={{ uri: logoUri }} style={{ width: 64, height: 64 }} contentFit="cover" /> : <Ionicons name="camera-outline" size={22} color={c.faint} />}
+        </Pressable>
+        <Text className="flex-1 text-[12px] text-muted">Upload a team photo or logo, or just use the emoji badge below.</Text>
+        {logoUri ? <Pressable onPress={() => setLogoUri(null)} hitSlop={8}><Ionicons name="close-circle" size={20} color={c.faint} /></Pressable> : null}
+      </View>
+
+      <Text className={lbl}>Emoji badge</Text>
       <View className="mb-4 flex-row items-center gap-3">
         <TextInput value={emoji} onChangeText={setEmoji} placeholder={getSport(pickedSport)?.emoji ?? '🏅'} placeholderTextColor={c.faint} maxLength={2} className={input} style={{ width: 64, textAlign: 'center', outline: 'none' } as any} />
         <View className="flex-1 flex-row flex-wrap" style={{ gap: 8 }}>

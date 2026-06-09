@@ -1,4 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, Text, TextInput, View } from 'react-native';
@@ -8,6 +10,7 @@ import { fetchDirectory } from '../lib/directory';
 import {
   GroupMember, SportGroup, Tournament, addMember, addTournament, deleteGroup, deleteTournament,
   fetchGroup, fetchGroupMembers, fetchTournaments, getSport, joinGroup, leaveGroup, removeMember,
+  updateGroup, uploadGroupLogo,
 } from '../lib/sports';
 import { useThemeColors } from '../theme';
 import { Avatar, Button, RowSkeleton, Sheet } from './ui';
@@ -71,6 +74,16 @@ export function SportGroupBody({
     else Alert.alert('Remove', msg, [{ text: 'Cancel', style: 'cancel' }, { text: 'Remove', style: 'destructive', onPress: run }]);
   };
 
+  const pickLogo = async () => {
+    if (!group) return;
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true, aspect: [1, 1] });
+    if (result.canceled) return;
+    try {
+      await updateGroup(group.id, { logo_url: await uploadGroupLogo(result.assets[0].uri, group.id) });
+      await reload();
+    } catch { toast.show('Could not upload logo'); }
+  };
+
   const onDeleteGroup = () => {
     if (!group) return;
     const run = async () => { try { await deleteGroup(group.id); toast.show('Group deleted'); onDeleted ? onDeleted() : router.back(); } catch { toast.show('Could not delete'); } };
@@ -93,9 +106,18 @@ export function SportGroupBody({
     <>
       {/* Identity */}
       <View className="items-center rounded-3xl border border-line bg-surface px-6 py-6">
-        <View className="h-20 w-20 items-center justify-center rounded-3xl" style={{ backgroundColor: color + '22' }}>
-          <Text style={{ fontSize: 40 }}>{emoji}</Text>
-        </View>
+        <Pressable onPress={canManage ? pickLogo : undefined} disabled={!canManage} className="h-20 w-20 items-center justify-center overflow-hidden rounded-3xl" style={{ backgroundColor: color + '22' }}>
+          {group.logo_url ? (
+            <Image source={{ uri: group.logo_url }} style={{ width: 80, height: 80 }} contentFit="cover" />
+          ) : (
+            <Text style={{ fontSize: 40 }}>{emoji}</Text>
+          )}
+          {canManage ? (
+            <View className="absolute bottom-0 right-0 h-6 w-6 items-center justify-center rounded-full border-2 border-surface bg-accent">
+              <Ionicons name="camera" size={11} color={c.onAccent} />
+            </View>
+          ) : null}
+        </Pressable>
         <Text className="mt-3 font-display-x text-[22px] text-ink text-center">{group.name}</Text>
         <View className="mt-1 flex-row items-center gap-1.5 rounded-full px-2.5 py-0.5" style={{ backgroundColor: color + '1A' }}>
           <Text style={{ fontSize: 12 }}>{sport?.emoji}</Text>

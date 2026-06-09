@@ -1,4 +1,5 @@
-import { COMMUNITY_ID, supabase } from './supabase';
+import * as ImageManipulator from 'expo-image-manipulator';
+import { COMMUNITY_ID, SPORT_LOGOS_BUCKET, supabase } from './supabase';
 
 // ── Sport catalogue ──────────────────────────────────────────────────
 // Adding a new sport = add one entry here. The screens read from this list.
@@ -22,6 +23,7 @@ export interface SportGroup {
   name: string;
   emoji: string | null;
   color: string | null;
+  logo_url: string | null;
   description: string | null;
   practice_days: string | null;
   practice_time: string | null;
@@ -124,9 +126,30 @@ export async function createGroup(input: NewGroup): Promise<SportGroup> {
   return data as SportGroup;
 }
 
+export async function updateGroup(id: string, patch: Partial<SportGroup>): Promise<void> {
+  const { error } = await supabase.from('sport_groups').update(patch).eq('id', id);
+  if (error) throw error;
+}
+
 export async function deleteGroup(id: string): Promise<void> {
   const { error } = await supabase.from('sport_groups').delete().eq('id', id);
   if (error) throw error;
+}
+
+/** Compress + upload a group logo to the sport-logos bucket. Returns the public URL. */
+export async function uploadGroupLogo(localUri: string, groupId: string): Promise<string> {
+  const manipulated = await ImageManipulator.manipulateAsync(
+    localUri,
+    [{ resize: { width: 512 } }],
+    { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG, base64: false },
+  );
+  const res = await fetch(manipulated.uri);
+  const arrayBuffer = await res.arrayBuffer();
+  const path = `${groupId}.jpg`;
+  const { error } = await supabase.storage.from(SPORT_LOGOS_BUCKET).upload(path, arrayBuffer, { contentType: 'image/jpeg', upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from(SPORT_LOGOS_BUCKET).getPublicUrl(path);
+  return `${data.publicUrl}?v=${Date.now()}`; // cache-bust on re-upload
 }
 
 export async function joinGroup(groupId: string, userId: string): Promise<void> {

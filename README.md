@@ -87,15 +87,15 @@ npx tsc --noEmit                  # type-check
 1. **Create a Supabase project** at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. **Run the migrations in order.** Open **SQL Editor** and run every file in
    [`supabase/migrations/`](./supabase/migrations) from `0001_init.sql` through
-   the latest (`0030_sport_groups.sql`). They create all tables (communities,
+   the latest (`0031_sport_group_logos.sql`). They create all tables (communities,
    profiles, dishes, orders, tiffin, listings, inquiries, posts, comments, polls,
    emergency contacts, saved listings, per-listing chat, direct messages,
    notifications, resident directory, sports groups), RLS policies, RPCs,
    full-text indexes, realtime publications, and the push pipeline.
 3. **Disable email confirmation.** Auth → Providers → Email → turn **off**
    "Confirm email" (the phone-as-email aliases can't receive confirmation mail).
-4. **Create two public Storage buckets:** `listing-photos` and `dish-photos`
-   (Storage → New bucket → Public).
+4. **Create three public Storage buckets:** `listing-photos`, `dish-photos`
+   and `sport-logos` (Storage → New bucket → Public).
 5. **Seed a society and grant yourself admin:**
    ```sql
    insert into public.communities (name, slug, address)

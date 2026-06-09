@@ -257,7 +257,8 @@ scoped to that society. Admins of a society can manage that society only. Platfo
 | 0027 | profiles.resident_type (owner/tenant) + profession — resident directory | ✅ run |
 | 0028 | profiles.show_in_directory + vehicle_no — directory opt-out + vehicle | ⏸️ written — run in Supabase |
 | 0029 | directory_entries (non-member residents) + RLS + admin_set_directory_visibility RPC | ✅ run |
-| 0030 | sport_groups + sport_group_members + sport_tournaments + RLS — sports groups | ⏸️ written — run in Supabase |
+| 0030 | sport_groups + sport_group_members + sport_tournaments + RLS — sports groups | ✅ run |
+| 0031 | sport_groups.logo_url + sport-logos storage policies — uploaded team logos | ⏸️ create `sport-logos` bucket + run |
 
 **Pending (future):**
 - `listing_reports` — moderation queue (schema designed; UI not yet built)
@@ -906,6 +907,7 @@ last-message bump, mark-read; FTS stem-matching on listings ("dancing"→"dance"
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-09 | **Sports group logo upload.** Migration `0031` adds `sport_groups.logo_url` + `sport-logos` storage policies (public read, authenticated write). The create-group sheet has an optional **logo image picker** (compressed to 512px via `uploadGroupLogo`), and the group badge shows the uploaded image (emoji+colour remains the fallback). Owners/admins can tap the badge to change the logo. Requires a public `sport-logos` bucket. |
 | 2026-06-09 | **Sports = one group per sport (tabbed) + uniform content width.** (1) Sports reworked so each sport has a single group, shown in **per-sport tabs**; the **+** button adds a *new sport* (create-sheet only offers sports without a group). Extracted `SportGroupBody` (shared by the tabbed `/sports` and the `/sports/[id]` deep-link). (2) **Every nav tab now uses the same content width as Polls/Home** (`layout.maxContent` = 1180): Feed/Search/Listings/Directory custom maxes and the narrow Containers on Messages/Admin/You/My-Listings/Saved all switched to the standard width. |
 | 2026-06-09 | **Sports groups.** New section (NavRail "Sports" + Home tile + universal search). Migration `0030` adds `sport_groups` + `sport_group_members` + `sport_tournaments` with RLS (member self-join/leave; group creator/captain or admin manages members + tournaments). `src/lib/sports.ts` holds the sport catalogue (`SPORTS` = Badminton + Cricket; adding a sport is one line). `/sports` lists groups by sport with join/leave; `/sports/[id]` shows the team badge (emoji+colour), practice schedule, members (captain badge; add/remove for owner/admin), and upcoming tournaments (add/remove for owner/admin), plus delete-group. Logo = emoji + team colour (no storage bucket needed). |
 | 2026-06-09 | **Consistent page headers (the Polls pattern).** New reusable `ScreenHeader` (full-width bar: icon + bold title left, circular **+** button far right where relevant, back chevron on mobile for pushed screens, optional `subBar` for chips/search). Applied to Feed, Search, Listings, Residents, Polls, Emergency, Messages, Admin, You, Home Food, About — every screen except Home. Replaced the recently-added max-width-centered headers; content stays centered below the full-width bar. + buttons only where an add action exists (Feed→compose, Polls→create, Residents→add, Listings→new post, Emergency→add[admin], Messages→new). |

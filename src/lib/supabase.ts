@@ -49,3 +49,6 @@ export const DISH_PHOTOS_BUCKET = 'dish-photos';
 
 /** Storage bucket for listing photos (create in Supabase dashboard as a public bucket). */
 export const LISTING_PHOTOS_BUCKET = 'listing-photos';
+
+/** Storage bucket for sports group logos (create in Supabase dashboard as a public bucket). */
+export const SPORT_LOGOS_BUCKET = 'sport-logos';
