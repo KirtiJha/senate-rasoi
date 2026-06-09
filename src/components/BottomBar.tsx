@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '../theme';
 
@@ -11,7 +11,7 @@ type Item = {
   activeIcon: keyof typeof Ionicons.glyphMap;
 };
 
-// Standard 5-item bar (Feed lives on the Home hub).
+// Standard 5-item bar, icons only (Feed lives on the Home hub).
 const ITEMS: Item[] = [
   { route: '/', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
   { route: '/listings', label: 'Listings', icon: 'pricetags-outline', activeIcon: 'pricetags' },
@@ -38,16 +38,14 @@ export function BottomBar() {
 
   return (
     <View
-      style={{ paddingBottom: padBottom, paddingTop: 8, backgroundColor: c.bg, borderTopColor: c.line, borderTopWidth: 1 }}
-      className="flex-row items-start justify-around"
+      style={{ paddingBottom: padBottom, paddingTop: 12, backgroundColor: c.bg, borderTopColor: c.line, borderTopWidth: 1 }}
+      className="flex-row items-center justify-around"
     >
       {ITEMS.map((it) => {
         const active = activeFor(it.route);
-        const color = active ? c.accent : c.faint;
         return (
-          <Pressable key={it.route} onPress={() => router.navigate(it.route as any)} hitSlop={4} className="flex-1 items-center">
-            <Ionicons name={active ? it.activeIcon : it.icon} size={24} color={color} />
-            <Text style={{ color, fontSize: 11, fontFamily: 'HankenGrotesk_600SemiBold', marginTop: 2 }}>{it.label}</Text>
+          <Pressable key={it.route} onPress={() => router.navigate(it.route as any)} hitSlop={6} className="flex-1 items-center pb-1.5" accessibilityLabel={it.label}>
+            <Ionicons name={active ? it.activeIcon : it.icon} size={25} color={active ? c.accent : c.faint} />
           </Pressable>
         );
       })}
