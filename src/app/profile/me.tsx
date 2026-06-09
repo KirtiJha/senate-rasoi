@@ -7,7 +7,7 @@ import { Field, SectionCard } from '../../components/forms';
 import { Avatar, Button, Container } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
-import { changePin, deleteAccount } from '../../lib/auth';
+import { changePin, deleteAccount, updateResidentInfo } from '../../lib/auth';
 import { Community, fetchCommunityById } from '../../lib/communities';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useThemeColors } from '../../theme';
@@ -24,6 +24,8 @@ export default function ProfileScreen() {
   const [flat, setFlat] = useState(profile?.flat ?? '');
   const [whatsapp, setWhatsapp] = useState(profile?.whatsapp ?? '');
   const [upi, setUpi] = useState(profile?.upi ?? '');
+  const [residentType, setResidentType] = useState<'owner' | 'tenant' | null>(profile?.resident_type ?? null);
+  const [profession, setProfession] = useState(profile?.profession ?? '');
   const [savingProfile, setSavingProfile] = useState(false);
 
   // PIN change state
@@ -47,6 +49,8 @@ export default function ProfileScreen() {
       setFlat(profile.flat ?? '');
       setWhatsapp(profile.whatsapp ?? '');
       setUpi(profile.upi ?? '');
+      setResidentType(profile.resident_type ?? null);
+      setProfession(profile.profession ?? '');
     }
   }, [profile]);
 
@@ -55,6 +59,7 @@ export default function ProfileScreen() {
     setSavingProfile(true);
     try {
       await saveProfile({ name: name.trim(), flat: flat.trim() || null, whatsapp: whatsapp.trim() || null, upi: upi.trim() || null });
+      if (profile) await updateResidentInfo(profile.id, residentType, profession.trim() || null);
       await refreshProfile();
       toast.show('Profile updated ✅');
     } catch {
@@ -163,6 +168,23 @@ export default function ProfileScreen() {
             </View>
             <Field label="WhatsApp" placeholder="98765 43210" keyboardType="phone-pad" value={whatsapp} onChangeText={setWhatsapp} />
             <Field label="UPI ID" hint="Neighbours pay you directly" autoCapitalize="none" placeholder="priya@ybl" value={upi} onChangeText={setUpi} />
+
+            <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">I'm a…</Text>
+            <View className="mb-4 flex-row gap-2.5">
+              {(['owner', 'tenant'] as const).map((t) => (
+                <Pressable
+                  key={t}
+                  onPress={() => setResidentType(residentType === t ? null : t)}
+                  className={`flex-1 rounded-2xl border-[1.5px] p-3 ${residentType === t ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <Text className="font-sans-sb text-[14px] text-ink">{t === 'owner' ? 'Owner' : 'Tenant'}</Text>
+                    <Ionicons name={residentType === t ? 'checkmark-circle' : 'ellipse-outline'} size={18} color={residentType === t ? c.accent : c.faint} />
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+            <Field label="Profession" hint="Shown in the resident directory" placeholder="e.g. Doctor, CA, Teacher" value={profession} onChangeText={setProfession} />
             <Button label={savingProfile ? 'Saving…' : 'Save Changes'} loading={savingProfile} onPress={handleSaveProfile} fullWidth />
           </SectionCard>
 

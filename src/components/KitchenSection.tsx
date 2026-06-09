@@ -182,12 +182,12 @@ function KitchenDishCard({
                     </Pressable>
                   </View>
                 ) : o.status === 'accepted' ? (
-                  <Pressable onPress={() => onAct(o.id, 'cooking', 'Cooking started 🍳', wa, dish.dish_name)} className="h-9 flex-row items-center gap-1 rounded-full bg-accent px-3 active:bg-accent-press">
+                  <Pressable onPress={() => onAct(o.id, 'cooking', 'Cooking started 🍳')} className="h-9 flex-row items-center gap-1 rounded-full bg-accent px-3 active:bg-accent-press">
                     <Ionicons name="flame-outline" size={15} color={c.onAccent} />
                     <Text className="font-sans-sb text-[12px] text-on-accent">Cook</Text>
                   </Pressable>
                 ) : o.status === 'cooking' ? (
-                  <Pressable onPress={() => onAct(o.id, 'delivered', 'Marked delivered 🍽️', wa, dish.dish_name)} className="h-9 flex-row items-center gap-1 rounded-full bg-success px-3 active:opacity-90">
+                  <Pressable onPress={() => onAct(o.id, 'delivered', 'Marked delivered 🍽️')} className="h-9 flex-row items-center gap-1 rounded-full bg-success px-3 active:opacity-90">
                     <Ionicons name="bag-check-outline" size={15} color="#fff" />
                     <Text className="font-sans-sb text-[12px] text-white">Delivered</Text>
                   </Pressable>

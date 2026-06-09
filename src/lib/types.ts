@@ -91,6 +91,8 @@ export interface DbProfile {
   roles: Role[];
   community_id: string | null;
   blocked: boolean;
+  resident_type: 'owner' | 'tenant' | null;
+  profession: string | null;
   created_at: string;
 }
 

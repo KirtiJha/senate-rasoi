@@ -14,6 +14,8 @@ export interface SignUpInput {
   upi: string;
   roles: Role[];
   communityId?: string; // selected at sign-up; falls back to the seeded default
+  residentType?: 'owner' | 'tenant' | null;
+  profession?: string;
 }
 
 export async function signUp(input: SignUpInput): Promise<DbProfile> {
@@ -47,6 +49,15 @@ export async function signUp(input: SignUpInput): Promise<DbProfile> {
     .select()
     .single();
   if (pErr) throw pErr;
+
+  // Best-effort resident-directory fields — kept out of the core insert so a
+  // missing column (migration 0027 not yet run) can never break sign-up.
+  if (input.residentType || input.profession?.trim()) {
+    await supabase
+      .from('profiles')
+      .update({ resident_type: input.residentType ?? null, profession: input.profession?.trim() || null })
+      .eq('id', userId); // error (if column absent) is intentionally ignored
+  }
   return profile as DbProfile;
 }
 
@@ -97,6 +108,15 @@ export async function getProfile(userId: string): Promise<DbProfile | null> {
 export async function updateProfile(userId: string, patch: Partial<DbProfile>): Promise<void> {
   const { error } = await supabase.from('profiles').update(patch).eq('id', userId);
   if (error) throw error;
+}
+
+/** Best-effort write of resident-directory fields; ignores a missing column (pre-0027). */
+export async function updateResidentInfo(
+  userId: string,
+  residentType: 'owner' | 'tenant' | null,
+  profession: string | null,
+): Promise<void> {
+  await supabase.from('profiles').update({ resident_type: residentType, profession }).eq('id', userId);
 }
 
 /** Self-service: add a role to your own profile (admin is blocked server-side). */

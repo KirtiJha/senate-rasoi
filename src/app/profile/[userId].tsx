@@ -93,6 +93,13 @@ export default function PublicProfileScreen() {
             {profile.flat ? (
               <Text className="mt-0.5 text-[13px] text-muted">Flat {profile.flat}</Text>
             ) : null}
+            {profile.resident_type || profile.profession ? (
+              <Text className="mt-0.5 text-[13px] text-muted">
+                {profile.resident_type ? (profile.resident_type === 'owner' ? 'Owner' : 'Tenant') : ''}
+                {profile.resident_type && profile.profession ? ' · ' : ''}
+                {profile.profession ?? ''}
+              </Text>
+            ) : null}
             {/* Role chip */}
             <View className="mt-3 flex-row flex-wrap justify-center gap-1.5">
               <View className="rounded-full border border-line bg-inset px-3 py-1">

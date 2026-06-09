@@ -21,6 +21,14 @@ type CommunityTile = { key: string; label: string; blurb: string; icon: string; 
 
 const COMMUNITY_TILES: CommunityTile[] = [
   {
+    key: 'directory',
+    label: 'Residents',
+    blurb: 'Owner & tenant directory',
+    icon: 'people',
+    color: '#8B5CF6',
+    href: '/directory',
+  },
+  {
     key: 'messages',
     label: 'Messages',
     blurb: 'Private chats with neighbours',
@@ -103,21 +111,18 @@ export default function HomeScreen() {
       <Container>
         {/* Header */}
         <View className="mb-6">
-          <View>
-            <Text className="text-[13px] font-sans-md text-accent">{greeting}</Text>
-            <Text className="font-display-x text-[28px] leading-9 text-ink">
-              {profile?.name ? `Hi, ${profile.name.split(' ')[0]} 👋` : 'Your neighbourhood hub'}
-            </Text>
-          </View>
-
-          {/* Society badge */}
+          {/* Society badge — above the greeting */}
           {community ? (
-            <View className="mt-2 flex-row items-center gap-1.5 self-start rounded-full px-3 py-1.5" style={{ backgroundColor: '#7C3AED1A', borderWidth: 1, borderColor: '#7C3AED55' }}>
+            <View className="mb-2 flex-row items-center gap-1.5 self-start rounded-full px-3 py-1.5" style={{ backgroundColor: '#7C3AED1A', borderWidth: 1, borderColor: '#7C3AED55' }}>
               <Ionicons name="business" size={13} color="#7C3AED" />
               <Text className="text-[12px] font-sans-sb" numberOfLines={1} style={{ color: '#7C3AED' }}>{community.name}</Text>
             </View>
           ) : null}
 
+          <Text className="text-[13px] font-sans-md text-accent">{greeting}</Text>
+          <Text className="font-display-x text-[28px] leading-9 text-ink">
+            {profile?.name ? `Hi, ${profile.name.split(' ')[0]} 👋` : 'Your neighbourhood hub'}
+          </Text>
           <Text className="mt-2 text-[14px] font-sans-md text-muted">
             What can your society help you with today?
           </Text>

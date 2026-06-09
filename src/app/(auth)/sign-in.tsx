@@ -24,6 +24,8 @@ export default function SignInScreen() {
   const [flat, setFlat] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [upi, setUpi] = useState('');
+  const [residentType, setResidentType] = useState<'owner' | 'tenant' | null>(null);
+  const [profession, setProfession] = useState('');
   const [busy, setBusy] = useState(false);
 
   // Society picker
@@ -64,7 +66,7 @@ export default function SignInScreen() {
       } else {
         if (!name.trim()) { setBusy(false); return toast.show('Please enter your name'); }
         if (!selectedCommunity) { setBusy(false); return toast.show('Please select your society'); }
-        await signUp({ phone, code, name, flat, whatsapp, upi, roles: ['foodie'], communityId: selectedCommunity.id });
+        await signUp({ phone, code, name, flat, whatsapp, upi, roles: ['foodie'], communityId: selectedCommunity.id, residentType, profession });
       }
       await refreshProfile();
     } catch (e) {
@@ -169,6 +171,23 @@ export default function SignInScreen() {
               </View>
               <Field label="WhatsApp" hint="For coordination with neighbours" placeholder="98765 43210" keyboardType="phone-pad" value={whatsapp} onChangeText={setWhatsapp} />
               <Field label="UPI ID" hint="Optional — so neighbours can pay you" autoCapitalize="none" placeholder="priya@ybl" value={upi} onChangeText={setUpi} />
+
+              <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">I'm a… (optional)</Text>
+              <View className="mb-4 flex-row gap-2.5">
+                {(['owner', 'tenant'] as const).map((t) => (
+                  <Pressable
+                    key={t}
+                    onPress={() => setResidentType(residentType === t ? null : t)}
+                    className={`flex-1 rounded-2xl border-[1.5px] p-3 ${residentType === t ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <Text className="font-sans-sb text-[14px] text-ink">{t === 'owner' ? 'Owner' : 'Tenant'}</Text>
+                      <Ionicons name={residentType === t ? 'checkmark-circle' : 'ellipse-outline'} size={18} color={residentType === t ? c.accent : c.faint} />
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+              <Field label="Profession" hint="Optional — helps neighbours connect" placeholder="e.g. Doctor, CA, Teacher" value={profession} onChangeText={setProfession} />
             </>
           ) : null}
 
