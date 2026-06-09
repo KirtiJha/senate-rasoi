@@ -141,6 +141,7 @@ src/
   app/                       # Expo Router routes (file-based)
     _layout.tsx              # fonts, providers (auth, theme, toast, unread DMs), splash
     +html.tsx                # web/PWA document (meta, manifest, SW registration, preconnect)
+    landing.tsx              # public marketing landing page (logged-out entry)
     (auth)/sign-in.tsx       # phone + PIN sign-in / sign-up + society picker
     (tabs)/
       index.tsx              # Home hub — service grid + community tiles

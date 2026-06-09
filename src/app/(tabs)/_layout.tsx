@@ -17,7 +17,7 @@ export default function TabsLayout() {
   const c = useThemeColors();
 
   if (!ready) return <View style={{ flex: 1, backgroundColor: c.bg }} />;
-  if (!session) return <Redirect href="/sign-in" />;
+  if (!session) return <Redirect href={'/landing' as any} />;
 
   if (isDesktop) return <Slot />;
 
