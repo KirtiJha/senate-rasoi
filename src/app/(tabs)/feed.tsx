@@ -93,19 +93,28 @@ export default function FeedScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      {/* Filter tabs */}
+      {/* Filter tabs + inline compose */}
       <View style={{ paddingTop: isDesktop ? insets.top + 16 : 12 }} className="border-b border-line bg-bg">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 6, paddingBottom: 10 }}>
-          {FILTER_TABS.map((tab) => (
-            <Pressable
-              key={tab.key}
-              onPress={() => setActiveFilter(tab.key)}
-              className={`rounded-full px-3.5 py-1.5 ${activeFilter === tab.key ? 'bg-accent' : 'bg-inset'}`}
-            >
-              <Text className={`text-[13px] font-sans-sb ${activeFilter === tab.key ? 'text-on-accent' : 'text-muted'}`}>{tab.label}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+        <View className="flex-row items-center" style={{ paddingBottom: 10 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 6 }}>
+            {FILTER_TABS.map((tab) => (
+              <Pressable
+                key={tab.key}
+                onPress={() => setActiveFilter(tab.key)}
+                className={`rounded-full px-3.5 py-1.5 ${activeFilter === tab.key ? 'bg-accent' : 'bg-inset'}`}
+              >
+                <Text className={`text-[13px] font-sans-sb ${activeFilter === tab.key ? 'text-on-accent' : 'text-muted'}`}>{tab.label}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+          <Pressable
+            onPress={() => setShowCompose(true)}
+            className="ml-2 mr-3 h-9 w-9 items-center justify-center rounded-full bg-accent active:bg-accent-press"
+            accessibilityLabel="New post"
+          >
+            <Ionicons name="add" size={22} color={c.onAccent} />
+          </Pressable>
+        </View>
       </View>
 
       <FlashList
@@ -149,17 +158,6 @@ export default function FeedScreen() {
           ) : null
         }
       />
-
-      {/* FAB */}
-      <View className="absolute bottom-5 right-5">
-        <Pressable
-          onPress={() => setShowCompose(true)}
-          className="h-14 flex-row items-center gap-2 rounded-full bg-accent px-5 shadow-fab active:bg-accent-press"
-        >
-          <Ionicons name="add" size={22} color={c.onAccent} />
-          <Text className="font-sans-sb text-[15px] text-on-accent">New Post</Text>
-        </Pressable>
-      </View>
 
       {/* Compose modal */}
       <ComposeModal

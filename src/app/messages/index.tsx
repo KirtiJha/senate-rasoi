@@ -3,7 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Container } from '../../components/ui';
+import { Avatar, Button, Container } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { InboxThread, fetchInbox, subscribeToInbox } from '../../lib/dm';
@@ -42,7 +42,14 @@ export default function MessagesInboxScreen() {
           <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
             <Ionicons name="chevron-back" size={22} color={c.ink} />
           </Pressable>
-          <Text className="font-display-x text-[20px] text-ink">Messages</Text>
+          <Text className="flex-1 font-display-x text-[20px] text-ink">Messages</Text>
+          <Pressable
+            onPress={() => router.push('/messages/new' as any)}
+            className="h-9 w-9 items-center justify-center rounded-full bg-accent active:bg-accent-press"
+            accessibilityLabel="New message"
+          >
+            <Ionicons name="add" size={22} color={c.onAccent} />
+          </Pressable>
         </View>
       </View>
 
@@ -56,9 +63,10 @@ export default function MessagesInboxScreen() {
                 <Ionicons name="chatbubbles-outline" size={30} color={c.faint} />
               </View>
               <Text className="mb-1.5 font-display text-xl text-ink">No messages yet</Text>
-              <Text className="max-w-xs text-center text-[14px] leading-6 text-muted">
-                Open a neighbour's profile and tap Message to start a private conversation.
+              <Text className="mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">
+                Start a private conversation with a neighbour — or open their profile and tap Message.
               </Text>
+              <Button label="New message" icon="create-outline" onPress={() => router.push('/messages/new' as any)} />
             </View>
           ) : (
             <View style={{ gap: 4 }}>

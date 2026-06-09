@@ -42,6 +42,21 @@ export interface DmMessageRow {
 const THREAD_SELECT =
   '*, a:profiles!dm_threads_user_a_fkey(id,name,flat), b:profiles!dm_threads_user_b_fkey(id,name,flat)';
 
+/** Society members you can start a conversation with (everyone but yourself). */
+export async function fetchCommunityMembers(
+  communityId: string,
+  excludeUserId: string,
+): Promise<DmParticipant[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, name, flat')
+    .eq('community_id', communityId)
+    .neq('id', excludeUserId)
+    .order('name', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as DmParticipant[];
+}
+
 /** Get (or create) the 1:1 thread with another user; returns its id. */
 export async function getOrCreateThread(otherUserId: string): Promise<string> {
   const { data, error } = await supabase.rpc('dm_get_or_create_thread', { p_other: otherUserId });

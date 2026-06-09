@@ -254,7 +254,11 @@ export function NavRail() {
           }}
         >
           <Animated.View style={{ flex: 1, overflow: 'hidden', opacity: labelOpacity }}>
-            <Wordmark size={20} />
+            <Link href="/" asChild>
+              <Pressable accessibilityLabel="Go to Home" className="active:opacity-70">
+                <Wordmark size={20} />
+              </Pressable>
+            </Link>
           </Animated.View>
           <Pressable
             onPress={handleToggle}

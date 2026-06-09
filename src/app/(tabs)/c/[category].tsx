@@ -6,7 +6,7 @@ import { Pressable, RefreshControl, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Empty } from '../../../components/Empty';
 import { ListingCard } from '../../../components/listings/ListingCard';
-import { Button, ListingCardSkeleton, useResponsive } from '../../../components/ui';
+import { ListingCardSkeleton, useResponsive } from '../../../components/ui';
 import { useAuth } from '../../../context/auth';
 import { useToast } from '../../../context/toast';
 import { fetchListings, getCachedListings, subscribeToListings } from '../../../lib/listings';
@@ -97,6 +97,14 @@ export default function CategoryScreen() {
         <Text className="font-display-x text-[22px] text-ink">{cat.label}</Text>
         <Text className="text-[13px] font-sans-md text-muted">{cat.blurb}</Text>
       </View>
+      <Pressable
+        onPress={() => router.push({ pathname: '/post', params: { category: cat.key } } as any)}
+        className="h-11 w-11 items-center justify-center rounded-full active:opacity-80"
+        style={{ backgroundColor: cat.color }}
+        accessibilityLabel={`Post in ${cat.label}`}
+      >
+        <Ionicons name="add" size={24} color="#fff" />
+      </Pressable>
     </View>
   );
 
@@ -153,16 +161,6 @@ export default function CategoryScreen() {
               </Pressable>
             ) : null
           }
-        />
-      </View>
-
-      {/* FAB to post */}
-      <View className="absolute bottom-5 right-5">
-        <Button
-          label="Post"
-          icon="add"
-          size="sm"
-          onPress={() => router.push({ pathname: '/post', params: { category: cat.key } } as any)}
         />
       </View>
     </View>
