@@ -39,7 +39,7 @@ export default function LandingScreen() {
           <Pressable onPress={go} hitSlop={6} className="rounded-full px-3.5 py-2 active:opacity-70">
             <Text className="font-sans-sb" style={{ fontSize: 14, color: P.ink }}>Sign in</Text>
           </Pressable>
-          <Pressable onPress={go} className="ml-1 rounded-full px-4 py-2 active:opacity-90" style={{ backgroundColor: P.accent }}>
+          <Pressable onPress={() => router.push('/onboard' as any)} className="ml-1 rounded-full px-4 py-2 active:opacity-90" style={{ backgroundColor: P.accent }}>
             <Text className="font-sans-sb" style={{ fontSize: 14, color: '#fff' }}>Get started</Text>
           </Pressable>
         </View>
@@ -209,12 +209,11 @@ export default function LandingScreen() {
             <View className="flex-row items-center gap-2 flex-1">
               <BrandMark size={24} id="ft-mark" />
               <Text className="font-display" style={{ fontSize: 16, color: P.ink }}>Aangan</Text>
-              <Text className="font-sans-md" style={{ fontSize: 12, color: P.faint }}>· आँगन, your society's courtyard</Text>
             </View>
             <View className="flex-row items-center gap-4">
               <Text onPress={() => router.push('/legal' as any)} className="font-sans-sb" style={{ fontSize: 13, color: P.muted }}>Terms</Text>
               <Text onPress={() => router.push('/legal?tab=privacy' as any)} className="font-sans-sb" style={{ fontSize: 13, color: P.muted }}>Privacy</Text>
-              <Text onPress={go} className="font-sans-sb" style={{ fontSize: 13, color: P.accent }}>Sign in</Text>
+              <Text onPress={() => router.push('/about' as any)} className="font-sans-sb" style={{ fontSize: 13, color: P.accent }}>About</Text>
             </View>
           </View>
           <Text className="mt-3 w-full max-w-[1080px] self-center font-sans-md" style={{ fontSize: 11, color: P.faint }}>

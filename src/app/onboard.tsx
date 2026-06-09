@@ -55,6 +55,7 @@ export default function OnboardScreen() {
   const [searching, setSearching] = useState(false);
   const [place, setPlace] = useState<Place | null>(null);
   const [existing, setExisting] = useState<Community | null | undefined>(undefined); // undefined = checking
+  const [manual, setManual] = useState(false); // typed-in society (not found on the map)
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
 
@@ -84,11 +85,16 @@ export default function OnboardScreen() {
   };
 
   const reset = () => { setPlace(null); setExisting(undefined); setResults([]); };
+  const startManual = () => { setManual(true); setName(query.trim()); setAddress(''); };
 
   const signUpExisting = () => existing && router.push(`/sign-in?communityId=${existing.id}` as any);
   const onboardNew = () => {
-    if (!place || !name.trim()) return toast.show('Add your society name');
-    const payload = { name: name.trim(), address: address.trim(), lat: place.lat, lon: place.lon, osmPlaceId: place.osmId, city: place.city };
+    if (!name.trim()) return toast.show('Add your society name');
+    const payload = {
+      name: name.trim(), address: address.trim(),
+      lat: place?.lat ?? null, lon: place?.lon ?? null,
+      osmPlaceId: place?.osmId ?? null, city: place?.city ?? null,
+    };
     router.push(`/sign-in?onboard=${encodeURIComponent(JSON.stringify(payload))}` as any);
   };
 
@@ -98,7 +104,24 @@ export default function OnboardScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>
-          {!place ? (
+          {manual ? (
+            <>
+              <Pressable onPress={() => setManual(false)} className="mb-3 flex-row items-center gap-1 self-start active:opacity-60">
+                <Ionicons name="chevron-back" size={16} color={c.muted} />
+                <Text className="text-[14px] font-sans-md text-muted">Back to search</Text>
+              </Pressable>
+              <Text className="font-display-x text-[22px] text-ink">Add your society</Text>
+              <Text className="mt-1.5 mb-4 text-[14px] leading-[21px] text-muted">
+                Couldn't find it on the map? Just enter the details — the location can be added later.
+              </Text>
+              <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Society name</Text>
+              <TextInput value={name} onChangeText={setName} placeholder="e.g. Sunrise Residency" placeholderTextColor={c.faint} className="mb-4 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
+              <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Address</Text>
+              <TextInput value={address} onChangeText={setAddress} placeholder="Street, area, city" placeholderTextColor={c.faint} multiline className="mb-4 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ minHeight: 64, outline: 'none' } as any} />
+              <Button label="Continue — create my account" icon="arrow-forward" fullWidth disabled={!name.trim()} onPress={onboardNew} />
+              <Text className="mt-3 text-center text-[12px] leading-[18px] text-faint">As the founder you become the society admin and can invite neighbours.</Text>
+            </>
+          ) : !place ? (
             <>
               <Text className="font-display-x text-[22px] text-ink">Find your society</Text>
               <Text className="mt-1.5 mb-4 text-[14px] leading-[21px] text-muted">
@@ -138,7 +161,10 @@ export default function OnboardScreen() {
                 )}
               </View>
 
-              <Pressable onPress={() => router.push('/sign-in' as any)} className="mt-4 items-center py-2">
+              <Pressable onPress={startManual} className="mt-3 items-center py-2">
+                <Text className="text-[13px] font-sans-md text-muted">Can't find your society? <Text className="font-sans-sb text-accent">Add it manually</Text></Text>
+              </Pressable>
+              <Pressable onPress={() => router.push('/sign-in' as any)} className="mt-1 items-center py-2">
                 <Text className="text-[13px] font-sans-sb text-accent">Already have an account? Sign in</Text>
               </Pressable>
             </>
