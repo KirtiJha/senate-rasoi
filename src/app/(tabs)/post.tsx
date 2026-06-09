@@ -282,18 +282,7 @@ export default function PostScreen() {
       >
         <Container narrow>
           <Text className="text-[13px] font-sans-md text-accent">Share your kitchen</Text>
-          <Text className="mb-3 font-display-x text-[30px] text-ink">{mode === 'dish' ? 'Post a dish' : 'Post a tiffin'}</Text>
-
-          {/* one-off vs recurring */}
-          <View className="mb-4 flex-row rounded-2xl bg-inset p-1">
-            {(['dish', 'tiffin'] as const).map((m) => (
-              <Pressable key={m} onPress={() => setMode(m)} className={`flex-1 rounded-xl py-2.5 ${mode === m ? 'bg-surface' : ''}`}>
-                <Text className={`text-center text-[13px] ${mode === m ? 'font-sans-sb text-ink' : 'font-sans-md text-muted'}`}>
-                  {m === 'dish' ? 'One-off dish' : 'Tiffin service'}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+          <Text className="mb-4 font-display-x text-[30px] text-ink">{mode === 'dish' ? 'Post a dish' : 'Post a tiffin'}</Text>
 
           {/* photo first (dishes only) */}
           {mode === 'dish' && (photoUri ? (

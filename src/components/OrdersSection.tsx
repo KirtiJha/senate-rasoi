@@ -26,7 +26,7 @@ function openUrl(url: string) {
   else Linking.openURL(url);
 }
 
-export function OrdersSection() {
+export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
   const router = useRouter();
   const toast = useToast();
   const c = useThemeColors();
@@ -80,7 +80,7 @@ export function OrdersSection() {
           <Empty
             icon="🧺"
             title="No orders yet"
-            action={<Button label="Browse today's menu" icon="compass-outline" onPress={() => router.push('/')} />}
+            action={<Button label="Browse today's menu" icon="compass-outline" onPress={() => (onBrowse ? onBrowse() : router.push('/food' as any))} />}
           >
             Find something delicious from your neighbours and place your first order.
           </Empty>

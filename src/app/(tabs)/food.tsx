@@ -21,7 +21,7 @@ import { OrdersSection } from '../../components/OrdersSection';
 import { SetupBanner } from '../../components/SetupBanner';
 import { SubscribeModal } from '../../components/SubscribeModal';
 import { TiffinCard } from '../../components/TiffinCard';
-import { Button, Container, DishCardSkeleton, LiveDot, useResponsive } from '../../components/ui';
+import { Container, DishCardSkeleton, LiveDot, useResponsive } from '../../components/ui';
 import { useThemeColors } from '../../theme';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -226,11 +226,11 @@ export default function FoodScreen() {
       </View>
 
       {tab === 'orders' ? (
-        <OrdersSection />
+        <OrdersSection onBrowse={() => setTab('discover')} />
       ) : tab === 'kitchen' ? (
         <KitchenSection />
       ) : tab === 'tiffins' ? (
-        <MyTiffinsSection />
+        <MyTiffinsSection onBrowse={() => setTab('discover')} />
       ) : (
       <ScrollView
         className="flex-1"
@@ -352,9 +352,8 @@ export default function FoodScreen() {
                       ? 'No dishes yet today'
                       : `Nothing for ${filter} yet`
               }
-              action={<Button label="Post the first dish" icon="add" onPress={() => router.push({ pathname: '/post', params: { category: 'food' } })} />}
             >
-              Be the first to share what you're cooking — your neighbours are hungry!
+              Nothing on the menu right now — check back soon. Cooking something? Post it from the Kitchen tab.
             </Empty>
           ) : isDesktop ? (
             <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
