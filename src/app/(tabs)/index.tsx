@@ -88,19 +88,11 @@ export default function HomeScreen() {
       <Container>
         {/* Header */}
         <View className="mb-6">
-          <View className="flex-row items-start justify-between">
-            <View className="flex-1">
-              <Text className="text-[13px] font-sans-md text-accent">{greeting}</Text>
-              <Text className="font-display-x text-[28px] leading-9 text-ink">
-                {profile?.name ? `Hi, ${profile.name.split(' ')[0]} 👋` : 'Your neighbourhood hub'}
-              </Text>
-            </View>
-            <Pressable
-              onPress={() => router.push('/profile/me' as any)}
-              className="ml-3 mt-1 h-10 w-10 items-center justify-center rounded-full bg-inset active:opacity-70"
-            >
-              <Ionicons name="person-outline" size={20} color={c.muted} />
-            </Pressable>
+          <View>
+            <Text className="text-[13px] font-sans-md text-accent">{greeting}</Text>
+            <Text className="font-display-x text-[28px] leading-9 text-ink">
+              {profile?.name ? `Hi, ${profile.name.split(' ')[0]} 👋` : 'Your neighbourhood hub'}
+            </Text>
           </View>
 
           {/* Society badge */}

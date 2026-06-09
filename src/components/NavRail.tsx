@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Link, usePathname } from 'expo-router';
+import { Link, useRouter, usePathname } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Animated, Pressable, Text, View } from 'react-native';
+import { Animated, Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/auth';
 import { useThemePreference } from '../context/theme';
 import { useUnreadDms } from '../context/unread';
 import { useThemeColors } from '../theme';
 import { Wordmark } from './Brand';
+import { Avatar } from './ui';
 
 const NAV_EXPANDED = 220;
 const NAV_COLLAPSED = 64;
@@ -177,12 +178,14 @@ export function NavRail() {
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const path = usePathname();
-  const { isAdmin } = useAuth();
+  const router = useRouter();
+  const { isAdmin, profile, signOut } = useAuth();
   const { resolved, toggle: toggleTheme } = useThemePreference();
   const isDark = resolved === 'dark';
   const unread = useUnreadDms();
 
   const [collapsed, setCollapsed] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const anim = useRef(new Animated.Value(0)).current; // 0 = expanded, 1 = collapsed
 
   const handleToggle = () => {
@@ -351,67 +354,114 @@ export function NavRail() {
           </Link>
         </View>
 
-        {/* ── About ── */}
+        {/* ── Account (avatar opens a menu: Profile · About · theme · sign out) ── */}
         <View style={{ paddingHorizontal: 10 }}>
-          <NavItemRow
-            item={{
-              href: '/about',
-              label: 'About',
-              icon: 'information-circle-outline',
-              activeIcon: 'information-circle',
-            }}
-            path={path}
-            colors={colors}
-            av={av}
-          />
-        </View>
-
-        {/* ── Theme toggle ── */}
-        <Pressable
-          onPress={toggleTheme}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginHorizontal: 10,
-            borderRadius: 14,
-            marginBottom: 4,
-          }}
-          accessibilityLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          <Animated.View style={{ marginLeft: iconMarginL, paddingVertical: 10, paddingLeft: 12 }}>
-            <Ionicons
-              name={isDark ? 'sunny-outline' : 'moon-outline'}
-              size={19}
-              color={colors.faint}
-            />
-          </Animated.View>
-          <Animated.View
-            style={{
-              overflow: 'hidden',
-              maxWidth: labelMaxW,
-              opacity: labelOpacity,
-              marginLeft: 10,
-              paddingRight: 12,
-            }}
+          <Pressable
+            onPress={() => setMenuOpen(true)}
+            style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 14, paddingVertical: 6, overflow: 'hidden' }}
+            accessibilityLabel="Account menu"
           >
-            <Text
-              numberOfLines={1}
-              style={{
-                fontFamily: 'HankenGrotesk_500Medium',
-                fontSize: 13,
-                color: colors.faint,
-              }}
-            >
-              {isDark ? 'Light mode' : 'Dark mode'}
-            </Text>
-          </Animated.View>
-        </Pressable>
-
-        {/* ── Tagline ── */}
-        <Animated.View style={{ opacity: sectionOpacity, paddingHorizontal: 22 }}>
-          <Text style={{ fontSize: 11, color: colors.faint }}>Aangan · community hub</Text>
-        </Animated.View>
+            <Animated.View style={{ marginLeft: iconMarginL, paddingLeft: 7 }}>
+              <Avatar name={profile?.name ?? 'You'} size={32} />
+            </Animated.View>
+            <Animated.View style={{ flex: 1, overflow: 'hidden', maxWidth: labelMaxW, opacity: labelOpacity, marginLeft: 10 }}>
+              <Text numberOfLines={1} style={{ fontFamily: 'HankenGrotesk_600SemiBold', fontSize: 14, color: colors.ink }}>
+                {profile?.name ?? 'You'}
+              </Text>
+              {profile?.flat ? (
+                <Text numberOfLines={1} style={{ fontSize: 11, color: colors.faint }}>Flat {profile.flat}</Text>
+              ) : null}
+            </Animated.View>
+            <Animated.View style={{ opacity: labelOpacity, paddingRight: 12 }}>
+              <Ionicons name="chevron-up" size={16} color={colors.faint} />
+            </Animated.View>
+          </Pressable>
+        </View>
       </View>
+
+      <AccountMenu
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        profile={profile}
+        colors={colors}
+        isDark={isDark}
+        onToggleTheme={toggleTheme}
+        onSignOut={signOut}
+        onNavigate={(href) => router.push(href as any)}
+        insetsBottom={insets.bottom}
+      />
     </Animated.View>
+  );
+}
+
+function AccountMenu({
+  visible, onClose, profile, colors, isDark, onToggleTheme, onSignOut, onNavigate, insetsBottom,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  profile: { name: string; flat: string | null } | null;
+  colors: ReturnType<typeof useThemeColors>;
+  isDark: boolean;
+  onToggleTheme: () => void;
+  onSignOut: () => void;
+  onNavigate: (href: string) => void;
+  insetsBottom: number;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={{ flex: 1 }} onPress={onClose}>
+        <View
+          style={{
+            position: 'absolute',
+            left: 12,
+            bottom: insetsBottom + 56,
+            width: 232,
+            borderRadius: 16,
+            backgroundColor: colors.surface,
+            borderWidth: 1,
+            borderColor: colors.line,
+            paddingVertical: 6,
+            shadowColor: '#000',
+            shadowOpacity: 0.12,
+            shadowRadius: 16,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 12,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 8 }}>
+            <Avatar name={profile?.name ?? 'You'} size={36} />
+            <View style={{ flex: 1 }}>
+              <Text numberOfLines={1} style={{ fontFamily: 'HankenGrotesk_700Bold', fontSize: 14, color: colors.ink }}>
+                {profile?.name ?? 'You'}
+              </Text>
+              {profile?.flat ? <Text style={{ fontSize: 11, color: colors.faint }}>Flat {profile.flat}</Text> : null}
+            </View>
+          </View>
+          <View style={{ height: 1, backgroundColor: colors.line, marginVertical: 4 }} />
+          <AccountMenuRow icon="person-outline" label="Profile" colors={colors} onPress={() => { onClose(); onNavigate('/profile/me'); }} />
+          <AccountMenuRow icon="information-circle-outline" label="About" colors={colors} onPress={() => { onClose(); onNavigate('/about'); }} />
+          <AccountMenuRow icon={isDark ? 'sunny-outline' : 'moon-outline'} label={isDark ? 'Light mode' : 'Dark mode'} colors={colors} onPress={onToggleTheme} />
+          <View style={{ height: 1, backgroundColor: colors.line, marginVertical: 4 }} />
+          <AccountMenuRow icon="log-out-outline" label="Sign out" colors={colors} danger onPress={() => { onClose(); onSignOut(); }} />
+        </View>
+      </Pressable>
+    </Modal>
+  );
+}
+
+function AccountMenuRow({
+  icon, label, colors, onPress, danger,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  colors: ReturnType<typeof useThemeColors>;
+  onPress: () => void;
+  danger?: boolean;
+}) {
+  return (
+    <Pressable onPress={onPress} className="active:bg-inset" style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 11 }}>
+      <Ionicons name={icon} size={18} color={danger ? '#DC2626' : colors.muted} />
+      <Text style={{ fontFamily: 'HankenGrotesk_500Medium', fontSize: 14, color: danger ? '#DC2626' : colors.ink }}>{label}</Text>
+    </Pressable>
   );
 }
