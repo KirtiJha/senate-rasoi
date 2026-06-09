@@ -21,6 +21,7 @@ import { Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { BottomBar } from '../components/BottomBar';
 import { NavRail } from '../components/NavRail';
 import { useResponsive } from '../components/ui';
 import { AuthProvider } from '../context/auth';
@@ -92,14 +93,16 @@ function AppShell() {
 
 /**
  * On desktop: renders the persistent NavRail alongside the Stack navigator so
- * that navigating to admin/polls/emergency/about never hides the sidebar.
- * On mobile: just renders the Stack (bottom tabs handle navigation there).
+ * navigating to admin/polls/emergency/sports/about never hides the sidebar.
+ * On mobile: renders a persistent bottom bar below the Stack so it stays
+ * visible across every screen (tabs and community pages alike).
  */
 function DesktopShell() {
   const c = useThemeColors();
   const { isDesktop } = useResponsive();
   const { ready, session } = useAuth();
   const showRail = isDesktop && ready && !!session;
+  const showBottomBar = !isDesktop && ready && !!session;
 
   return (
     <View
@@ -130,6 +133,7 @@ function DesktopShell() {
           <Stack.Screen name="messages/[threadId]" />
         </Stack>
       </View>
+      {showBottomBar ? <BottomBar /> : null}
     </View>
   );
 }

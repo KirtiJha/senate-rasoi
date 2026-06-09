@@ -21,6 +21,14 @@ type CommunityTile = { key: string; label: string; blurb: string; icon: string; 
 
 const COMMUNITY_TILES: CommunityTile[] = [
   {
+    key: 'feed',
+    label: 'Feed',
+    blurb: 'Posts, announcements & issues',
+    icon: 'chatbubbles',
+    color: '#FF5A3C',
+    href: '/feed',
+  },
+  {
     key: 'directory',
     label: 'Residents',
     blurb: 'Owner & tenant directory',
