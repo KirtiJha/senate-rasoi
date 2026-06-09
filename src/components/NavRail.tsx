@@ -34,6 +34,7 @@ const PRIMARY_ITEMS: NavItem[] = [
 const COMMUNITY_ITEMS: NavItem[] = [
   { href: '/directory', label: 'Residents', icon: 'people-outline', activeIcon: 'people' },
   { href: '/sports', label: 'Sports', icon: 'football-outline', activeIcon: 'football', color: '#16A34A' },
+  { href: '/documents', label: 'Documents', icon: 'folder-outline', activeIcon: 'folder', color: '#0EA5E9' },
   { href: '/polls', label: 'Polls', icon: 'stats-chart-outline', activeIcon: 'stats-chart' },
   { href: '/emergency', label: 'Emergency', icon: 'call-outline', activeIcon: 'call', color: '#EF4444' },
 ];

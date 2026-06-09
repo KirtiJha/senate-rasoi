@@ -7,6 +7,7 @@ import { Avatar, RowSkeleton, ScreenHeader, useResponsive } from '../../componen
 import { useAuth } from '../../context/auth';
 import { fetchDirectory } from '../../lib/directory';
 import { fetchDishes } from '../../lib/dishes';
+import { fetchDocuments, fileGlyph } from '../../lib/documents';
 import { fetchAllListings } from '../../lib/listings';
 import { POST_CATEGORY_COLORS, POST_CATEGORY_ICONS, fetchPosts } from '../../lib/posts';
 import { addRecentSearch, clearRecentSearches, getRecentSearches } from '../../lib/recentSearches';
@@ -21,7 +22,7 @@ const FOOD_COLOR = '#FF5A3C';
 const TIFFIN_COLOR = '#F59E0B';
 const RESIDENT_COLOR = '#0EA5E9';
 
-type Kind = 'resident' | 'sport' | 'dish' | 'tiffin' | 'listing' | 'post';
+type Kind = 'resident' | 'sport' | 'document' | 'dish' | 'tiffin' | 'listing' | 'post';
 
 interface SearchItem {
   id: string;
@@ -35,9 +36,9 @@ interface SearchItem {
   open: () => void;
 }
 
-const KIND_ORDER: Kind[] = ['resident', 'sport', 'dish', 'tiffin', 'listing', 'post'];
+const KIND_ORDER: Kind[] = ['resident', 'sport', 'document', 'dish', 'tiffin', 'listing', 'post'];
 const KIND_LABEL: Record<Kind, string> = {
-  resident: 'Residents', sport: 'Sports', dish: 'Home Food', tiffin: 'Tiffins', listing: 'Listings', post: 'Posts',
+  resident: 'Residents', sport: 'Sports', document: 'Documents', dish: 'Home Food', tiffin: 'Tiffins', listing: 'Listings', post: 'Posts',
 };
 
 // ── Fuzzy scoring ────────────────────────────────────────────────────
@@ -76,13 +77,14 @@ export default function SearchScreen() {
   const load = useCallback(async () => {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
     try {
-      const [residents, listings, posts, dishes, tiffins, groups] = await Promise.all([
+      const [residents, listings, posts, dishes, tiffins, groups, documents] = await Promise.all([
         fetchDirectory(communityId, userId, !!isAdmin).catch(() => []),
         fetchAllListings(communityId, 0, 200).catch(() => []),
         fetchPosts(communityId, undefined, 0, 100).catch(() => []),
         fetchDishes(communityId).catch(() => []),
         listTiffinPlans(communityId).catch(() => []),
         fetchGroups(communityId, userId).catch(() => []),
+        fetchDocuments(communityId).catch(() => []),
       ]);
 
       const next: SearchItem[] = [];
@@ -102,6 +104,14 @@ export default function SearchScreen() {
           id: `g:${g.id}`, kind: 'sport', title: g.name, subtitle: `${sp?.label ?? g.sport} · ${g.member_count} member${g.member_count === 1 ? '' : 's'}`,
           haystack: `${g.name} ${sp?.label ?? g.sport}`.toLowerCase(),
           icon: 'football', color: g.color ?? sp?.color ?? '#16A34A', open: () => router.push(`/sports/${g.id}` as any),
+        });
+      }
+      for (const doc of documents) {
+        const fg = fileGlyph(doc.mime_type);
+        next.push({
+          id: `doc:${doc.id}`, kind: 'document', title: doc.name, subtitle: `${doc.is_public ? 'Public' : 'Shared'} · ${doc.owner?.name ?? 'Someone'}`,
+          haystack: `${doc.name} ${doc.description ?? ''}`.toLowerCase(),
+          icon: fg.icon, color: fg.color, open: () => router.push('/documents' as any),
         });
       }
       for (const d of dishes) {

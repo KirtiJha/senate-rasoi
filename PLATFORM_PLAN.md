@@ -46,6 +46,7 @@
 | Polls & Surveys | ✅ | polls.tsx, realtime voting, create/close/delete (migration 0020) |
 | Emergency Contacts | ✅ | emergency.tsx, 7 role types, admin add/delete, direct dial (migration 0019) |
 | Sports groups | ✅ | sports.tsx + sports/[id].tsx; teams per sport, members, practice, tournaments, join/leave (migration 0030) |
+| Document vault | ✅ | documents.tsx; upload files, public/private + share/revoke, preview/download, signed URLs (migration 0032) |
 | Resident directory | ✅ | directory.tsx; members + manual entries, grouped by flat, invite, admin moderation (migrations 0027–0029) |
 | Society-based access control | ✅ | RLS on all tables; is_admin fn (migration 0017); communityId in all queries |
 | About page + version | ✅ | about.tsx with version, features, technical info |
@@ -259,6 +260,7 @@ scoped to that society. Admins of a society can manage that society only. Platfo
 | 0029 | directory_entries (non-member residents) + RLS + admin_set_directory_visibility RPC | ✅ run |
 | 0030 | sport_groups + sport_group_members + sport_tournaments + RLS — sports groups | ✅ run |
 | 0031 | sport_groups.logo_url + sport-logos storage policies — uploaded team logos | ⏸️ create `sport-logos` bucket + run |
+| 0032 | documents + document_shares + RLS + storage policies — document vault | ⏸️ create PRIVATE `documents` bucket + run |
 
 **Pending (future):**
 - `listing_reports` — moderation queue (schema designed; UI not yet built)
@@ -907,6 +909,7 @@ last-message bump, mark-read; FTS stem-matching on listings ("dancing"→"dance"
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-09 | **Document vault (`/documents`).** New community section to upload society files. Migration `0032` adds `documents` + `document_shares` with RLS + storage policies on a **PRIVATE `documents` bucket**: the uploader owns each file and marks it **public** (any member) or **private** (only people they share with; can revoke). Access to the actual file is via short-lived **signed URLs**, gated by RLS (the storage read policy reuses the `documents` row RLS → public/owner/shared). 20 MB per-file limit (`MAX_DOCUMENT_MB`), `expo-document-picker` for any file type, preview + download, file-type icons, filter chips (All/Public/Shared/Mine). Wired into NavRail + Home tile + universal search. Uses Supabase Storage (already in stack; free tier, RLS-native access control). |
 | 2026-06-09 | **Persistent mobile bottom bar + centered +.** Replaced the per-`(tabs)` Tabs bar with a root-level `BottomBar` (mirrors how NavRail persists on desktop) so it **stays visible on community screens** (Residents/Sports/Polls/Emergency/Admin), not just tab screens. `(tabs)/_layout` now uses `<Slot/>` + the mobile `TopBar` like desktop. The bar is **5 items with a prominent centered +**: Home · Listings · ➕ Post · Search · You (Feed moved to a Home tile to free the slot; bar hidden inside DM threads). |
 | 2026-06-09 | **Sports group logo upload.** Migration `0031` adds `sport_groups.logo_url` + `sport-logos` storage policies (public read, authenticated write). The create-group sheet has an optional **logo image picker** (compressed to 512px via `uploadGroupLogo`), and the group badge shows the uploaded image (emoji+colour remains the fallback). Owners/admins can tap the badge to change the logo. Requires a public `sport-logos` bucket. |
 | 2026-06-09 | **Sports = one group per sport (tabbed) + uniform content width.** (1) Sports reworked so each sport has a single group, shown in **per-sport tabs**; the **+** button adds a *new sport* (create-sheet only offers sports without a group). Extracted `SportGroupBody` (shared by the tabbed `/sports` and the `/sports/[id]` deep-link). (2) **Every nav tab now uses the same content width as Polls/Home** (`layout.maxContent` = 1180): Feed/Search/Listings/Directory custom maxes and the narrow Containers on Messages/Admin/You/My-Listings/Saved all switched to the standard width. |

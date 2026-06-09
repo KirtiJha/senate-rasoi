@@ -53,6 +53,14 @@ const COMMUNITY_TILES: CommunityTile[] = [
     href: '/sports',
   },
   {
+    key: 'documents',
+    label: 'Documents',
+    blurb: 'Society files, public or shared',
+    icon: 'folder',
+    color: '#0EA5E9',
+    href: '/documents',
+  },
+  {
     key: 'polls',
     label: 'Polls',
     blurb: 'Vote on community decisions',
