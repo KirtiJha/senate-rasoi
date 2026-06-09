@@ -1,8 +1,9 @@
 import type { Session } from '@supabase/supabase-js';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { addRole as addRoleSvc, getProfile, signOut as signOutSvc, updateProfile } from '../lib/auth';
+import { Community, fetchCommunityById } from '../lib/communities';
 import { registerPush } from '../lib/push';
-import { COMMUNITY_ID, supabase } from '../lib/supabase';
+import { COMMUNITY_ID, isSupabaseConfigured, supabase } from '../lib/supabase';
 import type { DbProfile, Profile, Role } from '../lib/types';
 
 interface AuthValue {
@@ -11,6 +12,7 @@ interface AuthValue {
   userId: string | null;
   profile: DbProfile | null;
   communityId: string;
+  community: Community | null;
   roles: Role[];
   isChef: boolean;
   isFoodie: boolean;
@@ -27,6 +29,7 @@ const AuthContext = createContext<AuthValue>({
   userId: null,
   profile: null,
   communityId: COMMUNITY_ID,
+  community: null,
   roles: [],
   isChef: false,
   isFoodie: false,
@@ -44,6 +47,7 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<DbProfile | null>(null);
+  const [community, setCommunity] = useState<Community | null>(null);
   const [ready, setReady] = useState(false);
 
   const loadProfile = useCallback(async (uid: string | undefined) => {
@@ -86,11 +90,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const userId = session?.user.id ?? null;
   const roles = profile?.roles ?? [];
+  const communityId = profile?.community_id ?? COMMUNITY_ID;
 
   // Register this device for push once signed in (native only; no-op on web).
   useEffect(() => {
     if (userId) registerPush(userId);
   }, [userId]);
+
+  // Keep the current community (name etc.) loaded for the persistent chrome.
+  useEffect(() => {
+    if (!session || !isSupabaseConfigured) { setCommunity(null); return; }
+    fetchCommunityById(communityId).then(setCommunity).catch(() => {});
+  }, [session, communityId]);
 
   const value = useMemo<AuthValue>(
     () => ({
@@ -99,7 +110,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userId,
       profile,
       roles,
-      communityId: profile?.community_id ?? COMMUNITY_ID,
+      communityId,
+      community,
       // Roles collapsed to member + admin: every signed-in member can cook/post.
       isChef: !!profile,
       isFoodie: !!profile,
@@ -120,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null);
       },
     }),
-    [ready, session, userId, profile, roles, loadProfile]
+    [ready, session, userId, profile, roles, communityId, community, loadProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

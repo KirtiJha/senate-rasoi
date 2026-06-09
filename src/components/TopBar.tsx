@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../context/auth';
 import { useNotifications } from '../context/notifications';
 import { useThemePreference } from '../context/theme';
 import { useThemeColors } from '../theme';
@@ -15,6 +16,7 @@ export function TopBar({ live = false }: { live?: boolean }) {
   const { resolved, toggle } = useThemePreference();
   const isDark = resolved === 'dark';
   const { unreadCount, open } = useNotifications();
+  const { community } = useAuth();
 
   return (
     <View className="border-b border-line bg-bg" style={{ paddingTop: insets.top }}>
@@ -25,6 +27,15 @@ export function TopBar({ live = false }: { live?: boolean }) {
           </Pressable>
         </Link>
         <View className="flex-row items-center gap-2">
+          {community ? (
+            <View
+              className="flex-row items-center gap-1 rounded-full px-2.5 py-1"
+              style={{ backgroundColor: '#7C3AED1A', borderWidth: 1, borderColor: '#7C3AED55', maxWidth: 150 }}
+            >
+              <Ionicons name="business" size={11} color="#7C3AED" />
+              <Text className="text-[11px] font-sans-sb" numberOfLines={1} style={{ color: '#7C3AED' }}>{community.name}</Text>
+            </View>
+          ) : null}
           {live ? (
             <View className="flex-row items-center gap-1.5 rounded-full bg-inset px-2.5 py-1">
               <LiveDot color={c.accent} size={6} />

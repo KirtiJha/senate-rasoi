@@ -184,7 +184,7 @@ export function NavRail() {
   const insets = useSafeAreaInsets();
   const path = usePathname();
   const router = useRouter();
-  const { isAdmin, profile, signOut } = useAuth();
+  const { isAdmin, profile, community, signOut } = useAuth();
   const { resolved, toggle: toggleTheme } = useThemePreference();
   const isDark = resolved === 'dark';
   const unread = useUnreadDms();
@@ -287,6 +287,19 @@ export function NavRail() {
             </Animated.View>
           </Pressable>
         </View>
+
+        {/* ── Society badge (fades out when collapsed) ── */}
+        {community ? (
+          <Animated.View style={{ opacity: labelOpacity, height: collapsed ? 0 : undefined, marginBottom: collapsed ? 0 : 16, paddingHorizontal: 12, overflow: 'hidden' }}>
+            <View
+              className="flex-row items-center gap-1.5 self-start rounded-full px-2.5 py-1.5"
+              style={{ backgroundColor: '#7C3AED1A', borderWidth: 1, borderColor: '#7C3AED55', maxWidth: '100%' }}
+            >
+              <Ionicons name="business" size={12} color="#7C3AED" />
+              <Text className="text-[12px] font-sans-sb" numberOfLines={1} style={{ color: '#7C3AED', flexShrink: 1 }}>{community.name}</Text>
+            </View>
+          </Animated.View>
+        ) : null}
 
         {/* ── Primary nav ── */}
         <View style={{ paddingHorizontal: 10 }}>

@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useUnreadDms } from '../../context/unread';
-import { Community, fetchCommunityById } from '../../lib/communities';
 import { PostRow, fetchLatestAnnouncement } from '../../lib/posts';
 import { SERVICES, ServiceCategory } from '../../lib/services';
 import { isSupabaseConfigured } from '../../lib/supabase';
@@ -85,14 +84,12 @@ export default function HomeScreen() {
   const { profile, communityId } = useAuth();
   const c = useThemeColors();
   const unread = useUnreadDms();
-  const [community, setCommunity] = useState<Community | null>(null);
   const [updateBanner, setUpdateBanner] = useState<AppVersion | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [announcement, setAnnouncement] = useState<PostRow | null>(null);
 
   useEffect(() => {
     if (communityId && isSupabaseConfigured) {
-      fetchCommunityById(communityId).then(setCommunity).catch(() => {});
       fetchLatestAnnouncement(communityId).then(async (post) => {
         if (!post) return;
         const dismissed = await AsyncStorage.getItem(DISMISSED_ANNOUNCEMENT_KEY);
@@ -135,14 +132,6 @@ export default function HomeScreen() {
       <Container>
         {/* Header */}
         <View className="mb-6">
-          {/* Society badge — above the greeting */}
-          {community ? (
-            <View className="mb-2 flex-row items-center gap-1.5 self-start rounded-full px-3 py-1.5" style={{ backgroundColor: '#7C3AED1A', borderWidth: 1, borderColor: '#7C3AED55' }}>
-              <Ionicons name="business" size={13} color="#7C3AED" />
-              <Text className="text-[12px] font-sans-sb" numberOfLines={1} style={{ color: '#7C3AED' }}>{community.name}</Text>
-            </View>
-          ) : null}
-
           <Text className="text-[13px] font-sans-md text-accent">{greeting}</Text>
           <Text className="font-display-x text-[28px] leading-9 text-ink">
             {profile?.name ? `Hi, ${profile.name.split(' ')[0]} 👋` : 'Your neighbourhood hub'}

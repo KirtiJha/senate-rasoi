@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,8 +9,6 @@ import { SavedSection } from '../../components/SavedSection';
 import { Avatar, Badge, Container, ScreenHeader, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
-import { Community, fetchCommunityById } from '../../lib/communities';
-import { isSupabaseConfigured } from '../../lib/supabase';
 import { useThemeColors } from '../../theme';
 
 type Tab = 'listings' | 'saved';
@@ -21,15 +19,8 @@ export default function YouScreen() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { profile, communityId, isAdmin, signOut } = useAuth();
+  const { profile, isAdmin, signOut } = useAuth();
   const [tab, setTab] = useState<Tab>('listings');
-  const [community, setCommunity] = useState<Community | null>(null);
-
-  useEffect(() => {
-    if (communityId && isSupabaseConfigured) {
-      fetchCommunityById(communityId).then(setCommunity).catch(() => {});
-    }
-  }, [communityId]);
 
   return (
     <View className="flex-1 bg-bg">
@@ -46,12 +37,6 @@ export default function YouScreen() {
                 {profile?.name ?? 'You'}
               </Text>
               <Text className="text-[12px] text-muted">{profile?.phone ?? ''}</Text>
-              {community ? (
-                <View className="mt-1 flex-row items-center gap-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: '#7C3AED1A' }}>
-                  <Ionicons name="business" size={11} color="#7C3AED" />
-                  <Text className="text-[11px] font-sans-sb" numberOfLines={1} style={{ color: '#7C3AED' }}>{community.name}</Text>
-                </View>
-              ) : null}
             </View>
             <Pressable onPress={() => router.push('/profile/me' as any)} hitSlop={8} className="h-10 w-10 items-center justify-center rounded-full bg-inset active:opacity-70">
               <Ionicons name="person-outline" size={20} color={c.muted} />
