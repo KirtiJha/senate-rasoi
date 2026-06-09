@@ -24,7 +24,7 @@ export default function YouScreen() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { profile, communityId, isChef, isAdmin, addRole, signOut } = useAuth();
+  const { profile, communityId, isChef, isAdmin, signOut } = useAuth();
   const [tab, setTab] = useState<Tab>('orders');
   const [community, setCommunity] = useState<Community | null>(null);
 
@@ -33,12 +33,6 @@ export default function YouScreen() {
       fetchCommunityById(communityId).then(setCommunity).catch(() => {});
     }
   }, [communityId]);
-
-  const becomeChef = async () => {
-    await addRole('chef');
-    toast.show('Chef mode on — post your first dish! 🎉');
-    setTab('kitchen');
-  };
 
   return (
     <View className="flex-1 bg-bg">
@@ -66,29 +60,15 @@ export default function YouScreen() {
             </Pressable>
           </View>
 
-          {/* role chips */}
+          {/* role chip */}
           <View className="mt-2 flex-row gap-1.5">
-            {profile?.roles.map((r) => (
-              <Badge key={r} label={r === 'foodie' ? 'Foodie' : r === 'chef' ? 'Chef' : 'Admin'} tone={r === 'admin' ? 'accent' : 'neutral'} />
-            ))}
+            <Badge label={isAdmin ? 'Admin' : 'Member'} tone={isAdmin ? 'accent' : 'neutral'} />
           </View>
 
           {isAdmin ? (
             <Pressable onPress={() => router.push('/admin')} className="mt-3 flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3">
               <Ionicons name="shield-checkmark-outline" size={18} color={c.accent} />
               <Text className="flex-1 font-sans-sb text-[13px] text-ink">Admin · manage members & roles</Text>
-              <Ionicons name="chevron-forward" size={18} color={c.muted} />
-            </Pressable>
-          ) : null}
-
-          {/* become-a-chef CTA for foodies */}
-          {!isChef ? (
-            <Pressable onPress={becomeChef} className="mt-3 flex-row items-center gap-3 rounded-2xl border border-accent-soft bg-accent-soft px-4 py-3">
-              <Ionicons name="restaurant" size={20} color={c.accent} />
-              <View className="flex-1">
-                <Text className="font-sans-sb text-[14px] text-ink">Start cooking</Text>
-                <Text className="text-[12px] text-muted">Become a chef to post dishes & tiffins</Text>
-              </View>
               <Ionicons name="chevron-forward" size={18} color={c.muted} />
             </Pressable>
           ) : null}

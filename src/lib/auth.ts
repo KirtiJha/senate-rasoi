@@ -50,12 +50,38 @@ export async function signUp(input: SignUpInput): Promise<DbProfile> {
   return profile as DbProfile;
 }
 
+/** Thrown when a blocked member tries to sign in (the screen shows the message). */
+export class BlockedError extends Error {
+  constructor() {
+    super('Your access has been blocked. Please contact your society admin to restore it.');
+    this.name = 'BlockedError';
+  }
+}
+
 export async function signIn(phone: string, code: string): Promise<void> {
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: phoneToEmail(phone),
     password: code,
   });
   if (error) throw mapAuthError(error.message);
+
+  // Refuse blocked accounts: sign back out and surface a clear message.
+  // Defensive: if the `blocked` column isn't there yet (migration 0025 not run),
+  // the query errors — never let that break sign-in.
+  const uid = data.user?.id;
+  if (uid) {
+    try {
+      const { data: prof, error: pErr } = await supabase
+        .from('profiles').select('blocked').eq('id', uid).maybeSingle();
+      if (!pErr && (prof as { blocked?: boolean } | null)?.blocked) {
+        await supabase.auth.signOut();
+        throw new BlockedError();
+      }
+    } catch (e) {
+      if (e instanceof BlockedError) throw e;
+      // column missing / transient — allow sign-in.
+    }
+  }
 }
 
 export async function signOut(): Promise<void> {

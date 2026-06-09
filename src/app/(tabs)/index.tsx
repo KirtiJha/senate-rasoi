@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -8,14 +9,25 @@ import { Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useUnreadDms } from '../../context/unread';
 import { Community, fetchCommunityById } from '../../lib/communities';
+import { PostRow, fetchLatestAnnouncement } from '../../lib/posts';
 import { SERVICES, ServiceCategory } from '../../lib/services';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { AppVersion, fetchLatestVersion, isNewer } from '../../lib/appVersion';
 import { useThemeColors } from '../../theme';
 
+const DISMISSED_ANNOUNCEMENT_KEY = 'aangan:dismissed-announcement';
+
 type CommunityTile = { key: string; label: string; blurb: string; icon: string; color: string; href: string };
 
 const COMMUNITY_TILES: CommunityTile[] = [
+  {
+    key: 'listings',
+    label: 'All Listings',
+    blurb: 'Browse every category',
+    icon: 'pricetags',
+    color: '#14B8A6',
+    href: '/listings',
+  },
   {
     key: 'messages',
     label: 'Messages',
@@ -52,12 +64,23 @@ export default function HomeScreen() {
   const [community, setCommunity] = useState<Community | null>(null);
   const [updateBanner, setUpdateBanner] = useState<AppVersion | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [announcement, setAnnouncement] = useState<PostRow | null>(null);
 
   useEffect(() => {
     if (communityId && isSupabaseConfigured) {
       fetchCommunityById(communityId).then(setCommunity).catch(() => {});
+      fetchLatestAnnouncement(communityId).then(async (post) => {
+        if (!post) return;
+        const dismissed = await AsyncStorage.getItem(DISMISSED_ANNOUNCEMENT_KEY);
+        if (dismissed !== post.id) setAnnouncement(post);
+      }).catch(() => {});
     }
   }, [communityId]);
+
+  const dismissAnnouncement = () => {
+    if (announcement) AsyncStorage.setItem(DISMISSED_ANNOUNCEMENT_KEY, announcement.id).catch(() => {});
+    setAnnouncement(null);
+  };
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -107,6 +130,30 @@ export default function HomeScreen() {
             What can your society help you with today?
           </Text>
         </View>
+
+        {/* Announcement banner */}
+        {announcement ? (
+          <Pressable
+            onPress={() => router.push(`/feed/${announcement.id}` as any)}
+            className="mb-5 overflow-hidden rounded-2xl border active:opacity-90"
+            style={{ borderColor: '#F59E0B55', backgroundColor: '#F59E0B12' }}
+          >
+            <View style={{ height: 3, backgroundColor: '#F59E0B' }} />
+            <View className="flex-row items-start gap-3 p-4">
+              <View className="h-9 w-9 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: '#F59E0B22' }}>
+                <Ionicons name="megaphone" size={18} color="#F59E0B" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: '#B45309' }}>Announcement</Text>
+                {announcement.title ? <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{announcement.title}</Text> : null}
+                <Text className="text-[13px] text-muted" numberOfLines={2}>{announcement.body}</Text>
+              </View>
+              <Pressable onPress={dismissAnnouncement} hitSlop={8}>
+                <Ionicons name="close" size={18} color={c.faint} />
+              </Pressable>
+            </View>
+          </Pressable>
+        ) : null}
 
         {/* Update banner */}
         {updateBanner && !bannerDismissed ? (

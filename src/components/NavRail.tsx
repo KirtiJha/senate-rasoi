@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { Animated, Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/auth';
+import { useNotifications } from '../context/notifications';
 import { useThemePreference } from '../context/theme';
 import { useUnreadDms } from '../context/unread';
 import { useThemeColors } from '../theme';
@@ -25,6 +26,7 @@ const PRIMARY_ITEMS: NavItem[] = [
   { href: '/', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
   { href: '/feed', label: 'Feed', icon: 'chatbubbles-outline', activeIcon: 'chatbubbles' },
   { href: '/search', label: 'Search', icon: 'search-outline', activeIcon: 'search' },
+  { href: '/listings', label: 'Listings', icon: 'pricetags-outline', activeIcon: 'pricetags' },
   { href: '/messages', label: 'Messages', icon: 'mail-outline', activeIcon: 'mail' },
   { href: '/you', label: 'You', icon: 'person-outline', activeIcon: 'person' },
 ];
@@ -183,6 +185,7 @@ export function NavRail() {
   const { resolved, toggle: toggleTheme } = useThemePreference();
   const isDark = resolved === 'dark';
   const unread = useUnreadDms();
+  const { unreadCount: notifCount, open: openNotifs } = useNotifications();
 
   const [collapsed, setCollapsed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -263,6 +266,25 @@ export function NavRail() {
               </Pressable>
             </Link>
           </Animated.View>
+          <Pressable
+            onPress={openNotifs}
+            style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}
+            accessibilityLabel="Notifications"
+          >
+            <Ionicons name="notifications-outline" size={19} color={colors.muted} />
+            {notifCount > 0 ? (
+              <View
+                style={{
+                  position: 'absolute', top: 1, right: 1, minWidth: 15, height: 15, paddingHorizontal: 3,
+                  borderRadius: 8, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <Text style={{ color: '#fff', fontSize: 9, fontFamily: 'HankenGrotesk_700Bold' }}>
+                  {notifCount > 9 ? '9+' : notifCount}
+                </Text>
+              </View>
+            ) : null}
+          </Pressable>
           <Pressable
             onPress={handleToggle}
             style={{

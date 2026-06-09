@@ -132,6 +132,20 @@ export async function searchPosts(
   return (data ?? []) as PostRow[];
 }
 
+/** The most recent announcement in a community (for the Home banner), or null. */
+export async function fetchLatestAnnouncement(communityId: string): Promise<PostRow | null> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_SELECT)
+    .eq('community_id', communityId)
+    .eq('category', 'announcement')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data as PostRow | null;
+}
+
 export async function fetchPostById(id: string): Promise<PostRow | null> {
   const { data, error } = await supabase
     .from('posts')

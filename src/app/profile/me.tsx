@@ -133,15 +133,13 @@ export default function ProfileScreen() {
             <Text className="font-display-x text-[22px] text-ink">{profile?.name ?? '—'}</Text>
             {profile?.flat ? <Text className="text-[13px] text-muted">Flat {profile.flat}</Text> : null}
 
-            {/* Role chips */}
+            {/* Role chip */}
             <View className="mt-2 flex-row flex-wrap justify-center gap-1.5">
-              {profile?.roles.map((r) => (
-                <View key={r} className="rounded-full border border-line bg-surface px-3 py-1">
-                  <Text className="text-[11px] font-sans-sb text-muted">
-                    {r === 'foodie' ? 'Member' : r === 'chef' ? 'Chef' : 'Admin'}
-                  </Text>
-                </View>
-              ))}
+              <View className="rounded-full border border-line bg-surface px-3 py-1">
+                <Text className="text-[11px] font-sans-sb text-muted">
+                  {profile?.roles.includes('admin') ? 'Admin' : 'Member'}
+                </Text>
+              </View>
             </View>
 
             {/* Society badge */}

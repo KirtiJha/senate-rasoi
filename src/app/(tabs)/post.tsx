@@ -36,7 +36,7 @@ export default function PostScreen() {
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { userId, isChef, addRole } = useAuth();
+  const { userId, isChef } = useAuth();
   const { profile, ready, update } = useProfile();
 
   // ── All hooks unconditionally at top (Rules of Hooks) ────────────────
@@ -270,37 +270,6 @@ export default function PostScreen() {
           </View>
         </Container>
       </ScrollView>
-    );
-  }
-
-  // Food posting is chef-only. Show upgrade prompt for non-chefs.
-  if (!isChef) {
-    return (
-      <View className="flex-1 bg-bg" style={{ paddingTop: isDesktop ? insets.top + 18 : 18 }}>
-        <Pressable
-          onPress={() => setSelectedCategory(null)}
-          className="mx-4 mb-2 flex-row items-center gap-1 self-start active:opacity-60"
-        >
-          <Ionicons name="chevron-back" size={18} color={c.muted} />
-          <Text className="font-sans-md text-[14px] text-muted">Post</Text>
-        </Pressable>
-        <Empty
-          icon="👨‍🍳"
-          title="Start cooking?"
-          action={
-            <Button
-              label="Become a chef"
-              icon="restaurant-outline"
-              onPress={async () => {
-                await addRole('chef');
-                toast.show("You're a chef now — post your first dish! 🎉");
-              }}
-            />
-          }
-        >
-          Turn on chef mode to post dishes and run your little kitchen. You can still order as a Foodie too.
-        </Empty>
-      </View>
     );
   }
 

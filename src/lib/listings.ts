@@ -92,6 +92,23 @@ export async function searchListings(query: string, communityId: string = COMMUN
 
 export { getCachedListings };
 
+/** All active listings in a community across every category (newest-bumped first). */
+export async function fetchAllListings(
+  communityId: string = COMMUNITY_ID,
+  offset = 0,
+  limit = 30,
+): Promise<ListingRow[]> {
+  const { data, error } = await supabase
+    .from('listings')
+    .select(LISTING_SELECT)
+    .eq('community_id', communityId)
+    .eq('status', 'active')
+    .order('bump_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) throw error;
+  return (data ?? []) as ListingRow[];
+}
+
 export async function fetchListingById(id: string): Promise<ListingRow | null> {
   const { data, error } = await supabase
     .from('listings')

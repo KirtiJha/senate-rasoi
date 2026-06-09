@@ -4,13 +4,12 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, Tex
 
 import { Brandfull } from '../../components/Brand';
 import { Field } from '../../components/forms';
-import { Button, Container, VegMark } from '../../components/ui';
+import { Button, Container } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { signIn, signUp } from '../../lib/auth';
 import { Community, fetchCommunities, submitJoinRequest } from '../../lib/communities';
 import { isSupabaseConfigured } from '../../lib/supabase';
-import type { Role } from '../../lib/types';
 import { useThemeColors } from '../../theme';
 
 export default function SignInScreen() {
@@ -25,7 +24,6 @@ export default function SignInScreen() {
   const [flat, setFlat] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [upi, setUpi] = useState('');
-  const [roles, setRoles] = useState<Role[]>(['foodie']);
   const [busy, setBusy] = useState(false);
 
   // Society picker
@@ -50,9 +48,6 @@ export default function SignInScreen() {
       (comm.address ?? '').toLowerCase().includes(communitySearch.toLowerCase())
   );
 
-  const toggleRole = (r: Role) =>
-    setRoles((cur: Role[]) => (cur.includes(r) ? cur.filter((x: Role) => x !== r) : [...cur, r]));
-
   const submit = async () => {
     if (!isSupabaseConfigured) {
       toast.show("Supabase isn't configured yet ⚙️");
@@ -69,8 +64,7 @@ export default function SignInScreen() {
       } else {
         if (!name.trim()) { setBusy(false); return toast.show('Please enter your name'); }
         if (!selectedCommunity) { setBusy(false); return toast.show('Please select your society'); }
-        const chosen = roles.length ? roles : (['foodie'] as Role[]);
-        await signUp({ phone, code, name, flat, whatsapp, upi, roles: chosen, communityId: selectedCommunity.id });
+        await signUp({ phone, code, name, flat, whatsapp, upi, roles: ['foodie'], communityId: selectedCommunity.id });
       }
       await refreshProfile();
     } catch (e) {
@@ -175,12 +169,6 @@ export default function SignInScreen() {
               </View>
               <Field label="WhatsApp" hint="For coordination with neighbours" placeholder="98765 43210" keyboardType="phone-pad" value={whatsapp} onChangeText={setWhatsapp} />
               <Field label="UPI ID" hint="Optional — so neighbours can pay you" autoCapitalize="none" placeholder="priya@ybl" value={upi} onChangeText={setUpi} />
-
-              <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">I want to…</Text>
-              <View className="mb-4 flex-row gap-2.5">
-                <RolePick label="Order & discover" sublabel="as a Member" icon="bag-handle-outline" active={roles.includes('foodie')} onPress={() => toggleRole('foodie')} c={c} />
-                <RolePick label="Cook & sell" sublabel="as a Chef" leading={<VegMark type="Veg" size={16} />} active={roles.includes('chef')} onPress={() => toggleRole('chef')} c={c} />
-              </View>
             </>
           ) : null}
 
@@ -278,27 +266,5 @@ export default function SignInScreen() {
         </View>
       </Modal>
     </KeyboardAvoidingView>
-  );
-}
-
-function RolePick({
-  label, sublabel, icon, leading, active, onPress, c,
-}: {
-  label: string; sublabel: string; icon?: keyof typeof Ionicons.glyphMap;
-  leading?: React.ReactNode; active: boolean; onPress: () => void;
-  c: ReturnType<typeof useThemeColors>;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className={`flex-1 rounded-2xl border-[1.5px] p-3 ${active ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}
-    >
-      <View className="mb-1.5 flex-row items-center justify-between">
-        {leading ?? <Ionicons name={icon!} size={20} color={active ? c.accent : c.muted} />}
-        <Ionicons name={active ? 'checkmark-circle' : 'ellipse-outline'} size={18} color={active ? c.accent : c.faint} />
-      </View>
-      <Text className="font-sans-sb text-[14px] text-ink">{label}</Text>
-      <Text className="text-[11px] text-faint">{sublabel}</Text>
-    </Pressable>
   );
 }

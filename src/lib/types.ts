@@ -90,6 +90,7 @@ export interface DbProfile {
   upi: string | null;
   roles: Role[];
   community_id: string | null;
+  blocked: boolean;
   created_at: string;
 }
 

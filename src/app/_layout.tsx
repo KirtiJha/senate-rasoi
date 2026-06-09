@@ -24,6 +24,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavRail } from '../components/NavRail';
 import { useResponsive } from '../components/ui';
 import { AuthProvider } from '../context/auth';
+import { NotificationsProvider } from '../context/notifications';
 import { ThemeProvider } from '../context/theme';
 import { ToastProvider } from '../context/toast';
 import { UnreadDmsProvider } from '../context/unread';
@@ -76,10 +77,12 @@ function AppShell() {
       <SafeAreaProvider>
         <AuthProvider>
           <UnreadDmsProvider>
-            <ToastProvider>
-              <StatusBar style={isDark ? 'light' : 'dark'} />
-              <DesktopShell />
-            </ToastProvider>
+            <NotificationsProvider>
+              <ToastProvider>
+                <StatusBar style={isDark ? 'light' : 'dark'} />
+                <DesktopShell />
+              </ToastProvider>
+            </NotificationsProvider>
           </UnreadDmsProvider>
         </AuthProvider>
       </SafeAreaProvider>
@@ -113,6 +116,7 @@ function DesktopShell() {
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="admin" />
           <Stack.Screen name="about" />
+          <Stack.Screen name="listings" />
           <Stack.Screen name="profile/me" />
           <Stack.Screen name="profile/[userId]" />
           <Stack.Screen name="feed/[postId]" />

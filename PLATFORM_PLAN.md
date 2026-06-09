@@ -250,6 +250,8 @@ scoped to that society. Admins of a society can manage that society only. Platfo
 | 0022 | full-text search: search_tsv generated cols + GIN indexes (listings, posts) | ✅ run + verified |
 | 0023 | direct messages: dm_threads + dm_messages + RLS + realtime + push + dm_get_or_create_thread RPC | ✅ run + verified |
 | 0024 | tighten listings_read RLS to community scope (security fix) | ✅ run |
+| 0025 | member moderation: profiles.blocked + admin_set_blocked / admin_delete_member RPCs | ⏸️ written — run in Supabase |
+| 0026 | notifications + notification_reads + triggers (post/listing/poll/DM) + realtime | ⏸️ written — run in Supabase |
 
 **Pending (future):**
 - `listing_reports` — moderation queue (schema designed; UI not yet built)
@@ -742,6 +744,8 @@ Open **Supabase Dashboard → SQL Editor** and run these in order. Each file is 
 0022_fulltext_search.sql     ← search_tsv + GIN indexes         ✅ run
 0023_direct_messages.sql     ← DMs: threads, messages, RPC      ✅ run
 0024_listings_read_scope.sql ← community-scope listings_read    ✅ run
+0025_member_moderation.sql   ← profiles.blocked + admin RPCs    (NEW — run this)
+0026_notifications.sql       ← notifications + reads + triggers (NEW — run this)
 ```
 
 ### Step 2 — Create Supabase Storage bucket
@@ -896,6 +900,7 @@ last-message bump, mark-read; FTS stem-matching on listings ("dancing"→"dance"
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-09 | **Community-app rework: roles, admin moderation, all-listings, notifications, announcement banner.** (1) **Roles simplified** to member + admin — removed the chef/foodie picker at signup; every member can cook/post (ungated post.tsx/you.tsx); profile/admin show Member/Admin only. (2) **Admin member management** (migration `0025`): `profiles.blocked` + `admin_set_blocked`/`admin_delete_member` RPCs (own-community, self-protected). Admin page lists community members with Message (DM) / Make-admin / Block / Delete; sign-in refuses blocked members with a message (defensive if 0025 unrun), deleted → normal no-account path; auth context force-signs-out a member blocked mid-session. (3) **All Listings** screen (`/listings`) — cross-category FlashList feed + filter; NavRail item + Home tile. (4) **Notifications** (migration `0026`): `notifications` + `notification_reads` + triggers (post/announcement/listing/poll/DM) + realtime; `NotificationsProvider` + bell (NavRail + TopBar) with unread badge + modal (tap→read+route, mark-all-read). (5) **Announcement banner** on Home (latest announcement, dismissable, persisted). tsc clean. ⏸️ run migrations 0025 + 0026. |
 | 2026-06-09 | **Nav chrome cleanup.** Desktop NavRail: replaced the loose bottom items (About row + theme toggle + tagline — cramped when collapsed) with a single **account row** (avatar + name) that opens a popover menu: Profile · About · Light/Dark · Sign out. New Post stays as the coral CTA. Mobile: removed the duplicate profile icon from the Home header (the "You" tab already covers it; `/profile/me` still reachable from You). |
 | 2026-06-09 | **UX fixes + Messages directory.** (1) Replaced the bottom "Post"/"New Post" FABs with a compact round `+`: on category screens it sits in the header (right, category-coloured); on the feed it sits inline at the right of the filter-tabs row — cleaner alongside the desktop NavRail. (2) **Bug fix — Messages had no way to start a chat:** added a member-directory `messages/new.tsx` (searchable list of community neighbours → `getOrCreateThread` → thread), a `+` compose button in the inbox header, a "New message" button in the empty state, and `fetchCommunityMembers()` in `lib/dm.ts`; verified it returns real neighbours. (3) Brand logo/title in NavRail (desktop) + TopBar (mobile) now route to Home. tsc clean. |
 | 2026-06-09 | **README rewritten** to match the current Aangan platform (was stale "Senate Chef" food-only/no-login docs). **Bug report investigated — NOT a bug:** "every feed post lands in General". Write path is correct (`createPost` inserts the selected `category`; single call site at feed.tsx) and a live DB read confirmed posts persist their real category (e.g. a `feedback` post stored as `feedback`, not `general`). The earlier test posts were simply created as General. No code change. |

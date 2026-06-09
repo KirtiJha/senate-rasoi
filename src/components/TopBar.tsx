@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNotifications } from '../context/notifications';
 import { useThemePreference } from '../context/theme';
 import { useThemeColors } from '../theme';
 import { Wordmark } from './Brand';
@@ -13,6 +14,7 @@ export function TopBar({ live = false }: { live?: boolean }) {
   const c = useThemeColors();
   const { resolved, toggle } = useThemePreference();
   const isDark = resolved === 'dark';
+  const { unreadCount, open } = useNotifications();
 
   return (
     <View className="border-b border-line bg-bg" style={{ paddingTop: insets.top }}>
@@ -29,6 +31,24 @@ export function TopBar({ live = false }: { live?: boolean }) {
               <Text className="font-sans-sb text-[11px] text-muted">Live</Text>
             </View>
           ) : null}
+          <Pressable
+            onPress={open}
+            hitSlop={8}
+            className="h-9 w-9 items-center justify-center rounded-full bg-inset active:opacity-70"
+            accessibilityLabel="Notifications"
+          >
+            <Ionicons name="notifications-outline" size={18} color={c.muted} />
+            {unreadCount > 0 ? (
+              <View
+                className="absolute items-center justify-center rounded-full"
+                style={{ top: 2, right: 1, minWidth: 15, height: 15, paddingHorizontal: 3, backgroundColor: c.accent }}
+              >
+                <Text style={{ color: '#fff', fontSize: 9, fontFamily: 'HankenGrotesk_700Bold' }}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Text>
+              </View>
+            ) : null}
+          </Pressable>
           <Pressable
             onPress={toggle}
             hitSlop={8}

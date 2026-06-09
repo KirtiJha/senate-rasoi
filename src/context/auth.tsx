@@ -52,7 +52,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
-      setProfile(await getProfile(uid));
+      const p = await getProfile(uid);
+      // A member blocked while signed in is bounced back to sign-in.
+      if (p?.blocked) {
+        await signOutSvc();
+        setProfile(null);
+        setSession(null);
+        return;
+      }
+      setProfile(p);
     } catch {
       setProfile(null);
     }
@@ -92,8 +100,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profile,
       roles,
       communityId: profile?.community_id ?? COMMUNITY_ID,
-      isChef: roles.includes('chef'),
-      isFoodie: roles.includes('foodie'),
+      // Roles collapsed to member + admin: every signed-in member can cook/post.
+      isChef: !!profile,
+      isFoodie: !!profile,
       isAdmin: roles.includes('admin'),
       refreshProfile: () => loadProfile(userId ?? undefined),
       saveProfile: async (patch) => {
