@@ -67,8 +67,9 @@ export default function LandingScreen() {
                     <Text className="font-sans-bold" style={{ fontSize: 16, color: '#fff' }}>Onboard your society</Text>
                     <Ionicons name="arrow-forward" size={18} color="#fff" />
                   </Pressable>
-                  <Pressable onPress={go} className="rounded-2xl px-6 py-3.5 active:opacity-70" style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: P.line }}>
-                    <Text className="font-sans-bold" style={{ fontSize: 16, color: P.ink }}>Explore Aangan</Text>
+                  <Pressable onPress={go} hitSlop={6} className="flex-row items-center gap-1 px-2 py-3.5 active:opacity-60">
+                    <Text className="font-sans-bold" style={{ fontSize: 16, color: P.accent }}>Sign in</Text>
+                    <Ionicons name="arrow-forward" size={16} color={P.accent} />
                   </Pressable>
                 </View>
                 <View className="mt-6 flex-row flex-wrap items-center gap-x-5 gap-y-2">
