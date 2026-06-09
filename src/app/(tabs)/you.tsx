@@ -4,10 +4,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { KitchenSection } from '../../components/KitchenSection';
 import { MyListingsSection } from '../../components/MyListingsSection';
-import { MyTiffinsSection } from '../../components/MyTiffinsSection';
-import { OrdersSection } from '../../components/OrdersSection';
 import { SavedSection } from '../../components/SavedSection';
 import { Avatar, Badge, Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
@@ -16,7 +13,7 @@ import { Community, fetchCommunityById } from '../../lib/communities';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useThemeColors } from '../../theme';
 
-type Tab = 'orders' | 'tiffins' | 'listings' | 'kitchen' | 'saved';
+type Tab = 'listings' | 'saved';
 
 export default function YouScreen() {
   const router = useRouter();
@@ -24,8 +21,8 @@ export default function YouScreen() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { profile, communityId, isChef, isAdmin, signOut } = useAuth();
-  const [tab, setTab] = useState<Tab>('orders');
+  const { profile, communityId, isAdmin, signOut } = useAuth();
+  const [tab, setTab] = useState<Tab>('listings');
   const [community, setCommunity] = useState<Community | null>(null);
 
   useEffect(() => {
@@ -73,39 +70,15 @@ export default function YouScreen() {
             </Pressable>
           ) : null}
 
-          {/* segments */}
+          {/* segments — food lives in the Food tab now; You = your listings & saved */}
           <View className="mt-3 flex-row rounded-2xl bg-inset p-1">
-            <Segment label="Orders" icon="receipt-outline" active={tab === 'orders'} onPress={() => setTab('orders')} c={c} />
-            <Segment label="Tiffins" icon="repeat-outline" active={tab === 'tiffins'} onPress={() => setTab('tiffins')} c={c} />
-            <Segment label="Listings" icon="list-outline" active={tab === 'listings'} onPress={() => setTab('listings')} c={c} />
+            <Segment label="My Listings" icon="list-outline" active={tab === 'listings'} onPress={() => setTab('listings')} c={c} />
             <Segment label="Saved" icon="bookmark-outline" active={tab === 'saved'} onPress={() => setTab('saved')} c={c} />
-            {isChef ? <Segment label="Kitchen" icon="restaurant-outline" active={tab === 'kitchen'} onPress={() => setTab('kitchen')} c={c} /> : null}
           </View>
         </Container>
       </View>
 
-      {tab === 'kitchen' && isChef ? (
-        <KitchenSection />
-      ) : tab === 'tiffins' ? (
-        <MyTiffinsSection />
-      ) : tab === 'listings' ? (
-        <MyListingsSection />
-      ) : tab === 'saved' ? (
-        <SavedSection />
-      ) : (
-        <OrdersSection />
-      )}
-
-      {/* chefs get a quick post entry on this screen too */}
-      {isChef && tab === 'kitchen' ? (
-        <Pressable
-          onPress={() => router.push('/post')}
-          className="absolute bottom-5 right-5 h-14 flex-row items-center gap-2 rounded-full bg-accent px-5 shadow-fab active:bg-accent-press"
-        >
-          <Ionicons name="add" size={22} color={c.onAccent} />
-          <Text className="font-sans-sb text-[15px] text-on-accent">Post a dish</Text>
-        </Pressable>
-      ) : null}
+      {tab === 'saved' ? <SavedSection /> : <MyListingsSection />}
     </View>
   );
 }

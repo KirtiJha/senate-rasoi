@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -14,7 +15,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DishCard } from '../../components/DishCard';
 import { Empty } from '../../components/Empty';
+import { KitchenSection } from '../../components/KitchenSection';
+import { MyTiffinsSection } from '../../components/MyTiffinsSection';
 import { OrderModal } from '../../components/OrderModal';
+import { OrdersSection } from '../../components/OrdersSection';
 import { SetupBanner } from '../../components/SetupBanner';
 import { SubscribeModal } from '../../components/SubscribeModal';
 import { TiffinCard } from '../../components/TiffinCard';
@@ -39,6 +43,14 @@ import { DishRow, SLOTS, Slot, SLOT_EMOJI, TiffinPlanWithChef } from '../../lib/
 
 const FILTERS: ('All' | Slot)[] = ['All', ...SLOTS];
 
+type FoodTab = 'discover' | 'orders' | 'kitchen' | 'tiffins';
+const FOOD_TABS: { key: FoodTab; label: string }[] = [
+  { key: 'discover', label: 'Discover' },
+  { key: 'orders', label: 'Orders' },
+  { key: 'kitchen', label: 'Kitchen' },
+  { key: 'tiffins', label: 'Tiffins' },
+];
+
 export default function FoodScreen() {
   const toast = useToast();
   const router = useRouter();
@@ -46,6 +58,7 @@ export default function FoodScreen() {
   const { userId } = useAuth();
   const { columns, isDesktop } = useResponsive();
   const c = useThemeColors();
+  const [tab, setTab] = useState<FoodTab>('discover');
   const [dishes, setDishes] = useState<DishRow[]>([]);
   const [filter, setFilter] = useState<'All' | Slot>('All');
   const [vegOnly, setVegOnly] = useState(false);
@@ -193,8 +206,36 @@ export default function FoodScreen() {
 
   return (
     <View className="flex-1 bg-bg">
+      {/* Food tabs — browse the board, plus your own orders & kitchen */}
+      <View style={{ paddingTop: isDesktop ? insets.top + 16 : 12 }} className="border-b border-line bg-bg px-4 pb-2.5">
+        <Container>
+          <View className="flex-row rounded-2xl bg-inset p-1">
+            {FOOD_TABS.map((t) => {
+              const on = tab === t.key;
+              return (
+                <Pressable
+                  key={t.key}
+                  onPress={() => setTab(t.key)}
+                  className={`flex-1 items-center rounded-xl py-2 ${on ? 'bg-surface' : ''}`}
+                >
+                  <Text className={`text-[13px] ${on ? 'font-sans-sb text-ink' : 'font-sans-md text-muted'}`}>{t.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Container>
+      </View>
+
+      {tab === 'orders' ? (
+        <OrdersSection />
+      ) : tab === 'kitchen' ? (
+        <KitchenSection />
+      ) : tab === 'tiffins' ? (
+        <MyTiffinsSection />
+      ) : (
       <ScrollView
-        contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 18 : 18, paddingBottom: 32, paddingHorizontal: 16 }}
+        className="flex-1"
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 32, paddingHorizontal: 16 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       >
@@ -336,6 +377,18 @@ export default function FoodScreen() {
           )}
         </Container>
       </ScrollView>
+      )}
+
+      {/* Quick "post a dish" while managing your kitchen */}
+      {tab === 'kitchen' ? (
+        <Pressable
+          onPress={() => router.push('/post')}
+          className="absolute bottom-5 right-5 h-14 flex-row items-center gap-2 rounded-full bg-accent px-5 shadow-fab active:bg-accent-press"
+        >
+          <Ionicons name="add" size={22} color={c.onAccent} />
+          <Text className="font-sans-sb text-[15px] text-on-accent">Post a dish</Text>
+        </Pressable>
+      ) : null}
 
       <OrderModal dish={orderDish} onClose={() => setOrderDish(null)} onConfirm={handleConfirmOrder} />
       <SubscribeModal plan={subPlan} onClose={() => setSubPlan(null)} onConfirm={handleSubscribe} />
