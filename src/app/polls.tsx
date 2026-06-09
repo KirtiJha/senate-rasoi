@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Modal, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Container, useResponsive } from '../components/ui';
+import { Avatar, Container, Sheet, useResponsive } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { PollRow, closePoll, createPoll, deletePoll, fetchPolls, subscribeToPolls, votePoll } from '../lib/polls';
@@ -253,7 +253,6 @@ function CreatePollModal({
   onCreated: () => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
-  const insets = useSafeAreaInsets();
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [saving, setSaving] = useState(false);
@@ -286,69 +285,63 @@ function CreatePollModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View className="flex-1 bg-bg" style={{ paddingBottom: insets.bottom + 16 }}>
-        <View className="border-b border-line px-4 py-4 flex-row items-center justify-between">
-          <Text className="font-sans-sb text-[16px] text-ink">Create Poll</Text>
-          <Pressable onPress={onClose} hitSlop={8}>
-            <Ionicons name="close" size={22} color={c.muted} />
-          </Pressable>
-        </View>
-
-        <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-          <View className="mb-4">
-            <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Question</Text>
-            <TextInput
-              value={question}
-              onChangeText={setQuestion}
-              placeholder="Ask your community something…"
-              placeholderTextColor={c.faint}
-              multiline
-              className="rounded-2xl border border-line bg-inset px-3.5 py-3 text-[15px] text-ink"
-              style={{ minHeight: 72, outline: 'none' } as any}
-            />
-          </View>
-
-          <View className="mb-4">
-            <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Options (2–6)</Text>
-            <View className="gap-2">
-              {options.map((opt, i) => (
-                <View key={i} className="flex-row items-center gap-2">
-                  <TextInput
-                    value={opt}
-                    onChangeText={(v) => setOption(i, v)}
-                    placeholder={`Option ${i + 1}`}
-                    placeholderTextColor={c.faint}
-                    className="flex-1 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[14px] text-ink"
-                    style={{ outline: 'none' } as any}
-                  />
-                  {options.length > 2 ? (
-                    <Pressable onPress={() => removeOption(i)} hitSlop={8}>
-                      <Ionicons name="close-circle" size={20} color={c.faint} />
-                    </Pressable>
-                  ) : null}
-                </View>
-              ))}
-            </View>
-            {options.length < 6 ? (
-              <Pressable onPress={addOption} className="mt-2 flex-row items-center gap-1.5 py-1">
-                <Ionicons name="add-circle-outline" size={16} color={c.accent} />
-                <Text className="text-[13px] font-sans-md text-accent">Add option</Text>
-              </Pressable>
-            ) : null}
-          </View>
-
-          <Pressable
-            onPress={submit}
-            disabled={saving || !canSubmit}
-            className={`items-center rounded-2xl py-3.5 ${saving || !canSubmit ? 'bg-inset' : 'bg-accent active:bg-accent-press'}`}
-          >
-            <Text className={`font-sans-sb text-[15px] ${saving || !canSubmit ? 'text-faint' : 'text-on-accent'}`}>
-              {saving ? 'Creating…' : 'Create Poll'}
-            </Text>
-          </Pressable>
-        </ScrollView>
+    <Sheet
+      visible={visible}
+      onClose={onClose}
+      title="Create poll"
+      footer={
+        <Pressable
+          onPress={submit}
+          disabled={saving || !canSubmit}
+          className={`items-center rounded-2xl py-3.5 ${saving || !canSubmit ? 'bg-inset' : 'bg-accent active:bg-accent-press'}`}
+        >
+          <Text className={`font-sans-sb text-[15px] ${saving || !canSubmit ? 'text-faint' : 'text-on-accent'}`}>
+            {saving ? 'Creating…' : 'Create Poll'}
+          </Text>
+        </Pressable>
+      }
+    >
+      <View className="mb-4">
+        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Question</Text>
+        <TextInput
+          value={question}
+          onChangeText={setQuestion}
+          placeholder="Ask your community something…"
+          placeholderTextColor={c.faint}
+          multiline
+          className="rounded-2xl border border-line bg-inset px-3.5 py-3 text-[15px] text-ink"
+          style={{ minHeight: 72, outline: 'none' } as any}
+        />
       </View>
-    </Modal>
+
+      <View className="mb-1">
+        <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Options (2–6)</Text>
+        <View className="gap-2">
+          {options.map((opt, i) => (
+            <View key={i} className="flex-row items-center gap-2">
+              <TextInput
+                value={opt}
+                onChangeText={(v) => setOption(i, v)}
+                placeholder={`Option ${i + 1}`}
+                placeholderTextColor={c.faint}
+                className="flex-1 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[14px] text-ink"
+                style={{ outline: 'none' } as any}
+              />
+              {options.length > 2 ? (
+                <Pressable onPress={() => removeOption(i)} hitSlop={8}>
+                  <Ionicons name="close-circle" size={20} color={c.faint} />
+                </Pressable>
+              ) : null}
+            </View>
+          ))}
+        </View>
+        {options.length < 6 ? (
+          <Pressable onPress={addOption} className="mt-2 flex-row items-center gap-1.5 py-1">
+            <Ionicons name="add-circle-outline" size={16} color={c.accent} />
+            <Text className="text-[13px] font-sans-md text-accent">Add option</Text>
+          </Pressable>
+        ) : null}
+      </View>
+    </Sheet>
   );
 }

@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Button, Container, useResponsive } from '../components/ui';
+import { Avatar, Button, RowSkeleton, Sheet, useResponsive } from '../components/ui';
 import { Field } from '../components/forms';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
@@ -164,7 +164,7 @@ export default function DirectoryScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View className="w-full self-center" style={{ maxWidth: DIR_MAX }}>
           {loading ? (
-            <View className="py-16 items-center"><ActivityIndicator size="small" color={c.muted} /></View>
+            <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={6} /></View>
           ) : groups.length === 0 ? (
             <View className="items-center py-16">
               <Ionicons name="people-outline" size={40} color={c.faint} />
@@ -310,35 +310,28 @@ function AddResidentModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View className="flex-1 bg-bg">
-        <View className="flex-row items-center justify-between border-b border-line px-4 py-4">
-          <Pressable onPress={onClose} hitSlop={10}><Ionicons name="close" size={24} color={c.muted} /></Pressable>
-          <Text className="font-sans-sb text-[16px] text-ink">Add a resident</Text>
-          <View style={{ width: 24 }} />
-        </View>
-        <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-          <Container narrow>
-            <Text className="mb-4 text-[13px] text-muted">Add a neighbour to the directory. If they're not on Aangan yet, you can invite them after.</Text>
-            <View className="flex-row gap-3">
-              <View className="flex-1"><Field label="Name" required placeholder="Priya Sharma" value={name} onChangeText={setName} /></View>
-              <View className="w-28"><Field label="Flat" placeholder="A-204" value={flat} onChangeText={setFlat} /></View>
-            </View>
-            <Field label="Phone" hint="For contact & invite" keyboardType="phone-pad" placeholder="98765 43210" value={phone} onChangeText={setPhone} />
-            <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Owner / Tenant (optional)</Text>
-            <View className="mb-4 flex-row gap-2.5">
-              {(['owner', 'tenant'] as const).map((t) => (
-                <Pressable key={t} onPress={() => setType(type === t ? null : t)} className={`flex-1 rounded-2xl border-[1.5px] p-3 ${type === t ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
-                  <Text className="font-sans-sb text-[14px] text-ink">{t === 'owner' ? 'Owner' : 'Tenant'}</Text>
-                </Pressable>
-              ))}
-            </View>
-            <Field label="Profession" placeholder="e.g. Doctor, Teacher" value={profession} onChangeText={setProfession} />
-            <Field label="Vehicle number" autoCapitalize="characters" placeholder="MH 12 AB 1234" value={vehicle} onChangeText={setVehicle} />
-            <Button label={busy ? 'Adding…' : 'Add resident'} loading={busy} fullWidth disabled={!name.trim()} onPress={submit} />
-          </Container>
-        </ScrollView>
+    <Sheet
+      visible={visible}
+      onClose={onClose}
+      title="Add a resident"
+      footer={<Button label={busy ? 'Adding…' : 'Add resident'} loading={busy} fullWidth disabled={!name.trim()} onPress={submit} />}
+    >
+      <Text className="mb-4 text-[13px] text-muted">Add a neighbour to the directory. If they're not on Aangan yet, you can invite them after.</Text>
+      <View className="flex-row gap-3">
+        <View className="flex-1"><Field label="Name" required placeholder="Priya Sharma" value={name} onChangeText={setName} /></View>
+        <View className="w-28"><Field label="Flat" placeholder="A-204" value={flat} onChangeText={setFlat} /></View>
       </View>
-    </Modal>
+      <Field label="Phone" hint="For contact & invite" keyboardType="phone-pad" placeholder="98765 43210" value={phone} onChangeText={setPhone} />
+      <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Owner / Tenant (optional)</Text>
+      <View className="mb-4 flex-row gap-2.5">
+        {(['owner', 'tenant'] as const).map((t) => (
+          <Pressable key={t} onPress={() => setType(type === t ? null : t)} className={`flex-1 rounded-2xl border-[1.5px] p-3 ${type === t ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
+            <Text className="font-sans-sb text-[14px] text-ink">{t === 'owner' ? 'Owner' : 'Tenant'}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <Field label="Profession" placeholder="e.g. Doctor, Teacher" value={profession} onChangeText={setProfession} />
+      <Field label="Vehicle number" autoCapitalize="characters" placeholder="MH 12 AB 1234" value={vehicle} onChangeText={setVehicle} />
+    </Sheet>
   );
 }

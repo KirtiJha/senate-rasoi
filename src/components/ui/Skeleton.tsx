@@ -37,6 +37,24 @@ export function ListingCardSkeleton() {
   );
 }
 
+/** A generic list/table row placeholder: icon + two lines + trailing action. */
+export function RowSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <View>
+      {Array.from({ length: count }).map((_, i) => (
+        <View key={i} className="flex-row items-center gap-3 border-b border-line px-3.5 py-3.5">
+          <Skeleton style={{ width: 38, height: 38 }} radius={12} />
+          <View className="flex-1" style={{ gap: 7 }}>
+            <Skeleton style={{ width: '45%', height: 13 }} />
+            <Skeleton style={{ width: '28%', height: 11 }} />
+          </View>
+          <Skeleton style={{ width: 64, height: 30 }} radius={15} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export function DishCardSkeleton() {
   return (
     <View className="overflow-hidden rounded-3xl border border-line bg-surface">

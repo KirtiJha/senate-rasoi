@@ -18,6 +18,8 @@ import {
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useThemeColors } from '../../theme';
 
+const FEED_MAX = 640; // keep the feed a comfortable reading width on desktop
+
 const FILTER_TABS: { key: PostCategory | 'all'; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'general', label: 'General' },
@@ -93,10 +95,21 @@ export default function FeedScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      {/* Filter tabs + inline compose */}
-      <View style={{ paddingTop: isDesktop ? insets.top + 16 : 12 }} className="border-b border-line bg-bg">
-        <View className="flex-row items-center" style={{ paddingBottom: 10 }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 6 }}>
+      {/* Header: title + compose, then filter chips — centered to the feed width */}
+      <View style={{ paddingTop: isDesktop ? insets.top + 16 : 12 }} className="border-b border-line bg-bg pb-2.5">
+        <View className="w-full self-center px-4" style={{ maxWidth: FEED_MAX }}>
+          <View className="flex-row items-center gap-2">
+            <Text className="flex-1 font-display-x text-[22px] text-ink">Feed</Text>
+            <Pressable
+              onPress={() => setShowCompose(true)}
+              className="flex-row items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 active:bg-accent-press"
+              accessibilityLabel="New post"
+            >
+              <Ionicons name="add" size={17} color={c.onAccent} />
+              <Text className="font-sans-sb text-[12px] text-on-accent">New post</Text>
+            </Pressable>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2.5 -mx-4 px-4" contentContainerStyle={{ gap: 6 }}>
             {FILTER_TABS.map((tab) => (
               <Pressable
                 key={tab.key}
@@ -107,16 +120,10 @@ export default function FeedScreen() {
               </Pressable>
             ))}
           </ScrollView>
-          <Pressable
-            onPress={() => setShowCompose(true)}
-            className="ml-2 mr-3 h-9 w-9 items-center justify-center rounded-full bg-accent active:bg-accent-press"
-            accessibilityLabel="New post"
-          >
-            <Ionicons name="add" size={22} color={c.onAccent} />
-          </Pressable>
         </View>
       </View>
 
+      <View style={{ flex: 1, width: '100%', maxWidth: FEED_MAX, alignSelf: 'center' }}>
       <FlashList
         data={loading ? [] : posts}
         keyExtractor={(item: PostRow) => item.id}
@@ -158,6 +165,7 @@ export default function FeedScreen() {
           ) : null
         }
       />
+      </View>
 
       {/* Compose modal */}
       <ComposeModal
