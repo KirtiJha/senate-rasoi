@@ -1,9 +1,8 @@
-import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 
 /**
- * The Aangan mark — a warm coral tile holding a white "courtyard": a rounded
- * frame of homes around an open central space (आँगन = courtyard) with a small
- * gathering point at its heart. Geometric, friendly, and unique to the brand.
+ * The Aangan mark — a warm coral tile holding two little homes side by side:
+ * a friendly neighbourhood / society. Relatable and unique to the brand.
  */
 export function BrandMark({ size = 40, id = 'aangan-mark' }: { size?: number; id?: string }) {
   return (
@@ -16,12 +15,12 @@ export function BrandMark({ size = 40, id = 'aangan-mark' }: { size?: number; id
       </Defs>
       {/* tile */}
       <Rect x="0" y="0" width="100" height="100" rx="30" fill={`url(#${id})`} />
-      {/* the ring of homes */}
-      <Rect x="26" y="26" width="48" height="48" rx="15" fill="#FFFFFF" />
-      {/* the open courtyard (cut back to the tile colour) */}
-      <Rect x="38" y="38" width="24" height="24" rx="8" fill={`url(#${id})`} />
-      {/* the gathering point */}
-      <Circle cx="50" cy="50" r="4.4" fill="#FFFFFF" />
+      {/* two homes — a tiny neighbourhood */}
+      <Path d="M34 24 L51 45 L51 73 Q51 78 46 78 L23 78 Q18 78 18 73 L18 45 Z" fill="#FFFFFF" />
+      <Path d="M68 35 L83 53 L83 73 Q83 78 78 78 L59 78 Q54 78 54 73 L54 53 Z" fill="#FFFFFF" />
+      {/* doorways */}
+      <Rect x="29" y="62" width="11" height="16" rx="3" fill={`url(#${id})`} />
+      <Rect x="63" y="64" width="9" height="14" rx="2.5" fill={`url(#${id})`} />
     </Svg>
   );
 }

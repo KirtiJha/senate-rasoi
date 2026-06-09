@@ -6,30 +6,29 @@ import { dirname, join } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-// Shared defs: coral gradient + a mask that punches the courtyard hole.
+// Coral gradient.
 const defs = `
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#FF7A57"/>
       <stop offset="1" stop-color="#F5492B"/>
     </linearGradient>
-    <mask id="hole">
-      <rect x="266" y="266" width="492" height="492" rx="154" fill="white"/>
-      <rect x="389" y="389" width="246" height="246" rx="82" fill="black"/>
-    </mask>
   </defs>`;
 
-// The white mark: a ring of homes (with the courtyard cut out) + a gathering dot.
+// Two little homes (a neighbourhood) with doorways. Uses a 0–100 viewBox so the
+// coordinates match src/components/BrandMark.tsx exactly.
 const mark = `
-  <rect x="266" y="266" width="492" height="492" rx="154" fill="#ffffff" mask="url(#hole)"/>
-  <circle cx="512" cy="512" r="46" fill="#ffffff"/>`;
+  <path d="M34 24 L51 45 L51 73 Q51 78 46 78 L23 78 Q18 78 18 73 L18 45 Z" fill="#ffffff"/>
+  <path d="M68 35 L83 53 L83 73 Q83 78 78 78 L59 78 Q54 78 54 73 L54 53 Z" fill="#ffffff"/>
+  <rect x="29" y="62" width="11" height="16" rx="3" fill="url(#g)"/>
+  <rect x="63" y="64" width="9" height="14" rx="2.5" fill="url(#g)"/>`;
 
-// Full-bleed square icon (iOS masks the corners itself). The courtyard shows the gradient.
-const square = `<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-  ${defs}<rect width="1024" height="1024" fill="url(#g)"/>${mark}</svg>`;
+// Full-bleed square icon (iOS masks the corners itself).
+const square = `<svg width="1024" height="1024" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  ${defs}<rect width="100" height="100" fill="url(#g)"/>${mark}</svg>`;
 
-// Mark on transparent — for the splash + Android adaptive foreground (already inset).
-const fgTransparent = `<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+// Mark on transparent — for the splash + Android adaptive foreground.
+const fgTransparent = `<svg width="1024" height="1024" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   ${defs}${mark}</svg>`;
 
 const targets = [

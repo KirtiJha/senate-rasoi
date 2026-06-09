@@ -51,13 +51,15 @@ export async function fetchDirectory(
   const residents: Resident[] = [];
 
   for (const m of members) {
-    if (m.show_in_directory === false) continue; // opted out
+    // `show_in_directory === false` now means "hide my phone number" — the
+    // member still appears in the directory, just without a contactable number.
+    const hidePhone = m.show_in_directory === false;
     residents.push({
       key: `m:${m.id}`,
       name: m.name || 'Resident',
       flat: m.flat,
-      phone: m.phone,
-      whatsapp: m.whatsapp,
+      phone: hidePhone ? null : m.phone,
+      whatsapp: hidePhone ? null : m.whatsapp,
       resident_type: m.resident_type,
       profession: m.profession,
       vehicle_no: m.vehicle_no,

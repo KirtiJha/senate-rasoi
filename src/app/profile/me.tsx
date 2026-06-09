@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Field, SectionCard } from '../../components/forms';
-import { Avatar, Button, Container } from '../../components/ui';
+import { Avatar, Button, Container, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { changePin, deleteAccount, updateResidentInfo } from '../../lib/auth';
@@ -125,20 +125,13 @@ export default function ProfileScreen() {
 
   return (
     <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScreenHeader icon="person-circle-outline" title="My Profile" showBack hideSociety />
       <ScrollView
-        contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 60, paddingHorizontal: 16 }}
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 60, paddingHorizontal: 16 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Container narrow>
-          {/* Header */}
-          <View className="mb-6 flex-row items-center gap-2">
-            <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
-              <Ionicons name="chevron-back" size={22} color={c.ink} />
-            </Pressable>
-            <Text className="font-display-x text-[22px] text-ink">My Profile</Text>
-          </View>
-
+        <Container>
           {/* Avatar + Identity */}
           <View className="mb-6 items-center">
             <View className="mb-3">
@@ -200,10 +193,10 @@ export default function ProfileScreen() {
               onPress={() => setShowInDirectory((v) => !v)}
               className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-inset px-4 py-3"
             >
-              <Ionicons name={showInDirectory ? 'eye-outline' : 'eye-off-outline'} size={18} color={showInDirectory ? c.accent : c.muted} />
+              <Ionicons name={showInDirectory ? 'call-outline' : 'eye-off-outline'} size={18} color={showInDirectory ? c.accent : c.muted} />
               <View className="flex-1">
-                <Text className="font-sans-sb text-[14px] text-ink">Show me in the resident directory</Text>
-                <Text className="text-[12px] text-muted">{showInDirectory ? 'Neighbours can find your flat & contact' : 'You are hidden from the directory'}</Text>
+                <Text className="font-sans-sb text-[14px] text-ink">Show my phone number in the directory</Text>
+                <Text className="text-[12px] text-muted">{showInDirectory ? 'Neighbours can call & WhatsApp you' : "You're still listed — but your number is hidden"}</Text>
               </View>
               <View className={`h-6 w-10 rounded-full p-0.5 ${showInDirectory ? 'bg-accent' : 'bg-line'}`}>
                 <View className={`h-5 w-5 rounded-full bg-white ${showInDirectory ? 'self-end' : 'self-start'}`} />

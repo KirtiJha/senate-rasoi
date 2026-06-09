@@ -255,8 +255,8 @@ function ResidentRow({
       </View>
 
       <View className="flex-row items-center gap-1.5">
-        <IconBtn icon="call" onPress={onCall} bg={c.inset} color={c.muted} />
-        <IconBtn icon="logo-whatsapp" onPress={onWhatsApp} bg="#25D36618" color="#25D366" />
+        {r.phone ? <IconBtn icon="call" onPress={onCall} bg={c.inset} color={c.muted} /> : null}
+        {r.phone ? <IconBtn icon="logo-whatsapp" onPress={onWhatsApp} bg="#25D36618" color="#25D366" /> : null}
         {r.onboarded ? (
           <IconBtn icon="chatbubble-ellipses-outline" onPress={onMessage} bg={c.inset} color={c.muted} />
         ) : (
