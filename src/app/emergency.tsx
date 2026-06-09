@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Linking, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Container, useResponsive } from '../components/ui';
+import { Container, ScreenHeader, useResponsive } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import {
@@ -62,27 +62,14 @@ export default function EmergencyScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      {/* Header */}
-      <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
-        <View className="flex-row items-center gap-2">
-          {!isDesktop ? (
-            <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
-              <Ionicons name="chevron-back" size={22} color={c.ink} />
-            </Pressable>
-          ) : null}
-          <View className="flex-row items-center gap-2 flex-1">
-            <View className="h-8 w-8 items-center justify-center rounded-xl bg-red-100">
-              <Ionicons name="call" size={16} color="#EF4444" />
-            </View>
-            <Text className="font-display-x text-[20px] text-ink">Emergency Contacts</Text>
-          </View>
-          {isAdmin ? (
-            <Pressable onPress={() => setShowAdd(true)} className="h-9 w-9 items-center justify-center rounded-full bg-accent active:bg-accent-press">
-              <Ionicons name="add" size={22} color={c.onAccent} />
-            </Pressable>
-          ) : null}
-        </View>
-      </View>
+      <ScreenHeader
+        icon="call-outline"
+        iconColor="#EF4444"
+        title="Emergency Contacts"
+        showBack
+        onAdd={isAdmin ? () => setShowAdd(true) : undefined}
+        addLabel="Add contact"
+      />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container>

@@ -22,7 +22,7 @@ import { SetupBanner } from '../../components/SetupBanner';
 import { SubscribeModal } from '../../components/SubscribeModal';
 import { TiffinCard } from '../../components/TiffinCard';
 import PostScreen from './post';
-import { Container, DishCardSkeleton, LiveDot, useResponsive } from '../../components/ui';
+import { Container, DishCardSkeleton, LiveDot, ScreenHeader, useResponsive } from '../../components/ui';
 import { useThemeColors } from '../../theme';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -207,8 +207,9 @@ export default function FoodScreen() {
 
   return (
     <View className="flex-1 bg-bg">
+      <ScreenHeader icon="restaurant-outline" iconColor="#FF5A3C" title="Home Food" showBack />
       {/* Food tabs — browse the board, plus your own orders & kitchen */}
-      <View style={{ paddingTop: isDesktop ? insets.top + 16 : 12 }} className="border-b border-line bg-bg px-4 pb-2.5">
+      <View className="border-b border-line bg-bg px-4 pb-2.5 pt-2.5">
         <Container>
           <View className="flex-row rounded-2xl bg-inset p-1">
             {FOOD_TABS.map((t) => {

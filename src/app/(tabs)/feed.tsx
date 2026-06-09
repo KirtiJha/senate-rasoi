@@ -7,7 +7,7 @@ import {
   RefreshControl, ScrollView, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Button, useResponsive } from '../../components/ui';
+import { Avatar, Button, ScreenHeader, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import {
@@ -95,21 +95,14 @@ export default function FeedScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      {/* Header: title + compose, then filter chips — centered to the feed width */}
-      <View style={{ paddingTop: isDesktop ? insets.top + 16 : 12 }} className="border-b border-line bg-bg pb-2.5">
-        <View className="w-full self-center px-4" style={{ maxWidth: FEED_MAX }}>
-          <View className="flex-row items-center gap-2">
-            <Text className="flex-1 font-display-x text-[22px] text-ink">Feed</Text>
-            <Pressable
-              onPress={() => setShowCompose(true)}
-              className="flex-row items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 active:bg-accent-press"
-              accessibilityLabel="New post"
-            >
-              <Ionicons name="add" size={17} color={c.onAccent} />
-              <Text className="font-sans-sb text-[12px] text-on-accent">New post</Text>
-            </Pressable>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2.5 -mx-4 px-4" contentContainerStyle={{ gap: 6 }}>
+      <ScreenHeader
+        icon="chatbubbles-outline"
+        iconColor={c.accent}
+        title="Feed"
+        onAdd={() => setShowCompose(true)}
+        addLabel="New post"
+        subBar={
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-4 px-4" contentContainerStyle={{ gap: 6 }}>
             {FILTER_TABS.map((tab) => (
               <Pressable
                 key={tab.key}
@@ -120,8 +113,8 @@ export default function FeedScreen() {
               </Pressable>
             ))}
           </ScrollView>
-        </View>
-      </View>
+        }
+      />
 
       <View style={{ flex: 1, width: '100%', maxWidth: FEED_MAX, alignSelf: 'center' }}>
       <FlashList

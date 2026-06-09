@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Container, useResponsive } from '../components/ui';
+import { Container, ScreenHeader, useResponsive } from '../components/ui';
 import { useThemeColors } from '../theme';
 
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
@@ -15,22 +15,13 @@ export default function AboutScreen() {
   const { isDesktop } = useResponsive();
 
   return (
-    <ScrollView
-      className="flex-1 bg-bg"
-      contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 24, paddingBottom: 60, paddingHorizontal: 16 }}
-      showsVerticalScrollIndicator={false}
-    >
-      <Container narrow>
-        {/* Header */}
-        <View className="mb-6 flex-row items-center gap-2">
-          {!isDesktop ? (
-            <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
-              <Ionicons name="chevron-back" size={22} color={c.ink} />
-            </Pressable>
-          ) : null}
-          <Text className="font-display-x text-[22px] text-ink">About</Text>
-        </View>
-
+    <View className="flex-1 bg-bg">
+      <ScreenHeader icon="information-circle-outline" title="About" showBack />
+      <ScrollView
+        contentContainerStyle={{ paddingTop: 20, paddingBottom: 60, paddingHorizontal: 16 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Container narrow>
         {/* App Identity */}
         <View className="mb-6 items-center py-6">
           <View className="mb-4 h-20 w-20 items-center justify-center rounded-3xl bg-accent">
@@ -95,8 +86,9 @@ export default function AboutScreen() {
         <Text className="mt-6 text-center text-[12px] text-faint">
           Made with ❤️ for Indian communities
         </Text>
-      </Container>
-    </ScrollView>
+        </Container>
+      </ScrollView>
+    </View>
   );
 }
 

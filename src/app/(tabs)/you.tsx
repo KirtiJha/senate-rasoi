@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MyListingsSection } from '../../components/MyListingsSection';
 import { SavedSection } from '../../components/SavedSection';
-import { Avatar, Badge, Container, useResponsive } from '../../components/ui';
+import { Avatar, Badge, Container, ScreenHeader, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { Community, fetchCommunityById } from '../../lib/communities';
@@ -33,7 +33,8 @@ export default function YouScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <View style={{ paddingTop: isDesktop ? insets.top + 18 : 14 }} className="px-4 pb-2">
+      <ScreenHeader icon="person-circle-outline" title="You" />
+      <View className="px-4 pb-2 pt-3">
         <Container narrow>
           {/* account header */}
           <View className="flex-row items-center gap-3">

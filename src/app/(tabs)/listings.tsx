@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useResponsive } from '../../components/ui';
+import { ScreenHeader, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { fetchDishes, waLink } from '../../lib/dishes';
@@ -152,22 +152,22 @@ export default function AllListingsScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      {/* Header + chips — aligned to the table width */}
-      <View style={{ paddingTop: isDesktop ? insets.top + 16 : 12 }} className="border-b border-line bg-bg pb-3">
-        <View className="w-full self-center px-4" style={{ maxWidth: LIST_MAX }}>
-          <View className="flex-row items-center gap-2">
-            <Text className="flex-1 font-display-x text-[22px] text-ink">All listings</Text>
-            <Text className="text-[12px] font-sans-md text-faint">{filtered.length} item{filtered.length === 1 ? '' : 's'}</Text>
-          </View>
-          {isDesktop ? (
-            <View className="mt-2.5 flex-row flex-wrap" style={{ gap: 6 }}>{chipRow}</View>
+      <ScreenHeader
+        icon="pricetags-outline"
+        iconColor={c.accent}
+        title="All listings"
+        onAdd={() => router.push('/post' as any)}
+        addLabel="New listing"
+        subBar={
+          isDesktop ? (
+            <View className="flex-row flex-wrap" style={{ gap: 6 }}>{chipRow}</View>
           ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2.5 -mx-4 px-4" contentContainerStyle={{ gap: 6 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-4 px-4" contentContainerStyle={{ gap: 6 }}>
               {chipRow}
             </ScrollView>
-          )}
-        </View>
-      </View>
+          )
+        }
+      />
 
       <View style={{ flex: 1, width: '100%', maxWidth: LIST_MAX, alignSelf: 'center' }}>
         <FlashList

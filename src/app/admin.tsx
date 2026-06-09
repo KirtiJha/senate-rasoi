@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Avatar, Container } from '../components/ui';
+import { Avatar, Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { deleteMember, listCommunityMembers, setMemberBlocked, setUserRoles } from '../lib/admin';
@@ -188,16 +188,9 @@ export default function AdminScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      {/* Header */}
-      <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
+      <ScreenHeader icon="shield-checkmark-outline" title="Admin" showBack />
+      <View className="border-b border-line bg-bg px-4 pb-3 pt-3">
         <Container narrow>
-          <View className="flex-row items-center gap-2 mb-3">
-            <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
-              <Ionicons name="chevron-back" size={22} color={c.ink} />
-            </Pressable>
-            <Text className="font-display-x text-[22px] text-ink">Admin</Text>
-          </View>
-
           {/* Stats row */}
           <View className="flex-row gap-2 mb-3">
             {[

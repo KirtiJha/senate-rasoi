@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Container, Sheet, useResponsive } from '../components/ui';
+import { Avatar, Container, ScreenHeader, Sheet, useResponsive } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { PollRow, closePoll, createPoll, deletePoll, fetchPolls, subscribeToPolls, votePoll } from '../lib/polls';
@@ -81,26 +81,7 @@ export default function PollsScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      {/* Header */}
-      <View style={{ paddingTop: isDesktop ? insets.top + 16 : insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
-        <View className="flex-row items-center gap-2">
-          {!isDesktop ? (
-            <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
-              <Ionicons name="chevron-back" size={22} color={c.ink} />
-            </Pressable>
-          ) : null}
-          <View className="flex-row items-center gap-2 flex-1">
-            <Ionicons name="bar-chart-outline" size={20} color="#8B5CF6" />
-            <Text className="font-display-x text-[20px] text-ink">Community Polls</Text>
-          </View>
-          <Pressable
-            onPress={() => setShowCreate(true)}
-            className="h-9 w-9 items-center justify-center rounded-full bg-accent active:bg-accent-press"
-          >
-            <Ionicons name="add" size={22} color={c.onAccent} />
-          </Pressable>
-        </View>
-      </View>
+      <ScreenHeader icon="bar-chart-outline" iconColor="#8B5CF6" title="Community Polls" showBack onAdd={() => setShowCreate(true)} addLabel="Create poll" />
 
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}

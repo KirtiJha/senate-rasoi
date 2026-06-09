@@ -3,7 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Button, Container } from '../../components/ui';
+import { Avatar, Button, Container, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { InboxThread, fetchInbox, subscribeToInbox } from '../../lib/dm';
@@ -36,22 +36,7 @@ export default function MessagesInboxScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      {/* Header */}
-      <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
-        <View className="flex-row items-center gap-2">
-          <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
-            <Ionicons name="chevron-back" size={22} color={c.ink} />
-          </Pressable>
-          <Text className="flex-1 font-display-x text-[20px] text-ink">Messages</Text>
-          <Pressable
-            onPress={() => router.push('/messages/new' as any)}
-            className="h-9 w-9 items-center justify-center rounded-full bg-accent active:bg-accent-press"
-            accessibilityLabel="New message"
-          >
-            <Ionicons name="add" size={22} color={c.onAccent} />
-          </Pressable>
-        </View>
-      </View>
+      <ScreenHeader icon="mail-outline" title="Messages" showBack onAdd={() => router.push('/messages/new' as any)} addLabel="New message" />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container narrow>

@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Button, RowSkeleton, Sheet, useResponsive } from '../components/ui';
+import { Avatar, Button, RowSkeleton, ScreenHeader, Sheet, useResponsive } from '../components/ui';
 import { Field } from '../components/forms';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
@@ -120,46 +120,39 @@ export default function DirectoryScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      {/* Header */}
-      <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg pb-3">
-        <View className="w-full self-center px-4" style={{ maxWidth: DIR_MAX }}>
-          <View className="flex-row items-center gap-2">
-            {!isDesktop ? (
-              <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
-                <Ionicons name="chevron-back" size={22} color={c.ink} />
-              </Pressable>
-            ) : null}
-            <Text className="flex-1 font-display-x text-[22px] text-ink">Residents</Text>
-            <Pressable onPress={() => setShowAdd(true)} className="flex-row items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 active:bg-accent-press">
-              <Ionicons name="person-add-outline" size={15} color={c.onAccent} />
-              <Text className="font-sans-sb text-[12px] text-on-accent">Add</Text>
-            </Pressable>
+      <ScreenHeader
+        icon="people-outline"
+        iconColor="#8B5CF6"
+        title="Residents"
+        showBack
+        onAdd={() => setShowAdd(true)}
+        addLabel="Add resident"
+        subBar={
+          <View>
+            <View className="flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
+              <Ionicons name="search-outline" size={18} color={c.faint} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search by name, flat or profession…"
+                placeholderTextColor={c.faint}
+                className="flex-1 font-sans text-[15px] text-ink"
+                style={{ outline: 'none' } as any}
+              />
+              {query.length > 0 ? (
+                <Pressable onPress={() => setQuery('')} hitSlop={8}><Ionicons name="close-circle" size={18} color={c.faint} /></Pressable>
+              ) : null}
+            </View>
+            <View className="mt-2.5 flex-row gap-2">
+              {FILTERS.map((f) => (
+                <Pressable key={f.key} onPress={() => setFilter(f.key)} className={`rounded-full px-3.5 py-1.5 ${filter === f.key ? 'bg-accent' : 'bg-inset'}`}>
+                  <Text className={`text-[12px] font-sans-sb ${filter === f.key ? 'text-on-accent' : 'text-muted'}`}>{f.label}</Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
-
-          <View className="mt-2.5 flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
-            <Ionicons name="search-outline" size={18} color={c.faint} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search by name, flat or profession…"
-              placeholderTextColor={c.faint}
-              className="flex-1 font-sans text-[15px] text-ink"
-              style={{ outline: 'none' } as any}
-            />
-            {query.length > 0 ? (
-              <Pressable onPress={() => setQuery('')} hitSlop={8}><Ionicons name="close-circle" size={18} color={c.faint} /></Pressable>
-            ) : null}
-          </View>
-
-          <View className="mt-2.5 flex-row gap-2">
-            {FILTERS.map((f) => (
-              <Pressable key={f.key} onPress={() => setFilter(f.key)} className={`rounded-full px-3.5 py-1.5 ${filter === f.key ? 'bg-accent' : 'bg-inset'}`}>
-                <Text className={`text-[12px] font-sans-sb ${filter === f.key ? 'text-on-accent' : 'text-muted'}`}>{f.label}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-      </View>
+        }
+      />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View className="w-full self-center" style={{ maxWidth: DIR_MAX }}>
