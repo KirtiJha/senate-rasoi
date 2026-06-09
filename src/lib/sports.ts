@@ -12,6 +12,19 @@ export interface Sport {
 export const SPORTS: Sport[] = [
   { key: 'badminton', label: 'Badminton', emoji: '🏸', color: '#16A34A' },
   { key: 'cricket', label: 'Cricket', emoji: '🏏', color: '#2563EB' },
+  { key: 'football', label: 'Football', emoji: '⚽', color: '#EA580C' },
+  { key: 'tennis', label: 'Tennis', emoji: '🎾', color: '#CA8A04' },
+  { key: 'tabletennis', label: 'Table Tennis', emoji: '🏓', color: '#DC2626' },
+  { key: 'basketball', label: 'Basketball', emoji: '🏀', color: '#9333EA' },
+  { key: 'volleyball', label: 'Volleyball', emoji: '🏐', color: '#0891B2' },
+  { key: 'swimming', label: 'Swimming', emoji: '🏊', color: '#0284C7' },
+  { key: 'cycling', label: 'Cycling', emoji: '🚴', color: '#0D9488' },
+  { key: 'running', label: 'Running', emoji: '🏃', color: '#DB2777' },
+  { key: 'yoga', label: 'Yoga', emoji: '🧘', color: '#7C3AED' },
+  { key: 'gym', label: 'Gym & Fitness', emoji: '🏋️', color: '#B45309' },
+  { key: 'chess', label: 'Chess', emoji: '♟️', color: '#64748B' },
+  { key: 'carrom', label: 'Carrom', emoji: '🎯', color: '#9A3412' },
+  { key: 'skating', label: 'Skating', emoji: '⛸️', color: '#4F46E5' },
 ];
 export const getSport = (key: string): Sport | undefined => SPORTS.find((s) => s.key === key);
 
