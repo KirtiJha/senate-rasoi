@@ -94,7 +94,7 @@ export function KitchenSection() {
           <Empty
             icon="👨‍🍳"
             title="Your kitchen is empty"
-            action={<Button label="Post your first dish" icon="add" onPress={() => router.push('/post')} />}
+            action={<Button label="Post your first dish" icon="add" onPress={() => router.push({ pathname: '/post', params: { category: 'food' } })} />}
           >
             Post a one-off dish or a recurring tiffin and manage everything here.
           </Empty>
@@ -121,7 +121,7 @@ export function KitchenSection() {
                   />
                 ))}
                 <Pressable
-                  onPress={() => router.push({ pathname: '/post', params: { kind: 'tiffin' } })}
+                  onPress={() => router.push({ pathname: '/post', params: { category: 'food', kind: 'tiffin' } })}
                   className="mb-4 flex-row items-center justify-center gap-1.5 rounded-2xl border border-line py-3 active:bg-inset"
                 >
                   <Ionicons name="add" size={16} color={c.muted} />
@@ -135,6 +135,13 @@ export function KitchenSection() {
             {dishes.map((dish) => (
               <KitchenDishCard key={dish.id} dish={dish} orders={ordersByDish[dish.id] ?? []} onAct={act} />
             ))}
+            <Pressable
+              onPress={() => router.push({ pathname: '/post', params: { category: 'food' } })}
+              className="mb-2 flex-row items-center justify-center gap-1.5 rounded-2xl border border-line py-3 active:bg-inset"
+            >
+              <Ionicons name="add" size={16} color={c.muted} />
+              <Text className="font-sans-sb text-[13px] text-muted">Post a dish</Text>
+            </Pressable>
           </>
         )}
       </Container>

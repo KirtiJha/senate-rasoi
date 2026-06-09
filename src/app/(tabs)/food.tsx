@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -353,7 +352,7 @@ export default function FoodScreen() {
                       ? 'No dishes yet today'
                       : `Nothing for ${filter} yet`
               }
-              action={<Button label="Post the first dish" icon="add" onPress={() => router.push('/post')} />}
+              action={<Button label="Post the first dish" icon="add" onPress={() => router.push({ pathname: '/post', params: { category: 'food' } })} />}
             >
               Be the first to share what you're cooking — your neighbours are hungry!
             </Empty>
@@ -378,17 +377,6 @@ export default function FoodScreen() {
         </Container>
       </ScrollView>
       )}
-
-      {/* Quick "post a dish" while managing your kitchen */}
-      {tab === 'kitchen' ? (
-        <Pressable
-          onPress={() => router.push('/post')}
-          className="absolute bottom-5 right-5 h-14 flex-row items-center gap-2 rounded-full bg-accent px-5 shadow-fab active:bg-accent-press"
-        >
-          <Ionicons name="add" size={22} color={c.onAccent} />
-          <Text className="font-sans-sb text-[15px] text-on-accent">Post a dish</Text>
-        </Pressable>
-      ) : null}
 
       <OrderModal dish={orderDish} onClose={() => setOrderDish(null)} onConfirm={handleConfirmOrder} />
       <SubscribeModal plan={subPlan} onClose={() => setSubPlan(null)} onConfirm={handleSubscribe} />

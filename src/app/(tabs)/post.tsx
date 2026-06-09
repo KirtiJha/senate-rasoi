@@ -76,8 +76,8 @@ export default function PostScreen() {
   // (useState initializer only runs once, so it would go stale between navigations)
   useFocusEffect(
     useCallback(() => {
-      const cat = params.category;
-      setSelectedCategory(cat && cat !== 'food' ? cat : null);
+      // category=food → dish/tiffin form; a listing category → its form; none → picker
+      setSelectedCategory(params.category ?? null);
       setMode(params.kind === 'tiffin' ? 'tiffin' : 'dish');
     }, [params.category, params.kind])
   );
