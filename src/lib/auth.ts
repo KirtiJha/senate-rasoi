@@ -98,7 +98,9 @@ export async function signIn(phone: string, code: string): Promise<void> {
 }
 
 export async function signOut(): Promise<void> {
-  await supabase.auth.signOut();
+  // Local scope clears the on-device session instantly (no network round-trip
+  // that can hang); the refresh token simply expires server-side.
+  await supabase.auth.signOut({ scope: 'local' });
 }
 
 export async function getProfile(userId: string): Promise<DbProfile | null> {

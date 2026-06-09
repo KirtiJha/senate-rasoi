@@ -1,4 +1,5 @@
 import type { Session } from '@supabase/supabase-js';
+import { router } from 'expo-router';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { addRole as addRoleSvc, getProfile, signOut as signOutSvc, updateProfile } from '../lib/auth';
 import { Community, fetchCommunityById } from '../lib/communities';
@@ -128,8 +129,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await loadProfile(profile.id);
       },
       signOut: async () => {
-        await signOutSvc();
+        // Clear local state + route to the public landing immediately so it
+        // works from any screen (not just tab routes that gate on session),
+        // then revoke the session in the background.
+        setSession(null);
         setProfile(null);
+        setCommunity(null);
+        router.replace('/landing' as any);
+        try { await signOutSvc(); } catch { /* best-effort */ }
       },
     }),
     [ready, session, userId, profile, roles, communityId, community, loadProfile]
