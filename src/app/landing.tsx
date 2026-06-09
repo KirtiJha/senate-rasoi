@@ -211,7 +211,11 @@ export default function LandingScreen() {
               <Text className="font-display" style={{ fontSize: 16, color: P.ink }}>Aangan</Text>
               <Text className="font-sans-md" style={{ fontSize: 12, color: P.faint }}>· आँगन, your society's courtyard</Text>
             </View>
-            <Pressable onPress={go}><Text className="font-sans-sb" style={{ fontSize: 13, color: P.accent }}>Sign in</Text></Pressable>
+            <View className="flex-row items-center gap-4">
+              <Text onPress={() => router.push('/legal' as any)} className="font-sans-sb" style={{ fontSize: 13, color: P.muted }}>Terms</Text>
+              <Text onPress={() => router.push('/legal?tab=privacy' as any)} className="font-sans-sb" style={{ fontSize: 13, color: P.muted }}>Privacy</Text>
+              <Text onPress={go} className="font-sans-sb" style={{ fontSize: 13, color: P.accent }}>Sign in</Text>
+            </View>
           </View>
           <Text className="mt-3 w-full max-w-[1080px] self-center font-sans-md" style={{ fontSize: 11, color: P.faint }}>
             Made for Indian apartment societies. Phone + PIN sign-in, no SMS/OTP. Payments happen directly between

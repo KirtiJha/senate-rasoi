@@ -78,8 +78,8 @@ export default function AboutScreen() {
         <View className="rounded-3xl border border-line bg-surface p-5">
           <Text className="mb-3 font-sans-sb text-[13px] text-muted">LEGAL</Text>
           <View className="gap-2">
-            <LinkRow label="Privacy Policy" icon="shield-outline" c={c} onPress={() => {}} />
-            <LinkRow label="Terms of Service" icon="document-text-outline" c={c} onPress={() => {}} />
+            <LinkRow label="Privacy Policy" icon="shield-outline" c={c} onPress={() => router.push('/legal?tab=privacy' as any)} />
+            <LinkRow label="Terms of Service" icon="document-text-outline" c={c} onPress={() => router.push('/legal' as any)} />
           </View>
         </View>
 

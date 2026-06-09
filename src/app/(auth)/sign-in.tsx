@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
@@ -15,6 +16,7 @@ import { useThemeColors } from '../../theme';
 export default function SignInScreen() {
   const toast = useToast();
   const c = useThemeColors();
+  const router = useRouter();
   const { refreshProfile } = useAuth();
 
   const [mode, setMode] = useState<'in' | 'up'>('in');
@@ -200,6 +202,15 @@ export default function SignInScreen() {
             loading={busy}
             onPress={submit}
           />
+
+          {mode === 'up' ? (
+            <Text className="mt-3 text-center text-[12px] leading-[18px] text-faint">
+              By creating an account, you agree to Aangan's{' '}
+              <Text className="font-sans-sb text-muted" onPress={() => router.push('/legal' as any)}>Terms</Text>
+              {' '}&amp;{' '}
+              <Text className="font-sans-sb text-muted" onPress={() => router.push('/legal?tab=privacy' as any)}>Privacy Policy</Text>.
+            </Text>
+          ) : null}
 
           <Pressable onPress={() => setMode(mode === 'in' ? 'up' : 'in')} className="mt-4">
             <Text className="text-center text-[13px] text-muted">
