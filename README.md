@@ -1,16 +1,39 @@
-# 🍽️ Senate Chef
+# 🏡 Aangan
 
-A community food board for a residential society. Neighbours post dishes they're
-cooking; others order via WhatsApp before cooking starts — so chefs make exactly
-the right amount, with no waste.
+**Aangan** (आँगन — "courtyard") is a single app for everything neighbours in a
+residential society need from each other: home food, local services, buy & sell,
+community discussions, polls, emergency contacts, and private messaging. One
+shared courtyard, scoped to your society.
 
-Built **PWA-first** with Expo (one codebase → web today, iOS/Android later) on a
-free stack. See [`PLAN.md`](./PLAN.md) for the full product plan and roadmap.
+Built **PWA-first** with Expo (one codebase → web today, iOS/Android via EAS
+later) on an all-free stack. No in-app payments — coordination happens over
+**WhatsApp + UPI**, the way trusted neighbours already work.
 
-- **No login.** Identity is a name/flat/WhatsApp profile saved on the device.
-- **Zero-friction ordering.** Tap *Order* → WhatsApp opens with the message pre-filled.
-- **Safe without accounts.** Posts are owned by a device token; only its hash is
-  stored. Plate counts decrement atomically (no overselling). See [`PLAN.md` §4](./PLAN.md).
+> **Canonical plan & status:** [`PLATFORM_PLAN.md`](./PLATFORM_PLAN.md).
+> ([`PLAN.md`](./PLAN.md) is the original food-only plan, superseded.)
+> Repo folder is still `senate-chef`; the app is **Aangan**.
+
+---
+
+## What's inside
+
+Two engines under one Home hub, plus community tools — all multi-society and
+realtime:
+
+- **Food engine** — chefs post dishes (one-off or future-dated) and **tiffin
+  services**; neighbours reserve plates or **subscribe**; full order lifecycle
+  (placed → accepted → cooking → delivered, with cancellation windows) and a
+  chef Kitchen dashboard.
+- **Listings engine** — one registry-driven flow covering **15 categories**
+  (tuitions, tailoring, tax, clinic, catering, decoration, jobs, buy & sell,
+  service directory, day care, yoga & fitness, arts, astrology, carpooling),
+  with photos, attributes, inquiries, bookmarks, and per-listing chat.
+- **Community** — a posts feed with comment threads (general / announcements /
+  issues / events / lost & found / feedback / suggestions), **polls**,
+  **emergency contacts**, **direct messages** between neighbours, and unified
+  **full-text search** across listings and posts.
+- **Identity & roles** — phone + 6-digit PIN accounts (no SMS/OTP), roles
+  **chef / member / admin**, public profiles, and a society admin panel.
 
 ---
 
@@ -18,11 +41,20 @@ free stack. See [`PLAN.md`](./PLAN.md) for the full product plan and roadmap.
 
 | Layer | Choice |
 |---|---|
-| App framework | Expo (React Native) + Expo Router |
-| Web / PWA | React Native Web, static export, installable manifest |
-| Styling | NativeWind (Tailwind for RN) |
-| Backend / DB | Supabase (Postgres + Realtime + Storage) |
-| Web hosting | Vercel (or any static host) |
+| App framework | **Expo SDK 56** (React Native) + **Expo Router** (typed routes) |
+| Web / PWA | React Native Web, static export, installable manifest + service worker |
+| Styling | **NativeWind v4** (Tailwind for RN) + light/dark CSS-var theme |
+| Fonts | Bricolage Grotesque (display) + Hanken Grotesk (UI) |
+| Lists / images | `@shopify/flash-list`, `expo-image` (memory-disk cache + blurhash) |
+| Backend / DB | **Supabase** — Postgres + Row-Level Security + Realtime + Storage |
+| Auth | Supabase Auth via a phone→email alias (`<digits>@senate.app`) + PIN-as-password |
+| Notifications | Expo push (native) via a `pg_net` Postgres trigger; WhatsApp deep-links everywhere |
+| Web hosting | **Vercel** · Native builds | **EAS** (bundle id `com.aangan.app`) |
+
+**Security model:** everything is scoped to the signed-in user's `community_id`
+and enforced by RLS, with `SECURITY DEFINER` RPCs for atomic/privileged actions
+(order placement, role edits, account deletion, DM thread creation). The anon key
+is meant to be public — security lives server-side, not in hiding the key.
 
 ---
 
@@ -31,52 +63,66 @@ free stack. See [`PLAN.md`](./PLAN.md) for the full product plan and roadmap.
 ```bash
 npm install
 cp .env.example .env      # then fill in your Supabase values (see below)
-npx expo start            # press "w" for web, or scan the QR with Expo Go
+npx expo start            # press "w" for web, or scan the QR with Expo Go / a dev build
 ```
 
-The app runs without Supabase configured — you'll just see a setup banner on the
-board instead of live dishes.
+The app boots without Supabase configured — you'll see a setup banner instead of
+live data.
 
-### Build the web/PWA bundle
+### Useful scripts
 
 ```bash
-npx expo export --platform web   # outputs static site to ./dist
-npx serve dist                   # preview locally
+npm run web                       # expo start --web
+npx expo export --platform web    # static PWA bundle → ./dist
+npx serve dist                    # preview the export
+npx tsc --noEmit                  # type-check
 ```
 
 ---
 
-## One-time backend setup (free, ~5 minutes)
+## One-time backend setup
 
 1. **Create a Supabase project** at [supabase.com/dashboard](https://supabase.com/dashboard).
-2. **Run the schema.** Open the project's **SQL Editor**, paste the contents of
-   [`supabase/migrations/0001_init.sql`](./supabase/migrations/0001_init.sql), and run it.
-   This creates the `communities` + `dishes` tables, Row-Level Security policies,
-   the atomic `order_plates` / token-checked `delete_dish` RPCs, enables Realtime,
-   and seeds the single society.
-3. **Create the photo bucket.** Storage → **New bucket** → name it `dish-photos` →
-   make it **Public**. (Public read is fine; uploads use the anon key.)
-4. **Copy your keys.** Project Settings → **API**. Put the **Project URL** and the
-   **anon public** key into `.env`:
+2. **Run the migrations in order.** Open **SQL Editor** and run every file in
+   [`supabase/migrations/`](./supabase/migrations) from `0001_init.sql` through
+   `0024_listings_read_scope.sql`. They create all tables (communities, profiles,
+   dishes, orders, tiffin, listings, inquiries, posts, comments, polls, emergency
+   contacts, saved listings, per-listing chat, direct messages), RLS policies,
+   RPCs, full-text indexes, realtime publications, and the push pipeline.
+3. **Disable email confirmation.** Auth → Providers → Email → turn **off**
+   "Confirm email" (the phone-as-email aliases can't receive confirmation mail).
+4. **Create two public Storage buckets:** `listing-photos` and `dish-photos`
+   (Storage → New bucket → Public).
+5. **Seed a society and grant yourself admin:**
+   ```sql
+   insert into public.communities (name, slug, address)
+   values ('Green Valley Apartments', 'green-valley', 'Sector 12, Noida') returning id;
 
+   -- after you sign up in the app, grant admin to your account:
+   -- (the member role is stored as 'foodie'; the UI just labels it "Member")
+   update public.profiles set roles = array['foodie','chef','admin']
+   where phone = '<your-phone-digits>';
+   ```
+6. **Copy your keys** into `.env`:
    ```
    EXPO_PUBLIC_SUPABASE_URL=https://YOURPROJECT.supabase.co
    EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJ...
    ```
-5. Restart `expo start`. The board is now live.
 
-> The anon key is meant to be public — all security is enforced server-side by RLS
-> and the SECURITY DEFINER functions, not by hiding the key.
+See [`PLATFORM_PLAN.md` §12](./PLATFORM_PLAN.md) for a full end-to-end testing guide.
 
 ---
 
 ## Deploy to Vercel
 
-1. Push this repo to GitHub.
-2. Import it in Vercel. The included [`vercel.json`](./vercel.json) already sets the
-   build command (`expo export --platform web`) and output dir (`dist`).
-3. Add the two `EXPO_PUBLIC_*` environment variables in the Vercel project settings.
-4. Deploy → you get an HTTPS URL that installs as a PWA on phones.
+1. Push to GitHub.
+2. Import the repo in Vercel — [`vercel.json`](./vercel.json) sets the build
+   command (`expo export --platform web`) and output dir (`dist`).
+3. Add the two `EXPO_PUBLIC_*` env vars in the Vercel project settings.
+4. Deploy → an HTTPS URL that installs as a PWA (offline shell via `public/sw.js`).
+
+> Note: the free **Hobby** plan runs **one** build at a time — a stuck build will
+> queue the next one until cancelled.
 
 ---
 
@@ -84,20 +130,30 @@ npx serve dist                   # preview locally
 
 ```
 src/
-  app/                 # Expo Router routes (file-based)
-    _layout.tsx        # fonts, providers, splash
-    +html.tsx          # web/PWA document (meta, manifest link)
+  app/                       # Expo Router routes (file-based)
+    _layout.tsx              # fonts, providers (auth, theme, toast, unread DMs), splash
+    +html.tsx                # web/PWA document (meta, manifest, SW registration, preconnect)
+    (auth)/sign-in.tsx       # phone + PIN sign-in / sign-up + society picker
     (tabs)/
-      _layout.tsx      # bottom tabs + hero header
-      index.tsx        # Today's Menu — live board, filters, order, remove
-      post.tsx         # Post a Dish — form, photo upload
-      orders.tsx       # My Orders — device-local
-  components/          # Hero, DishCard, OrderModal, forms, ...
-  context/             # profile + toast providers
-  lib/                 # supabase client, dishes service, device token, profile, orders
-supabase/migrations/   # SQL schema + RLS + RPCs
-public/                # PWA manifest + icons
-docs/                  # the original Firebase prototype (reference)
+      index.tsx              # Home hub — service grid + community tiles
+      food.tsx               # Food board (dishes + tiffins)
+      feed.tsx               # Community posts feed + composer
+      search.tsx             # Full-text search (Listings / Posts) + recent searches
+      post.tsx               # Category picker → create listing/dish
+      you.tsx                # My orders, tiffins, listings, saved, kitchen
+      c/[category].tsx       # Category listing feed (FlashList)
+    listing/[id].tsx         # Listing detail + inquiry + per-listing chat
+    messages/                # DM inbox + thread
+    profile/me.tsx · [userId].tsx
+    feed/[postId].tsx        # Post thread + comments
+    admin.tsx · about.tsx · polls.tsx · emergency.tsx
+  components/                # DishCard, ListingCard, NavRail, sections, ui/ kit, ...
+  context/                   # auth, theme, toast, unread (shared providers)
+  lib/                       # supabase client + service layer (one module per domain)
+supabase/migrations/         # 0001–0024: schema, RLS, RPCs, FTS, realtime, push
+public/                      # PWA manifest, icons, service worker
+assets/images/               # app icon, adaptive icon layers, splash
+docs/                        # the original Firebase prototype (reference)
 ```
 
 ---
@@ -105,4 +161,13 @@ docs/                  # the original Firebase prototype (reference)
 ## Native apps (later)
 
 The same codebase ships to iOS/Android via [EAS Build](https://docs.expo.dev/build/introduction/).
-See Phase 3 in [`PLAN.md`](./PLAN.md). No code changes needed for the core flow.
+Config is in place — [`eas.json`](./eas.json) build profiles and
+[`app.json`](./app.json) bundle ids (`com.aangan.app`), adaptive icons, splash,
+privacy strings, and OTA-update settings. Run `eas login` → `eas init` (writes the
+project id push needs) → `eas build`. Apple ($99/yr) and Google ($25) developer
+accounts gate store distribution. See Phase 10 in [`PLATFORM_PLAN.md`](./PLATFORM_PLAN.md).
+
+---
+
+> ⚠️ **Read before writing code:** Expo SDK 56 changed a lot — check the versioned
+> docs at <https://docs.expo.dev/versions/v56.0.0/>. (See [`AGENTS.md`](./AGENTS.md).)
