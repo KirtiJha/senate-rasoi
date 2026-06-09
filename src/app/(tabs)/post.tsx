@@ -334,7 +334,7 @@ export default function PostScreen({
             <SectionCard title="Your details" subtitle="Saved on this device — typed once, reused next time">
               <View className="flex-row gap-3">
                 <View className="flex-1">
-                  <Field label="Chef name" required placeholder="Priya Sharma" value={chefName} onChangeText={setChefName} />
+                  <Field label="Chef name" required placeholder="Pratibha Priti" value={chefName} onChangeText={setChefName} />
                 </View>
                 <View className="w-28">
                   <Field label="Flat" required placeholder="A-204" value={flat} onChangeText={setFlat} />

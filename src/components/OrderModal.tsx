@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { useProfile } from '../context/profile';
 import { DishRow, SLOT_EMOJI } from '../lib/types';
-import { Avatar, Button, IconButton, Stepper, VegMark } from './ui';
+import { Avatar, Button, IconButton, Stepper, VegMark, useResponsive } from './ui';
 
 interface OrderModalProps {
   dish: DishRow | null;
@@ -13,6 +13,7 @@ interface OrderModalProps {
 
 export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
   const { profile } = useProfile();
+  const { isDesktop } = useResponsive();
   const [qty, setQty] = useState(1);
 
   useEffect(() => {
@@ -23,14 +24,14 @@ export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
   const total = dish.price * qty;
 
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end bg-black/55" onPress={onClose}>
+    <Modal visible transparent animationType={isDesktop ? 'fade' : 'slide'} onRequestClose={onClose}>
+      <Pressable className={`flex-1 bg-black/55 ${isDesktop ? 'items-center justify-center p-6' : 'justify-end'}`} onPress={onClose}>
         <Pressable
           onPress={(e) => e.stopPropagation()}
-          className="w-full self-center rounded-t-[28px] bg-bg px-5 pb-9 pt-3"
-          style={{ maxWidth: 560 }}
+          className={`w-full self-center bg-bg px-5 ${isDesktop ? 'rounded-[28px] pb-6 pt-5' : 'rounded-t-[28px] pb-9 pt-3'}`}
+          style={{ maxWidth: 460 }}
         >
-          <View className="mb-4 h-1.5 w-12 self-center rounded-full bg-line" />
+          {!isDesktop ? <View className="mb-4 h-1.5 w-12 self-center rounded-full bg-line" /> : null}
 
           <View className="mb-3 flex-row items-start justify-between">
             <Text className="font-sans-sb text-[13px] uppercase tracking-wider text-accent">Place an order</Text>

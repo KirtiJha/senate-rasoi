@@ -311,7 +311,7 @@ function AddResidentModal({
     >
       <Text className="mb-4 text-[13px] text-muted">Add a neighbour to the directory. If they're not on Aangan yet, you can invite them after.</Text>
       <View className="flex-row gap-3">
-        <View className="flex-1"><Field label="Name" required placeholder="Priya Sharma" value={name} onChangeText={setName} /></View>
+        <View className="flex-1"><Field label="Name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} /></View>
         <View className="w-28"><Field label="Flat" placeholder="A-204" value={flat} onChangeText={setFlat} /></View>
       </View>
       <Field label="Phone" hint="For contact & invite" keyboardType="phone-pad" placeholder="98765 43210" value={phone} onChangeText={setPhone} />
