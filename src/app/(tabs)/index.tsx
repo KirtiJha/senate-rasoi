@@ -112,9 +112,9 @@ export default function HomeScreen() {
 
           {/* Society badge */}
           {community ? (
-            <View className="mt-2 flex-row items-center gap-1.5 self-start rounded-full border border-line bg-surface px-3 py-1.5">
-              <Ionicons name="business-outline" size={13} color={c.faint} />
-              <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>{community.name}</Text>
+            <View className="mt-2 flex-row items-center gap-1.5 self-start rounded-full px-3 py-1.5" style={{ backgroundColor: '#7C3AED1A', borderWidth: 1, borderColor: '#7C3AED55' }}>
+              <Ionicons name="business" size={13} color="#7C3AED" />
+              <Text className="text-[12px] font-sans-sb" numberOfLines={1} style={{ color: '#7C3AED' }}>{community.name}</Text>
             </View>
           ) : null}
 

@@ -49,9 +49,9 @@ export default function YouScreen() {
               </Text>
               <Text className="text-[12px] text-muted">{profile?.phone ?? ''}</Text>
               {community ? (
-                <View className="mt-0.5 flex-row items-center gap-1">
-                  <Ionicons name="business-outline" size={11} color={c.faint} />
-                  <Text className="text-[11px] text-faint" numberOfLines={1}>{community.name}</Text>
+                <View className="mt-1 flex-row items-center gap-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: '#7C3AED1A' }}>
+                  <Ionicons name="business" size={11} color="#7C3AED" />
+                  <Text className="text-[11px] font-sans-sb" numberOfLines={1} style={{ color: '#7C3AED' }}>{community.name}</Text>
                 </View>
               ) : null}
             </View>

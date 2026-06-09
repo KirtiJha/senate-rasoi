@@ -144,9 +144,9 @@ export default function ProfileScreen() {
 
             {/* Society badge */}
             {community ? (
-              <View className="mt-2 flex-row items-center gap-1.5 rounded-full border border-accent-soft bg-accent-soft px-3 py-1.5">
-                <Ionicons name="business-outline" size={12} color={c.accent} />
-                <Text className="text-[12px] font-sans-sb text-accent">{community.name}</Text>
+              <View className="mt-2 flex-row items-center gap-1.5 rounded-full px-3 py-1.5" style={{ backgroundColor: '#7C3AED1A', borderWidth: 1, borderColor: '#7C3AED55' }}>
+                <Ionicons name="business" size={12} color="#7C3AED" />
+                <Text className="text-[12px] font-sans-sb" style={{ color: '#7C3AED' }}>{community.name}</Text>
               </View>
             ) : null}
           </View>

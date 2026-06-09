@@ -215,11 +215,13 @@ export function NavRail() {
     inputRange: [0, 1],
     outputRange: [140, 0],
   });
-  // Shifts icon right so it stays visually centered in the 64px collapsed rail
-  // collapsed: paddingLeft=12 + marginLeft=9 => icon starts at 21px ≈ (64-21)/2
+  // Icons sit at container paddingHorizontal(10) + paddingLeft(12) = 22px from the
+  // rail edge, which already centers a ~21px icon in the 64px collapsed rail
+  // ((64-21)/2 ≈ 21.5). So no extra shift is needed — an earlier +9 over-pushed
+  // the bell / New Post / avatar to the right when collapsed.
   const iconMarginL = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 9],
+    outputRange: [0, 0],
   });
   const sectionOpacity = anim.interpolate({
     inputRange: [0, 0.2, 1],
