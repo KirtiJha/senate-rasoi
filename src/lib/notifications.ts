@@ -1,6 +1,8 @@
 import { isSupabaseConfigured, supabase } from './supabase';
 
-export type NotificationType = 'post' | 'announcement' | 'listing' | 'poll' | 'message';
+export type NotificationType =
+  | 'post' | 'announcement' | 'listing' | 'poll' | 'message'
+  | 'dish' | 'tiffin' | 'sport' | 'document';
 
 export interface NotificationRow {
   id: string;
@@ -62,6 +64,15 @@ export async function markUnread(userId: string, ids: string[]): Promise<void> {
     .delete()
     .eq('user_id', userId)
     .in('notification_id', ids);
+  if (error) throw error;
+}
+
+/** "Clear all" — hide every notification up to now from this user's own bell. */
+export async function clearAllNotifications(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ notifications_cleared_at: new Date().toISOString() })
+    .eq('id', userId);
   if (error) throw error;
 }
 

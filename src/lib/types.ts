@@ -95,6 +95,7 @@ export interface DbProfile {
   profession: string | null;
   vehicle_no: string | null;
   show_in_directory: boolean;
+  notifications_cleared_at: string | null;
   created_at: string;
 }
 

@@ -5,7 +5,7 @@ import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useResponsive } from '../components/ui';
 import {
-  NotificationItem, NotificationType, fetchNotifications, markRead, markUnread, subscribeNotifications,
+  NotificationItem, NotificationType, clearAllNotifications, fetchNotifications, markRead, markUnread, subscribeNotifications,
 } from '../lib/notifications';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { useThemeColors } from '../theme';
@@ -24,19 +24,26 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   listing: { icon: 'pricetag', color: '#14B8A6' },
   poll: { icon: 'stats-chart', color: '#6366F1' },
   message: { icon: 'mail', color: '#0EA5E9' },
+  dish: { icon: 'restaurant', color: '#FF5A3C' },
+  tiffin: { icon: 'repeat', color: '#F59E0B' },
+  sport: { icon: 'football', color: '#16A34A' },
+  document: { icon: 'folder', color: '#0EA5E9' },
 };
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
-  const { userId, profile } = useAuth();
+  const { userId, profile, refreshProfile } = useAuth();
   const router = useRouter();
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [visible, setVisible] = useState(false);
   const joinedAt = profile?.created_at ?? '1970-01-01';
+  const clearedAt = profile?.notifications_cleared_at ?? null;
+  // Show notifications newer than whichever is later: join time or last "Clear all".
+  const floor = clearedAt && clearedAt > joinedAt ? clearedAt : joinedAt;
 
   const refresh = useCallback(() => {
     if (!userId || !isSupabaseConfigured) { setItems([]); return; }
-    fetchNotifications(userId, joinedAt).then(setItems).catch(() => {});
-  }, [userId, joinedAt]);
+    fetchNotifications(userId, floor).then(setItems).catch(() => {});
+  }, [userId, floor]);
 
   useEffect(() => {
     if (!userId || !isSupabaseConfigured) { setItems([]); return; }
@@ -72,6 +79,15 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     setItems((prev) => prev.map((i) => ({ ...i, read })));
   };
 
+  const onClearAll = async () => {
+    if (!userId) return;
+    setItems([]); // optimistic
+    try {
+      await clearAllNotifications(userId);
+      await refreshProfile(); // bumps notifications_cleared_at so future fetches stay clear
+    } catch { refresh(); }
+  };
+
   return (
     <Ctx.Provider value={{ unreadCount, open: () => setVisible(true) }}>
       {children}
@@ -83,13 +99,14 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         onItemPress={onItemPress}
         onToggleRead={onToggleRead}
         onMarkAll={onMarkAll}
+        onClearAll={onClearAll}
       />
     </Ctx.Provider>
   );
 }
 
 function NotificationsModal({
-  visible, items, unreadCount, onClose, onItemPress, onToggleRead, onMarkAll,
+  visible, items, unreadCount, onClose, onItemPress, onToggleRead, onMarkAll, onClearAll,
 }: {
   visible: boolean;
   items: NotificationItem[];
@@ -98,6 +115,7 @@ function NotificationsModal({
   onItemPress: (i: NotificationItem) => void;
   onToggleRead: (i: NotificationItem) => void;
   onMarkAll: (read: boolean) => void;
+  onClearAll: () => void;
 }) {
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
@@ -127,24 +145,31 @@ function NotificationsModal({
           ]}
         >
           {/* Header */}
-          <View
-            className="flex-row items-center gap-2 border-b border-line px-4"
-            style={{ paddingTop: isDesktop ? 14 : insets.top + 6, paddingBottom: 12 }}
-          >
-            <Ionicons name="notifications-outline" size={20} color={c.ink} />
-            <Text className="flex-1 font-display-x text-[18px] text-ink">Notifications</Text>
-            {unreadCount > 0 ? (
-              <Pressable onPress={() => onMarkAll(true)} hitSlop={6} className="rounded-full bg-inset px-2.5 py-1 active:opacity-70">
-                <Text className="text-[12px] font-sans-sb text-accent">Mark all read</Text>
+          <View className="border-b border-line px-4" style={{ paddingTop: isDesktop ? 14 : insets.top + 6, paddingBottom: 10 }}>
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="notifications-outline" size={20} color={c.ink} />
+              <Text className="flex-1 font-display-x text-[18px] text-ink">Notifications</Text>
+              <Pressable onPress={onClose} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full active:bg-inset">
+                <Ionicons name="close" size={20} color={c.muted} />
               </Pressable>
-            ) : items.length > 0 ? (
-              <Pressable onPress={() => onMarkAll(false)} hitSlop={6} className="rounded-full bg-inset px-2.5 py-1 active:opacity-70">
-                <Text className="text-[12px] font-sans-sb text-muted">Mark all unread</Text>
-              </Pressable>
+            </View>
+            {items.length > 0 ? (
+              <View className="mt-2 flex-row items-center gap-2">
+                {unreadCount > 0 ? (
+                  <Pressable onPress={() => onMarkAll(true)} hitSlop={4} className="rounded-full bg-inset px-2.5 py-1 active:opacity-70">
+                    <Text className="text-[12px] font-sans-sb text-accent">Mark all read</Text>
+                  </Pressable>
+                ) : (
+                  <Pressable onPress={() => onMarkAll(false)} hitSlop={4} className="rounded-full bg-inset px-2.5 py-1 active:opacity-70">
+                    <Text className="text-[12px] font-sans-sb text-muted">Mark all unread</Text>
+                  </Pressable>
+                )}
+                <Pressable onPress={onClearAll} hitSlop={4} className="flex-row items-center gap-1 rounded-full bg-inset px-2.5 py-1 active:opacity-70">
+                  <Ionicons name="trash-outline" size={12} color="#EF4444" />
+                  <Text className="text-[12px] font-sans-sb text-[#EF4444]">Clear all</Text>
+                </Pressable>
+              </View>
             ) : null}
-            <Pressable onPress={onClose} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full active:bg-inset">
-              <Ionicons name="close" size={20} color={c.muted} />
-            </Pressable>
           </View>
 
           {items.length === 0 ? (
