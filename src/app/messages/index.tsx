@@ -39,7 +39,7 @@ export default function MessagesInboxScreen() {
       <ScreenHeader icon="mail-outline" title="Messages" showBack onAdd={() => router.push('/messages/new' as any)} addLabel="New message" />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        <Container narrow>
+        <Container>
           {loading ? (
             <Text className="py-10 text-center text-[14px] text-muted">Loading…</Text>
           ) : threads.length === 0 ? (

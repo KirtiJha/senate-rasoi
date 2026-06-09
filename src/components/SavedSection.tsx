@@ -54,7 +54,7 @@ export function SavedSection() {
       contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 32 }}
       showsVerticalScrollIndicator={false}
     >
-      <Container narrow>
+      <Container>
         {listings.map((l: ListingRow) => {
           const cat = getService(l.category);
           return (

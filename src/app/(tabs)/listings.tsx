@@ -14,11 +14,9 @@ import { SERVICES, getService } from '../../lib/services';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { listTiffinPlans } from '../../lib/tiffin';
 import { DishRow, ListingRow, TiffinPlanWithChef } from '../../lib/types';
-import { useThemeColors } from '../../theme';
+import { layout, useThemeColors } from '../../theme';
 
-// A touch narrower than the global max so the table columns don't spread
-// awkwardly far apart on very wide screens.
-const LIST_MAX = 1040;
+const LIST_MAX = layout.maxContent; // same content width as every other tab
 const FOOD_COLOR = '#FF5A3C';
 const TIFFIN_COLOR = '#F59E0B';
 

@@ -16,9 +16,9 @@ import {
   createPost, fetchPosts, subscribeToFeed,
 } from '../../lib/posts';
 import { isSupabaseConfigured } from '../../lib/supabase';
-import { useThemeColors } from '../../theme';
+import { layout, useThemeColors } from '../../theme';
 
-const FEED_MAX = 640; // keep the feed a comfortable reading width on desktop
+const FEED_MAX = layout.maxContent; // same content width as every other tab
 
 const FILTER_TABS: { key: PostCategory | 'all'; label: string }[] = [
   { key: 'all', label: 'All' },

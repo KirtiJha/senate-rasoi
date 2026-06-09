@@ -79,7 +79,7 @@ export function MyListingsSection() {
   if (loading) {
     return (
       <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12 }} showsVerticalScrollIndicator={false}>
-        <Container narrow>
+        <Container>
           <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={5} /></View>
         </Container>
       </ScrollView>
@@ -103,7 +103,7 @@ export function MyListingsSection() {
 
   return (
     <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
-      <Container narrow>
+      <Container>
         {items.map((it) => (
           <MyItemRow
             key={`${it.kind}:${it.id}`}

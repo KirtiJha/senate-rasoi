@@ -14,9 +14,9 @@ import { getService } from '../../lib/services';
 import { fetchGroups, getSport } from '../../lib/sports';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { listTiffinPlans } from '../../lib/tiffin';
-import { useThemeColors } from '../../theme';
+import { layout, useThemeColors } from '../../theme';
 
-const SEARCH_MAX = 660;
+const SEARCH_MAX = layout.maxContent;
 const FOOD_COLOR = '#FF5A3C';
 const TIFFIN_COLOR = '#F59E0B';
 const RESIDENT_COLOR = '#0EA5E9';

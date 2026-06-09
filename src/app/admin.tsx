@@ -190,7 +190,7 @@ export default function AdminScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader icon="shield-checkmark-outline" title="Admin" showBack />
       <View className="border-b border-line bg-bg px-4 pb-3 pt-3">
-        <Container narrow>
+        <Container>
           {/* Stats row */}
           <View className="flex-row gap-2 mb-3">
             {[
@@ -235,7 +235,7 @@ export default function AdminScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Container narrow>
+          <Container>
             {/* Search */}
             <View className="mb-4 flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
               <Ionicons name="search-outline" size={16} color={c.faint} />
@@ -315,7 +315,7 @@ export default function AdminScreen() {
           refreshControl={<RefreshControl refreshing={requestsLoading} onRefresh={onRefresh} />}
           showsVerticalScrollIndicator={false}
         >
-          <Container narrow>
+          <Container>
             {requests.length === 0 ? (
               <View className="items-center py-16">
                 <Ionicons name="mail-open-outline" size={40} color={c.faint} />

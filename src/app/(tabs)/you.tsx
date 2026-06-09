@@ -35,7 +35,7 @@ export default function YouScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader icon="person-circle-outline" title="You" />
       <View className="px-4 pb-2 pt-3">
-        <Container narrow>
+        <Container>
           {/* account header */}
           <View className="flex-row items-center gap-3">
             <Pressable onPress={() => router.push('/profile/me' as any)}>

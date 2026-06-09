@@ -11,9 +11,9 @@ import { Resident, addDirectoryEntry, adminSetDirectoryVisibility, deleteDirecto
 import { waLink } from '../lib/dishes';
 import { getOrCreateThread } from '../lib/dm';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { useThemeColors } from '../theme';
+import { layout, useThemeColors } from '../theme';
 
-const DIR_MAX = 720;
+const DIR_MAX = layout.maxContent;
 type Filter = 'all' | 'owner' | 'tenant';
 
 function openUrl(url: string) {
