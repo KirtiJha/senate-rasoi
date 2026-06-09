@@ -164,7 +164,7 @@ export default function SignInScreen() {
 
               <View className="flex-row gap-3">
                 <View className="flex-1">
-                  <Field label="Your name" required placeholder="Priya Sharma" value={name} onChangeText={setName} />
+                  <Field label="Your name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} />
                 </View>
                 <View className="w-28">
                   <Field label="Flat" placeholder="A-204" value={flat} onChangeText={setFlat} />
