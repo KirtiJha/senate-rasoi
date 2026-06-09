@@ -60,6 +60,14 @@ const COMMUNITY_TILES: CommunityTile[] = [
     href: '/documents',
   },
   {
+    key: 'payments',
+    label: 'Payments',
+    blurb: 'Track UPI payments & receipts',
+    icon: 'wallet',
+    color: '#16A34A',
+    href: '/payments',
+  },
+  {
     key: 'polls',
     label: 'Polls',
     blurb: 'Vote on community decisions',

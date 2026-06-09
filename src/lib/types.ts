@@ -60,7 +60,7 @@ export interface Order {
 export interface MyOrder extends Order {
   dish: Pick<
     DishRow,
-    'dish_name' | 'slot' | 'price' | 'photo_url' | 'chef_name' | 'whatsapp' | 'chef_user_id'
+    'dish_name' | 'slot' | 'price' | 'photo_url' | 'chef_name' | 'whatsapp' | 'chef_user_id' | 'upi'
   > | null;
 }
 
@@ -119,7 +119,7 @@ export interface TiffinPlan {
 
 /** A plan joined with the chef profile (for the Discover tiffin strip). */
 export interface TiffinPlanWithChef extends TiffinPlan {
-  chef: { name: string; flat: string | null; whatsapp: string | null } | null;
+  chef: { name: string; flat: string | null; whatsapp: string | null; upi: string | null } | null;
 }
 
 export interface Subscription {
@@ -176,6 +176,7 @@ export interface ListingOwner {
   flat: string | null;
   whatsapp: string | null;
   phone: string;
+  upi: string | null;
 }
 
 /** A listing row as returned from Supabase (incl. joined owner). */

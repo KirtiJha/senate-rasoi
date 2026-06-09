@@ -47,6 +47,7 @@
 | Emergency Contacts | ✅ | emergency.tsx, 7 role types, admin add/delete, direct dial (migration 0019) |
 | Sports groups | ✅ | sports.tsx + sports/[id].tsx; teams per sport, members, practice, tournaments, join/leave (migration 0030) |
 | Document vault | ✅ | documents.tsx; upload files, public/private + share/revoke, preview/download, signed URLs (migration 0032) |
+| UPI payments | ✅ | PayButton/PaySheet (UPI deep link + desktop QR) on dishes/tiffins/listings; payments.tsx ledger, mark-received both-ends (migration 0034) |
 | Resident directory | ✅ | directory.tsx; members + manual entries, grouped by flat, invite, admin moderation (migrations 0027–0029) |
 | Society-based access control | ✅ | RLS on all tables; is_admin fn (migration 0017); communityId in all queries |
 | About page + version | ✅ | about.tsx with version, features, technical info |
@@ -262,6 +263,7 @@ scoped to that society. Admins of a society can manage that society only. Platfo
 | 0031 | sport_groups.logo_url + sport-logos storage policies — uploaded team logos | ⏸️ create `sport-logos` bucket + run |
 | 0032 | documents + document_shares + RLS + storage policies — document vault | ⏸️ create PRIVATE `documents` bucket + run |
 | 0033 | notify triggers for dish/tiffin/sport/public-doc + profiles.notifications_cleared_at (Clear all) | ⏸️ written — run in Supabase |
+| 0034 | payments ledger + RLS + mark-received/cancel RPCs + notify triggers + realtime | ⏸️ written — run in Supabase |
 
 **Pending (future):**
 - `listing_reports` — moderation queue (schema designed; UI not yet built)
@@ -910,6 +912,7 @@ last-message bump, mark-read; FTS stem-matching on listings ("dancing"→"dance"
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-09 | **UPI payments layer.** A lightweight payment ledger on top of UPI deep links — the app never touches money. Migration `0034` adds `payments` (payer/payee/amount/status) + RLS + `payment_mark_received`/`payment_cancel` RPCs + an insert→payee notify trigger + realtime. New reusable `PayButton`/`PaySheet`: **mobile opens the UPI app pre-filled** (`upi://pay?…`), **desktop shows a QR + copyable UPI ID** (via `react-native-qrcode-svg`). Flow: payer pays → "record it" (status *initiated*, payee notified) → payee taps **Received** (status flips both ends, payer notified). Wired into **dish orders, tiffin subscriptions, and priced listings** (added `upi` to those joins). New `/payments` screen (filters: All / I paid / To me) + NavRail + Home tile. New `payment` notification type. Added deps `react-native-svg` + `react-native-qrcode-svg`. |
 | 2026-06-09 | **Post picker width + society badge colour.** The "What are you posting?" picker used `Container narrow` (looked cramped vs other tabs) — now `Container` (maxContent) with a 3-column grid on desktop. Recoloured the society badge from the faint purple `#7C3AED` to a more legible teal `#0D9488` (stronger 13% bg) across TopBar / NavRail / ScreenHeader / profile. |
 | 2026-06-09 | **More notifications + Clear all.** Migration `0033` adds community-broadcast notification triggers for the newer engines — **a posted dish, a new tiffin service, a new sports group, and a PUBLIC document** (private docs stay silent) — matching the existing post/listing/poll/DM fan-out. New `NotificationType`s (`dish`/`tiffin`/`sport`/`document`) with their own icons. Also added **`profiles.notifications_cleared_at`** + a **"Clear all"** button in the bell modal: it stamps the watermark so everything up to that moment is hidden from your own bell (new ones still arrive). All defensive pre-migration. |
 | 2026-06-09 | **Society badge moved into the chrome.** Removed the society-name badge from the body (Home greeting, You header) and put it in the persistent chrome so it's always visible and frees body space: **mobile** → in the `TopBar` next to the theme switcher; **desktop** → at the top of the `NavRail` under the Aangan wordmark (the "workspace name" spot; fades out when the rail is collapsed). Also shown in `ScreenHeader` (a small pill above the title) on mobile community/detail pages — suppressed via `hideSociety` on the tab screens that already show it in the TopBar — so the society name is visible on every mobile screen. Added `community` to the auth context (single shared fetch) so all chrome reads it without duplicate queries. |

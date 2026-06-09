@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { daysLabel } from './TiffinCard';
+import { PayButton } from './PayButton';
 import { Avatar, Badge, Button, Container, VegMark } from './ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
@@ -161,6 +162,16 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
                   <View className="mt-2.5 flex-row items-center justify-between border-t border-line pt-2.5">
                     <Badge label={s.paused ? '⏸ Paused' : `${s.qty}/day · Active`} tone={s.paused ? 'neutral' : 'success'} />
                     <View className="flex-row items-center gap-3">
+                      {plan?.chef_user_id ? (
+                        <PayButton
+                          payee={{ id: plan.chef_user_id, name: plan.chef?.name ?? 'Cook', upi: plan.chef?.upi ?? null }}
+                          amount={(plan.price ?? 0) * s.qty}
+                          note={`${plan.title} tiffin`}
+                          context={{ type: 'tiffin', id: plan.id }}
+                          label="Pay"
+                          size="sm"
+                        />
+                      ) : null}
                       {wa ? (
                         <Pressable onPress={() => openUrl(waLink(wa, `Hi ${plan?.chef?.name ?? ''}! About my ${plan?.title ?? ''} tiffin…`))} hitSlop={6}>
                           <Ionicons name="logo-whatsapp" size={18} color={c.success} />

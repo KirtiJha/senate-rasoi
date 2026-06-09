@@ -129,6 +129,7 @@ function DesktopShell() {
           <Stack.Screen name="sports" />
           <Stack.Screen name="sports/[id]" />
           <Stack.Screen name="documents" />
+          <Stack.Screen name="payments" />
           <Stack.Screen name="messages/index" />
           <Stack.Screen name="messages/new" />
           <Stack.Screen name="messages/[threadId]" />

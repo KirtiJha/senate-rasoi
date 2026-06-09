@@ -26,7 +26,7 @@ export interface NewTiffinPlan {
 export async function listTiffinPlans(communityId: string = COMMUNITY_ID): Promise<TiffinPlanWithChef[]> {
   const { data, error } = await supabase
     .from('tiffin_plans')
-    .select('*, chef:profiles!tiffin_plans_chef_user_id_fkey(name,flat,whatsapp)')
+    .select('*, chef:profiles!tiffin_plans_chef_user_id_fkey(name,flat,whatsapp,upi)')
     .eq('community_id', communityId)
     .eq('active', true)
     .order('created_at', { ascending: false });
@@ -91,7 +91,7 @@ export async function subscribe(
 export async function listMySubscriptions(userId: string): Promise<SubscriptionWithPlan[]> {
   const { data, error } = await supabase
     .from('subscriptions')
-    .select('*, plan:tiffin_plans(*, chef:profiles!tiffin_plans_chef_user_id_fkey(name,flat,whatsapp))')
+    .select('*, plan:tiffin_plans(*, chef:profiles!tiffin_plans_chef_user_id_fkey(name,flat,whatsapp,upi))')
     .eq('subscriber_user_id', userId)
     .order('created_at', { ascending: false });
   if (error) throw error;

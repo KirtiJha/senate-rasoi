@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Empty } from './Empty';
+import { PayButton } from './PayButton';
 import { Avatar, Badge, Button, Container } from './ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
@@ -112,6 +113,16 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
                 <View className="mt-2.5 flex-row items-center justify-between border-t border-line pt-2.5">
                   <Badge label={st.label} tone={st.tone} />
                   <View className="flex-row items-center gap-3">
+                    {active && o.dish?.chef_user_id ? (
+                      <PayButton
+                        payee={{ id: o.dish.chef_user_id, name: o.dish.chef_name, upi: o.dish.upi }}
+                        amount={(o.dish.price ?? 0) * o.qty}
+                        note={`${o.dish.dish_name} × ${o.qty}`}
+                        context={{ type: 'dish', id: o.id }}
+                        label="Pay"
+                        size="sm"
+                      />
+                    ) : null}
                     {active && wa ? (
                       <Pressable onPress={() => openUrl(waLink(wa, `Hi ${o.dish?.chef_name ?? ''}! About my Aangan order for ${o.dish?.dish_name ?? ''}…`))} hitSlop={6}>
                         <Ionicons name="logo-whatsapp" size={18} color={c.success} />

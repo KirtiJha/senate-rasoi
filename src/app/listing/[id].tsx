@@ -6,6 +6,7 @@ import { Alert, Linking, Platform, Pressable, ScrollView, Text, View } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { InquiryModal } from '../../components/listings/InquiryModal';
 import { ListingChat } from '../../components/listings/ListingChat';
+import { PayButton } from '../../components/PayButton';
 import { Avatar, Badge, Button, Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -308,6 +309,20 @@ export default function ListingDetailScreen() {
           className="absolute bottom-0 left-0 right-0 border-t border-line bg-bg px-4 pt-3"
           style={{ paddingBottom: insets.bottom + 12 }}
         >
+          {listing.price != null && listing.owner?.upi ? (
+            <View className="mb-2">
+              <PayButton
+                payee={{ id: listing.owner_user_id, name: ownerName, upi: listing.owner.upi }}
+                amount={listing.price}
+                note={listing.title}
+                context={{ type: 'listing', id: listing.id }}
+                label={`Pay ₹${listing.price.toLocaleString('en-IN')} via UPI`}
+                variant="outline"
+                size="lg"
+                fullWidth
+              />
+            </View>
+          ) : null}
           <Button
             label={cat.ctaLabel}
             icon="logo-whatsapp"

@@ -28,6 +28,7 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   tiffin: { icon: 'repeat', color: '#F59E0B' },
   sport: { icon: 'football', color: '#16A34A' },
   document: { icon: 'folder', color: '#0EA5E9' },
+  payment: { icon: 'wallet', color: '#16A34A' },
 };
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {

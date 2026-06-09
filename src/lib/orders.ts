@@ -10,7 +10,7 @@ const CANCEL_WINDOW_MS = 5 * 60 * 1000;
 export async function listMyOrders(userId: string): Promise<MyOrder[]> {
   const { data, error } = await supabase
     .from('orders')
-    .select('*, dish:dishes(dish_name,slot,price,photo_url,chef_name,whatsapp,chef_user_id)')
+    .select('*, dish:dishes(dish_name,slot,price,photo_url,chef_name,whatsapp,chef_user_id,upi)')
     .eq('orderer_user_id', userId)
     .order('created_at', { ascending: false });
   if (error) throw error;
