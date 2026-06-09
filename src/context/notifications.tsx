@@ -5,7 +5,7 @@ import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useResponsive } from '../components/ui';
 import {
-  NotificationItem, NotificationType, fetchNotifications, markRead, subscribeNotifications,
+  NotificationItem, NotificationType, fetchNotifications, markRead, markUnread, subscribeNotifications,
 } from '../lib/notifications';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { useThemeColors } from '../theme';
@@ -56,12 +56,20 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     if (item.route) router.push(item.route as any);
   };
 
-  const onMarkAll = async () => {
+  // Toggle a single notification read ↔ unread without navigating.
+  const onToggleRead = (item: NotificationItem) => {
     if (!userId) return;
-    const ids = items.filter((i) => !i.read).map((i) => i.id);
+    const next = !item.read;
+    (next ? markRead(userId, [item.id]) : markUnread(userId, [item.id])).catch(() => {});
+    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, read: next } : i)));
+  };
+
+  const onMarkAll = async (read: boolean) => {
+    if (!userId) return;
+    const ids = items.filter((i) => i.read !== read).map((i) => i.id);
     if (!ids.length) return;
-    markRead(userId, ids).catch(() => {});
-    setItems((prev) => prev.map((i) => ({ ...i, read: true })));
+    (read ? markRead(userId, ids) : markUnread(userId, ids)).catch(() => {});
+    setItems((prev) => prev.map((i) => ({ ...i, read })));
   };
 
   return (
@@ -73,6 +81,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         unreadCount={unreadCount}
         onClose={() => setVisible(false)}
         onItemPress={onItemPress}
+        onToggleRead={onToggleRead}
         onMarkAll={onMarkAll}
       />
     </Ctx.Provider>
@@ -80,14 +89,15 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 }
 
 function NotificationsModal({
-  visible, items, unreadCount, onClose, onItemPress, onMarkAll,
+  visible, items, unreadCount, onClose, onItemPress, onToggleRead, onMarkAll,
 }: {
   visible: boolean;
   items: NotificationItem[];
   unreadCount: number;
   onClose: () => void;
   onItemPress: (i: NotificationItem) => void;
-  onMarkAll: () => void;
+  onToggleRead: (i: NotificationItem) => void;
+  onMarkAll: (read: boolean) => void;
 }) {
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
@@ -124,8 +134,12 @@ function NotificationsModal({
             <Ionicons name="notifications-outline" size={20} color={c.ink} />
             <Text className="flex-1 font-display-x text-[18px] text-ink">Notifications</Text>
             {unreadCount > 0 ? (
-              <Pressable onPress={onMarkAll} hitSlop={6} className="rounded-full bg-inset px-2.5 py-1 active:opacity-70">
+              <Pressable onPress={() => onMarkAll(true)} hitSlop={6} className="rounded-full bg-inset px-2.5 py-1 active:opacity-70">
                 <Text className="text-[12px] font-sans-sb text-accent">Mark all read</Text>
+              </Pressable>
+            ) : items.length > 0 ? (
+              <Pressable onPress={() => onMarkAll(false)} hitSlop={6} className="rounded-full bg-inset px-2.5 py-1 active:opacity-70">
+                <Text className="text-[12px] font-sans-sb text-muted">Mark all unread</Text>
               </Pressable>
             ) : null}
             <Pressable onPress={onClose} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full active:bg-inset">
@@ -157,7 +171,17 @@ function NotificationsModal({
                       {item.body ? <Text className="text-[13px] text-muted" numberOfLines={2}>{item.body}</Text> : null}
                       <Text className="mt-0.5 text-[11px] text-faint">{timeAgo(item.created_at)}</Text>
                     </View>
-                    {!item.read ? <View className="mt-1.5 h-2 w-2 rounded-full" style={{ backgroundColor: c.accent }} /> : null}
+                    {/* Per-row read/unread toggle (doesn't navigate) */}
+                    <Pressable
+                      onPress={() => onToggleRead(item)}
+                      hitSlop={8}
+                      accessibilityLabel={item.read ? 'Mark as unread' : 'Mark as read'}
+                      className="ml-1 h-7 w-7 items-center justify-center rounded-full active:bg-inset"
+                    >
+                      {item.read
+                        ? <Ionicons name="ellipse-outline" size={14} color={c.faint} />
+                        : <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: c.accent }} />}
+                    </Pressable>
                   </Pressable>
                 );
               })}

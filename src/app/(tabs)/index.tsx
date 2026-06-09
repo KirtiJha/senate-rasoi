@@ -7,6 +7,7 @@ import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
+import { useNotifications } from '../../context/notifications';
 import { useUnreadDms } from '../../context/unread';
 import { Community, fetchCommunityById } from '../../lib/communities';
 import { PostRow, fetchLatestAnnouncement } from '../../lib/posts';
@@ -61,6 +62,7 @@ export default function HomeScreen() {
   const { profile, communityId } = useAuth();
   const c = useThemeColors();
   const unread = useUnreadDms();
+  const { unreadCount: notifCount, open: openNotifs } = useNotifications();
   const [community, setCommunity] = useState<Community | null>(null);
   const [updateBanner, setUpdateBanner] = useState<AppVersion | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -111,11 +113,32 @@ export default function HomeScreen() {
       <Container>
         {/* Header */}
         <View className="mb-6">
-          <View>
-            <Text className="text-[13px] font-sans-md text-accent">{greeting}</Text>
-            <Text className="font-display-x text-[28px] leading-9 text-ink">
-              {profile?.name ? `Hi, ${profile.name.split(' ')[0]} 👋` : 'Your neighbourhood hub'}
-            </Text>
+          <View className="flex-row items-start justify-between">
+            <View className="flex-1">
+              <Text className="text-[13px] font-sans-md text-accent">{greeting}</Text>
+              <Text className="font-display-x text-[28px] leading-9 text-ink">
+                {profile?.name ? `Hi, ${profile.name.split(' ')[0]} 👋` : 'Your neighbourhood hub'}
+              </Text>
+            </View>
+            {!isDesktop ? (
+              <Pressable
+                onPress={openNotifs}
+                className="ml-3 mt-1 h-10 w-10 items-center justify-center rounded-full bg-inset active:opacity-70"
+                accessibilityLabel="Notifications"
+              >
+                <Ionicons name="notifications-outline" size={20} color={c.muted} />
+                {notifCount > 0 ? (
+                  <View
+                    className="absolute items-center justify-center rounded-full"
+                    style={{ top: 1, right: 0, minWidth: 16, height: 16, paddingHorizontal: 3, backgroundColor: c.accent }}
+                  >
+                    <Text style={{ color: '#fff', fontSize: 9, fontFamily: 'HankenGrotesk_700Bold' }}>
+                      {notifCount > 9 ? '9+' : notifCount}
+                    </Text>
+                  </View>
+                ) : null}
+              </Pressable>
+            ) : null}
           </View>
 
           {/* Society badge */}

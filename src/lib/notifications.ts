@@ -20,9 +20,9 @@ export interface NotificationItem extends NotificationRow {
 }
 
 /**
- * Notifications visible to the user (community broadcasts + DMs to them), not
- * authored by them, since they joined — each flagged read/unread from their
- * own notification_reads rows.
+ * Notifications visible to the user (community broadcasts + DMs to them) since
+ * they joined — including their own actions — each flagged read/unread from
+ * their own notification_reads rows.
  */
 export async function fetchNotifications(
   userId: string,
@@ -33,7 +33,6 @@ export async function fetchNotifications(
     supabase
       .from('notifications')
       .select('*')
-      .neq('actor_id', userId)
       .gte('created_at', joinedAt)
       .order('created_at', { ascending: false })
       .limit(limit),
@@ -52,6 +51,17 @@ export async function markRead(userId: string, ids: string[]): Promise<void> {
   const { error } = await supabase
     .from('notification_reads')
     .upsert(rows, { onConflict: 'notification_id,user_id', ignoreDuplicates: true });
+  if (error) throw error;
+}
+
+/** Mark notifications unread again for a user (removes the read rows). */
+export async function markUnread(userId: string, ids: string[]): Promise<void> {
+  if (!ids.length) return;
+  const { error } = await supabase
+    .from('notification_reads')
+    .delete()
+    .eq('user_id', userId)
+    .in('notification_id', ids);
   if (error) throw error;
 }
 
