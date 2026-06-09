@@ -60,11 +60,13 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
     setRefreshing(false);
   }, [load]);
 
-  const act = async (orderId: string, status: OrderStatus, msg: string) => {
+  const act = async (orderId: string, status: OrderStatus, msg: string, wa?: string | null, dishName?: string) => {
     try {
       haptics.success();
       await setOrderStatus(orderId, status);
       toast.show(msg);
+      // Open WhatsApp so the chef can confirm the new status to the customer.
+      if (wa && dishName) openUrl(waLink(wa, statusMessageForFoodie(dishName, status)));
       await load();
     } catch (e) {
       console.error(e);
@@ -116,7 +118,7 @@ function KitchenDishCard({
 }: {
   dish: DishRow;
   orders: ChefOrder[];
-  onAct: (orderId: string, status: OrderStatus, msg: string) => void;
+  onAct: (orderId: string, status: OrderStatus, msg: string, wa?: string | null, dishName?: string) => void;
 }) {
   const c = useThemeColors();
   const active = orders.filter((o) => ACTIVE_STATUSES.includes(o.status));
@@ -174,18 +176,18 @@ function KitchenDishCard({
                     <Pressable onPress={() => onAct(o.id, 'rejected', 'Declined — plates released')} className="h-9 w-9 items-center justify-center rounded-full border border-line active:bg-inset">
                       <Ionicons name="close" size={18} color={c.muted} />
                     </Pressable>
-                    <Pressable onPress={() => onAct(o.id, 'accepted', 'Order confirmed ✓')} className="h-9 flex-row items-center gap-1 rounded-full bg-success px-3 active:opacity-90">
+                    <Pressable onPress={() => onAct(o.id, 'accepted', 'Order confirmed ✓', wa, dish.dish_name)} className="h-9 flex-row items-center gap-1 rounded-full bg-success px-3 active:opacity-90">
                       <Ionicons name="checkmark" size={16} color="#fff" />
                       <Text className="font-sans-sb text-[12px] text-white">Accept</Text>
                     </Pressable>
                   </View>
                 ) : o.status === 'accepted' ? (
-                  <Pressable onPress={() => onAct(o.id, 'cooking', 'Cooking started 🍳')} className="h-9 flex-row items-center gap-1 rounded-full bg-accent px-3 active:bg-accent-press">
+                  <Pressable onPress={() => onAct(o.id, 'cooking', 'Cooking started 🍳', wa, dish.dish_name)} className="h-9 flex-row items-center gap-1 rounded-full bg-accent px-3 active:bg-accent-press">
                     <Ionicons name="flame-outline" size={15} color={c.onAccent} />
                     <Text className="font-sans-sb text-[12px] text-on-accent">Cook</Text>
                   </Pressable>
                 ) : o.status === 'cooking' ? (
-                  <Pressable onPress={() => onAct(o.id, 'delivered', 'Marked delivered 🍽️')} className="h-9 flex-row items-center gap-1 rounded-full bg-success px-3 active:opacity-90">
+                  <Pressable onPress={() => onAct(o.id, 'delivered', 'Marked delivered 🍽️', wa, dish.dish_name)} className="h-9 flex-row items-center gap-1 rounded-full bg-success px-3 active:opacity-90">
                     <Ionicons name="bag-check-outline" size={15} color="#fff" />
                     <Text className="font-sans-sb text-[12px] text-white">Delivered</Text>
                   </Pressable>

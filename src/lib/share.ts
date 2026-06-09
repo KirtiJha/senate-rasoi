@@ -9,7 +9,7 @@ export async function shareDish(dish: DishRow): Promise<'shared' | 'unsupported'
   const message =
     `${SLOT_EMOJI[dish.slot]} ${dish.dish_name} — ₹${dish.price}/plate\n` +
     `by ${dish.chef_name} (Flat ${dish.flat})\n` +
-    `${dish.plates_left} plates left · order on Senate Chef 🍽️`;
+    `${dish.plates_left} plates left · order on Aangan 🍽️`;
 
   if (Platform.OS === 'web') {
     const nav = globalThis.navigator as Navigator | undefined;

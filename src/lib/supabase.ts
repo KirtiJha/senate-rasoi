@@ -14,7 +14,7 @@ export const isSupabaseConfigured =
 
 if (!isSupabaseConfigured && __DEV__) {
   console.warn(
-    '[Senate Chef] Supabase is not configured. Copy .env.example to .env and fill in ' +
+    '[Aangan] Supabase is not configured. Copy .env.example to .env and fill in ' +
       'EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY.'
   );
 }

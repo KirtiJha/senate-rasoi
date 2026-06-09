@@ -208,7 +208,7 @@ export function waLink(phone: string | null | undefined, message: string): strin
 /** Foodie → chef, sent when placing an order. */
 export function buildWhatsAppOrderLink(dish: DishRow, qty: number): string {
   const msg =
-    `Hi ${dish.chef_name}! I just ordered on Senate Rasoi 🍽️\n\n` +
+    `Hi ${dish.chef_name}! I just ordered on Aangan 🍽️\n\n` +
     `*${dish.dish_name}* × ${qty} = ₹${dish.price * qty}\n\n` +
     `Please confirm. Thanks!`;
   return waLink(dish.whatsapp, msg);
@@ -224,5 +224,5 @@ export function statusMessageForFoodie(dishName: string, status: OrderStatus): s
     delivered: `Your *${dishName}* is delivered — enjoy! 🍽️`,
     cancelled: `Your order for *${dishName}* has been cancelled.`,
   };
-  return `Senate Rasoi: ${line[status]}`;
+  return `Aangan: ${line[status]}`;
 }

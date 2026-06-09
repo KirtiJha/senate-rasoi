@@ -12,7 +12,11 @@ import { buildInquiryWhatsAppLink, fetchAllListings } from '../../lib/listings';
 import { SERVICES, getService } from '../../lib/services';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { ListingRow } from '../../lib/types';
-import { layout, useThemeColors } from '../../theme';
+import { useThemeColors } from '../../theme';
+
+// A touch narrower than the global max so the table columns don't spread
+// awkwardly far apart on very wide screens.
+const LIST_MAX = 1040;
 
 export default function AllListingsScreen() {
   const router = useRouter();
@@ -60,40 +64,50 @@ export default function AllListingsScreen() {
     toast.show('Opening WhatsApp 📲');
   };
 
+  const categoryChips = (
+    <>
+      <Pressable
+        onPress={() => setCategory(null)}
+        className={`rounded-full px-3 py-1.5 ${!category ? 'bg-accent' : 'bg-inset'}`}
+      >
+        <Text className={`text-[12px] font-sans-sb ${!category ? 'text-on-accent' : 'text-muted'}`}>All</Text>
+      </Pressable>
+      {listingServices.map((svc) => (
+        <Pressable
+          key={svc.key}
+          onPress={() => setCategory(category === svc.key ? null : svc.key)}
+          className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
+          style={{ backgroundColor: category === svc.key ? svc.color : svc.color + '18' }}
+        >
+          <Ionicons name={svc.icon as any} size={11} color={category === svc.key ? '#fff' : svc.color} />
+          <Text className="text-[12px] font-sans-sb" style={{ color: category === svc.key ? '#fff' : svc.color }}>
+            {svc.label}
+          </Text>
+        </Pressable>
+      ))}
+    </>
+  );
+
   return (
     <View className="flex-1 bg-bg">
-      {/* Header (top-level tab — no back button) */}
+      {/* Header + chips — aligned to the same max width as the table */}
       <View style={{ paddingTop: isDesktop ? insets.top + 16 : 12 }} className="border-b border-line bg-bg pb-3">
-        <View className="flex-row items-center gap-2 px-4">
-          <Text className="flex-1 font-display-x text-[22px] text-ink">All listings</Text>
-          <Text className="text-[12px] font-sans-md text-faint">{filtered.length} item{filtered.length === 1 ? '' : 's'}</Text>
+        <View className="w-full self-center px-4" style={{ maxWidth: LIST_MAX }}>
+          <View className="flex-row items-center gap-2">
+            <Text className="flex-1 font-display-x text-[22px] text-ink">All listings</Text>
+            <Text className="text-[12px] font-sans-md text-faint">{filtered.length} item{filtered.length === 1 ? '' : 's'}</Text>
+          </View>
+          {isDesktop ? (
+            <View className="mt-2.5 flex-row flex-wrap" style={{ gap: 6 }}>{categoryChips}</View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2.5 -mx-4 px-4" contentContainerStyle={{ gap: 6 }}>
+              {categoryChips}
+            </ScrollView>
+          )}
         </View>
-
-        {/* Category filter chips */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2.5" contentContainerStyle={{ gap: 6, paddingHorizontal: 16 }}>
-          <Pressable
-            onPress={() => setCategory(null)}
-            className={`rounded-full px-3 py-1.5 ${!category ? 'bg-accent' : 'bg-inset'}`}
-          >
-            <Text className={`text-[12px] font-sans-sb ${!category ? 'text-on-accent' : 'text-muted'}`}>All</Text>
-          </Pressable>
-          {listingServices.map((svc) => (
-            <Pressable
-              key={svc.key}
-              onPress={() => setCategory(category === svc.key ? null : svc.key)}
-              className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
-              style={{ backgroundColor: category === svc.key ? svc.color : svc.color + '18' }}
-            >
-              <Ionicons name={svc.icon as any} size={11} color={category === svc.key ? '#fff' : svc.color} />
-              <Text className="text-[12px] font-sans-sb" style={{ color: category === svc.key ? '#fff' : svc.color }}>
-                {svc.label}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
       </View>
 
-      <View style={{ flex: 1, width: '100%', maxWidth: layout.maxContent, alignSelf: 'center' }}>
+      <View style={{ flex: 1, width: '100%', maxWidth: LIST_MAX, alignSelf: 'center' }}>
         <FlashList
           data={loading ? [] : filtered}
           keyExtractor={(item: ListingRow) => item.id}
@@ -101,15 +115,33 @@ export default function AllListingsScreen() {
             <ListingTableRow listing={item} isDesktop={isDesktop} onOpen={() => openListing(item)} onContact={() => contact(item)} c={c} />
           )}
           ListHeaderComponent={
-            isDesktop && filtered.length > 0 ? (
-              <View className="flex-row items-center gap-3 px-3 pb-2 pt-1">
-                <View style={{ width: 36 }} />
-                <Text className="flex-1 text-[11px] font-sans-sb uppercase tracking-wider text-faint">Listing</Text>
-                <Text style={{ width: 130 }} className="text-[11px] font-sans-sb uppercase tracking-wider text-faint">Category</Text>
-                <Text style={{ width: 100 }} className="text-[11px] font-sans-sb uppercase tracking-wider text-faint">Price</Text>
-                <View style={{ width: 186 }} />
-              </View>
-            ) : null
+            <>
+              {/* Home Food is a separate engine (dishes) — surface it here */}
+              {category === null ? (
+                <Pressable
+                  onPress={() => router.push('/food' as any)}
+                  className="mb-3 mt-1 flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3.5 active:bg-inset"
+                >
+                  <View className="h-11 w-11 items-center justify-center rounded-2xl" style={{ backgroundColor: c.accent + '20' }}>
+                    <Text style={{ fontSize: 22 }}>🍽️</Text>
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-sans-bold text-[15px] text-ink">Home Food</Text>
+                    <Text className="text-[12px] text-muted">Dishes & tiffins from your neighbours</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={c.faint} />
+                </Pressable>
+              ) : null}
+              {isDesktop && filtered.length > 0 ? (
+                <View className="flex-row items-center gap-3 px-3 pb-2 pt-1">
+                  <View style={{ width: 36 }} />
+                  <Text className="flex-1 text-[11px] font-sans-sb uppercase tracking-wider text-faint">Listing</Text>
+                  <Text style={{ width: 130 }} className="text-[11px] font-sans-sb uppercase tracking-wider text-faint">Category</Text>
+                  <Text style={{ width: 100 }} className="text-[11px] font-sans-sb uppercase tracking-wider text-faint">Price</Text>
+                  <View style={{ width: 186 }} />
+                </View>
+              ) : null}
+            </>
           }
           contentContainerStyle={{ paddingHorizontal: 13, paddingTop: 10, paddingBottom: 40 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}

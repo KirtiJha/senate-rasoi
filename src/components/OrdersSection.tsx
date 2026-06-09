@@ -113,7 +113,7 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
                   <Badge label={st.label} tone={st.tone} />
                   <View className="flex-row items-center gap-3">
                     {active && wa ? (
-                      <Pressable onPress={() => openUrl(waLink(wa, `Hi ${o.dish?.chef_name ?? ''}! About my Senate Rasoi order for ${o.dish?.dish_name ?? ''}…`))} hitSlop={6}>
+                      <Pressable onPress={() => openUrl(waLink(wa, `Hi ${o.dish?.chef_name ?? ''}! About my Aangan order for ${o.dish?.dish_name ?? ''}…`))} hitSlop={6}>
                         <Ionicons name="logo-whatsapp" size={18} color={c.success} />
                       </Pressable>
                     ) : null}

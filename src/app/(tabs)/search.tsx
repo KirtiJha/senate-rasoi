@@ -69,6 +69,30 @@ export default function SearchScreen() {
   const showListingGrid = mode === 'listings' && hasSearched && !searching && results.length > 0;
   const showPostList = mode === 'posts' && hasSearched && !searching && postResults.length > 0;
 
+  const catChips = (
+    <>
+      <Pressable
+        onPress={() => setSelectedCategory(null)}
+        className={`rounded-full px-3 py-1.5 ${!selectedCategory ? 'bg-accent' : 'bg-inset'}`}
+      >
+        <Text className={`text-[12px] font-sans-sb ${!selectedCategory ? 'text-on-accent' : 'text-muted'}`}>All</Text>
+      </Pressable>
+      {listingServices.map((svc) => (
+        <Pressable
+          key={svc.key}
+          onPress={() => setSelectedCategory(selectedCategory === svc.key ? null : svc.key)}
+          className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
+          style={{ backgroundColor: selectedCategory === svc.key ? svc.color : svc.color + '18' }}
+        >
+          <Ionicons name={svc.icon as any} size={11} color={selectedCategory === svc.key ? '#fff' : svc.color} />
+          <Text className="text-[12px] font-sans-sb" style={{ color: selectedCategory === svc.key ? '#fff' : svc.color }}>
+            {svc.label}
+          </Text>
+        </Pressable>
+      ))}
+    </>
+  );
+
   return (
     <View className="flex-1 bg-bg">
       {/* Search bar */}
@@ -115,29 +139,15 @@ export default function SearchScreen() {
           ))}
         </View>
 
-        {/* Category filter chips (listings only) */}
+        {/* Category filter chips (listings only) — wrap on desktop so all are reachable */}
         {mode === 'listings' ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2.5" contentContainerStyle={{ gap: 6 }}>
-            <Pressable
-              onPress={() => setSelectedCategory(null)}
-              className={`rounded-full px-3 py-1.5 ${!selectedCategory ? 'bg-accent' : 'bg-inset'}`}
-            >
-              <Text className={`text-[12px] font-sans-sb ${!selectedCategory ? 'text-on-accent' : 'text-muted'}`}>All</Text>
-            </Pressable>
-            {listingServices.map((svc) => (
-              <Pressable
-                key={svc.key}
-                onPress={() => setSelectedCategory(selectedCategory === svc.key ? null : svc.key)}
-                className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
-                style={{ backgroundColor: selectedCategory === svc.key ? svc.color : svc.color + '18' }}
-              >
-                <Ionicons name={svc.icon as any} size={11} color={selectedCategory === svc.key ? '#fff' : svc.color} />
-                <Text className="text-[12px] font-sans-sb" style={{ color: selectedCategory === svc.key ? '#fff' : svc.color }}>
-                  {svc.label}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
+          isDesktop ? (
+            <View className="mt-2.5 flex-row flex-wrap" style={{ gap: 6 }}>{catChips}</View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2.5" contentContainerStyle={{ gap: 6 }}>
+              {catChips}
+            </ScrollView>
+          )
         ) : null}
       </View>
 
