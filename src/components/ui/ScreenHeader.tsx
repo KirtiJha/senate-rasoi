@@ -43,10 +43,10 @@ export function ScreenHeader({
       {showSociety ? (
         <View
           className="mb-2 flex-row items-center gap-1 self-start rounded-full px-2.5 py-1"
-          style={{ backgroundColor: '#7C3AED1A', borderWidth: 1, borderColor: '#7C3AED55', maxWidth: '100%' }}
+          style={{ backgroundColor: '#0D948822', borderWidth: 1, borderColor: '#0D948855', maxWidth: '100%' }}
         >
-          <Ionicons name="business" size={11} color="#7C3AED" />
-          <Text className="text-[11px] font-sans-sb" numberOfLines={1} style={{ color: '#7C3AED', flexShrink: 1 }}>{community!.name}</Text>
+          <Ionicons name="business" size={11} color="#0D9488" />
+          <Text className="text-[11px] font-sans-sb" numberOfLines={1} style={{ color: '#0D9488', flexShrink: 1 }}>{community!.name}</Text>
         </View>
       ) : null}
 

@@ -253,12 +253,12 @@ export default function PostScreen({
         contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 24, paddingHorizontal: 16, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
-        <Container narrow>
+        <Container>
           <Text className="mb-1 text-[13px] font-sans-md text-accent">Share with your society</Text>
           <Text className="mb-6 font-display-x text-[28px] text-ink">What are you posting?</Text>
           <View className="flex-row flex-wrap" style={{ marginHorizontal: -5 }}>
             {SERVICES.map((svc) => (
-              <View key={svc.key} style={{ width: '50%', padding: 5 }}>
+              <View key={svc.key} style={{ width: isDesktop ? '33.333%' : '50%', padding: 5 }}>
                 <Pressable
                   onPress={() => setSelectedCategory(svc.key)}
                   className="overflow-hidden rounded-2xl bg-surface active:opacity-75"

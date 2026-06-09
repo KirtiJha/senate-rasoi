@@ -30,10 +30,10 @@ export function TopBar({ live = false }: { live?: boolean }) {
           {community ? (
             <View
               className="flex-row items-center gap-1 rounded-full px-2.5 py-1"
-              style={{ backgroundColor: '#7C3AED1A', borderWidth: 1, borderColor: '#7C3AED55', maxWidth: 150 }}
+              style={{ backgroundColor: '#0D948822', borderWidth: 1, borderColor: '#0D948855', maxWidth: 150 }}
             >
-              <Ionicons name="business" size={11} color="#7C3AED" />
-              <Text className="text-[11px] font-sans-sb" numberOfLines={1} style={{ color: '#7C3AED' }}>{community.name}</Text>
+              <Ionicons name="business" size={11} color="#0D9488" />
+              <Text className="text-[11px] font-sans-sb" numberOfLines={1} style={{ color: '#0D9488' }}>{community.name}</Text>
             </View>
           ) : null}
           {live ? (
