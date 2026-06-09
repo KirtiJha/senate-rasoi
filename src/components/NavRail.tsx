@@ -267,25 +267,6 @@ export function NavRail() {
             </Link>
           </Animated.View>
           <Pressable
-            onPress={openNotifs}
-            style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}
-            accessibilityLabel="Notifications"
-          >
-            <Ionicons name="notifications-outline" size={19} color={colors.muted} />
-            {notifCount > 0 ? (
-              <View
-                style={{
-                  position: 'absolute', top: 1, right: 1, minWidth: 15, height: 15, paddingHorizontal: 3,
-                  borderRadius: 8, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center',
-                }}
-              >
-                <Text style={{ color: '#fff', fontSize: 9, fontFamily: 'HankenGrotesk_700Bold' }}>
-                  {notifCount > 9 ? '9+' : notifCount}
-                </Text>
-              </View>
-            ) : null}
-          </Pressable>
-          <Pressable
             onPress={handleToggle}
             style={{
               width: 28,
@@ -334,6 +315,38 @@ export function NavRail() {
 
         {/* ── Flex spacer ── */}
         <View style={{ flex: 1, minHeight: 16 }} />
+
+        {/* ── Notifications (always accessible, above New Post) ── */}
+        <View style={{ paddingHorizontal: 10, marginBottom: 2 }}>
+          <Pressable
+            onPress={openNotifs}
+            style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 14, paddingVertical: 10, overflow: 'hidden' }}
+            accessibilityLabel="Notifications"
+          >
+            <Animated.View style={{ marginLeft: iconMarginL, paddingLeft: 12 }}>
+              <View>
+                <Ionicons name="notifications-outline" size={21} color={notifCount > 0 ? colors.accent : colors.muted} />
+                {notifCount > 0 ? (
+                  <View
+                    style={{
+                      position: 'absolute', top: -5, right: -8, minWidth: 16, height: 16, paddingHorizontal: 3,
+                      borderRadius: 8, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ color: '#fff', fontSize: 9, fontFamily: 'HankenGrotesk_700Bold' }}>
+                      {notifCount > 9 ? '9+' : notifCount}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+            </Animated.View>
+            <Animated.View style={{ flex: 1, overflow: 'hidden', maxWidth: labelMaxW, opacity: labelOpacity, marginLeft: 10, paddingRight: 12 }}>
+              <Text numberOfLines={1} style={{ fontFamily: 'HankenGrotesk_500Medium', fontSize: 15, color: colors.muted }}>
+                Notifications
+              </Text>
+            </Animated.View>
+          </Pressable>
+        </View>
 
         {/* ── New Post CTA ── */}
         <View style={{ paddingHorizontal: 10, marginBottom: 6 }}>
