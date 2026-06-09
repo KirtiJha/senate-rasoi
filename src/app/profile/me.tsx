@@ -26,6 +26,8 @@ export default function ProfileScreen() {
   const [upi, setUpi] = useState(profile?.upi ?? '');
   const [residentType, setResidentType] = useState<'owner' | 'tenant' | null>(profile?.resident_type ?? null);
   const [profession, setProfession] = useState(profile?.profession ?? '');
+  const [vehicleNo, setVehicleNo] = useState(profile?.vehicle_no ?? '');
+  const [showInDirectory, setShowInDirectory] = useState(profile?.show_in_directory ?? true);
   const [savingProfile, setSavingProfile] = useState(false);
 
   // PIN change state
@@ -51,6 +53,8 @@ export default function ProfileScreen() {
       setUpi(profile.upi ?? '');
       setResidentType(profile.resident_type ?? null);
       setProfession(profile.profession ?? '');
+      setVehicleNo(profile.vehicle_no ?? '');
+      setShowInDirectory(profile.show_in_directory ?? true);
     }
   }, [profile]);
 
@@ -59,7 +63,12 @@ export default function ProfileScreen() {
     setSavingProfile(true);
     try {
       await saveProfile({ name: name.trim(), flat: flat.trim() || null, whatsapp: whatsapp.trim() || null, upi: upi.trim() || null });
-      if (profile) await updateResidentInfo(profile.id, residentType, profession.trim() || null);
+      if (profile) await updateResidentInfo(profile.id, {
+        resident_type: residentType,
+        profession: profession.trim() || null,
+        vehicle_no: vehicleNo.trim() || null,
+        show_in_directory: showInDirectory,
+      });
       await refreshProfile();
       toast.show('Profile updated ✅');
     } catch {
@@ -185,6 +194,21 @@ export default function ProfileScreen() {
               ))}
             </View>
             <Field label="Profession" hint="Shown in the resident directory" placeholder="e.g. Doctor, CA, Teacher" value={profession} onChangeText={setProfession} />
+            <Field label="Vehicle number" hint="Optional — shown in the directory" autoCapitalize="characters" placeholder="MH 12 AB 1234" value={vehicleNo} onChangeText={setVehicleNo} />
+
+            <Pressable
+              onPress={() => setShowInDirectory((v) => !v)}
+              className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-inset px-4 py-3"
+            >
+              <Ionicons name={showInDirectory ? 'eye-outline' : 'eye-off-outline'} size={18} color={showInDirectory ? c.accent : c.muted} />
+              <View className="flex-1">
+                <Text className="font-sans-sb text-[14px] text-ink">Show me in the resident directory</Text>
+                <Text className="text-[12px] text-muted">{showInDirectory ? 'Neighbours can find your flat & contact' : 'You are hidden from the directory'}</Text>
+              </View>
+              <View className={`h-6 w-10 rounded-full p-0.5 ${showInDirectory ? 'bg-accent' : 'bg-line'}`}>
+                <View className={`h-5 w-5 rounded-full bg-white ${showInDirectory ? 'self-end' : 'self-start'}`} />
+              </View>
+            </Pressable>
             <Button label={savingProfile ? 'Saving…' : 'Save Changes'} loading={savingProfile} onPress={handleSaveProfile} fullWidth />
           </SectionCard>
 

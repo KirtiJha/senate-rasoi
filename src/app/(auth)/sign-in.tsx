@@ -26,6 +26,7 @@ export default function SignInScreen() {
   const [upi, setUpi] = useState('');
   const [residentType, setResidentType] = useState<'owner' | 'tenant' | null>(null);
   const [profession, setProfession] = useState('');
+  const [vehicleNo, setVehicleNo] = useState('');
   const [busy, setBusy] = useState(false);
 
   // Society picker
@@ -66,7 +67,7 @@ export default function SignInScreen() {
       } else {
         if (!name.trim()) { setBusy(false); return toast.show('Please enter your name'); }
         if (!selectedCommunity) { setBusy(false); return toast.show('Please select your society'); }
-        await signUp({ phone, code, name, flat, whatsapp, upi, roles: ['foodie'], communityId: selectedCommunity.id, residentType, profession });
+        await signUp({ phone, code, name, flat, whatsapp, upi, roles: ['foodie'], communityId: selectedCommunity.id, residentType, profession, vehicleNo });
       }
       await refreshProfile();
     } catch (e) {
@@ -188,6 +189,7 @@ export default function SignInScreen() {
                 ))}
               </View>
               <Field label="Profession" hint="Optional — helps neighbours connect" placeholder="e.g. Doctor, CA, Teacher" value={profession} onChangeText={setProfession} />
+              <Field label="Vehicle number" hint="Optional — for the resident directory" autoCapitalize="characters" placeholder="MH 12 AB 1234" value={vehicleNo} onChangeText={setVehicleNo} />
             </>
           ) : null}
 

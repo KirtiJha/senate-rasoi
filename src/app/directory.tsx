@@ -48,12 +48,14 @@ export default function DirectoryScreen() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return residents.filter((r) => {
+      if (r.show_in_directory === false) return false; // opted out of the directory
       if (filter !== 'all' && r.resident_type !== filter) return false;
       if (!q) return true;
       return (
         r.name?.toLowerCase().includes(q) ||
         (r.flat ?? '').toLowerCase().includes(q) ||
         (r.profession ?? '').toLowerCase().includes(q) ||
+        (r.vehicle_no ?? '').toLowerCase().includes(q) ||
         (r.phone ?? '').includes(q)
       );
     });
@@ -232,7 +234,9 @@ function ResidentRow({
             <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{name}</Text>
             {self ? <Text className="text-[11px] text-faint">(you)</Text> : null}
           </View>
-          {resident.phone ? <Text className="text-[12px] text-faint" numberOfLines={1}>{resident.phone}</Text> : null}
+          <Text className="text-[12px] text-faint" numberOfLines={1}>
+            {resident.phone ?? ''}{resident.vehicle_no ? `${resident.phone ? '  ·  ' : ''}🚗 ${resident.vehicle_no}` : ''}
+          </Text>
         </View>
         <Text style={{ width: 90 }} className="text-[13px] font-sans-md text-muted" numberOfLines={1}>{resident.flat ?? '—'}</Text>
         <View style={{ width: 90 }}><TypeBadge type={resident.resident_type} /></View>
@@ -258,6 +262,7 @@ function ResidentRow({
           <Text className="text-[12px] text-muted" numberOfLines={1}>
             {resident.flat ? `Flat ${resident.flat}` : 'Flat —'}
             {resident.profession ? ` · ${resident.profession}` : ''}
+            {resident.vehicle_no ? ` · 🚗 ${resident.vehicle_no}` : ''}
           </Text>
         </View>
       </View>

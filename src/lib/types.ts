@@ -93,6 +93,8 @@ export interface DbProfile {
   blocked: boolean;
   resident_type: 'owner' | 'tenant' | null;
   profession: string | null;
+  vehicle_no: string | null;
+  show_in_directory: boolean;
   created_at: string;
 }
 
