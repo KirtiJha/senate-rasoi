@@ -4,15 +4,15 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useResponsive } from '../components/ui';
-import { useAuth } from '../context/auth';
-import { useToast } from '../context/toast';
-import { sendInquiry } from '../lib/inquiries';
-import { buildInquiryWhatsAppLink, fetchAllListings } from '../lib/listings';
-import { SERVICES, getService } from '../lib/services';
-import { isSupabaseConfigured } from '../lib/supabase';
-import { ListingRow } from '../lib/types';
-import { layout, useThemeColors } from '../theme';
+import { useResponsive } from '../../components/ui';
+import { useAuth } from '../../context/auth';
+import { useToast } from '../../context/toast';
+import { sendInquiry } from '../../lib/inquiries';
+import { buildInquiryWhatsAppLink, fetchAllListings } from '../../lib/listings';
+import { SERVICES, getService } from '../../lib/services';
+import { isSupabaseConfigured } from '../../lib/supabase';
+import { ListingRow } from '../../lib/types';
+import { layout, useThemeColors } from '../../theme';
 
 export default function AllListingsScreen() {
   const router = useRouter();
@@ -62,12 +62,9 @@ export default function AllListingsScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      {/* Header */}
-      <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg pb-3">
+      {/* Header (top-level tab — no back button) */}
+      <View style={{ paddingTop: isDesktop ? insets.top + 16 : 12 }} className="border-b border-line bg-bg pb-3">
         <View className="flex-row items-center gap-2 px-4">
-          <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
-            <Ionicons name="chevron-back" size={22} color={c.ink} />
-          </Pressable>
           <Text className="flex-1 font-display-x text-[22px] text-ink">All listings</Text>
           <Text className="text-[12px] font-sans-md text-faint">{filtered.length} item{filtered.length === 1 ? '' : 's'}</Text>
         </View>

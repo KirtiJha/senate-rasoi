@@ -116,7 +116,6 @@ function DesktopShell() {
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="admin" />
           <Stack.Screen name="about" />
-          <Stack.Screen name="listings" />
           <Stack.Screen name="profile/me" />
           <Stack.Screen name="profile/[userId]" />
           <Stack.Screen name="feed/[postId]" />

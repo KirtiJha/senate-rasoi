@@ -78,6 +78,10 @@ function PhoneTabs({ isChef }: { isChef: boolean }) {
         options={{ title: 'Feed', tabBarIcon: tabIcon('chatbubbles', 'chatbubbles-outline') }}
       />
       <Tabs.Screen
+        name="listings"
+        options={{ title: 'Listings', tabBarIcon: tabIcon('pricetags', 'pricetags-outline') }}
+      />
+      <Tabs.Screen
         name="post"
         options={{
           title: 'Post',
