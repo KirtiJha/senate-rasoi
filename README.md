@@ -90,7 +90,7 @@ npx tsc --noEmit                  # type-check
 1. **Create a Supabase project** at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. **Run the migrations in order.** Open **SQL Editor** and run every file in
    [`supabase/migrations/`](./supabase/migrations) from `0001_init.sql` through
-   the latest (`0034_payments.sql`). They create all tables (communities,
+   the latest (`0035_society_onboarding.sql`). They create all tables (communities,
    profiles, dishes, orders, tiffin, listings, inquiries, posts, comments, polls,
    emergency contacts, saved listings, per-listing chat, direct messages,
    notifications, resident directory, sports groups, document vault), RLS
@@ -101,7 +101,9 @@ npx tsc --noEmit                  # type-check
 4. **Create the Storage buckets:** `listing-photos`, `dish-photos` and
    `sport-logos` as **public** buckets, plus `documents` as a **private** bucket
    (leave "Public" off — the vault grants access per-file via signed URLs).
-5. **Seed a society and grant yourself admin:**
+5. **Societies:** residents can **self-onboard** their society from the landing
+   page ("Onboard your society" — searches OpenStreetMap, dedupes, and makes the
+   founder admin). To seed one manually (e.g. a quick test society) instead:
    ```sql
    insert into public.communities (name, slug, address)
    values ('Green Valley Apartments', 'green-valley', 'Sector 12, Noida') returning id;
@@ -142,6 +144,7 @@ src/
     _layout.tsx              # fonts, providers (auth, theme, toast, unread DMs), splash
     +html.tsx                # web/PWA document (meta, manifest, SW registration, preconnect)
     landing.tsx              # public marketing landing page (logged-out entry)
+    onboard.tsx              # self-serve society onboarding (OSM search + map)
     legal.tsx                # Terms of Use + Privacy Policy
     (auth)/sign-in.tsx       # phone + PIN sign-in / sign-up + society picker
     (tabs)/

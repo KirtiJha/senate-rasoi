@@ -53,6 +53,7 @@
 | About page + version | ✅ | about.tsx with version, features, technical info |
 | Terms & Privacy | ✅ | legal.tsx (Terms of Use + Privacy Policy); sign-up consent line; landing + About links |
 | Marketing landing page | ✅ | landing.tsx — public, scrollable; logged-out entry; Sign in / Get started |
+| Society onboarding | ✅ | onboard.tsx + lib/geo.ts; OSM Nominatim search + tile map; dedupe by osm_place_id; founder-creates-society (migration 0035) |
 | Pagination (category feeds) | ✅ | limit/offset + Load more in c/[category].tsx |
 | React.memo (ListingCard) | ✅ | ListingCard wrapped in memo |
 | Mobile nav to Polls/Emergency | ✅ | Community section on Home hub with Polls + Emergency tiles |
@@ -266,6 +267,7 @@ scoped to that society. Admins of a society can manage that society only. Platfo
 | 0032 | documents + document_shares + RLS + storage policies — document vault | ⏸️ create PRIVATE `documents` bucket + run |
 | 0033 | notify triggers for dish/tiffin/sport/public-doc + profiles.notifications_cleared_at (Clear all) | ⏸️ written — run in Supabase |
 | 0034 | payments ledger + RLS + mark-received/cancel RPCs + notify triggers + realtime | ✅ run + verified (11/11 throwaway-account checks: insert RLS, both-side read, payee-only mark-received, status both ends, both notifications) |
+| 0035 | communities geo fields (lat/lon/osm_place_id/city/created_by) + dedupe unique index + insert/update RLS — society onboarding | ⏸️ written — run in Supabase |
 
 **Pending (future):**
 - `listing_reports` — moderation queue (schema designed; UI not yet built)
@@ -914,6 +916,7 @@ last-message bump, mark-read; FTS stem-matching on listings ("dancing"→"dance"
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-09 | **Society onboarding (self-serve, dedup, map).** Landing "Onboard your society" → new `/onboard` screen. Searches societies in Bengaluru via **OpenStreetMap Nominatim** (free, no key), shows a **map preview** (OSM tile mosaic with a pin) and pulls a (editable) address. Dedup by `osm_place_id`: if the place is **already on Aangan** → "sign up in it" (→ sign-in preselected); if **new** → an onboard form → sign-in that **creates the community with the founder as admin**. Migration `0035` adds geo columns + a unique osm index + an authenticated insert RLS (`created_by = auth.uid()`). `signUp` extended with a `newCommunity` payload (creates the society, grants admin; falls back to joining if a race created it first). Verified the free geo services work (Nominatim returns Bengaluru societies; OSM tiles 200). |
 | 2026-06-09 | **Terms & Privacy + sign-out / landing fixes.** (1) New `/legal` page — plain-language **Terms of Use + Privacy Policy** (platform-not-a-party, payments/home-food/emergency disclaimers, society-scoped data, delete-account) with a Terms/Privacy toggle; linked from the landing footer, the About page, and a **consent line on sign-up** ("By creating an account you agree to…"). (2) **Sign-out fixed** — was using global scope (network hang) and only redirected from tab screens; now local-scope instant sign-out + `router.replace('/landing')` from any screen. (3) **Landing dark-mode fix** — hero text/buttons used theme colours on a fixed-light gradient (invisible in dark mode); rebuilt with a fixed light palette. |
 | 2026-06-09 | **Logo v2 + profile consistency + directory privacy semantics.** (1) Replaced the abstract logo with a relatable **two-homes "neighbourhood" mark** (BrandMark + regenerated icons/favicon/splash). (2) **My Profile** now uses the standard `ScreenHeader` + `Container` (maxContent) like every other page (was a custom inline header + narrow width). (3) The **"Show me in the directory" toggle now hides only the phone number** — the resident still appears (name/flat/profession), but Call/WhatsApp are hidden when off. `show_in_directory=false` reinterpreted as "hide phone" (no longer excludes them); directory rows drop the call/WhatsApp buttons when no number. |
 | 2026-06-09 | **Marketing landing page + new logo.** New public `/landing` — a rich, scrollable marketing page (hero with app-preview card, "why not WhatsApp groups?", commerce + community feature sections, trust, gradient CTA, footer) with Sign in / Get started. Logged-out users now land here (the `(tabs)` gate redirects to `/landing` instead of straight to sign-in). **New brand logo:** a custom SVG `BrandMark` (coral tile + a top-down "courtyard" — homes framing an open centre) replaces the home icon in the Wordmark/auth/splash; regenerated `icon`/`favicon`/`splash`/adaptive PNGs (`scripts/gen-icon.mjs`). 0034 payments verified (11/11). |

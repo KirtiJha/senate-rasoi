@@ -119,6 +119,7 @@ function DesktopShell() {
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="landing" />
           <Stack.Screen name="legal" />
+          <Stack.Screen name="onboard" />
           <Stack.Screen name="admin" />
           <Stack.Screen name="about" />
           <Stack.Screen name="directory" />

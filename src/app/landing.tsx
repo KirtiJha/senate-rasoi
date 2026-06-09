@@ -63,8 +63,8 @@ export default function LandingScreen() {
                   organised — all inside your verified residential society.
                 </Text>
                 <View className="mt-7 flex-row flex-wrap items-center gap-3">
-                  <Pressable onPress={go} className="flex-row items-center gap-2 rounded-2xl px-6 py-3.5 active:opacity-90" style={{ backgroundColor: P.accent }}>
-                    <Text className="font-sans-bold" style={{ fontSize: 16, color: '#fff' }}>Start your society</Text>
+                  <Pressable onPress={() => router.push('/onboard' as any)} className="flex-row items-center gap-2 rounded-2xl px-6 py-3.5 active:opacity-90" style={{ backgroundColor: P.accent }}>
+                    <Text className="font-sans-bold" style={{ fontSize: 16, color: '#fff' }}>Onboard your society</Text>
                     <Ionicons name="arrow-forward" size={18} color="#fff" />
                   </Pressable>
                   <Pressable onPress={go} className="rounded-2xl px-6 py-3.5 active:opacity-70" style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: P.line }}>
@@ -194,8 +194,8 @@ export default function LandingScreen() {
                 <Text className="mt-2.5 max-w-[520px] text-center font-sans-md" style={{ fontSize: 15, lineHeight: 23, color: 'rgba(255,255,255,0.9)' }}>
                   Discover, transact, coordinate and help each other — without ever leaving your society.
                 </Text>
-                <Pressable onPress={go} className="mt-7 flex-row items-center gap-2 rounded-2xl px-7 py-3.5 active:opacity-90" style={{ backgroundColor: '#fff' }}>
-                  <Text className="font-sans-bold" style={{ fontSize: 16, color: '#F5492B' }}>Get started — it's free</Text>
+                <Pressable onPress={() => router.push('/onboard' as any)} className="mt-7 flex-row items-center gap-2 rounded-2xl px-7 py-3.5 active:opacity-90" style={{ backgroundColor: '#fff' }}>
+                  <Text className="font-sans-bold" style={{ fontSize: 16, color: '#F5492B' }}>Onboard your society — free</Text>
                   <Ionicons name="arrow-forward" size={18} color="#F5492B" />
                 </Pressable>
               </View>

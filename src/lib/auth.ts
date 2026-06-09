@@ -1,3 +1,4 @@
+import { createCommunity, findCommunityByOsm } from './communities';
 import { COMMUNITY_ID, phoneToEmail, supabase } from './supabase';
 import type { DbProfile, Role } from './types';
 
@@ -14,6 +15,8 @@ export interface SignUpInput {
   upi: string;
   roles: Role[];
   communityId?: string; // selected at sign-up; falls back to the seeded default
+  // When onboarding a brand-new society: create it here; the founder becomes admin.
+  newCommunity?: { name: string; address: string; lat?: number | null; lon?: number | null; osmPlaceId?: string | null; city?: string | null };
   residentType?: 'owner' | 'tenant' | null;
   profession?: string;
   vehicleNo?: string;
@@ -34,6 +37,24 @@ export async function signUp(input: SignUpInput): Promise<DbProfile> {
     );
   }
 
+  // Resolve the society: create a new one (founder = admin) or use the chosen id.
+  let communityId = input.communityId ?? COMMUNITY_ID;
+  let roles: Role[] = input.roles.length ? input.roles : (['foodie'] as Role[]);
+  if (input.newCommunity) {
+    try {
+      const comm = await createCommunity({ ...input.newCommunity, createdBy: userId });
+      communityId = comm.id;
+      roles = ['foodie', 'admin'] as Role[]; // founder runs the society
+    } catch (e) {
+      // Race: someone onboarded the same place first — join it as a member.
+      if (e instanceof Error && e.message === 'duplicate-society' && input.newCommunity.osmPlaceId) {
+        const existing = await findCommunityByOsm(input.newCommunity.osmPlaceId);
+        if (existing) communityId = existing.id;
+        else throw e;
+      } else throw e;
+    }
+  }
+
   const row = {
     id: userId,
     phone: input.phone.replace(/\D/g, ''),
@@ -41,8 +62,8 @@ export async function signUp(input: SignUpInput): Promise<DbProfile> {
     flat: input.flat.trim() || null,
     whatsapp: input.whatsapp.trim() || null,
     upi: input.upi.trim() || null,
-    roles: input.roles.length ? input.roles : (['foodie'] as Role[]),
-    community_id: input.communityId ?? COMMUNITY_ID,
+    roles,
+    community_id: communityId,
   };
   const { data: profile, error: pErr } = await supabase
     .from('profiles')

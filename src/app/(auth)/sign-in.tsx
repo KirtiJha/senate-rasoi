@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
@@ -9,7 +9,7 @@ import { Button, Container } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { signIn, signUp } from '../../lib/auth';
-import { Community, fetchCommunities, submitJoinRequest } from '../../lib/communities';
+import { Community, fetchCommunities, fetchCommunityById, submitJoinRequest } from '../../lib/communities';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useThemeColors } from '../../theme';
 
@@ -34,6 +34,9 @@ export default function SignInScreen() {
   // Society picker
   const [communities, setCommunities] = useState<Community[]>([]);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
+  // From the onboarding flow: a brand-new society to create (founder = admin).
+  const [newCommunity, setNewCommunity] = useState<{ name: string; address: string; lat?: number | null; lon?: number | null; osmPlaceId?: string | null; city?: string | null } | null>(null);
+  const params = useLocalSearchParams<{ communityId?: string; onboard?: string }>();
   const [showPicker, setShowPicker] = useState(false);
   const [communitySearch, setCommunitySearch] = useState('');
   const [showJoinRequest, setShowJoinRequest] = useState(false);
@@ -46,6 +49,16 @@ export default function SignInScreen() {
       fetchCommunities().then(setCommunities).catch(() => {});
     }
   }, []);
+
+  // Coming from /onboard — preselect an existing society, or queue a new one.
+  useEffect(() => {
+    if (params.onboard) {
+      try { setNewCommunity(JSON.parse(params.onboard)); setMode('up'); } catch { /* ignore */ }
+    } else if (params.communityId) {
+      setMode('up');
+      fetchCommunityById(params.communityId).then((comm) => { if (comm) setSelectedCommunity(comm); }).catch(() => {});
+    }
+  }, [params.onboard, params.communityId]);
 
   const filteredCommunities = communities.filter(
     (comm: Community) =>
@@ -68,8 +81,13 @@ export default function SignInScreen() {
         await signIn(phone, code);
       } else {
         if (!name.trim()) { setBusy(false); return toast.show('Please enter your name'); }
-        if (!selectedCommunity) { setBusy(false); return toast.show('Please select your society'); }
-        await signUp({ phone, code, name, flat, whatsapp, upi, roles: ['foodie'], communityId: selectedCommunity.id, residentType, profession, vehicleNo });
+        if (!newCommunity && !selectedCommunity) { setBusy(false); return toast.show('Please select your society'); }
+        await signUp({
+          phone, code, name, flat, whatsapp, upi, roles: ['foodie'],
+          communityId: newCommunity ? undefined : selectedCommunity!.id,
+          newCommunity: newCommunity ?? undefined,
+          residentType, profession, vehicleNo,
+        });
       }
       await refreshProfile();
     } catch (e) {
@@ -142,27 +160,37 @@ export default function SignInScreen() {
 
           {mode === 'up' ? (
             <>
-              {/* Society picker */}
+              {/* Society */}
               <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Your Society</Text>
-              <Pressable
-                onPress={() => setShowPicker(true)}
-                className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3.5"
-              >
-                <Ionicons name="business-outline" size={18} color={selectedCommunity ? c.accent : c.faint} />
-                <View className="flex-1">
-                  {selectedCommunity ? (
-                    <>
-                      <Text className="font-sans-sb text-[14px] text-ink">{selectedCommunity.name}</Text>
-                      {selectedCommunity.address ? (
-                        <Text className="text-[12px] text-faint" numberOfLines={1}>{selectedCommunity.address}</Text>
-                      ) : null}
-                    </>
-                  ) : (
-                    <Text className="text-[14px] text-faint">Select your society…</Text>
-                  )}
+              {newCommunity ? (
+                <View className="mb-4 flex-row items-center gap-3 rounded-2xl px-4 py-3.5" style={{ borderWidth: 1, borderColor: c.accent, backgroundColor: c.accent + '12' }}>
+                  <Ionicons name="sparkles" size={18} color={c.accent} />
+                  <View className="flex-1">
+                    <Text className="font-sans-sb text-[14px] text-ink">{newCommunity.name}</Text>
+                    <Text className="text-[12px] text-faint">New society — you'll be the admin</Text>
+                  </View>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color={c.faint} />
-              </Pressable>
+              ) : (
+                <Pressable
+                  onPress={() => setShowPicker(true)}
+                  className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3.5"
+                >
+                  <Ionicons name="business-outline" size={18} color={selectedCommunity ? c.accent : c.faint} />
+                  <View className="flex-1">
+                    {selectedCommunity ? (
+                      <>
+                        <Text className="font-sans-sb text-[14px] text-ink">{selectedCommunity.name}</Text>
+                        {selectedCommunity.address ? (
+                          <Text className="text-[12px] text-faint" numberOfLines={1}>{selectedCommunity.address}</Text>
+                        ) : null}
+                      </>
+                    ) : (
+                      <Text className="text-[14px] text-faint">Select your society…</Text>
+                    )}
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={c.faint} />
+                </Pressable>
+              )}
 
               <View className="flex-row gap-3">
                 <View className="flex-1">
