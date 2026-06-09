@@ -21,6 +21,7 @@ import { OrdersSection } from '../../components/OrdersSection';
 import { SetupBanner } from '../../components/SetupBanner';
 import { SubscribeModal } from '../../components/SubscribeModal';
 import { TiffinCard } from '../../components/TiffinCard';
+import PostScreen from './post';
 import { Container, DishCardSkeleton, LiveDot, useResponsive } from '../../components/ui';
 import { useThemeColors } from '../../theme';
 import { useAuth } from '../../context/auth';
@@ -58,6 +59,7 @@ export default function FoodScreen() {
   const { columns, isDesktop } = useResponsive();
   const c = useThemeColors();
   const [tab, setTab] = useState<FoodTab>('discover');
+  const [posting, setPosting] = useState<'dish' | 'tiffin' | null>(null);
   const [dishes, setDishes] = useState<DishRow[]>([]);
   const [filter, setFilter] = useState<'All' | Slot>('All');
   const [vegOnly, setVegOnly] = useState(false);
@@ -214,7 +216,7 @@ export default function FoodScreen() {
               return (
                 <Pressable
                   key={t.key}
-                  onPress={() => setTab(t.key)}
+                  onPress={() => { setTab(t.key); setPosting(null); }}
                   className={`flex-1 items-center rounded-xl py-2 ${on ? 'bg-surface' : ''}`}
                 >
                   <Text className={`text-[13px] ${on ? 'font-sans-sb text-ink' : 'font-sans-md text-muted'}`}>{t.label}</Text>
@@ -228,9 +230,13 @@ export default function FoodScreen() {
       {tab === 'orders' ? (
         <OrdersSection onBrowse={() => setTab('discover')} />
       ) : tab === 'kitchen' ? (
-        <KitchenSection />
+        posting === 'dish'
+          ? <PostScreen embedded category="food" kind="dish" onDone={() => setPosting(null)} />
+          : <KitchenSection onPost={() => setPosting('dish')} />
       ) : tab === 'tiffins' ? (
-        <MyTiffinsSection onBrowse={() => setTab('discover')} />
+        posting === 'tiffin'
+          ? <PostScreen embedded category="food" kind="tiffin" onDone={() => setPosting(null)} />
+          : <MyTiffinsSection onBrowse={() => setTab('discover')} onPost={() => setPosting('tiffin')} />
       ) : (
       <ScrollView
         className="flex-1"

@@ -24,7 +24,7 @@ function openUrl(url: string) {
  * The Tiffins tab — everything recurring in one place: post & manage the tiffin
  * services you offer (cook side), and the tiffins you subscribe to (eater side).
  */
-export function MyTiffinsSection({ onBrowse }: { onBrowse?: () => void } = {}) {
+export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; onPost?: () => void } = {}) {
   const router = useRouter();
   const toast = useToast();
   const c = useThemeColors();
@@ -61,7 +61,7 @@ export function MyTiffinsSection({ onBrowse }: { onBrowse?: () => void } = {}) {
     setRefreshing(false);
   }, [load]);
 
-  const postTiffin = () => router.push({ pathname: '/post', params: { category: 'food', kind: 'tiffin' } });
+  const postTiffin = () => (onPost ? onPost() : router.push({ pathname: '/post', params: { category: 'food', kind: 'tiffin' } }));
 
   const togglePause = async (s: SubscriptionWithPlan) => {
     await setSubscriptionPaused(s.id, !s.paused);

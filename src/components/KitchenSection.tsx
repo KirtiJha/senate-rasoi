@@ -28,7 +28,7 @@ function openUrl(url: string) {
 }
 
 /** Kitchen = the one-off dishes you've posted + their incoming orders. */
-export function KitchenSection() {
+export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
   const router = useRouter();
   const toast = useToast();
   const { userId } = useAuth();
@@ -72,7 +72,7 @@ export function KitchenSection() {
     }
   };
 
-  const postDish = () => router.push({ pathname: '/post', params: { category: 'food' } });
+  const postDish = () => (onPost ? onPost() : router.push({ pathname: '/post', params: { category: 'food' } }));
 
   return (
     <ScrollView

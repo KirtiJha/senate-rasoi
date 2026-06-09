@@ -30,7 +30,14 @@ const SLOT_HINTS: Record<Slot, string> = {
   Snack: 'Anytime',
 };
 
-export default function PostScreen() {
+/**
+ * The Post screen. Used as the `/post` route (category picker → form) and also
+ * embedded inside the Food screen (with `embedded` + a forced `category`/`kind`)
+ * so the food tab bar stays visible while posting a dish or tiffin.
+ */
+export default function PostScreen({
+  embedded, category: forceCategory, kind: forceKind, onDone,
+}: { embedded?: boolean; category?: string; kind?: string; onDone?: () => void } = {}) {
   const router = useRouter();
   const toast = useToast();
   const c = useThemeColors();
@@ -41,8 +48,9 @@ export default function PostScreen() {
 
   // ── All hooks unconditionally at top (Rules of Hooks) ────────────────
   const params = useLocalSearchParams<{ category?: string; kind?: string }>();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [mode, setMode] = useState<'dish' | 'tiffin'>('dish');
+  const finishOrHome = () => (onDone ? onDone() : router.push('/'));
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(forceCategory ?? null);
+  const [mode, setMode] = useState<'dish' | 'tiffin'>(forceKind === 'tiffin' ? 'tiffin' : 'dish');
 
   const [chefName, setChefName] = useState('');
   const [flat, setFlat] = useState('');
@@ -77,9 +85,10 @@ export default function PostScreen() {
   useFocusEffect(
     useCallback(() => {
       // category=food → dish/tiffin form; a listing category → its form; none → picker
-      setSelectedCategory(params.category ?? null);
-      setMode(params.kind === 'tiffin' ? 'tiffin' : 'dish');
-    }, [params.category, params.kind])
+      const cat = forceCategory ?? params.category;
+      setSelectedCategory(cat ?? null);
+      setMode((forceKind ?? params.kind) === 'tiffin' ? 'tiffin' : 'dish');
+    }, [params.category, params.kind, forceCategory, forceKind])
   );
 
   useEffect(() => {
@@ -165,7 +174,7 @@ export default function PostScreen() {
 
       haptics.success();
       toast.show('Your dish is live on the board! 🎉');
-      router.push('/');
+      finishOrHome();
     } catch (e) {
       console.error(e);
       toast.show('Could not post — check your connection');
@@ -215,7 +224,7 @@ export default function PostScreen() {
       setTCutoff('');
       haptics.success();
       toast.show('Your tiffin service is live! 🍱');
-      router.push('/');
+      finishOrHome();
     } catch (e) {
       console.error(e);
       toast.show('Could not post the tiffin — try again');
@@ -276,11 +285,17 @@ export default function PostScreen() {
   return (
     <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
-        contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 18 : 18, paddingHorizontal: 16, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingTop: embedded ? 14 : isDesktop ? insets.top + 18 : 18, paddingHorizontal: 16, paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <Container narrow>
+          {embedded ? (
+            <Pressable onPress={onDone} className="mb-2 flex-row items-center gap-1 self-start active:opacity-60">
+              <Ionicons name="chevron-back" size={18} color={c.muted} />
+              <Text className="font-sans-md text-[14px] text-muted">Back</Text>
+            </Pressable>
+          ) : null}
           <Text className="text-[13px] font-sans-md text-accent">Share your kitchen</Text>
           <Text className="mb-4 font-display-x text-[30px] text-ink">{mode === 'dish' ? 'Post a dish' : 'Post a tiffin'}</Text>
 
