@@ -99,6 +99,7 @@ export default function FeedScreen() {
         icon="chatbubbles-outline"
         iconColor={c.accent}
         title="Feed"
+        hideSociety
         onAdd={() => setShowCompose(true)}
         addLabel="New post"
         subBar={

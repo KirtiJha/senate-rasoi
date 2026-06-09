@@ -183,6 +183,7 @@ export default function SearchScreen() {
       <ScreenHeader
         icon="search-outline"
         title="Search"
+        hideSociety
         subBar={
           <View className="flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
             <Ionicons name="search-outline" size={19} color={c.faint} />

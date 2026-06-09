@@ -24,7 +24,7 @@ export default function YouScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="person-circle-outline" title="You" />
+      <ScreenHeader icon="person-circle-outline" title="You" hideSociety />
       <View className="px-4 pb-2 pt-3">
         <Container>
           {/* account header */}

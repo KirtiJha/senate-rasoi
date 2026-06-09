@@ -207,7 +207,7 @@ export default function FoodScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="restaurant-outline" iconColor="#FF5A3C" title="Home Food" showBack />
+      <ScreenHeader icon="restaurant-outline" iconColor="#FF5A3C" title="Home Food" showBack hideSociety />
       {/* Food tabs — browse the board, plus your own orders & kitchen */}
       <View className="border-b border-line bg-bg px-4 pb-2.5 pt-2.5">
         <Container>
