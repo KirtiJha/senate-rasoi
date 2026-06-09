@@ -37,6 +37,14 @@ const COMMUNITY_TILES: CommunityTile[] = [
     href: '/messages',
   },
   {
+    key: 'sports',
+    label: 'Sports',
+    blurb: 'Teams, practice & tournaments',
+    icon: 'football',
+    color: '#16A34A',
+    href: '/sports',
+  },
+  {
     key: 'polls',
     label: 'Polls',
     blurb: 'Vote on community decisions',

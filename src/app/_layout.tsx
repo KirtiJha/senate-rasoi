@@ -123,6 +123,8 @@ function DesktopShell() {
           <Stack.Screen name="listing/[id]" />
           <Stack.Screen name="emergency" />
           <Stack.Screen name="polls" />
+          <Stack.Screen name="sports" />
+          <Stack.Screen name="sports/[id]" />
           <Stack.Screen name="messages/index" />
           <Stack.Screen name="messages/new" />
           <Stack.Screen name="messages/[threadId]" />

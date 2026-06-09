@@ -45,6 +45,8 @@
 | Issues / feedback page | ✅ | Feed tab with category filter (issue/feedback/suggestion) |
 | Polls & Surveys | ✅ | polls.tsx, realtime voting, create/close/delete (migration 0020) |
 | Emergency Contacts | ✅ | emergency.tsx, 7 role types, admin add/delete, direct dial (migration 0019) |
+| Sports groups | ✅ | sports.tsx + sports/[id].tsx; teams per sport, members, practice, tournaments, join/leave (migration 0030) |
+| Resident directory | ✅ | directory.tsx; members + manual entries, grouped by flat, invite, admin moderation (migrations 0027–0029) |
 | Society-based access control | ✅ | RLS on all tables; is_admin fn (migration 0017); communityId in all queries |
 | About page + version | ✅ | about.tsx with version, features, technical info |
 | Pagination (category feeds) | ✅ | limit/offset + Load more in c/[category].tsx |
@@ -254,7 +256,8 @@ scoped to that society. Admins of a society can manage that society only. Platfo
 | 0026 | notifications + notification_reads + triggers (post/listing/poll/DM) + realtime | ✅ run |
 | 0027 | profiles.resident_type (owner/tenant) + profession — resident directory | ✅ run |
 | 0028 | profiles.show_in_directory + vehicle_no — directory opt-out + vehicle | ⏸️ written — run in Supabase |
-| 0029 | directory_entries (non-member residents) + RLS + admin_set_directory_visibility RPC | ⏸️ written — run in Supabase |
+| 0029 | directory_entries (non-member residents) + RLS + admin_set_directory_visibility RPC | ✅ run |
+| 0030 | sport_groups + sport_group_members + sport_tournaments + RLS — sports groups | ⏸️ written — run in Supabase |
 
 **Pending (future):**
 - `listing_reports` — moderation queue (schema designed; UI not yet built)
@@ -903,6 +906,7 @@ last-message bump, mark-read; FTS stem-matching on listings ("dancing"→"dance"
 
 | Date | What changed |
 |------|-------------|
+| 2026-06-09 | **Sports groups.** New section (NavRail "Sports" + Home tile + universal search). Migration `0030` adds `sport_groups` + `sport_group_members` + `sport_tournaments` with RLS (member self-join/leave; group creator/captain or admin manages members + tournaments). `src/lib/sports.ts` holds the sport catalogue (`SPORTS` = Badminton + Cricket; adding a sport is one line). `/sports` lists groups by sport with join/leave; `/sports/[id]` shows the team badge (emoji+colour), practice schedule, members (captain badge; add/remove for owner/admin), and upcoming tournaments (add/remove for owner/admin), plus delete-group. Logo = emoji + team colour (no storage bucket needed). |
 | 2026-06-09 | **Consistent page headers (the Polls pattern).** New reusable `ScreenHeader` (full-width bar: icon + bold title left, circular **+** button far right where relevant, back chevron on mobile for pushed screens, optional `subBar` for chips/search). Applied to Feed, Search, Listings, Residents, Polls, Emergency, Messages, Admin, You, Home Food, About — every screen except Home. Replaced the recently-added max-width-centered headers; content stays centered below the full-width bar. + buttons only where an add action exists (Feed→compose, Polls→create, Residents→add, Listings→new post, Emergency→add[admin], Messages→new). |
 | 2026-06-09 | **Universal search.** Rebuilt the Search tab: one box, no category/mode filters. On focus it loads residents + dishes + tiffins + listings + posts into memory, then **fuzzy-filters as you type** (token-substring with title-prefix ranking + subsequence typo-tolerance), grouped by type (Residents / Home Food / Tiffins / Listings / Posts). Each result deep-links (resident→profile, listing→detail, dish/tiffin→food, post→feed). Keeps recent searches; centered to `SEARCH_MAX`; skeleton while loading. |
 | 2026-06-09 | **UI consistency pass.** (1) **My Listings** (You tab) now includes posted **dishes + tiffins** (not just listings), rows are **tappable** to open, + skeleton loader. (2) **Feed** now has a "Feed" title and is centered to a comfortable width (`FEED_MAX`) instead of full-bleed. (3) New reusable **`Sheet`** (centered dialog on desktop, page-sheet on mobile) — **Create Poll** + **Add Resident** modals use it, so they no longer cover the NavRail on desktop. (4) Reusable **`RowSkeleton`** applied to My Listings + directory. |

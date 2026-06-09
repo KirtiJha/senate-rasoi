@@ -30,8 +30,10 @@ realtime:
   with photos, attributes, inquiries, bookmarks, and per-listing chat.
 - **Community** — a posts feed with comment threads (general / announcements /
   issues / events / lost & found / feedback / suggestions), **polls**,
-  **emergency contacts**, **direct messages** between neighbours, and unified
-  **full-text search** across listings and posts.
+  **emergency contacts**, a **resident directory** (members + manually-added
+  neighbours, grouped by flat, with invites), **sports groups** (teams per
+  sport with members, practice schedules and tournaments), **direct messages**
+  between neighbours, and **universal fuzzy search** across everything.
 - **Identity & roles** — phone + 6-digit PIN accounts (no SMS/OTP), roles
   **chef / member / admin**, public profiles, and a society admin panel.
 
@@ -85,10 +87,11 @@ npx tsc --noEmit                  # type-check
 1. **Create a Supabase project** at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. **Run the migrations in order.** Open **SQL Editor** and run every file in
    [`supabase/migrations/`](./supabase/migrations) from `0001_init.sql` through
-   `0024_listings_read_scope.sql`. They create all tables (communities, profiles,
-   dishes, orders, tiffin, listings, inquiries, posts, comments, polls, emergency
-   contacts, saved listings, per-listing chat, direct messages), RLS policies,
-   RPCs, full-text indexes, realtime publications, and the push pipeline.
+   the latest (`0030_sport_groups.sql`). They create all tables (communities,
+   profiles, dishes, orders, tiffin, listings, inquiries, posts, comments, polls,
+   emergency contacts, saved listings, per-listing chat, direct messages,
+   notifications, resident directory, sports groups), RLS policies, RPCs,
+   full-text indexes, realtime publications, and the push pipeline.
 3. **Disable email confirmation.** Auth → Providers → Email → turn **off**
    "Confirm email" (the phone-as-email aliases can't receive confirmation mail).
 4. **Create two public Storage buckets:** `listing-photos` and `dish-photos`
@@ -138,19 +141,21 @@ src/
       index.tsx              # Home hub — service grid + community tiles
       food.tsx               # Food board (dishes + tiffins)
       feed.tsx               # Community posts feed + composer
-      search.tsx             # Full-text search (Listings / Posts) + recent searches
+      search.tsx             # Universal fuzzy search across everything
       post.tsx               # Category picker → create listing/dish
       you.tsx                # My orders, tiffins, listings, saved, kitchen
       c/[category].tsx       # Category listing feed (FlashList)
     listing/[id].tsx         # Listing detail + inquiry + per-listing chat
+    directory.tsx            # Resident directory (members + manual entries)
+    sports.tsx · sports/[id].tsx   # Sports groups list + group detail
     messages/                # DM inbox + thread
     profile/me.tsx · [userId].tsx
     feed/[postId].tsx        # Post thread + comments
     admin.tsx · about.tsx · polls.tsx · emergency.tsx
-  components/                # DishCard, ListingCard, NavRail, sections, ui/ kit, ...
+  components/                # DishCard, ListingCard, NavRail, ScreenHeader, ui/ kit, ...
   context/                   # auth, theme, toast, unread (shared providers)
   lib/                       # supabase client + service layer (one module per domain)
-supabase/migrations/         # 0001–0024: schema, RLS, RPCs, FTS, realtime, push
+supabase/migrations/         # 0001–0030: schema, RLS, RPCs, FTS, realtime, push, directory, sports
 public/                      # PWA manifest, icons, service worker
 assets/images/               # app icon, adaptive icon layers, splash
 docs/                        # the original Firebase prototype (reference)
