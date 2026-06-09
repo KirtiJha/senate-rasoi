@@ -55,7 +55,7 @@ export default function FoodScreen() {
   const toast = useToast();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { userId } = useAuth();
+  const { userId, communityId } = useAuth();
   const { columns, isDesktop } = useResponsive();
   const c = useThemeColors();
   const [tab, setTab] = useState<FoodTab>('discover');
@@ -78,8 +78,8 @@ export default function FoodScreen() {
     }
     try {
       const [rows, planRows, ids] = await Promise.all([
-        fetchDishes(),
-        listTiffinPlans(),
+        fetchDishes(communityId),
+        listTiffinPlans(communityId),
         userId ? myActiveSubscriptionIds(userId) : Promise.resolve(new Set<string>()),
       ]);
       setDishes(rows);
@@ -91,7 +91,7 @@ export default function FoodScreen() {
     } finally {
       setLoading(false);
     }
-  }, [toast, userId]);
+  }, [toast, userId, communityId]);
 
   useEffect(() => {
     let alive = true;

@@ -31,12 +31,12 @@ async function cacheDishes(dishes: DishRow[]): Promise<void> {
 
 // ── Read the board ──────────────────────────────────────────────────
 /** Today's + upcoming dishes (past serve-dates are hidden). */
-export async function fetchDishes(): Promise<DishRow[]> {
+export async function fetchDishes(communityId: string = COMMUNITY_ID): Promise<DishRow[]> {
   const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD (local)
   const { data, error } = await supabase
     .from('dishes')
     .select('*')
-    .eq('community_id', COMMUNITY_ID)
+    .eq('community_id', communityId)
     .gte('serve_date', today)
     .order('serve_date', { ascending: true })
     .order('created_at', { ascending: false });
@@ -114,6 +114,7 @@ export async function fetchMyRecentDishes(userId: string): Promise<DishRow[]> {
 // ── Post a dish ─────────────────────────────────────────────────────
 export interface NewDishInput {
   chefUserId: string; // owner (auth.uid())
+  communityId?: string; // defaults to COMMUNITY_ID
   profile: Profile; // denormalised chef name/flat/whatsapp/upi for display
   dishName: string;
   slot: Slot;
@@ -137,7 +138,7 @@ export async function postDish(input: NewDishInput): Promise<DishRow> {
 
   const row = {
     id,
-    community_id: COMMUNITY_ID,
+    community_id: input.communityId ?? COMMUNITY_ID,
     chef_user_id: input.chefUserId, // ownership (RLS enforces auth.uid() = this)
     chef_name: input.profile.chefName.trim(),
     flat: input.profile.flat.trim(),

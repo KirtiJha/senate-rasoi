@@ -75,11 +75,9 @@ export default function PublicProfileScreen() {
       {/* Header */}
       <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
         <View className="flex-row items-center gap-2">
-          {!isDesktop ? (
-            <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
-              <Ionicons name="chevron-back" size={22} color={c.ink} />
-            </Pressable>
-          ) : null}
+          <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+            <Ionicons name="chevron-back" size={22} color={c.ink} />
+          </Pressable>
           <Text className="font-display-x text-[20px] text-ink flex-1">{displayName}</Text>
         </View>
       </View>

@@ -43,7 +43,7 @@ export default function PostScreen({
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { userId, isChef } = useAuth();
+  const { userId, isChef, communityId } = useAuth();
   const { profile, ready, update } = useProfile();
 
   // ── All hooks unconditionally at top (Rules of Hooks) ────────────────
@@ -149,6 +149,7 @@ export default function PostScreen({
       await update({ chefName, flat, whatsapp, upi });
       await postDish({
         chefUserId: userId!,
+        communityId,
         profile: { chefName, flat, whatsapp, upi },
         dishName,
         slot,
@@ -205,6 +206,7 @@ export default function PostScreen({
       await update({ chefName, flat, whatsapp, upi });
       await createTiffinPlan({
         chefUserId: userId!,
+        communityId,
         title: tTitle,
         description: tDesc,
         vegType: tVeg,

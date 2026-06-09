@@ -83,8 +83,8 @@ export default function AllListingsScreen() {
     try {
       const [listings, dishes, tiffins] = await Promise.all([
         fetchAllListings(communityId, 0, 200),
-        fetchDishes().catch(() => [] as DishRow[]),
-        listTiffinPlans().catch(() => [] as TiffinPlanWithChef[]),
+        fetchDishes(communityId).catch(() => [] as DishRow[]),
+        listTiffinPlans(communityId).catch(() => [] as TiffinPlanWithChef[]),
       ]);
       setItems([
         ...dishes.map((d): AllItem => ({ kind: 'dish', id: d.id, raw: d })),

@@ -31,7 +31,7 @@ function openUrl(url: string) {
 export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
   const router = useRouter();
   const toast = useToast();
-  const { userId } = useAuth();
+  const { userId, communityId } = useAuth();
   const [dishes, setDishes] = useState<DishRow[]>([]);
   const [ordersByDish, setOrdersByDish] = useState<Record<string, ChefOrder[]>>({});
   const [loading, setLoading] = useState(true);
@@ -39,7 +39,7 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
 
   const load = useCallback(async () => {
     try {
-      const all = await fetchDishes();
+      const all = await fetchDishes(communityId);
       const mine = all.filter((d) => d.chef_user_id === userId);
       setDishes(mine);
       const entries = await Promise.all(mine.map(async (d) => [d.id, await listChefOrders(d.id)] as const));
@@ -49,7 +49,7 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, communityId]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
   useEffect(() => subscribeToOrders(load), [load]);
@@ -121,8 +121,9 @@ function KitchenDishCard({
   onAct: (orderId: string, status: OrderStatus, msg: string, wa?: string | null, dishName?: string) => void;
 }) {
   const c = useThemeColors();
-  const active = orders.filter((o) => ACTIVE_STATUSES.includes(o.status));
-  const platesOrdered = active.reduce((s, o) => s + o.qty, 0);
+  // Plates reserved = max − left (set_order_status / place_order keep plates_left
+  // accurate); this avoids depending on the orders array being fully loaded.
+  const platesOrdered = Math.max(0, dish.max_plates - dish.plates_left);
   const revenue = orders.filter((o) => EARN.includes(o.status)).reduce((s, o) => s + o.qty * dish.price, 0);
   const cd = countdown(dish.order_by);
 

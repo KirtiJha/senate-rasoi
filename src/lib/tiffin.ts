@@ -12,6 +12,7 @@ import type {
 // ── Plans ───────────────────────────────────────────────────────────
 export interface NewTiffinPlan {
   chefUserId: string;
+  communityId?: string;
   title: string;
   description: string;
   vegType: VegType;
@@ -22,11 +23,11 @@ export interface NewTiffinPlan {
   cutoffTime: string | null;
 }
 
-export async function listTiffinPlans(): Promise<TiffinPlanWithChef[]> {
+export async function listTiffinPlans(communityId: string = COMMUNITY_ID): Promise<TiffinPlanWithChef[]> {
   const { data, error } = await supabase
     .from('tiffin_plans')
     .select('*, chef:profiles!tiffin_plans_chef_user_id_fkey(name,flat,whatsapp)')
-    .eq('community_id', COMMUNITY_ID)
+    .eq('community_id', communityId)
     .eq('active', true)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -45,7 +46,7 @@ export async function listMyTiffinPlans(userId: string): Promise<TiffinPlan[]> {
 
 export async function createTiffinPlan(input: NewTiffinPlan): Promise<TiffinPlan> {
   const row = {
-    community_id: COMMUNITY_ID,
+    community_id: input.communityId ?? COMMUNITY_ID,
     chef_user_id: input.chefUserId,
     title: input.title.trim(),
     description: input.description.trim() || null,
