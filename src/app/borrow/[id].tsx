@@ -20,6 +20,7 @@ import {
   setRequestStatus,
   subscribeRequests,
 } from '../../lib/borrow';
+import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { waLink } from '../../lib/listings';
 import { useThemeColors } from '../../theme';
 
@@ -80,7 +81,7 @@ export default function LendItemDetailScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
           {item.photo_url ? (
-            <Image source={{ uri: item.photo_url }} style={{ width: '100%', height: 200 }} contentFit="cover" transition={150} className="mb-4 rounded-2xl" />
+            <Image source={{ uri: item.photo_url }} style={{ width: '100%', height: 200 }} contentFit="cover" {...IMAGE_CACHE_PROPS} className="mb-4 rounded-2xl" />
           ) : (
             <View className="mb-4 items-center justify-center rounded-2xl bg-inset" style={{ height: 140 }}><Ionicons name={m.icon as any} size={36} color={c.faint} /></View>
           )}

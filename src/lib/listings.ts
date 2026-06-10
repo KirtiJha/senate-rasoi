@@ -131,11 +131,13 @@ export async function fetchMyListings(userId: string): Promise<ListingRow[]> {
   return (data ?? []) as ListingRow[];
 }
 
-export function subscribeToListings(category: string, onChange: () => void): () => void {
+export function subscribeToListings(category: string, communityId: string | undefined, onChange: () => void): () => void {
   if (!isSupabaseConfigured) return () => {};
+  const opts: { event: '*'; schema: string; table: string; filter?: string } = { event: '*', schema: 'public', table: 'listings' };
+  if (communityId) opts.filter = `community_id=eq.${communityId}`; // only this society's writes
   const channel = supabase
-    .channel(`listings-${category}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, () => onChange())
+    .channel(`listings-${communityId ?? 'all'}-${category}`)
+    .on('postgres_changes', opts, () => onChange())
     .subscribe();
   return () => { supabase.removeChannel(channel); };
 }

@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
+import { IMAGE_CACHE_PROPS } from '../lib/image';
 import { ListingType, PropertyRow, fetchProperties, propertySubtitle, subscribeProperties } from '../lib/properties';
 import { useThemeColors } from '../theme';
 
@@ -112,7 +113,7 @@ function PropertyCard({ p, onPress, c }: { p: PropertyRow; onPress: () => void; 
     <Pressable onPress={onPress} className="flex-row overflow-hidden rounded-2xl border border-line bg-surface active:opacity-90">
       <View style={{ width: 108, height: 108, backgroundColor: c.inset }} className="items-center justify-center">
         {p.photos[0] ? (
-          <Image source={{ uri: p.photos[0] }} style={{ width: '100%', height: '100%' }} contentFit="cover" transition={120} />
+          <Image source={{ uri: p.photos[0] }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
         ) : (
           <Ionicons name="home-outline" size={28} color={c.faint} />
         )}

@@ -7,6 +7,7 @@ import { PropertyChat } from '../../components/PropertyChat';
 import { Avatar, Button, Container, ScreenHeader, Sheet } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { waLink } from '../../lib/listings';
 import {
   PropertyReferralRow,
@@ -124,7 +125,7 @@ export default function PropertyDetailScreen() {
           {p.photos.length > 0 ? (
             <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} className="mb-4 overflow-hidden rounded-2xl">
               {p.photos.map((url, i) => (
-                <Image key={i} source={{ uri: url }} style={{ width: galleryW, height: galleryW * 0.62 }} contentFit="cover" transition={150} />
+                <Image key={i} source={{ uri: url }} style={{ width: galleryW, height: galleryW * 0.62 }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
               ))}
             </ScrollView>
           ) : (

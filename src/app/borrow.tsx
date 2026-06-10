@@ -6,6 +6,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { BORROW_CATEGORIES, LendItem, fetchItems, subscribeItems } from '../lib/borrow';
+import { IMAGE_CACHE_PROPS } from '../lib/image';
 import { useThemeColors } from '../theme';
 
 const ACCENT = '#0891B2';
@@ -78,7 +79,7 @@ export default function BorrowScreen() {
                 return (
                   <Pressable key={it.id} onPress={() => router.push(`/borrow/${it.id}` as any)} className="flex-row overflow-hidden rounded-2xl border border-line bg-surface active:opacity-90">
                     <View style={{ width: 92, height: 92, backgroundColor: c.inset }} className="items-center justify-center">
-                      {it.photo_url ? <Image source={{ uri: it.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" transition={120} /> : <Ionicons name={m.icon as any} size={26} color={c.faint} />}
+                      {it.photo_url ? <Image source={{ uri: it.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} /> : <Ionicons name={m.icon as any} size={26} color={c.faint} />}
                     </View>
                     <View className="flex-1 p-3">
                       <View className="flex-row items-center gap-1.5">

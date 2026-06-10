@@ -62,9 +62,9 @@ export default function CategoryScreen() {
       if (alive && cached.length) { setListings(cached); setLoading(false); }
     });
     load(0);
-    const unsub = subscribeToListings(category, () => load(0));
+    const unsub = subscribeToListings(category, communityId ?? undefined, () => load(0));
     return () => { alive = false; unsub(); };
-  }, [category, load]);
+  }, [category, communityId, load]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
