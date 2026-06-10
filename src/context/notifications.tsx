@@ -24,7 +24,7 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   listing: { icon: 'pricetag', color: '#14B8A6' },
   poll: { icon: 'stats-chart', color: '#6366F1' },
   message: { icon: 'mail', color: '#0EA5E9' },
-  dish: { icon: 'restaurant', color: '#FF5A3C' },
+  dish: { icon: 'restaurant', color: '#E8650A' },
   tiffin: { icon: 'repeat', color: '#F59E0B' },
   sport: { icon: 'football', color: '#16A34A' },
   document: { icon: 'folder', color: '#0EA5E9' },

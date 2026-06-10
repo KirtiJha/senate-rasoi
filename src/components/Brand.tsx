@@ -20,9 +20,12 @@ export function Wordmark({ size = 20, markOnly = false }: { size?: number; markO
 export function Brandfull() {
   return (
     <View className="items-center">
-      <BrandMark size={72} id="bf-mark" />
-      <Text style={{ fontSize: 30 }} className="mt-3 font-display-x text-ink">
+      <BrandMark size={76} id="bf-mark" />
+      <Text style={{ fontSize: 30 }} className="mt-3 font-display-x text-accent">
         Aangan
+      </Text>
+      <Text className="mt-0.5 text-[11px] font-sans-sb uppercase tracking-[2px] text-faint">
+        your society · your courtyard
       </Text>
     </View>
   );

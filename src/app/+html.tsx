@@ -20,8 +20,8 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Aangan" />
         {/* theme-color follows the system scheme so the browser chrome blends in */}
-        <meta name="theme-color" content="#F7F7F5" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#0E0F12" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#FBF8F3" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0D0F0E" media="(prefers-color-scheme: dark)" />
         <meta
           name="description"
           content="Your society's community hub — home food, services, and more from your neighbours."

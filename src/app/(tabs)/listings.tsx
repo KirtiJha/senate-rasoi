@@ -17,7 +17,7 @@ import { DishRow, ListingRow, TiffinPlanWithChef } from '../../lib/types';
 import { layout, useThemeColors } from '../../theme';
 
 const LIST_MAX = layout.maxContent; // same content width as every other tab
-const FOOD_COLOR = '#FF5A3C';
+const FOOD_COLOR = '#E8650A';
 const TIFFIN_COLOR = '#F59E0B';
 
 // Listings, food dishes and tiffins are different tables — here they're unified

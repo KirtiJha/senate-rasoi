@@ -14,7 +14,7 @@ import { DishRow, ListingRow, TiffinPlan } from '../lib/types';
 import { useThemeColors } from '../theme';
 import { Button, Container, RowSkeleton } from './ui';
 
-const FOOD_COLOR = '#FF5A3C';
+const FOOD_COLOR = '#E8650A';
 const TIFFIN_COLOR = '#F59E0B';
 
 type MyItem =

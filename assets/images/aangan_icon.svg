@@ -1,0 +1,34 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <title>Aangan app icon</title>
+  <rect width="512" height="512" rx="112" fill="#0F6E56"/>
+
+  <!-- Glow ring -->
+  <circle cx="256" cy="230" r="168" fill="none" stroke="#ffffff" stroke-width="6" opacity="0.08"/>
+
+  <!-- Arch outer -->
+  <path d="M156 370 L156 240 Q156 130 256 130 Q356 130 356 240 L356 370 Z" fill="#ffffff" opacity="0.12"/>
+  <!-- Arch mid -->
+  <path d="M178 370 L178 248 Q178 152 256 152 Q334 152 334 248 L334 370 Z" fill="#E8650A" opacity="0.92"/>
+  <!-- Arch inner cutout -->
+  <path d="M205 370 L205 260 Q205 178 256 178 Q307 178 307 260 L307 370 Z" fill="#0F6E56"/>
+
+  <!-- Central dot -->
+  <circle cx="256" cy="302" r="36" fill="#FAEEDA"/>
+  <circle cx="256" cy="302" r="22" fill="#E8650A"/>
+  <circle cx="256" cy="302" r="8"  fill="#ffffff"/>
+
+  <!-- Crown dots -->
+  <circle cx="256" cy="135" r="9"  fill="#ffffff" opacity="0.55"/>
+  <circle cx="214" cy="148" r="6"  fill="#ffffff" opacity="0.35"/>
+  <circle cx="298" cy="148" r="6"  fill="#ffffff" opacity="0.35"/>
+  <circle cx="180" cy="176" r="4.5" fill="#ffffff" opacity="0.22"/>
+  <circle cx="332" cy="176" r="4.5" fill="#ffffff" opacity="0.22"/>
+
+  <!-- Base step -->
+  <rect x="136" y="364" width="240" height="20" rx="7" fill="#ffffff" opacity="0.45"/>
+  <rect x="156" y="382" width="200" height="14" rx="5" fill="#0A4F3A" opacity="0.5"/>
+
+  <!-- Flanking pillars -->
+  <rect x="130" y="290" width="26" height="80" rx="6" fill="#ffffff" opacity="0.12"/>
+  <rect x="356" y="290" width="26" height="80" rx="6" fill="#ffffff" opacity="0.12"/>
+</svg>

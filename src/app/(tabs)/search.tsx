@@ -18,7 +18,7 @@ import { listTiffinPlans } from '../../lib/tiffin';
 import { layout, useThemeColors } from '../../theme';
 
 const SEARCH_MAX = layout.maxContent;
-const FOOD_COLOR = '#FF5A3C';
+const FOOD_COLOR = '#E8650A';
 const TIFFIN_COLOR = '#F59E0B';
 const RESIDENT_COLOR = '#0EA5E9';
 

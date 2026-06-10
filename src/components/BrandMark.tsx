@@ -1,26 +1,35 @@
-import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 /**
- * The Aangan mark — a warm coral tile holding two little homes side by side:
- * a friendly neighbourhood / society. Relatable and unique to the brand.
+ * The Aangan mark — a teal tile holding a courtyard archway with a warm dot at
+ * its heart (आँगन = courtyard). Ported from assets/images/aangan_icon.svg.
  */
-export function BrandMark({ size = 40, id = 'aangan-mark' }: { size?: number; id?: string }) {
+export function BrandMark({ size = 40 }: { size?: number; id?: string }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 100 100" accessibilityLabel="Aangan">
-      <Defs>
-        <LinearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#FF7A57" />
-          <Stop offset="1" stopColor="#F5492B" />
-        </LinearGradient>
-      </Defs>
-      {/* tile */}
-      <Rect x="0" y="0" width="100" height="100" rx="30" fill={`url(#${id})`} />
-      {/* two homes — a tiny neighbourhood */}
-      <Path d="M34 24 L51 45 L51 73 Q51 78 46 78 L23 78 Q18 78 18 73 L18 45 Z" fill="#FFFFFF" />
-      <Path d="M68 35 L83 53 L83 73 Q83 78 78 78 L59 78 Q54 78 54 73 L54 53 Z" fill="#FFFFFF" />
-      {/* doorways */}
-      <Rect x="29" y="62" width="11" height="16" rx="3" fill={`url(#${id})`} />
-      <Rect x="63" y="64" width="9" height="14" rx="2.5" fill={`url(#${id})`} />
+    <Svg width={size} height={size} viewBox="0 0 512 512" accessibilityLabel="Aangan">
+      <Rect width="512" height="512" rx="112" fill="#0F6E56" />
+      {/* glow ring */}
+      <Circle cx="256" cy="230" r="168" fill="none" stroke="#ffffff" strokeWidth="6" opacity={0.08} />
+      {/* arch — outer halo / orange / inner cutout back to the tile */}
+      <Path d="M156 370 L156 240 Q156 130 256 130 Q356 130 356 240 L356 370 Z" fill="#ffffff" opacity={0.12} />
+      <Path d="M178 370 L178 248 Q178 152 256 152 Q334 152 334 248 L334 370 Z" fill="#E8650A" opacity={0.92} />
+      <Path d="M205 370 L205 260 Q205 178 256 178 Q307 178 307 260 L307 370 Z" fill="#0F6E56" />
+      {/* central dot */}
+      <Circle cx="256" cy="302" r="36" fill="#FAEEDA" />
+      <Circle cx="256" cy="302" r="22" fill="#E8650A" />
+      <Circle cx="256" cy="302" r="8" fill="#ffffff" />
+      {/* crown dots */}
+      <Circle cx="256" cy="135" r="9" fill="#ffffff" opacity={0.55} />
+      <Circle cx="214" cy="148" r="6" fill="#ffffff" opacity={0.35} />
+      <Circle cx="298" cy="148" r="6" fill="#ffffff" opacity={0.35} />
+      <Circle cx="180" cy="176" r="4.5" fill="#ffffff" opacity={0.22} />
+      <Circle cx="332" cy="176" r="4.5" fill="#ffffff" opacity={0.22} />
+      {/* base step */}
+      <Rect x="136" y="364" width="240" height="20" rx="7" fill="#ffffff" opacity={0.45} />
+      <Rect x="156" y="382" width="200" height="14" rx="5" fill="#0A4F3A" opacity={0.5} />
+      {/* flanking pillars */}
+      <Rect x="130" y="290" width="26" height="80" rx="6" fill="#ffffff" opacity={0.12} />
+      <Rect x="356" y="290" width="26" height="80" rx="6" fill="#ffffff" opacity={0.12} />
     </Svg>
   );
 }

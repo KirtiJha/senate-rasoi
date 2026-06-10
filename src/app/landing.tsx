@@ -14,7 +14,8 @@ const P = {
   ink: '#1B1410',
   muted: '#6E665F',
   faint: '#A8A099',
-  accent: '#FF5A3C',
+  accent: '#0F6E56',
+  orange: '#E8650A',
   surface: '#FFFFFF',
   bg: '#FCF7F3',
   inset: '#F4EDE7',
@@ -47,11 +48,11 @@ export default function LandingScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* ── Hero ── */}
-        <LinearGradient colors={['#FFF3EE', '#FFE7DF', '#FFF7F4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+        <LinearGradient colors={['#EAF6F2', '#D8F0E7', '#F1FAF6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
           <View className="w-full self-center px-5" style={{ maxWidth: MAXW, paddingTop: isDesktop ? 72 : 44, paddingBottom: isDesktop ? 72 : 44 }}>
             <View className={isWide ? 'flex-row items-center gap-12' : ''}>
               <View className="flex-1">
-                <View className="mb-4 flex-row items-center gap-2 self-start rounded-full px-3 py-1.5" style={{ backgroundColor: 'rgba(255,255,255,0.75)', borderWidth: 1, borderColor: 'rgba(255,90,60,0.3)' }}>
+                <View className="mb-4 flex-row items-center gap-2 self-start rounded-full px-3 py-1.5" style={{ backgroundColor: 'rgba(255,255,255,0.75)', borderWidth: 1, borderColor: 'rgba(15,110,86,0.3)' }}>
                   <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: P.accent }} />
                   <Text className="font-sans-sb" style={{ fontSize: 12, color: P.accent }}>A private super-app for your society</Text>
                 </View>
@@ -128,7 +129,7 @@ export default function LandingScreen() {
           <Kicker>Earn & save from your neighbours</Kicker>
           <Heading isDesktop={isDesktop}>A local economy inside your gate</Heading>
           <View className={`mt-9 ${isWide ? 'flex-row' : ''} gap-4`}>
-            <Feature icon="restaurant" color="#FF5A3C" title="Home food & tiffins"
+            <Feature icon="restaurant" color="#E8650A" title="Home food & tiffins"
               body="Discover daily dishes, reserve plates, and subscribe to tiffin services from verified home chefs in your own society." />
             <Feature icon="pricetags" color="#14B8A6" title="Marketplace & services"
               body="Buy, sell, and find trusted help across 15 categories — tuitions, tailoring, clinics, carpooling and more — with inquiries and per-listing chat." />
@@ -186,7 +187,7 @@ export default function LandingScreen() {
         {/* ── Final CTA ── */}
         <View className="px-5 py-4">
           <View className="w-full self-center overflow-hidden rounded-[32px]" style={{ maxWidth: MAXW }}>
-            <LinearGradient colors={['#FF7A57', '#F5492B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+            <LinearGradient colors={['#15936F', '#0A4F3A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
               <View className="items-center px-6 py-14">
                 <BrandMark size={56} id="cta-mark" />
                 <Text className="mt-4 text-center font-display-x" style={{ color: '#fff', fontSize: isDesktop ? 32 : 26, lineHeight: isDesktop ? 40 : 33 }}>
@@ -196,8 +197,8 @@ export default function LandingScreen() {
                   Discover, transact, coordinate and help each other — without ever leaving your society.
                 </Text>
                 <Pressable onPress={() => router.push('/onboard' as any)} className="mt-7 flex-row items-center gap-2 rounded-2xl px-7 py-3.5 active:opacity-90" style={{ backgroundColor: '#fff' }}>
-                  <Text className="font-sans-bold" style={{ fontSize: 16, color: '#F5492B' }}>Find your society — it's free</Text>
-                  <Ionicons name="arrow-forward" size={18} color="#F5492B" />
+                  <Text className="font-sans-bold" style={{ fontSize: 16, color: '#0F6E56' }}>Find your society — it's free</Text>
+                  <Ionicons name="arrow-forward" size={18} color="#0F6E56" />
                 </Pressable>
               </View>
             </LinearGradient>
@@ -230,7 +231,7 @@ export default function LandingScreen() {
 // ── Hero visual: a stacked "app preview" card ───────────────────────
 function HeroCard() {
   const rows = [
-    { icon: 'restaurant', color: '#FF5A3C', title: 'Aalu parwal sabji', sub: 'Pratibha · 3 plates left · ₹80' },
+    { icon: 'restaurant', color: '#E8650A', title: 'Aalu parwal sabji', sub: 'Pratibha · 3 plates left · ₹80' },
     { icon: 'pricetags', color: '#14B8A6', title: 'Maths tuition (Class 9–10)', sub: 'Flat C-204 · ₹4,000/mo' },
     { icon: 'stats-chart', color: '#6366F1', title: 'New gym equipment?', sub: 'Poll · 28 votes' },
     { icon: 'wallet', color: '#16A34A', title: 'Paid ₹80 to Pratibha', sub: 'Awaiting confirmation' },

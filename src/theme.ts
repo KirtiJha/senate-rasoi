@@ -5,30 +5,30 @@ import { useThemePreference } from './context/theme';
 // Mirrors the CSS variables in src/global.css.
 
 const light = {
-  bg: '#FBF7F2',
+  bg: '#FBF8F3',
   surface: '#FFFFFF',
-  inset: '#F4F0E9',
+  inset: '#F1F3EF',
   ink: '#16171A',
   muted: '#696E76',
   faint: '#9CA1A9',
-  line: '#E9E9E8',
-  accent: '#FF5A3C',
-  accentPress: '#E8431F',
-  accentSoft: '#FFE9E3',
+  line: '#E7E9E6',
+  accent: '#0F6E56',
+  accentPress: '#0B5341',
+  accentSoft: '#E1F5EE',
   onAccent: '#FFFFFF',
 } as const;
 
 const dark = {
-  bg: '#0E0F12',
-  surface: '#191B1F',
-  inset: '#21242A',
+  bg: '#0D0F0E',
+  surface: '#181B1A',
+  inset: '#212523',
   ink: '#F4F5F7',
   muted: '#A5ABB5',
   faint: '#6E747E',
-  line: '#292C33',
-  accent: '#FF6C50',
-  accentPress: '#FF5A3C',
-  accentSoft: '#2B1914',
+  line: '#293330',
+  accent: '#22A37D',
+  accentPress: '#0F6E56',
+  accentSoft: '#12302A',
   onAccent: '#FFFFFF',
 } as const;
 
@@ -39,15 +39,17 @@ export const fixed = {
   egg: '#E0A416',
   whatsapp: '#25D366',
   success: '#14A06A',
+  orange: '#E8650A', // brand secondary highlight (food, warm accents)
   white: '#FFFFFF',
   black: '#000000',
 } as const;
 
-// Warm, appetizing gradients (used on the hero, primary buttons, accents).
+// Brand gradients — teal (courtyard) with warm orange highlights.
 export const gradients = {
-  hero: ['#FF6A3D', '#FF9E45'] as const, // coral → amber (sunset)
-  heroDark: ['#FF5A3C', '#E8851F'] as const,
-  primary: ['#FF6A3D', '#FF8A3D'] as const,
+  hero: ['#15936F', '#0F6E56'] as const, // teal
+  heroDark: ['#0F6E56', '#0A4F3A'] as const,
+  primary: ['#15936F', '#0F6E56'] as const,
+  warm: ['#F08A2C', '#E8650A'] as const, // orange (food / warm accents)
   mint: ['#16A06A', '#3FBE86'] as const, // fresh green (veg / success accents)
 };
 

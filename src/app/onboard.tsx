@@ -39,7 +39,7 @@ function MapPreview({ lat, lon, height }: { lat: number; lon: number; height: nu
           )
         : null}
       <View style={{ position: 'absolute', left: w / 2 - 13, top: height / 2 - 26 }}>
-        <Ionicons name="location" size={26} color="#F5492B" />
+        <Ionicons name="location" size={26} color="#E8650A" />
       </View>
     </View>
   );

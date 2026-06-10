@@ -36,7 +36,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     label: 'Home Food',
     blurb: "See what your neighbours are cooking today",
     icon: 'restaurant',
-    color: '#FF5A3C',
+    color: '#E8650A',
     kind: 'food',
     cta: 'order',
     ctaLabel: 'Reserve plates',

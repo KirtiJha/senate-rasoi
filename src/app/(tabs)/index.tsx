@@ -24,7 +24,7 @@ const COMMUNITY_TILES: CommunityTile[] = [
     label: 'Feed',
     blurb: 'Posts, announcements & issues',
     icon: 'chatbubbles',
-    color: '#FF5A3C',
+    color: '#E8650A',
     href: '/feed',
   },
   {
