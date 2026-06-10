@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Button, Container, ScreenHeader } from '../components/ui';
 import { useToast } from '../context/toast';
-import { Community, findCommunityByOsm } from '../lib/communities';
+import { Community, findCommunityByOsm, searchCommunities } from '../lib/communities';
 import { Place, TILE, osmMapLink, searchSocieties, tileMath, tileUrl } from '../lib/geo';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { useThemeColors } from '../theme';
@@ -52,6 +52,7 @@ export default function OnboardScreen() {
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Place[]>([]);
+  const [existingMatches, setExistingMatches] = useState<Community[]>([]);
   const [searching, setSearching] = useState(false);
   const [place, setPlace] = useState<Place | null>(null);
   const [existing, setExisting] = useState<Community | null | undefined>(undefined); // undefined = checking
@@ -59,20 +60,25 @@ export default function OnboardScreen() {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
 
-  // Debounced society search (OpenStreetMap).
+  // Debounced search — existing Aangan societies (to JOIN) + OpenStreetMap (to ONBOARD).
   useEffect(() => {
-    if (place) return;
+    if (place || manual) return;
     const q = query.trim();
-    if (q.length < 3) { setResults([]); setSearching(false); return; }
+    if (q.length < 3) { setResults([]); setExistingMatches([]); setSearching(false); return; }
     setSearching(true);
     const ctrl = new AbortController();
     const t = setTimeout(async () => {
-      const r = await searchSocieties(q, ctrl.signal);
-      setResults(r);
+      const [osm, comms] = await Promise.all([
+        searchSocieties(q, ctrl.signal),
+        isSupabaseConfigured ? searchCommunities(q).catch(() => [] as Community[]) : Promise.resolve([] as Community[]),
+      ]);
+      setExistingMatches(comms);
+      const onAangan = new Set(comms.map((cm) => cm.osm_place_id).filter(Boolean) as string[]);
+      setResults(osm.filter((r) => !onAangan.has(r.osmId)));
       setSearching(false);
     }, 500);
     return () => { clearTimeout(t); ctrl.abort(); };
-  }, [query, place]);
+  }, [query, place, manual]);
 
   const pick = async (p: Place) => {
     setPlace(p);
@@ -86,6 +92,7 @@ export default function OnboardScreen() {
 
   const reset = () => { setPlace(null); setExisting(undefined); setResults([]); };
   const startManual = () => { setManual(true); setName(query.trim()); setAddress(''); };
+  const joinExisting = (cm: Community) => router.push(`/sign-in?communityId=${cm.id}` as any);
 
   const signUpExisting = () => existing && router.push(`/sign-in?communityId=${existing.id}` as any);
   const onboardNew = () => {
@@ -100,7 +107,7 @@ export default function OnboardScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="business-outline" iconColor="#0D9488" title="Onboard your society" showBack hideSociety />
+      <ScreenHeader icon="business-outline" iconColor="#0D9488" title="Find your society" showBack hideSociety />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>
@@ -125,7 +132,7 @@ export default function OnboardScreen() {
             <>
               <Text className="font-display-x text-[22px] text-ink">Find your society</Text>
               <Text className="mt-1.5 mb-4 text-[14px] leading-[21px] text-muted">
-                Search for your apartment or society in Bengaluru. We'll check if it's already on Aangan — if not, you can onboard it.
+                Search for your apartment or society in Bengaluru. If it's already on Aangan you'll <Text className="font-sans-sb text-ink">join</Text> it; if not, you can <Text className="font-sans-sb text-ink">onboard</Text> it as the founder.
               </Text>
 
               <View className="flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
@@ -143,22 +150,51 @@ export default function OnboardScreen() {
               </View>
 
               <View className="mt-3">
-                {query.trim().length >= 3 && !searching && results.length === 0 ? (
-                  <Text className="px-1 py-3 text-[13px] text-muted">No matches. Try a different name or a nearby landmark.</Text>
-                ) : (
-                  results.map((r) => (
-                    <Pressable key={r.osmId} onPress={() => pick(r)} className="flex-row items-start gap-3 rounded-2xl border border-line bg-surface p-3.5 active:bg-inset" style={{ marginBottom: 8 }}>
-                      <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: '#0D948822' }}>
-                        <Ionicons name="business" size={17} color="#0D9488" />
-                      </View>
-                      <View className="flex-1">
-                        <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{r.name}</Text>
-                        <Text className="text-[12px] text-muted" numberOfLines={2}>{r.address}</Text>
-                      </View>
-                      <Ionicons name="chevron-forward" size={18} color={c.faint} />
-                    </Pressable>
-                  ))
-                )}
+                {/* Already on Aangan → join */}
+                {existingMatches.length > 0 ? (
+                  <View className="mb-1">
+                    <Text className="mb-1.5 px-1 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Already on Aangan — join</Text>
+                    {existingMatches.map((cm) => (
+                      <Pressable key={cm.id} onPress={() => joinExisting(cm)} className="mb-2 flex-row items-center gap-3 rounded-2xl border p-3.5 active:opacity-80" style={{ borderColor: '#16A34A55', backgroundColor: '#16A34A10' }}>
+                        <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: '#16A34A22' }}>
+                          <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{cm.name}</Text>
+                          <Text className="text-[12px] text-muted" numberOfLines={1}>{cm.address ?? 'On Aangan'}</Text>
+                        </View>
+                        <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: '#16A34A' }}>
+                          <Text className="text-[11px] font-sans-sb" style={{ color: '#fff' }}>Join</Text>
+                        </View>
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
+
+                {/* Not yet on Aangan → onboard */}
+                {results.length > 0 ? (
+                  <View>
+                    {existingMatches.length > 0 ? (
+                      <Text className="mb-1.5 mt-2 px-1 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Not yours? Onboard a new one</Text>
+                    ) : null}
+                    {results.map((r) => (
+                      <Pressable key={r.osmId} onPress={() => pick(r)} className="flex-row items-start gap-3 rounded-2xl border border-line bg-surface p-3.5 active:bg-inset" style={{ marginBottom: 8 }}>
+                        <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: '#0D948822' }}>
+                          <Ionicons name="business" size={17} color="#0D9488" />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{r.name}</Text>
+                          <Text className="text-[12px] text-muted" numberOfLines={2}>{r.address}</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={18} color={c.faint} />
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
+
+                {query.trim().length >= 3 && !searching && results.length === 0 && existingMatches.length === 0 ? (
+                  <Text className="px-1 py-3 text-[13px] text-muted">No matches. Try a different name, a nearby landmark, or add it manually below.</Text>
+                ) : null}
               </View>
 
               <Pressable onPress={startManual} className="mt-3 items-center py-2">

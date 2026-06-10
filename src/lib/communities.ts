@@ -11,7 +11,9 @@ export interface Community {
   city?: string | null;
 }
 
-const COMMUNITY_COLS = 'id, name, slug, address, lat, lon, osm_place_id, city';
+// `*` (not an explicit column list) so community reads keep working even before
+// migration 0035 adds the geo columns — the extra fields are optional on Community.
+const COMMUNITY_COLS = '*';
 
 export async function fetchCommunities(): Promise<Community[]> {
   const { data, error } = await supabase
@@ -30,6 +32,21 @@ export async function fetchCommunityById(id: string): Promise<Community | null> 
     .maybeSingle();
   if (error) throw error;
   return data as Community | null;
+}
+
+/** Societies already on Aangan whose name matches the query (for the onboarding
+ *  search — so a user instantly sees if theirs is here). */
+export async function searchCommunities(query: string): Promise<Community[]> {
+  const q = query.trim().replace(/[%_\\]/g, ' ');
+  if (q.length < 2) return [];
+  const { data, error } = await supabase
+    .from('communities')
+    .select(COMMUNITY_COLS)
+    .ilike('name', `%${q}%`)
+    .order('name')
+    .limit(8);
+  if (error) throw error;
+  return (data ?? []) as Community[];
 }
 
 /** Is a real-world place already on Aangan? (de-dupe by OpenStreetMap id) */

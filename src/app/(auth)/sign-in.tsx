@@ -191,6 +191,11 @@ export default function SignInScreen() {
                   <Ionicons name="chevron-forward" size={16} color={c.faint} />
                 </Pressable>
               )}
+              {!newCommunity ? (
+                <Pressable onPress={() => router.push('/onboard' as any)} className="mb-4 -mt-1 self-start active:opacity-60">
+                  <Text className="text-[12.5px] font-sans-sb text-accent">Don't see your society? Find &amp; onboard it →</Text>
+                </Pressable>
+              ) : null}
 
               <View className="flex-row gap-3">
                 <View className="flex-1">

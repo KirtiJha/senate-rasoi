@@ -64,7 +64,7 @@ export default function LandingScreen() {
                 </Text>
                 <View className="mt-7 flex-row flex-wrap items-center gap-3">
                   <Pressable onPress={() => router.push('/onboard' as any)} className="flex-row items-center gap-2 rounded-2xl px-6 py-3.5 active:opacity-90" style={{ backgroundColor: P.accent }}>
-                    <Text className="font-sans-bold" style={{ fontSize: 16, color: '#fff' }}>Onboard your society</Text>
+                    <Text className="font-sans-bold" style={{ fontSize: 16, color: '#fff' }}>Find your society</Text>
                     <Ionicons name="arrow-forward" size={18} color="#fff" />
                   </Pressable>
                   <Pressable onPress={go} hitSlop={6} className="flex-row items-center gap-1 px-2 py-3.5 active:opacity-60">
@@ -196,7 +196,7 @@ export default function LandingScreen() {
                   Discover, transact, coordinate and help each other — without ever leaving your society.
                 </Text>
                 <Pressable onPress={() => router.push('/onboard' as any)} className="mt-7 flex-row items-center gap-2 rounded-2xl px-7 py-3.5 active:opacity-90" style={{ backgroundColor: '#fff' }}>
-                  <Text className="font-sans-bold" style={{ fontSize: 16, color: '#F5492B' }}>Onboard your society — free</Text>
+                  <Text className="font-sans-bold" style={{ fontSize: 16, color: '#F5492B' }}>Find your society — it's free</Text>
                   <Ionicons name="arrow-forward" size={18} color="#F5492B" />
                 </Pressable>
               </View>
