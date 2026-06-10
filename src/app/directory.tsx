@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, RowSkeleton, ScreenHeader, Sheet, useResponsive } from '../components/ui';
@@ -47,7 +47,7 @@ export default function DirectoryScreen() {
     finally { setLoading(false); }
   }, [communityId, userId, isAdmin, toast]);
 
-  useEffect(() => { load(); }, [load]);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

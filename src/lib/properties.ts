@@ -83,7 +83,7 @@ export async function fetchProperties(filters: PropertyFilters = {}, communityId
   if (filters.type && filters.type !== 'all') q = q.eq('listing_type', filters.type);
   if (filters.availableOnly) q = q.eq('status', 'available');
   if (filters.mine) q = q.eq('owner_user_id', filters.mine);
-  q = q.order('bump_at', { ascending: false });
+  q = q.order('bump_at', { ascending: false }).limit(100);
   const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as PropertyRow[];
@@ -197,11 +197,11 @@ export async function deleteProperty(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export function subscribeProperties(onChange: () => void): () => void {
+export function subscribeProperties(communityId: string, onChange: () => void): () => void {
   if (!isSupabaseConfigured) return () => {};
   const ch = supabase
-    .channel('property-listings')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'property_listings' }, onChange)
+    .channel(`property-listings-${communityId}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'property_listings', filter: `community_id=eq.${communityId}` }, onChange)
     .subscribe();
   return () => { supabase.removeChannel(ch); };
 }

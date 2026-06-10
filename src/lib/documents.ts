@@ -26,7 +26,8 @@ export async function fetchDocuments(communityId: string): Promise<DocRow[]> {
     .from('documents')
     .select('*, owner:profiles!documents_owner_id_fkey(name, flat)')
     .eq('community_id', communityId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(500);
   if (error) throw error;
   return (data ?? []) as unknown as DocRow[];
 }

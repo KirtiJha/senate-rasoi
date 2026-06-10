@@ -124,8 +124,9 @@ export async function searchPosts(
   if (ftsErr) throw ftsErr;
   if (fts && fts.length) return fts as PostRow[];
 
+  const safe = q.replace(/[%_,()*\\]/g, ' ').trim();
   const { data, error } = await base()
-    .or(`title.ilike.%${q}%,body.ilike.%${q}%`)
+    .or(`title.ilike.%${safe}%,body.ilike.%${safe}%`)
     .order('created_at', { ascending: false })
     .limit(40);
   if (error) throw error;

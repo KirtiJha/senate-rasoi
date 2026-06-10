@@ -14,7 +14,7 @@ const catMeta = (key: string | null) => BORROW_CATEGORIES.find((c) => c.key === 
 export default function BorrowScreen() {
   const c = useThemeColors();
   const router = useRouter();
-  const { userId } = useAuth();
+  const { userId, communityId } = useAuth();
 
   const [rows, setRows] = useState<LendItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +26,7 @@ export default function BorrowScreen() {
     catch { /* keep */ } finally { setLoading(false); }
   }, [cat, mine, userId]);
 
-  useFocusEffect(useCallback(() => { setLoading(true); load(); return subscribeItems(load); }, [load]));
+  useFocusEffect(useCallback(() => { setLoading(true); load(); return subscribeItems(communityId, load); }, [load, communityId]));
 
   return (
     <View className="flex-1 bg-bg">

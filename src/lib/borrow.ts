@@ -49,7 +49,7 @@ export async function fetchItems(opts: { category?: string; availableOnly?: bool
   if (opts.category && opts.category !== 'all') q = q.eq('category', opts.category);
   if (opts.availableOnly) q = q.eq('status', 'available');
   if (opts.mine) q = q.eq('owner_user_id', opts.mine);
-  const { data, error } = await q.order('bump_at', { ascending: false });
+  const { data, error } = await q.order('bump_at', { ascending: false }).limit(100);
   if (error) throw error;
   return (data ?? []) as LendItem[];
 }
@@ -124,10 +124,10 @@ export async function setRequestStatus(id: string, status: BorrowStatus): Promis
   if (error) throw error;
 }
 
-export function subscribeItems(onChange: () => void): () => void {
+export function subscribeItems(communityId: string, onChange: () => void): () => void {
   if (!isSupabaseConfigured) return () => {};
-  const ch = supabase.channel('lend-items')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'lend_items' }, onChange)
+  const ch = supabase.channel(`lend-items-${communityId}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'lend_items', filter: `community_id=eq.${communityId}` }, onChange)
     .subscribe();
   return () => { supabase.removeChannel(ch); };
 }

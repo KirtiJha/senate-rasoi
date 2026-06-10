@@ -46,7 +46,7 @@ const A_SELECT = '*, author:profiles!reco_answers_author_id_fkey(name,flat)';
 export async function fetchQuestions(category?: string, communityId: string = COMMUNITY_ID): Promise<RecoQuestion[]> {
   let q = supabase.from('reco_questions').select(Q_SELECT).eq('community_id', communityId);
   if (category && category !== 'all') q = q.eq('category', category);
-  const { data, error } = await q.order('bump_at', { ascending: false });
+  const { data, error } = await q.order('bump_at', { ascending: false }).limit(100);
   if (error) throw error;
   return (data ?? []) as RecoQuestion[];
 }
@@ -60,7 +60,7 @@ export async function fetchQuestion(id: string): Promise<RecoQuestion | null> {
 export async function fetchAnswers(questionId: string, userId?: string): Promise<RecoAnswer[]> {
   const { data, error } = await supabase
     .from('reco_answers').select(A_SELECT)
-    .eq('question_id', questionId).order('vote_count', { ascending: false }).order('created_at', { ascending: true });
+    .eq('question_id', questionId).order('vote_count', { ascending: false }).order('created_at', { ascending: true }).limit(200);
   if (error) throw error;
   const answers = (data ?? []) as RecoAnswer[];
   if (userId && answers.length) {
@@ -111,10 +111,10 @@ export async function toggleVote(answerId: string, userId: string, currentlyVote
   return true;
 }
 
-export function subscribeQuestions(onChange: () => void): () => void {
+export function subscribeQuestions(communityId: string, onChange: () => void): () => void {
   if (!isSupabaseConfigured) return () => {};
-  const ch = supabase.channel('reco-questions')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'reco_questions' }, onChange)
+  const ch = supabase.channel(`reco-questions-${communityId}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'reco_questions', filter: `community_id=eq.${communityId}` }, onChange)
     .subscribe();
   return () => { supabase.removeChannel(ch); };
 }

@@ -27,7 +27,8 @@ export async function fetchRegistry(communityId: string = COMMUNITY_ID): Promise
   const { data, error } = await supabase
     .from('profiles')
     .select('id,name,flat,whatsapp,phone,blood_group,donor_available,helper_skills')
-    .eq('community_id', communityId);
+    .eq('community_id', communityId)
+    .limit(2000);
   if (error) throw error;
   return ((data ?? []) as RegistryPerson[]).filter((p) => p.donor_available || (p.helper_skills?.length ?? 0) > 0);
 }

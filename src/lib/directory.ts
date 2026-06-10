@@ -39,8 +39,8 @@ export async function fetchDirectory(
   isAdmin: boolean,
 ): Promise<Resident[]> {
   const [memberRes, entryRes] = await Promise.all([
-    supabase.from('profiles').select('*').eq('community_id', communityId),
-    supabase.from('directory_entries').select('*').eq('community_id', communityId),
+    supabase.from('profiles').select('*').eq('community_id', communityId).limit(2000),
+    supabase.from('directory_entries').select('*').eq('community_id', communityId).limit(2000),
   ]);
   if (memberRes.error) throw memberRes.error;
   const members = (memberRes.data ?? []) as DbProfile[];

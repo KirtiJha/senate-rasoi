@@ -20,7 +20,7 @@ const STATUS_META: Record<string, { label: string; bg: string; fg: string }> = {
 export default function PropertiesScreen() {
   const c = useThemeColors();
   const router = useRouter();
-  const { userId } = useAuth();
+  const { userId, communityId } = useAuth();
 
   const [rows, setRows] = useState<PropertyRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,9 +38,8 @@ export default function PropertiesScreen() {
   useFocusEffect(useCallback(() => {
     setLoading(true);
     load();
-    const unsub = subscribeProperties(load);
-    return unsub;
-  }, [load]));
+    return subscribeProperties(communityId, load);
+  }, [load, communityId]));
 
   return (
     <View className="flex-1 bg-bg">

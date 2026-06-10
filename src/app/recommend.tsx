@@ -27,8 +27,8 @@ export default function RecommendScreen() {
 
   useFocusEffect(useCallback(() => {
     setLoading(true); load();
-    return subscribeQuestions(load);
-  }, [load]));
+    return subscribeQuestions(communityId, load);
+  }, [load, communityId]));
 
   return (
     <View className="flex-1 bg-bg">

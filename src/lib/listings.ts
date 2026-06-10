@@ -81,9 +81,11 @@ export async function searchListings(query: string, communityId: string = COMMUN
   if (ftsErr) throw ftsErr;
   if (fts && fts.length) return fts as ListingRow[];
 
-  // Fallback: substring match for partial tokens.
+  // Fallback: substring match for partial tokens. Neutralise PostgREST/ilike
+  // metacharacters so the query can't be broken out of (RLS still backstops).
+  const safe = q.replace(/[%_,()*\\]/g, ' ').trim();
   const { data, error } = await base()
-    .or(`title.ilike.%${q}%,description.ilike.%${q}%`)
+    .or(`title.ilike.%${safe}%,description.ilike.%${safe}%`)
     .order('bump_at', { ascending: false })
     .limit(40);
   if (error) throw error;
