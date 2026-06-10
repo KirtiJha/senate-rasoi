@@ -226,7 +226,7 @@ export default function LandingScreen() {
   );
 }
 
-// ── Full brand lockup (faithful port of assets/images/aangan_logo.svg) ──
+// ── Full brand lockup (faithful port of assets/images/aangan_diversity_logo.svg) ──
 // 8 petals of the diversity flower (matches assets/images/aangan_diversity_logo.svg).
 const LOGO_PETALS = [
   { a: 0, c: '#E8650A', o: 0.92 },
