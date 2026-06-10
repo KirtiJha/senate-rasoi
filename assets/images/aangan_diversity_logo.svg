@@ -1,0 +1,58 @@
+<svg width="680" height="460" viewBox="0 0 680 460" xmlns="http://www.w3.org/2000/svg">
+  <title>Aangan diversity logo</title>
+  <rect width="680" height="460" fill="#ffffff"/>
+
+  <circle cx="178" cy="218" r="118" fill="none" stroke="#D3D1C7" stroke-width="0.75" opacity="0.6"/>
+
+  <g transform="rotate(0, 178, 218)"><ellipse cx="178" cy="160" rx="22" ry="58" fill="#E8650A" opacity="0.92"/></g>
+  <g transform="rotate(45, 178, 218)"><ellipse cx="178" cy="160" rx="22" ry="58" fill="#D4537E" opacity="0.88"/></g>
+  <g transform="rotate(90, 178, 218)"><ellipse cx="178" cy="160" rx="22" ry="58" fill="#1D9E75" opacity="0.90"/></g>
+  <g transform="rotate(135, 178, 218)"><ellipse cx="178" cy="160" rx="22" ry="58" fill="#534AB7" opacity="0.88"/></g>
+  <g transform="rotate(180, 178, 218)"><ellipse cx="178" cy="160" rx="22" ry="58" fill="#BA7517" opacity="0.90"/></g>
+  <g transform="rotate(225, 178, 218)"><ellipse cx="178" cy="160" rx="22" ry="58" fill="#D85A30" opacity="0.88"/></g>
+  <g transform="rotate(270, 178, 218)"><ellipse cx="178" cy="160" rx="22" ry="58" fill="#185FA5" opacity="0.88"/></g>
+  <g transform="rotate(315, 178, 218)"><ellipse cx="178" cy="160" rx="22" ry="58" fill="#3B6D11" opacity="0.88"/></g>
+
+  <circle cx="178" cy="218" r="54" fill="#ffffff" opacity="0.92"/>
+  <circle cx="178" cy="218" r="54" fill="none" stroke="#e8e5e0" stroke-width="1"/>
+
+  <g transform="rotate(0, 178, 218)"><ellipse cx="178" cy="185" rx="13" ry="19" fill="#E8650A" opacity="0.28"/></g>
+  <g transform="rotate(45, 178, 218)"><ellipse cx="178" cy="185" rx="13" ry="19" fill="#D4537E" opacity="0.25"/></g>
+  <g transform="rotate(90, 178, 218)"><ellipse cx="178" cy="185" rx="13" ry="19" fill="#1D9E75" opacity="0.25"/></g>
+  <g transform="rotate(135, 178, 218)"><ellipse cx="178" cy="185" rx="13" ry="19" fill="#534AB7" opacity="0.25"/></g>
+  <g transform="rotate(180, 178, 218)"><ellipse cx="178" cy="185" rx="13" ry="19" fill="#BA7517" opacity="0.25"/></g>
+  <g transform="rotate(225, 178, 218)"><ellipse cx="178" cy="185" rx="13" ry="19" fill="#D85A30" opacity="0.25"/></g>
+  <g transform="rotate(270, 178, 218)"><ellipse cx="178" cy="185" rx="13" ry="19" fill="#185FA5" opacity="0.25"/></g>
+  <g transform="rotate(315, 178, 218)"><ellipse cx="178" cy="185" rx="13" ry="19" fill="#3B6D11" opacity="0.25"/></g>
+
+  <circle cx="178" cy="218" r="22" fill="#1a1a1a"/>
+  <circle cx="178" cy="218" r="14" fill="#E8650A"/>
+  <circle cx="178" cy="218" r="6"  fill="#ffffff"/>
+  <circle cx="178" cy="218" r="2.5" fill="#E8650A"/>
+
+  <circle cx="178" cy="103" r="4" fill="#E8650A" opacity="0.5"/>
+  <circle cx="258" cy="138" r="4" fill="#D4537E" opacity="0.45"/>
+  <circle cx="293" cy="218" r="4" fill="#1D9E75" opacity="0.45"/>
+  <circle cx="258" cy="298" r="4" fill="#534AB7" opacity="0.45"/>
+  <circle cx="178" cy="333" r="4" fill="#BA7517" opacity="0.45"/>
+  <circle cx="98"  cy="298" r="4" fill="#D85A30" opacity="0.45"/>
+  <circle cx="63"  cy="218" r="4" fill="#185FA5" opacity="0.45"/>
+  <circle cx="98"  cy="138" r="4" fill="#3B6D11" opacity="0.45"/>
+
+  <text x="326" y="236" text-anchor="middle"
+        font-family="Georgia, serif" font-weight="700" font-size="68" fill="#1a1a1a" letter-spacing="-1.5">aangan</text>
+  <text x="326" y="271" text-anchor="middle"
+        font-family="Arial, sans-serif" font-weight="300" font-size="19" fill="#888780" letter-spacing="5">&#x906;&#x901;&#x917;&#x928;</text>
+
+  <rect x="200" y="290" width="21" height="3.5" rx="1.5" fill="#E8650A"/>
+  <rect x="224" y="290" width="21" height="3.5" rx="1.5" fill="#D4537E"/>
+  <rect x="248" y="290" width="21" height="3.5" rx="1.5" fill="#1D9E75"/>
+  <rect x="272" y="290" width="21" height="3.5" rx="1.5" fill="#534AB7"/>
+  <rect x="296" y="290" width="21" height="3.5" rx="1.5" fill="#BA7517"/>
+  <rect x="320" y="290" width="21" height="3.5" rx="1.5" fill="#D85A30"/>
+  <rect x="344" y="290" width="21" height="3.5" rx="1.5" fill="#185FA5"/>
+  <rect x="368" y="290" width="21" height="3.5" rx="1.5" fill="#3B6D11"/>
+
+  <text x="326" y="318" text-anchor="middle"
+        font-family="Arial, sans-serif" font-weight="300" font-size="12.5" fill="#B4B2A9" letter-spacing="2.5">every home. every language. one courtyard.</text>
+</svg>

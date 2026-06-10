@@ -24,8 +24,8 @@ export function Brandfull() {
       <Text style={{ fontSize: 30 }} className="mt-3 font-display-x text-accent">
         Aangan
       </Text>
-      <Text className="mt-0.5 text-[11px] font-sans-sb uppercase tracking-[2px] text-faint">
-        your society · your courtyard
+      <Text className="mt-0.5 text-[10px] font-sans-sb uppercase tracking-[1.5px] text-faint">
+        every home · every language · one courtyard
       </Text>
     </View>
   );

@@ -28,7 +28,7 @@
     "android": {
       "package": "com.aangan.app",
       "adaptiveIcon": {
-        "backgroundColor": "#0F6E56",
+        "backgroundColor": "#1A1A1A",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false,
@@ -50,7 +50,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0F6E56",
+          "backgroundColor": "#1A1A1A",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 120
         }

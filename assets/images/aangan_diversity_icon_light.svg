@@ -1,0 +1,28 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <title>Aangan icon light</title>
+  <rect width="512" height="512" rx="112" fill="#f7f5f2"/>
+  <g transform="translate(256,256)">
+    <g transform="rotate(0,0,0)"><ellipse cx="0" cy="-90" rx="30" ry="90" fill="#E8650A" opacity="0.92"/></g>
+    <g transform="rotate(45,0,0)"><ellipse cx="0" cy="-90" rx="30" ry="90" fill="#D4537E" opacity="0.88"/></g>
+    <g transform="rotate(90,0,0)"><ellipse cx="0" cy="-90" rx="30" ry="90" fill="#1D9E75" opacity="0.90"/></g>
+    <g transform="rotate(135,0,0)"><ellipse cx="0" cy="-90" rx="30" ry="90" fill="#534AB7" opacity="0.88"/></g>
+    <g transform="rotate(180,0,0)"><ellipse cx="0" cy="-90" rx="30" ry="90" fill="#BA7517" opacity="0.90"/></g>
+    <g transform="rotate(225,0,0)"><ellipse cx="0" cy="-90" rx="30" ry="90" fill="#D85A30" opacity="0.88"/></g>
+    <g transform="rotate(270,0,0)"><ellipse cx="0" cy="-90" rx="30" ry="90" fill="#185FA5" opacity="0.88"/></g>
+    <g transform="rotate(315,0,0)"><ellipse cx="0" cy="-90" rx="30" ry="90" fill="#3B6D11" opacity="0.88"/></g>
+    <circle cx="0" cy="0" r="52" fill="#f7f5f2"/>
+    <circle cx="0" cy="0" r="52" fill="none" stroke="#e8e5e0" stroke-width="2"/>
+    <g transform="rotate(0,0,0)"><ellipse cx="0" cy="-30" rx="18" ry="26" fill="#E8650A" opacity="0.28"/></g>
+    <g transform="rotate(45,0,0)"><ellipse cx="0" cy="-30" rx="18" ry="26" fill="#D4537E" opacity="0.25"/></g>
+    <g transform="rotate(90,0,0)"><ellipse cx="0" cy="-30" rx="18" ry="26" fill="#1D9E75" opacity="0.25"/></g>
+    <g transform="rotate(135,0,0)"><ellipse cx="0" cy="-30" rx="18" ry="26" fill="#534AB7" opacity="0.25"/></g>
+    <g transform="rotate(180,0,0)"><ellipse cx="0" cy="-30" rx="18" ry="26" fill="#BA7517" opacity="0.25"/></g>
+    <g transform="rotate(225,0,0)"><ellipse cx="0" cy="-30" rx="18" ry="26" fill="#D85A30" opacity="0.25"/></g>
+    <g transform="rotate(270,0,0)"><ellipse cx="0" cy="-30" rx="18" ry="26" fill="#185FA5" opacity="0.25"/></g>
+    <g transform="rotate(315,0,0)"><ellipse cx="0" cy="-30" rx="18" ry="26" fill="#3B6D11" opacity="0.25"/></g>
+    <circle cx="0" cy="0" r="30" fill="#1a1a1a"/>
+    <circle cx="0" cy="0" r="20" fill="#E8650A"/>
+    <circle cx="0" cy="0" r="8"  fill="#ffffff"/>
+    <circle cx="0" cy="0" r="3.5" fill="#E8650A"/>
+  </g>
+</svg>

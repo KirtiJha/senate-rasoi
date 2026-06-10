@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Ellipse, G } from 'react-native-svg';
 import { BrandMark } from '../components/BrandMark';
 import { useResponsive } from '../components/ui';
 
@@ -53,7 +53,6 @@ export default function LandingScreen() {
           <View className="w-full self-center px-5" style={{ maxWidth: MAXW, paddingTop: isDesktop ? 72 : 44, paddingBottom: isDesktop ? 72 : 44 }}>
             <View className={isWide ? 'flex-row items-center gap-12' : ''}>
               <View className="flex-1">
-                <View className="mb-6"><LogoLockup emblem={68} /></View>
                 <View className="mb-4 flex-row items-center gap-2 self-start rounded-full px-3 py-1.5" style={{ backgroundColor: 'rgba(255,255,255,0.75)', borderWidth: 1, borderColor: 'rgba(15,110,86,0.3)' }}>
                   <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: P.accent }} />
                   <Text className="font-sans-sb" style={{ fontSize: 12, color: P.accent }}>A private super-app for your society</Text>
@@ -228,45 +227,57 @@ export default function LandingScreen() {
 }
 
 // ── Full brand lockup (faithful port of assets/images/aangan_logo.svg) ──
-function LogoEmblem({ size }: { size: number }) {
+// 8 petals of the diversity flower (matches assets/images/aangan_diversity_logo.svg).
+const LOGO_PETALS = [
+  { a: 0, c: '#E8650A', o: 0.92 },
+  { a: 45, c: '#D4537E', o: 0.88 },
+  { a: 90, c: '#1D9E75', o: 0.9 },
+  { a: 135, c: '#534AB7', o: 0.88 },
+  { a: 180, c: '#BA7517', o: 0.9 },
+  { a: 225, c: '#D85A30', o: 0.88 },
+  { a: 270, c: '#185FA5', o: 0.88 },
+  { a: 315, c: '#3B6D11', o: 0.88 },
+];
+
+function DiversityEmblem({ size }: { size: number }) {
   return (
-    <Svg width={size} height={size} viewBox="52 78 236 236" accessibilityLabel="Aangan">
-      <Circle cx={170} cy={195} r={115} fill="none" stroke="#0F6E56" strokeWidth={3} opacity={0.18} />
-      <Circle cx={170} cy={195} r={108} fill="none" stroke="#0F6E56" strokeWidth={1} opacity={0.12} />
-      <Circle cx={170} cy={195} r={104} fill="#E1F5EE" opacity={0.55} />
-      <Path d="M118 258 L118 200 Q118 148 170 148 Q222 148 222 200 L222 258 Z" fill="#0F6E56" opacity={0.92} />
-      <Path d="M132 258 L132 206 Q132 162 170 162 Q208 162 208 206 L208 258 Z" fill="#E1F5EE" opacity={0.6} />
-      <Path d="M140 258 L140 209 Q140 170 170 170 Q200 170 200 209 L200 258 Z" fill="#E8650A" opacity={0.88} />
-      <Circle cx={170} cy={222} r={14} fill="#FAEEDA" />
-      <Circle cx={170} cy={222} r={8} fill="#E8650A" />
-      <Circle cx={170} cy={222} r={3} fill="#ffffff" />
-      <Circle cx={170} cy={152} r={3.5} fill="#0F6E56" opacity={0.7} />
-      <Circle cx={151} cy={158} r={2.5} fill="#0F6E56" opacity={0.5} />
-      <Circle cx={189} cy={158} r={2.5} fill="#0F6E56" opacity={0.5} />
-      <Circle cx={137} cy={173} r={2} fill="#0F6E56" opacity={0.35} />
-      <Circle cx={203} cy={173} r={2} fill="#0F6E56" opacity={0.35} />
-      <Rect x={108} y={255} width={124} height={9} rx={3} fill="#0F6E56" opacity={0.75} />
-      <Rect x={118} y={262} width={104} height={6} rx={2} fill="#0A4F3A" opacity={0.5} />
-      <Rect x={104} y={215} width={14} height={47} rx={3} fill="#0F6E56" opacity={0.25} />
-      <Rect x={222} y={215} width={14} height={47} rx={3} fill="#0F6E56" opacity={0.25} />
-      <Circle cx={138} cy={240} r={2} fill="#E8650A" opacity={0.35} />
-      <Circle cx={202} cy={240} r={2} fill="#E8650A" opacity={0.35} />
-      <Circle cx={144} cy={248} r={1.5} fill="#E8650A" opacity={0.25} />
-      <Circle cx={196} cy={248} r={1.5} fill="#E8650A" opacity={0.25} />
+    <Svg width={size} height={size} viewBox="0 0 236 236" accessibilityLabel="Aangan">
+      <Circle cx={118} cy={118} r={116} fill="none" stroke="#D3D1C7" strokeWidth={0.75} opacity={0.6} />
+      <G transform="translate(118,118)">
+        {LOGO_PETALS.map((p) => (
+          <G key={p.a} transform={`rotate(${p.a})`}><Ellipse cx={0} cy={-58} rx={22} ry={58} fill={p.c} opacity={p.o} /></G>
+        ))}
+        <Circle cx={0} cy={0} r={54} fill="#ffffff" opacity={0.92} />
+        <Circle cx={0} cy={0} r={54} fill="none" stroke="#e8e5e0" strokeWidth={1} />
+        {LOGO_PETALS.map((p) => (
+          <G key={`i${p.a}`} transform={`rotate(${p.a})`}><Ellipse cx={0} cy={-33} rx={13} ry={19} fill={p.c} opacity={0.26} /></G>
+        ))}
+        <Circle cx={0} cy={0} r={22} fill="#1A1A1A" />
+        <Circle cx={0} cy={0} r={14} fill="#E8650A" />
+        <Circle cx={0} cy={0} r={6} fill="#ffffff" />
+        <Circle cx={0} cy={0} r={2.5} fill="#E8650A" />
+        {LOGO_PETALS.map((p) => (
+          <G key={`d${p.a}`} transform={`rotate(${p.a})`}><Circle cx={0} cy={-115} r={4} fill={p.c} opacity={0.47} /></G>
+        ))}
+      </G>
     </Svg>
   );
 }
 
-function LogoLockup({ emblem = 86 }: { emblem?: number }) {
-  const word = emblem * 0.47;
+function LogoLockup({ emblem = 94 }: { emblem?: number }) {
+  const word = emblem * 0.44;
   return (
     <View className="flex-row items-center">
-      <LogoEmblem size={emblem} />
-      <View style={{ marginLeft: -2 }}>
-        <Text className="font-display-x" style={{ fontSize: word, lineHeight: word * 1.1, color: '#0F5E4A', letterSpacing: -1.5 }}>aangan</Text>
-        <Text className="font-sans-md" style={{ fontSize: emblem * 0.14, letterSpacing: 4, color: '#888780', marginTop: 1 }}>आँगन</Text>
-        <View style={{ height: 1, width: emblem * 1.9, backgroundColor: '#D3D1C7', marginTop: 6, marginBottom: 5 }} />
-        <Text className="font-sans" style={{ fontSize: emblem * 0.118, letterSpacing: 1.6, color: '#B4B2A9' }}>your society. your courtyard.</Text>
+      <DiversityEmblem size={emblem} />
+      <View style={{ marginLeft: 2 }}>
+        <Text className="font-display-x" style={{ fontSize: word, lineHeight: word * 1.1, color: '#1A1A1A', letterSpacing: -1.2 }}>aangan</Text>
+        <Text className="font-sans-md" style={{ fontSize: emblem * 0.13, letterSpacing: 4, color: '#888780', marginTop: 1 }}>आँगन</Text>
+        <View className="flex-row" style={{ marginTop: 7, marginBottom: 5 }}>
+          {LOGO_PETALS.map((p) => (
+            <View key={p.a} style={{ width: 15, height: 3.5, borderRadius: 2, backgroundColor: p.c, marginRight: 3 }} />
+          ))}
+        </View>
+        <Text className="font-sans" style={{ fontSize: emblem * 0.1, letterSpacing: 1.3, color: '#B4B2A9' }}>every home. every language. one courtyard.</Text>
       </View>
     </View>
   );

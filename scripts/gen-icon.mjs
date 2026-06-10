@@ -1,12 +1,12 @@
-// Generates Aangan app icons from assets/images/aangan_icon.svg
-// (teal courtyard-arch tile). Run: node scripts/gen-icon.mjs
+// Generates Aangan app icons from assets/images/aangan_diversity_icon_dark.svg
+// (dark tile + multicolour diversity flower). Run: node scripts/gen-icon.mjs
 import sharp from 'sharp';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const svg = readFileSync(join(root, 'assets/images/aangan_icon.svg'));
+const svg = readFileSync(join(root, 'assets/images/aangan_diversity_icon_dark.svg'));
 
 const targets = [
   { out: 'assets/images/icon.png', size: 1024 },
