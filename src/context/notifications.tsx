@@ -29,6 +29,7 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   sport: { icon: 'football', color: '#16A34A' },
   document: { icon: 'folder', color: '#0EA5E9' },
   payment: { icon: 'wallet', color: '#16A34A' },
+  property: { icon: 'key', color: '#7C3AED' },
 };
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {

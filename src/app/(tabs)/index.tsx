@@ -68,6 +68,14 @@ const COMMUNITY_TILES: CommunityTile[] = [
     href: '/payments',
   },
   {
+    key: 'properties',
+    label: 'Flats',
+    blurb: 'Buy, sell or rent a flat',
+    icon: 'key',
+    color: '#7C3AED',
+    href: '/properties',
+  },
+  {
     key: 'polls',
     label: 'Polls',
     blurb: 'Vote on community decisions',

@@ -35,7 +35,9 @@ realtime:
   sport with members, practice schedules and tournaments), a **document vault**
   (upload society files, keep public or share privately with revoke, preview +
   download), **UPI payments** (pay a neighbour via a UPI deep link / QR, with a
-  ledger both sides confirm), **direct messages** between neighbours, and
+  ledger both sides confirm), **flats for sale/rent** (owners post their flat
+  with photos & specs, price-on-request, a per-flat Q&A thread, and
+  buyer/tenant **referrals**), **direct messages** between neighbours, and
   **universal fuzzy search** across everything.
 - **Identity & roles** — phone + 6-digit PIN accounts (no SMS/OTP), roles
   **chef / member / admin**, public profiles, and a society admin panel.
@@ -90,7 +92,7 @@ npx tsc --noEmit                  # type-check
 1. **Create a Supabase project** at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. **Run the migrations in order.** Open **SQL Editor** and run every file in
    [`supabase/migrations/`](./supabase/migrations) from `0001_init.sql` through
-   the latest (`0035_society_onboarding.sql`). They create all tables (communities,
+   the latest (`0036_properties.sql`). They create all tables (communities,
    profiles, dishes, orders, tiffin, listings, inquiries, posts, comments, polls,
    emergency contacts, saved listings, per-listing chat, direct messages,
    notifications, resident directory, sports groups, document vault), RLS
@@ -160,6 +162,8 @@ src/
     sports.tsx · sports/[id].tsx   # Sports groups list + group detail
     documents.tsx            # Document vault (upload, public/private, share)
     payments.tsx             # UPI payment ledger (pay, mark received)
+    properties.tsx           # Flats for sale/rent (list + filters)
+    property/[id] · property/new  # Flat detail (gallery, Q&A, referrals) + post form
     messages/                # DM inbox + thread
     profile/me.tsx · [userId].tsx
     feed/[postId].tsx        # Post thread + comments

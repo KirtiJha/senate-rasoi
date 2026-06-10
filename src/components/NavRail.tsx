@@ -36,6 +36,7 @@ const COMMUNITY_ITEMS: NavItem[] = [
   { href: '/sports', label: 'Sports', icon: 'football-outline', activeIcon: 'football', color: '#16A34A' },
   { href: '/documents', label: 'Documents', icon: 'folder-outline', activeIcon: 'folder', color: '#0EA5E9' },
   { href: '/payments', label: 'Payments', icon: 'wallet-outline', activeIcon: 'wallet', color: '#16A34A' },
+  { href: '/properties', label: 'Flats', icon: 'key-outline', activeIcon: 'key', color: '#7C3AED' },
   { href: '/polls', label: 'Polls', icon: 'stats-chart-outline', activeIcon: 'stats-chart' },
   { href: '/emergency', label: 'Emergency', icon: 'call-outline', activeIcon: 'call', color: '#EF4444' },
 ];
