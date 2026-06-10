@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { BrandMark } from '../components/BrandMark';
 import { useResponsive } from '../components/ui';
 
@@ -206,24 +207,65 @@ export default function LandingScreen() {
         </View>
 
         {/* ── Footer ── */}
-        <View className="px-5 pb-10 pt-6">
-          <View className="w-full self-center flex-row flex-wrap items-center gap-3" style={{ maxWidth: MAXW }}>
-            <View className="flex-row items-center gap-2 flex-1">
-              <BrandMark size={24} id="ft-mark" />
-              <Text className="font-display" style={{ fontSize: 16, color: P.ink }}>Aangan</Text>
-            </View>
-            <View className="flex-row items-center gap-4">
-              <Text onPress={() => router.push('/legal' as any)} className="font-sans-sb" style={{ fontSize: 13, color: P.muted }}>Terms</Text>
-              <Text onPress={() => router.push('/legal?tab=privacy' as any)} className="font-sans-sb" style={{ fontSize: 13, color: P.muted }}>Privacy</Text>
-              <Text onPress={() => router.push('/about' as any)} className="font-sans-sb" style={{ fontSize: 13, color: P.accent }}>About</Text>
-            </View>
+        <View className="px-5 pb-10 pt-12" style={{ borderTopWidth: 1, borderTopColor: P.line }}>
+          <View className="items-center">
+            <LogoLockup />
           </View>
-          <Text className="mt-3 w-full max-w-[1080px] self-center font-sans-md" style={{ fontSize: 11, color: P.faint }}>
+          <View className="mt-7 flex-row items-center justify-center gap-5">
+            <Text onPress={() => router.push('/legal' as any)} className="font-sans-sb" style={{ fontSize: 13, color: P.muted }}>Terms</Text>
+            <Text onPress={() => router.push('/legal?tab=privacy' as any)} className="font-sans-sb" style={{ fontSize: 13, color: P.muted }}>Privacy</Text>
+            <Text onPress={() => router.push('/about' as any)} className="font-sans-sb" style={{ fontSize: 13, color: P.accent }}>About</Text>
+          </View>
+          <Text className="mt-4 w-full max-w-[620px] self-center text-center font-sans-md" style={{ fontSize: 11, lineHeight: 16, color: P.faint }}>
             Made for Indian apartment societies. Phone + PIN sign-in, no SMS/OTP. Payments happen directly between
             neighbours over UPI — Aangan never holds your money.
           </Text>
         </View>
       </ScrollView>
+    </View>
+  );
+}
+
+// ── Full brand lockup (faithful port of assets/images/aangan_logo.svg) ──
+function LogoEmblem({ size }: { size: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="52 78 236 236" accessibilityLabel="Aangan">
+      <Circle cx={170} cy={195} r={115} fill="none" stroke="#0F6E56" strokeWidth={3} opacity={0.18} />
+      <Circle cx={170} cy={195} r={108} fill="none" stroke="#0F6E56" strokeWidth={1} opacity={0.12} />
+      <Circle cx={170} cy={195} r={104} fill="#E1F5EE" opacity={0.55} />
+      <Path d="M118 258 L118 200 Q118 148 170 148 Q222 148 222 200 L222 258 Z" fill="#0F6E56" opacity={0.92} />
+      <Path d="M132 258 L132 206 Q132 162 170 162 Q208 162 208 206 L208 258 Z" fill="#E1F5EE" opacity={0.6} />
+      <Path d="M140 258 L140 209 Q140 170 170 170 Q200 170 200 209 L200 258 Z" fill="#E8650A" opacity={0.88} />
+      <Circle cx={170} cy={222} r={14} fill="#FAEEDA" />
+      <Circle cx={170} cy={222} r={8} fill="#E8650A" />
+      <Circle cx={170} cy={222} r={3} fill="#ffffff" />
+      <Circle cx={170} cy={152} r={3.5} fill="#0F6E56" opacity={0.7} />
+      <Circle cx={151} cy={158} r={2.5} fill="#0F6E56" opacity={0.5} />
+      <Circle cx={189} cy={158} r={2.5} fill="#0F6E56" opacity={0.5} />
+      <Circle cx={137} cy={173} r={2} fill="#0F6E56" opacity={0.35} />
+      <Circle cx={203} cy={173} r={2} fill="#0F6E56" opacity={0.35} />
+      <Rect x={108} y={255} width={124} height={9} rx={3} fill="#0F6E56" opacity={0.75} />
+      <Rect x={118} y={262} width={104} height={6} rx={2} fill="#0A4F3A" opacity={0.5} />
+      <Rect x={104} y={215} width={14} height={47} rx={3} fill="#0F6E56" opacity={0.25} />
+      <Rect x={222} y={215} width={14} height={47} rx={3} fill="#0F6E56" opacity={0.25} />
+      <Circle cx={138} cy={240} r={2} fill="#E8650A" opacity={0.35} />
+      <Circle cx={202} cy={240} r={2} fill="#E8650A" opacity={0.35} />
+      <Circle cx={144} cy={248} r={1.5} fill="#E8650A" opacity={0.25} />
+      <Circle cx={196} cy={248} r={1.5} fill="#E8650A" opacity={0.25} />
+    </Svg>
+  );
+}
+
+function LogoLockup() {
+  return (
+    <View className="flex-row items-center">
+      <LogoEmblem size={86} />
+      <View style={{ marginLeft: -2 }}>
+        <Text className="font-display-x" style={{ fontSize: 40, lineHeight: 44, color: '#0F5E4A', letterSpacing: -1.5 }}>aangan</Text>
+        <Text className="font-sans-md" style={{ fontSize: 12, letterSpacing: 4, color: '#888780', marginTop: 1 }}>आँगन</Text>
+        <View style={{ height: 1, width: 162, backgroundColor: '#D3D1C7', marginTop: 6, marginBottom: 5 }} />
+        <Text className="font-sans" style={{ fontSize: 10, letterSpacing: 1.6, color: '#B4B2A9' }}>your society. your courtyard.</Text>
+      </View>
     </View>
   );
 }
