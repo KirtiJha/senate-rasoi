@@ -53,6 +53,7 @@ export default function LandingScreen() {
           <View className="w-full self-center px-5" style={{ maxWidth: MAXW, paddingTop: isDesktop ? 72 : 44, paddingBottom: isDesktop ? 72 : 44 }}>
             <View className={isWide ? 'flex-row items-center gap-12' : ''}>
               <View className="flex-1">
+                <View className="mb-6"><LogoLockup emblem={68} /></View>
                 <View className="mb-4 flex-row items-center gap-2 self-start rounded-full px-3 py-1.5" style={{ backgroundColor: 'rgba(255,255,255,0.75)', borderWidth: 1, borderColor: 'rgba(15,110,86,0.3)' }}>
                   <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: P.accent }} />
                   <Text className="font-sans-sb" style={{ fontSize: 12, color: P.accent }}>A private super-app for your society</Text>
@@ -256,15 +257,16 @@ function LogoEmblem({ size }: { size: number }) {
   );
 }
 
-function LogoLockup() {
+function LogoLockup({ emblem = 86 }: { emblem?: number }) {
+  const word = emblem * 0.47;
   return (
     <View className="flex-row items-center">
-      <LogoEmblem size={86} />
+      <LogoEmblem size={emblem} />
       <View style={{ marginLeft: -2 }}>
-        <Text className="font-display-x" style={{ fontSize: 40, lineHeight: 44, color: '#0F5E4A', letterSpacing: -1.5 }}>aangan</Text>
-        <Text className="font-sans-md" style={{ fontSize: 12, letterSpacing: 4, color: '#888780', marginTop: 1 }}>आँगन</Text>
-        <View style={{ height: 1, width: 162, backgroundColor: '#D3D1C7', marginTop: 6, marginBottom: 5 }} />
-        <Text className="font-sans" style={{ fontSize: 10, letterSpacing: 1.6, color: '#B4B2A9' }}>your society. your courtyard.</Text>
+        <Text className="font-display-x" style={{ fontSize: word, lineHeight: word * 1.1, color: '#0F5E4A', letterSpacing: -1.5 }}>aangan</Text>
+        <Text className="font-sans-md" style={{ fontSize: emblem * 0.14, letterSpacing: 4, color: '#888780', marginTop: 1 }}>आँगन</Text>
+        <View style={{ height: 1, width: emblem * 1.9, backgroundColor: '#D3D1C7', marginTop: 6, marginBottom: 5 }} />
+        <Text className="font-sans" style={{ fontSize: emblem * 0.118, letterSpacing: 1.6, color: '#B4B2A9' }}>your society. your courtyard.</Text>
       </View>
     </View>
   );
