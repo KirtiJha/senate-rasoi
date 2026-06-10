@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter, usePathname } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Animated, Modal, Pressable, Text, View } from 'react-native';
+import { Animated, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/auth';
 import { useNotifications } from '../context/notifications';
@@ -293,6 +293,8 @@ export function NavRail() {
           </Pressable>
         </View>
 
+        {/* ── Scrollable middle (so all items reach on short screens) ── */}
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
         {/* ── Society badge (fades out when collapsed) ── */}
         {community ? (
           <Animated.View style={{ opacity: labelOpacity, height: collapsed ? 0 : undefined, marginBottom: collapsed ? 0 : 16, paddingHorizontal: 12, overflow: 'hidden' }}>
@@ -335,9 +337,7 @@ export function NavRail() {
             <NavItemRow item={ADMIN_ITEM} path={path} colors={colors} av={av} />
           </View>
         ) : null}
-
-        {/* ── Flex spacer ── */}
-        <View style={{ flex: 1, minHeight: 16 }} />
+        </ScrollView>
 
         {/* ── Notifications (always accessible, above New Post) ── */}
         <View style={{ paddingHorizontal: 10, marginBottom: 2 }}>
