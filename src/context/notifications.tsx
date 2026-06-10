@@ -30,6 +30,8 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   document: { icon: 'folder', color: '#0EA5E9' },
   payment: { icon: 'wallet', color: '#16A34A' },
   property: { icon: 'key', color: '#7C3AED' },
+  recommend: { icon: 'sparkles', color: '#CA8A04' },
+  borrow: { icon: 'swap-horizontal', color: '#0891B2' },
 };
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {

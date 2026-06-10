@@ -96,6 +96,9 @@ export interface DbProfile {
   vehicle_no: string | null;
   show_in_directory: boolean;
   notifications_cleared_at: string | null;
+  blood_group: string | null;
+  donor_available: boolean;
+  helper_skills: string[];
   created_at: string;
 }
 

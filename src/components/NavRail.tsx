@@ -37,6 +37,9 @@ const COMMUNITY_ITEMS: NavItem[] = [
   { href: '/documents', label: 'Documents', icon: 'folder-outline', activeIcon: 'folder', color: '#0EA5E9' },
   { href: '/payments', label: 'Payments', icon: 'wallet-outline', activeIcon: 'wallet', color: '#16A34A' },
   { href: '/properties', label: 'Flats', icon: 'key-outline', activeIcon: 'key', color: '#7C3AED' },
+  { href: '/recommend', label: 'Ask & Recommend', icon: 'sparkles-outline', activeIcon: 'sparkles', color: '#CA8A04' },
+  { href: '/borrow', label: 'Borrow & Lend', icon: 'swap-horizontal-outline', activeIcon: 'swap-horizontal', color: '#0891B2' },
+  { href: '/helpers', label: 'Blood & SOS', icon: 'heart-outline', activeIcon: 'heart', color: '#DC2626' },
   { href: '/polls', label: 'Polls', icon: 'stats-chart-outline', activeIcon: 'stats-chart' },
   { href: '/emergency', label: 'Emergency', icon: 'call-outline', activeIcon: 'call', color: '#EF4444' },
 ];
