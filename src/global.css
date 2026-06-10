@@ -56,6 +56,20 @@
   html,
   body {
     background-color: rgb(var(--bg));
+    /* Lock the page horizontally — the app scrolls vertically only.
+       The Expo reset pins overflow-y (auto) but leaves overflow-x at its
+       default `visible`, which CSS then computes to `auto`. That let any
+       element a hair wider than the viewport drag the whole page sideways
+       on mobile. Pinning overflow-x clips that bleed instead of scrolling. */
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+  }
+
+  /* The React Native Web mount node — clip any horizontal bleed here too so
+     nothing can introduce a sideways scroll above the app's own ScrollViews. */
+  #root {
+    overflow-x: hidden;
+    max-width: 100%;
   }
   input,
   textarea,
