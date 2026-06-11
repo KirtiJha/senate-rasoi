@@ -11,7 +11,7 @@ import { ServiceCategory } from '../lib/services';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { ListingRow } from '../lib/types';
 import { layout, useThemeColors } from '../theme';
-import { Avatar, RowSkeleton, ScreenHeader } from './ui';
+import { Avatar, Button, RowSkeleton, ScreenHeader, Sheet, useResponsive } from './ui';
 
 type SortKey = 'trade' | 'name';
 const tradeOf = (l: ListingRow) => (l.attributes?.trade as string) || 'Other';
@@ -31,6 +31,7 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
   const c = useThemeColors();
   const router = useRouter();
   const toast = useToast();
+  const { isDesktop } = useResponsive();
   const { communityId } = useAuth();
 
   const [rows, setRows] = useState<ListingRow[]>([]);
@@ -77,6 +78,24 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
 
   const activeFilters = (trade ? 1 : 0) + (sort !== 'trade' ? 1 : 0);
 
+  const filterBody = (
+    <>
+      <FilterGroup label="Sort by">
+        <Chip label="Category" on={sort === 'trade'} onPress={() => setSort('trade')} c={c} />
+        <Chip label="Name (A–Z)" on={sort === 'name'} onPress={() => setSort('name')} c={c} />
+      </FilterGroup>
+      <FilterGroup label="Category" last>
+        <Chip label="All" on={!trade} onPress={() => setTrade(null)} c={c} />
+        {trades.map((t) => <Chip key={t} label={t} on={trade === t} onPress={() => setTrade(trade === t ? null : t)} c={c} />)}
+      </FilterGroup>
+      {activeFilters > 0 ? (
+        <Pressable onPress={() => { setTrade(null); setSort('trade'); }} className="mt-3 self-start">
+          <Text className="text-[12px] font-sans-sb text-accent">Clear all</Text>
+        </Pressable>
+      ) : null}
+    </>
+  );
+
   return (
     <View className="flex-1 bg-bg">
       <ScreenHeader
@@ -101,35 +120,17 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
             </View>
             <View className="mt-2.5 flex-row items-center justify-between">
               <Text className="text-[12px] font-sans-md text-muted">{filtered.length} contact{filtered.length === 1 ? '' : 's'}{trade ? ` · ${trade}` : ''}</Text>
-              <Pressable onPress={() => setShowFilters((v) => !v)} className={`flex-row items-center gap-1 rounded-full px-3 py-1.5 ${activeFilters ? 'bg-accent-soft' : 'bg-inset'}`}>
-                <Ionicons name="options-outline" size={14} color={activeFilters ? c.accent : c.muted} />
-                <Text className={`text-[12px] font-sans-sb ${activeFilters ? 'text-accent' : 'text-muted'}`}>{activeFilters ? `Filters · ${activeFilters}` : 'Filter & sort'}</Text>
-                <Ionicons name={showFilters ? 'chevron-up' : 'chevron-down'} size={13} color={activeFilters ? c.accent : c.muted} />
+              <Pressable onPress={() => setShowFilters((v) => !v)} className={`flex-row items-center gap-1 rounded-full px-3 py-1.5 ${activeFilters || showFilters ? 'bg-accent-soft' : 'bg-inset'}`}>
+                <Ionicons name="options-outline" size={14} color={activeFilters || showFilters ? c.accent : c.muted} />
+                <Text className={`text-[12px] font-sans-sb ${activeFilters || showFilters ? 'text-accent' : 'text-muted'}`}>{activeFilters ? `Filters · ${activeFilters}` : 'Filter & sort'}</Text>
               </Pressable>
             </View>
-
-            {showFilters ? (
-              <View className="mt-2.5 rounded-2xl border border-line bg-surface p-3">
-                <FilterGroup label="Sort by">
-                  <Chip label="Category" on={sort === 'trade'} onPress={() => setSort('trade')} c={c} />
-                  <Chip label="Name (A–Z)" on={sort === 'name'} onPress={() => setSort('name')} c={c} />
-                </FilterGroup>
-                <FilterGroup label="Category" last>
-                  <Chip label="All" on={!trade} onPress={() => setTrade(null)} c={c} />
-                  {trades.map((t) => <Chip key={t} label={t} on={trade === t} onPress={() => setTrade(trade === t ? null : t)} c={c} />)}
-                </FilterGroup>
-                {activeFilters > 0 ? (
-                  <Pressable onPress={() => { setTrade(null); setSort('trade'); }} className="mt-2 self-start">
-                    <Text className="text-[12px] font-sans-sb text-accent">Clear all</Text>
-                  </Pressable>
-                ) : null}
-              </View>
-            ) : null}
           </View>
         }
       />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <View className={isDesktop ? 'flex-1 flex-row' : 'flex-1'}>
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
           {loading ? (
             <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={6} /></View>
@@ -161,6 +162,22 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
         </View>
       </ScrollView>
 
+      {isDesktop && showFilters ? (
+        <View className="border-l border-line bg-bg" style={{ width: 300 }}>
+          <View className="flex-row items-center justify-between border-b border-line px-4 py-3">
+            <Text className="font-sans-sb text-[15px] text-ink">Filter & sort</Text>
+            <Pressable onPress={() => setShowFilters(false)} hitSlop={8}><Ionicons name="close" size={20} color={c.muted} /></Pressable>
+          </View>
+          <ScrollView contentContainerStyle={{ padding: 16 }}>{filterBody}</ScrollView>
+        </View>
+      ) : null}
+      </View>
+
+      {!isDesktop ? (
+        <Sheet visible={showFilters} onClose={() => setShowFilters(false)} title="Filter & sort" footer={<Button label="Done" fullWidth onPress={() => setShowFilters(false)} />}>
+          {filterBody}
+        </Sheet>
+      ) : null}
     </View>
   );
 }

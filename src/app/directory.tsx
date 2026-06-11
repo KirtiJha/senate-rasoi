@@ -161,6 +161,43 @@ export default function DirectoryScreen() {
     { key: 'tenant', label: 'Tenants' },
   ];
 
+  // Shared filter controls — rendered in the desktop side panel and the mobile sheet.
+  const filterBody = (
+    <>
+      <FilterGroup label="Sort by">
+        <ChipBtn label="Flat" on={sort === 'flat'} onPress={() => setSort('flat')} c={c} />
+        <ChipBtn label="Name (A–Z)" on={sort === 'name'} onPress={() => setSort('name')} c={c} />
+      </FilterGroup>
+      {blocks.length > 1 ? (
+        <FilterGroup label="Block">
+          <ChipBtn label="All" on={!block} onPress={() => setBlock(null)} c={c} />
+          {blocks.map((b) => <ChipBtn key={b} label={b} on={block === b} onPress={() => setBlock(block === b ? null : b)} c={c} />)}
+        </FilterGroup>
+      ) : null}
+      {floors.length > 1 ? (
+        <FilterGroup label="Floor">
+          <ChipBtn label="All" on={!floor} onPress={() => setFloor(null)} c={c} />
+          {floors.map((f) => <ChipBtn key={f} label={f === '0' ? 'G' : f} on={floor === f} onPress={() => setFloor(floor === f ? null : f)} c={c} />)}
+        </FilterGroup>
+      ) : null}
+      <FilterGroup label="Registration">
+        {([['all', 'All'], ['done', 'Registered'], ['pending', 'Pending']] as const).map(([k, lbl]) => (
+          <ChipBtn key={k} label={lbl} on={reg === k} onPress={() => setReg(k)} c={c} />
+        ))}
+      </FilterGroup>
+      <FilterGroup label="Residence" last>
+        {([['all', 'All'], ['no', 'Living here'], ['yes', 'Shifted out']] as const).map(([k, lbl]) => (
+          <ChipBtn key={k} label={lbl} on={shf === k} onPress={() => setShf(k)} c={c} />
+        ))}
+      </FilterGroup>
+      {activeFilters > 0 ? (
+        <Pressable onPress={() => { setBlock(null); setFloor(null); setReg('all'); setShf('all'); setSort('flat'); }} className="mt-3 self-start">
+          <Text className="text-[12px] font-sans-sb text-accent">Clear all</Text>
+        </Pressable>
+      ) : null}
+    </>
+  );
+
   return (
     <View className="flex-1 bg-bg">
       <ScreenHeader
@@ -193,53 +230,17 @@ export default function DirectoryScreen() {
                 </Pressable>
               ))}
               <View className="flex-1" />
-              <Pressable onPress={() => setShowFilters((v) => !v)} className={`flex-row items-center gap-1 rounded-full px-3 py-1.5 ${activeFilters ? 'bg-accent-soft' : 'bg-inset'}`}>
-                <Ionicons name="options-outline" size={14} color={activeFilters ? c.accent : c.muted} />
-                <Text className={`text-[12px] font-sans-sb ${activeFilters ? 'text-accent' : 'text-muted'}`}>{activeFilters ? `Filters · ${activeFilters}` : 'Filter & sort'}</Text>
-                <Ionicons name={showFilters ? 'chevron-up' : 'chevron-down'} size={13} color={activeFilters ? c.accent : c.muted} />
+              <Pressable onPress={() => setShowFilters((v) => !v)} className={`flex-row items-center gap-1 rounded-full px-3 py-1.5 ${activeFilters || showFilters ? 'bg-accent-soft' : 'bg-inset'}`}>
+                <Ionicons name="options-outline" size={14} color={activeFilters || showFilters ? c.accent : c.muted} />
+                <Text className={`text-[12px] font-sans-sb ${activeFilters || showFilters ? 'text-accent' : 'text-muted'}`}>{activeFilters ? `Filters · ${activeFilters}` : 'Filter & sort'}</Text>
               </Pressable>
             </View>
-
-            {showFilters ? (
-              <View className="mt-2.5 rounded-2xl border border-line bg-surface p-3">
-                <FilterGroup label="Sort by">
-                  <ChipBtn label="Flat" on={sort === 'flat'} onPress={() => setSort('flat')} c={c} />
-                  <ChipBtn label="Name (A–Z)" on={sort === 'name'} onPress={() => setSort('name')} c={c} />
-                </FilterGroup>
-                {blocks.length > 1 ? (
-                  <FilterGroup label="Block">
-                    <ChipBtn label="All" on={!block} onPress={() => setBlock(null)} c={c} />
-                    {blocks.map((b) => <ChipBtn key={b} label={b} on={block === b} onPress={() => setBlock(block === b ? null : b)} c={c} />)}
-                  </FilterGroup>
-                ) : null}
-                {floors.length > 1 ? (
-                  <FilterGroup label="Floor">
-                    <ChipBtn label="All" on={!floor} onPress={() => setFloor(null)} c={c} />
-                    {floors.map((f) => <ChipBtn key={f} label={f === '0' ? 'G' : f} on={floor === f} onPress={() => setFloor(floor === f ? null : f)} c={c} />)}
-                  </FilterGroup>
-                ) : null}
-                <FilterGroup label="Registration">
-                  {([['all', 'All'], ['done', 'Registered'], ['pending', 'Pending']] as const).map(([k, lbl]) => (
-                    <ChipBtn key={k} label={lbl} on={reg === k} onPress={() => setReg(k)} c={c} />
-                  ))}
-                </FilterGroup>
-                <FilterGroup label="Residence" last>
-                  {([['all', 'All'], ['no', 'Living here'], ['yes', 'Shifted out']] as const).map(([k, lbl]) => (
-                    <ChipBtn key={k} label={lbl} on={shf === k} onPress={() => setShf(k)} c={c} />
-                  ))}
-                </FilterGroup>
-                {activeFilters > 0 ? (
-                  <Pressable onPress={() => { setBlock(null); setFloor(null); setReg('all'); setShf('all'); setSort('flat'); }} className="mt-1 self-start">
-                    <Text className="text-[12px] font-sans-sb text-accent">Clear all</Text>
-                  </Pressable>
-                ) : null}
-              </View>
-            ) : null}
           </View>
         }
       />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <View className={isDesktop ? 'flex-1 flex-row' : 'flex-1'}>
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View className="w-full self-center" style={{ maxWidth: DIR_MAX }}>
           {loading ? (
             <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={6} /></View>
@@ -285,9 +286,6 @@ export default function DirectoryScreen() {
                       onOpen={() => setSelected(r)}
                       onCall={() => call(r)}
                       onWhatsApp={() => whatsapp(r)}
-                      onMessage={() => message(r)}
-                      onInvite={() => invite(r)}
-                      onRemove={() => remove(r)}
                     />
                   ))}
                 </View>
@@ -296,6 +294,25 @@ export default function DirectoryScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Desktop: filter/sort opens as a right-hand panel that shrinks the list. */}
+      {isDesktop && showFilters ? (
+        <View className="border-l border-line bg-bg" style={{ width: 300 }}>
+          <View className="flex-row items-center justify-between border-b border-line px-4 py-3">
+            <Text className="font-sans-sb text-[15px] text-ink">Filter & sort</Text>
+            <Pressable onPress={() => setShowFilters(false)} hitSlop={8}><Ionicons name="close" size={20} color={c.muted} /></Pressable>
+          </View>
+          <ScrollView contentContainerStyle={{ padding: 16 }}>{filterBody}</ScrollView>
+        </View>
+      ) : null}
+      </View>
+
+      {/* Mobile: filter/sort as a modal. */}
+      {!isDesktop ? (
+        <Sheet visible={showFilters} onClose={() => setShowFilters(false)} title="Filter & sort" footer={<Button label="Done" fullWidth onPress={() => setShowFilters(false)} />}>
+          {filterBody}
+        </Sheet>
+      ) : null}
 
       <AddResidentModal
         visible={showAdd}
@@ -328,6 +345,7 @@ export default function DirectoryScreen() {
         onMessage={() => { if (selected) { message(selected); setSelected(null); } }}
         onInvite={() => selected && invite(selected)}
         onProfile={() => { if (selected?.userId) { router.push(`/profile/${selected.userId}` as any); setSelected(null); } }}
+        onRemove={() => { if (selected) { remove(selected); setSelected(null); } }}
       />
     </View>
   );
@@ -351,10 +369,10 @@ function ChipBtn({ label, on, onPress, c }: { label: string; on: boolean; onPres
 }
 
 function ResidentDetailSheet({
-  r, onClose, c, onCall, onWhatsApp, onMessage, onInvite, onProfile,
+  r, onClose, c, onCall, onWhatsApp, onMessage, onInvite, onProfile, onRemove,
 }: {
   r: Resident | null; onClose: () => void; c: ReturnType<typeof useThemeColors>;
-  onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onProfile: () => void;
+  onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onProfile: () => void; onRemove: () => void;
 }) {
   const typeColor = r?.resident_type === 'owner' ? '#0D9488' : '#7C3AED';
   return (
@@ -387,6 +405,7 @@ function ResidentDetailSheet({
             {r.phone ? <Button label="WhatsApp" icon="logo-whatsapp" variant="whatsapp" onPress={onWhatsApp} /> : null}
             {r.onboarded ? <Button label="Message" icon="chatbubble-ellipses-outline" variant="outline" onPress={onMessage} /> : (r.phone ? <Button label="Invite" icon="paper-plane-outline" onPress={onInvite} /> : null)}
             {r.onboarded ? <Button label="View profile" variant="ghost" onPress={onProfile} /> : null}
+            {r.removeKind ? <Button label={r.removeKind === 'hide' ? 'Hide from directory' : 'Remove'} icon="trash-outline" variant="danger" onPress={onRemove} /> : null}
           </View>
         </View>
       ) : null}
@@ -415,17 +434,16 @@ function DetailRow({ icon, label, value, c, last }: { icon: keyof typeof Ionicon
 }
 
 function ResidentRow({
-  r, first, showFlat, c, onOpen, onCall, onWhatsApp, onMessage, onInvite, onRemove,
+  r, first, showFlat, c, onOpen, onCall, onWhatsApp,
 }: {
   r: Resident; first: boolean; showFlat?: boolean; c: ReturnType<typeof useThemeColors>;
-  onOpen: () => void; onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onRemove: () => void;
+  onOpen: () => void; onCall: () => void; onWhatsApp: () => void;
 }) {
   const typeColor = r.resident_type === 'owner' ? '#0D9488' : '#7C3AED';
   const sub = [
-    showFlat && r.flat ? `🏠 Flat ${r.flat}` : null,
-    showFlat && r.block ? `Block ${r.block}` : null,
-    r.profession, r.native ? `📍 ${r.native}` : null, r.vehicle_no ? `🚗 ${r.vehicle_no}` : null,
-  ].filter(Boolean).join('  ·  ');
+    showFlat && r.flat ? `Flat ${[r.block, r.flat].filter(Boolean).join('-')}` : null,
+    r.profession, r.native, r.vehicle_no ? `🚗 ${r.vehicle_no}` : null,
+  ].filter(Boolean).join(' · ');
 
   return (
     <Pressable
@@ -434,41 +452,35 @@ function ResidentRow({
     >
       <Avatar name={r.name} size={40} />
       <View className="flex-1" style={{ minWidth: 0 }}>
-        <View className="flex-row items-center gap-1.5 flex-wrap">
-          <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{r.name}</Text>
+        <Text className="font-sans-bold text-[14.5px] text-ink" numberOfLines={1}>{r.name}</Text>
+        <View className="mt-0.5 flex-row items-center gap-1.5">
           {r.resident_type ? (
-            <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: typeColor + '20' }}>
+            <View className="rounded px-1.5 py-0.5" style={{ backgroundColor: typeColor + '20' }}>
               <Text className="text-[9px] font-sans-sb uppercase" style={{ color: typeColor }}>{r.resident_type}</Text>
             </View>
           ) : null}
+          {!r.onboarded ? (
+            <View className="rounded px-1.5 py-0.5" style={{ backgroundColor: '#CA8A0420' }}>
+              <Text className="text-[9px] font-sans-sb uppercase" style={{ color: '#A16207' }}>Not on Aangan</Text>
+            </View>
+          ) : null}
           {r.shifted ? (
-            <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: '#9CA3AF22' }}>
+            <View className="rounded px-1.5 py-0.5" style={{ backgroundColor: '#9CA3AF22' }}>
               <Text className="text-[9px] font-sans-sb uppercase text-muted">Shifted</Text>
             </View>
           ) : null}
-          {!r.onboarded ? (
-            <View className="rounded-full bg-inset px-1.5 py-0.5">
-              <Text className="text-[9px] font-sans-sb uppercase text-faint">Not on Aangan</Text>
-            </View>
-          ) : null}
+          {sub ? <Text className="flex-1 text-[12px] text-muted" numberOfLines={1}>{sub}</Text> : null}
         </View>
-        {sub ? <Text className="text-[12px] text-muted" numberOfLines={1}>{sub}</Text> : null}
       </View>
 
-      <View className="flex-row items-center gap-1.5">
-        {r.email ? <IconBtn icon="mail-outline" onPress={() => Linking.openURL(`mailto:${r.email}`)} bg={c.inset} color={c.muted} /> : null}
-        {r.phone ? <IconBtn icon="call" onPress={onCall} bg={c.inset} color={c.muted} /> : null}
-        {r.phone ? <IconBtn icon="logo-whatsapp" onPress={onWhatsApp} bg="#25D36618" color="#25D366" /> : null}
-        {r.onboarded ? (
-          <IconBtn icon="chatbubble-ellipses-outline" onPress={onMessage} bg={c.inset} color={c.muted} />
-        ) : (
-          <Pressable onPress={onInvite} className="flex-row items-center gap-1 rounded-full bg-accent-soft px-2.5 py-2 active:opacity-80">
-            <Ionicons name="paper-plane-outline" size={13} color={c.accent} />
-            <Text className="text-[11px] font-sans-sb text-accent">Invite</Text>
-          </Pressable>
-        )}
-        {r.removeKind ? <IconBtn icon="trash-outline" onPress={onRemove} bg={c.inset} color="#EF4444" /> : null}
-      </View>
+      {r.phone ? (
+        <View className="flex-row items-center gap-1.5">
+          <IconBtn icon="call" onPress={onCall} bg={c.inset} color={c.muted} />
+          <IconBtn icon="logo-whatsapp" onPress={onWhatsApp} bg="#25D36618" color="#25D366" />
+        </View>
+      ) : (
+        <Ionicons name="chevron-forward" size={16} color={c.faint} />
+      )}
     </Pressable>
   );
 }
