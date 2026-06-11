@@ -15,7 +15,8 @@ const EXAMPLES = [
   'Veg tiffin for lunch',
   'Any 2 BHK for rent?',
   'Where can I borrow a drill?',
-  'Recommend a good maid',
+  'How many members are in the society?',
+  'Is there a doctor in the society?',
   'Snacks under ₹100',
 ];
 
@@ -57,7 +58,7 @@ export default function AskScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>
           <Text className="mb-3 text-[14px] leading-5 text-muted">
-            Ask anything about your society in plain words — food, flats, things to borrow, recommendations. Aangan looks across all your neighbours' listings and answers.
+            Ask anything about your society in plain words — food, flats, things to borrow, recommendations, or your neighbours (members, residents, professions, announcements). Aangan looks across your society and answers.
           </Text>
 
           {/* Search box */}

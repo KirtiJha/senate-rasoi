@@ -278,16 +278,64 @@ async function fetchByIds(admin: any, idsBySource: Record<string, string[]>): Pr
   return out;
 }
 
-async function callAsk(question: string, catalog: CatalogItem[]): Promise<Record<string, unknown>> {
+// Society facts (member count, residents, announcements, polls) — always-on
+// context so Ask can answer questions that aren't about a specific listing.
+// deno-lint-ignore no-explicit-any
+async function buildFacts(admin: any, communityId: string): Promise<string> {
+  const lines: string[] = [];
+
+  try {
+    const { count } = await admin.from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('community_id', communityId).neq('blocked', true);
+    if (typeof count === 'number') lines.push(`The society has ${count} member${count === 1 ? '' : 's'} on Aangan.`);
+  } catch { /* skip */ }
+
+  try {
+    const { data } = await admin.from('profiles')
+      .select('name,flat,profession').eq('community_id', communityId).neq('blocked', true).limit(200);
+    const r = (data ?? []).filter((x: { name?: string }) => x.name);
+    if (r.length) {
+      lines.push('Residents (name · flat · profession): ' +
+        r.map((x: { name: string; flat?: string; profession?: string }) =>
+          `${x.name}${x.flat ? ` · ${x.flat}` : ''}${x.profession ? ` · ${x.profession}` : ''}`).join('; '));
+    }
+  } catch { /* skip */ }
+
+  try {
+    const since = new Date(Date.now() - 30 * 86400000).toISOString();
+    const { data } = await admin.from('posts')
+      .select('title,body,category,created_at').eq('community_id', communityId)
+      .gte('created_at', since).order('created_at', { ascending: false }).limit(8);
+    const anns = (data ?? []).filter((p: { category?: string }) => p.category === 'announcement');
+    if (anns.length) {
+      lines.push('Recent announcements: ' +
+        anns.map((a: { title?: string; body?: string }) => `${a.title ? a.title + ': ' : ''}${(a.body || '').slice(0, 160)}`).join(' | '));
+    }
+  } catch { /* skip */ }
+
+  try {
+    const { data } = await admin.from('polls')
+      .select('question').eq('community_id', communityId).order('created_at', { ascending: false }).limit(5);
+    const p = (data ?? []).filter((x: { question?: string }) => x.question);
+    if (p.length) lines.push('Current polls: ' + p.map((x: { question: string }) => x.question).join('; '));
+  } catch { /* skip */ }
+
+  return lines.join('\n');
+}
+
+async function callAsk(question: string, catalog: CatalogItem[], facts: string): Promise<Record<string, unknown>> {
   const lines = catalog.map((c) => `- [${c.source}:${c.id}] ${c.title} — ${c.info}`).join('\n');
   const prompt =
     "You are Aangan's helpful assistant for an Indian residential society. A resident asked a question. " +
-    'Using ONLY the catalog of current society listings below, pick the items that genuinely answer it (best first) ' +
-    'and write a short, warm answer. Never invent items, prices or contacts. If nothing in the catalog fits, ' +
-    'return an empty results list and say you could not find anything matching right now.\n\n' +
+    'Answer using ONLY the society info and catalog below. For questions about members, residents, who lives where, ' +
+    'professions, announcements or polls, use the "Society info" section. For things to buy/borrow/eat/rent, use the catalog ' +
+    'and list the matching items (best first) in results. Write a short, warm answer. Never invent people, items, prices or ' +
+    'contacts. If you genuinely have nothing relevant, say so politely.\n\n' +
     `Resident's question: "${question}"\n\n` +
-    `Catalog (source:id — title — details):\n${lines || '(the catalog is empty)'}\n\n` +
-    'Copy the source and id exactly from the matching catalog lines.';
+    (facts ? `Society info:\n${facts}\n\n` : '') +
+    `Catalog (source:id — title — details):\n${lines || '(no listings right now)'}\n\n` +
+    'In results, copy the source and id exactly from the matching catalog lines. Society-info answers usually have no result cards.';
   return geminiJSON([{ text: prompt }], ASK_SCHEMA, 0.3);
 }
 
@@ -585,7 +633,10 @@ Deno.serve(async (req) => {
     // Fallback (vectors not ready / no matches): recent fresh catalog.
     if (!catalog.length) catalog = await buildCatalog(admin, communityId);
 
-    const result = await callAsk(question, catalog);
+    // Always-on society facts (members, residents, announcements, polls).
+    const facts = await buildFacts(admin, communityId);
+
+    const result = await callAsk(question, catalog, facts);
     return json({ result });
   } catch (e) {
     console.error('ai-proxy ask error:', e);
