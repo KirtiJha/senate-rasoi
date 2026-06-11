@@ -4,7 +4,7 @@
 > Status legend: 🔴 Open · 🟡 In Progress · 🟢 Implemented · ⚪️ Won't Do / Deferred
 > Type legend: 🐞 Bug · ✨ Enhancement · 💡 Idea/Feature
 
-_Last updated: 12 Jun 2026, 12:30 AM IST_
+_Last updated: 12 Jun 2026, 1:00 AM IST_
 
 ---
 
@@ -12,20 +12,19 @@ _Last updated: 12 Jun 2026, 12:30 AM IST_
 
 | Open | In Progress | Implemented | Deferred | Total |
 |---|---|---|---|---|
-| 1 | 1 | 6 | 0 | 8 |
+| 1 | 0 | 7 | 0 | 8 |
 
 ---
 
 ## Issues
 
 ### #1 — Photo upload fails when posting home food 🐞
-- **Status:** 🟡 In Progress (code hardened — needs Storage bucket verified)
-- **Area:** Food / Post a dish
+- **Status:** 🟢 Implemented
+- **Area:** Food / Post a dish · Storage
 - **Reported:** 11 Jun 2026
-- **Description:** Adding a photo while posting home food shows a "connection problem" error.
-- **Root cause:** `uploadDishPhoto` is byte-for-byte identical to the working `uploadListingPhoto` / `uploadPropertyPhoto`, so this is **not a code bug** — it's almost certainly the **`dish-photos` Storage bucket** not being set up the way `listing-photos` is (missing bucket, or no `INSERT` policy for `authenticated`). Two code problems made it worse: (a) a photo failure **blocked the whole dish post**, and (b) the catch showed a generic "check your connection" that **hid the real error**.
-- **Fix (code, done):** Photo upload is now **best-effort** — `postDish` posts the dish even if the image fails (logs the real error), and `post.tsx` warns *"Dish posted ✅ — but the photo could not upload"* instead of blocking. Other (non-photo) failures now surface the **actual error message** so the cause is visible.
-- **⚠️ ACTION REQUIRED (dashboard):** In Supabase → Storage, confirm a **public** bucket named **`dish-photos`** exists with an `INSERT` policy `to authenticated` (mirror `listing-photos`). See `docs/LAUNCH_CHECKLIST.md`. After that, re-test — the photo should attach; if not, the post now shows the precise error.
+- **Root cause (confirmed):** The Storage buckets (`dish-photos`, `listing-photos`, `sport-logos`) had **no RLS policies** on `storage.objects`. Since that table has RLS **on by default**, every upload was rejected with **`403 / new row violates row-level security policy`**. The bucket's "public" flag only allows *reads* — *writes* need explicit policies. (The upload code itself is correct — identical to the working listing/property uploads.)
+- **Fix:** **Migration `0050_storage_photo_policies.sql`** adds the policies — public read, broad `authenticated` insert/update (the write must be broad because dish/listing photos are uploaded *before* the owning row exists), and owner-or-admin delete via a path→table join. It also flips the buckets to public. _Code hardening from the earlier pass stays:_ a photo failure no longer blocks posting, and real errors now surface.
+- **▶️ Action:** Run **`0050`** (the three buckets must already exist), then re-test a dish photo — it should attach.
 
 ---
 
@@ -102,6 +101,7 @@ _Last updated: 12 Jun 2026, 12:30 AM IST_
 ---
 
 ## Changelog
+- **12 Jun 2026 (later)** — #1 root cause confirmed (no Storage RLS policies → 403); fixed via migration 0050 (photo bucket policies + public). Now 🟢.
 - **12 Jun 2026** — Logged + fixed #6 (back-on-refresh fallback), #7 (dues blank — now live at game start, not only after end), #8 (booking form tap selectors for time/duration/date/weeks).
 - **11 Jun 2026 (later)** — Reviewed Home Food + Badminton end-to-end. #2 fixed (realtime + toast + optimistic RSVP + clearer control); #1 hardened (photo non-fatal + real errors, needs bucket verified). Logged + fixed #3 (order-notify rebrand, migration 0049) and #4 (dues screen realtime). Logged #5 (in-app order notifications, deferred).
 - **11 Jun 2026** — Tracker created. Logged issues #1 and #2.

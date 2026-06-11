@@ -9,18 +9,17 @@ Status of each is tracked so nothing is silently dropped.
 
 ---
 
-## 1. Storage bucket policies  ⚠️ verify in dashboard
+## 1. Storage bucket policies  ✅ now in migration `0050`
 
-Our public photo buckets (`listing-photos`, `dish-photos`, `sport-logos`) are
-created in the Supabase dashboard, so their object-level policies are **not** in
-our migrations and can't be safely set by us (a wrong policy would break uploads).
+Our public photo buckets (`listing-photos`, `dish-photos`, `sport-logos`) need
+object-level policies on `storage.objects` — without them **every upload is denied**
+(`403 / new row violates row-level security policy`), because the bucket's "public"
+flag only governs READS.
 
-**Why it matters:** photos are non-sensitive and paths use unguessable UUIDs, so
-the real risk is low — but an authenticated user who knew an exact storage path
-could in theory overwrite/delete someone else's photo. Lock that down once.
-
-**Do this** (Supabase → Storage → Policies, or SQL editor). First delete any
-existing broad/auto-generated policies on these buckets, then add exactly:
+**These are now applied by `0050_storage_photo_policies.sql`** — run it once the
+three buckets exist (it also flips them to public). The policy set is below for
+reference (public read; broad authenticated write/update; owner-or-admin delete via
+a path → table join):
 
 ```sql
 -- Public READ (needed for the public image URLs to load)
