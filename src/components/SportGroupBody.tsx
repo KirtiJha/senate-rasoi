@@ -13,6 +13,7 @@ import {
   updateGroup, uploadGroupLogo,
 } from '../lib/sports';
 import { useThemeColors } from '../theme';
+import { CourtBookings } from './CourtBookings';
 import { Avatar, Button, RowSkeleton, Sheet } from './ui';
 
 /**
@@ -179,6 +180,9 @@ export function SportGroupBody({
           </View>
         )}
       </View>
+
+      {/* Court bookings, attendance & cost-split */}
+      <CourtBookings groupId={group.id} communityId={group.community_id} accent={color} isMember={isMember} />
 
       {/* Tournaments */}
       <View className="mt-4 rounded-2xl border border-line bg-surface p-4">

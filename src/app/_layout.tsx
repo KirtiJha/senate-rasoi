@@ -134,6 +134,7 @@ function DesktopShell() {
           <Stack.Screen name="polls" />
           <Stack.Screen name="sports" />
           <Stack.Screen name="sports/[id]" />
+          <Stack.Screen name="sports/dues" />
           <Stack.Screen name="documents" />
           <Stack.Screen name="payments" />
           <Stack.Screen name="properties" />
