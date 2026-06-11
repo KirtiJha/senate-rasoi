@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Empty } from '../../../components/Empty';
+import { ServiceDirectory } from '../../../components/ServiceDirectory';
 import { ListingCard } from '../../../components/listings/ListingCard';
 import { ListingCardSkeleton, useResponsive } from '../../../components/ui';
 import { useAuth } from '../../../context/auth';
@@ -86,6 +87,11 @@ export default function CategoryScreen() {
     );
   }
 
+  // The Service Directory (recommendation contacts) reads better as a call list.
+  if (cat.listingType === 'recommendation') {
+    return <ServiceDirectory cat={cat} />;
+  }
+
   const cols = isDesktop ? 3 : 2;
 
   const header = (
@@ -143,7 +149,7 @@ export default function CategoryScreen() {
                 icon={cat.icon.includes('construct') ? '🔧' : cat.icon.includes('bag') ? '🛍️' : '📋'}
                 title={`No ${cat.label} yet`}
               >
-                Neighbours can post {cat.listingType === 'product' ? 'items' : cat.listingType === 'recommendation' ? 'recommendations' : 'services'} here and connect directly. Tap + to be first.
+                Neighbours can post {cat.listingType === 'product' ? 'items' : 'services'} here and connect directly. Tap + to be first.
               </Empty>
             )
           }

@@ -15,6 +15,16 @@ import { layout, useThemeColors } from '../theme';
 
 const DIR_MAX = layout.maxContent;
 type Filter = 'all' | 'owner' | 'tenant';
+type SortKey = 'flat' | 'name';
+
+/** Block = leading letters; Floor = first digit of the unit number (user's rule). */
+function parseFlat(flat: string | null): { block: string | null; floor: string | null } {
+  if (!flat) return { block: null, floor: null };
+  const m = /^([A-Za-z]+)?[-\s]*(\d+)/.exec(flat.trim());
+  if (!m) return { block: null, floor: null };
+  return { block: m[1] ? m[1].toUpperCase() : null, floor: m[2] ? m[2][0] : null };
+}
+const floorLabel = (f: string) => (f === '0' ? 'Ground' : `Floor ${f}`);
 
 function openUrl(url: string) {
   if (Platform.OS === 'web') window.open(url, '_blank');
@@ -37,7 +47,25 @@ export default function DirectoryScreen() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
+  const [block, setBlock] = useState<string | null>(null);
+  const [floor, setFloor] = useState<string | null>(null);
+  const [sort, setSort] = useState<SortKey>('flat');
+  const [showFilters, setShowFilters] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+
+  // Distinct blocks / floors present (for the filter sheet).
+  const { blocks, floors } = useMemo(() => {
+    const bs = new Set<string>(); const fs = new Set<string>();
+    for (const r of residents) {
+      const { block: b, floor: f } = parseFlat(r.flat);
+      if (b) bs.add(b); if (f) fs.add(f);
+    }
+    return {
+      blocks: [...bs].sort(),
+      floors: [...fs].sort((a, b) => Number(a) - Number(b)),
+    };
+  }, [residents]);
+  const activeFilters = (block ? 1 : 0) + (floor ? 1 : 0) + (sort !== 'flat' ? 1 : 0);
 
   const load = useCallback(async () => {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
@@ -53,19 +81,29 @@ export default function DirectoryScreen() {
     const q = query.trim().toLowerCase();
     return residents.filter((r) => {
       if (filter !== 'all' && r.resident_type !== filter) return false;
+      if (block || floor) {
+        const p = parseFlat(r.flat);
+        if (block && p.block !== block) return false;
+        if (floor && p.floor !== floor) return false;
+      }
       if (!q) return true;
       return (
         r.name.toLowerCase().includes(q) ||
         (r.flat ?? '').toLowerCase().includes(q) ||
         (r.profession ?? '').toLowerCase().includes(q) ||
+        (r.native ?? '').toLowerCase().includes(q) ||
         (r.vehicle_no ?? '').toLowerCase().includes(q) ||
         (r.phone ?? '').includes(q)
       );
     });
-  }, [residents, query, filter]);
+  }, [residents, query, filter, block, floor]);
 
-  // Group by flat (residents are already flat-sorted).
+  // Sort=name → a single flat list; sort=flat → grouped by flat (already flat-sorted).
   const groups = useMemo(() => {
+    if (sort === 'name') {
+      const rows = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+      return rows.length ? [{ flat: '__byname', rows }] : [];
+    }
     const out: { flat: string | null; rows: Resident[] }[] = [];
     for (const r of filtered) {
       const last = out[out.length - 1];
@@ -73,7 +111,7 @@ export default function DirectoryScreen() {
       else out.push({ flat: r.flat ?? null, rows: [r] });
     }
     return out;
-  }, [filtered]);
+  }, [filtered, sort]);
 
   const call = (r: Resident) => {
     const d = (r.phone ?? '').replace(/\D/g, '');
@@ -143,12 +181,17 @@ export default function DirectoryScreen() {
                 <Pressable onPress={() => setQuery('')} hitSlop={8}><Ionicons name="close-circle" size={18} color={c.faint} /></Pressable>
               ) : null}
             </View>
-            <View className="mt-2.5 flex-row gap-2">
+            <View className="mt-2.5 flex-row items-center gap-2">
               {FILTERS.map((f) => (
                 <Pressable key={f.key} onPress={() => setFilter(f.key)} className={`rounded-full px-3.5 py-1.5 ${filter === f.key ? 'bg-accent' : 'bg-inset'}`}>
                   <Text className={`text-[12px] font-sans-sb ${filter === f.key ? 'text-on-accent' : 'text-muted'}`}>{f.label}</Text>
                 </Pressable>
               ))}
+              <View className="flex-1" />
+              <Pressable onPress={() => setShowFilters(true)} className={`flex-row items-center gap-1 rounded-full px-3 py-1.5 ${activeFilters ? 'bg-accent-soft' : 'bg-inset'}`}>
+                <Ionicons name="options-outline" size={14} color={activeFilters ? c.accent : c.muted} />
+                <Text className={`text-[12px] font-sans-sb ${activeFilters ? 'text-accent' : 'text-muted'}`}>{activeFilters ? `Filters · ${activeFilters}` : 'Filter & sort'}</Text>
+              </Pressable>
             </View>
           </View>
         }
@@ -169,19 +212,28 @@ export default function DirectoryScreen() {
           ) : (
             groups.map((g) => (
               <View key={g.flat ?? '__none'} className="mb-5">
-                <View className="mb-2 flex-row items-center gap-2">
-                  <Ionicons name="home-outline" size={14} color={c.muted} />
-                  <Text className="font-sans-bold text-[13px] uppercase tracking-wider text-muted">
-                    {g.flat ? `Flat ${g.flat}` : 'No flat listed'}
-                  </Text>
-                  {g.rows.length > 1 ? <Text className="text-[12px] text-faint">· {g.rows.length} residents</Text> : null}
-                </View>
+                {g.flat === '__byname' ? (
+                  <View className="mb-2 flex-row items-center gap-2">
+                    <Ionicons name="text-outline" size={14} color={c.muted} />
+                    <Text className="font-sans-bold text-[13px] uppercase tracking-wider text-muted">All residents · A–Z</Text>
+                    <Text className="text-[12px] text-faint">· {g.rows.length}</Text>
+                  </View>
+                ) : (
+                  <View className="mb-2 flex-row items-center gap-2">
+                    <Ionicons name="home-outline" size={14} color={c.muted} />
+                    <Text className="font-sans-bold text-[13px] uppercase tracking-wider text-muted">
+                      {g.flat ? `Flat ${g.flat}` : 'No flat listed'}
+                    </Text>
+                    {g.rows.length > 1 ? <Text className="text-[12px] text-faint">· {g.rows.length} residents</Text> : null}
+                  </View>
+                )}
                 <View className="overflow-hidden rounded-2xl border border-line bg-surface">
                   {g.rows.map((r, i) => (
                     <ResidentRow
                       key={r.key}
                       r={r}
                       first={i === 0}
+                      showFlat={sort === 'name'}
                       c={c}
                       onOpen={() => r.userId && router.push(`/profile/${r.userId}` as any)}
                       onCall={() => call(r)}
@@ -218,18 +270,62 @@ export default function DirectoryScreen() {
         }}
         c={c}
       />
+
+      <Sheet visible={showFilters} onClose={() => setShowFilters(false)} title="Filter & sort">
+        <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Sort by</Text>
+        <View className="mb-4 flex-row gap-2">
+          {([['flat', 'Flat number'], ['name', 'Name (A–Z)']] as const).map(([k, lbl]) => (
+            <Pressable key={k} onPress={() => setSort(k)} className={`flex-1 items-center rounded-xl border py-2.5 ${sort === k ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
+              <Text className={`text-[13px] font-sans-sb ${sort === k ? 'text-accent' : 'text-muted'}`}>{lbl}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {blocks.length > 1 ? (
+          <>
+            <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Block</Text>
+            <View className="mb-4 flex-row flex-wrap gap-2">
+              <ChipBtn label="All" on={!block} onPress={() => setBlock(null)} c={c} />
+              {blocks.map((b) => <ChipBtn key={b} label={b} on={block === b} onPress={() => setBlock(b)} c={c} />)}
+            </View>
+          </>
+        ) : null}
+
+        {floors.length > 1 ? (
+          <>
+            <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Floor</Text>
+            <View className="mb-4 flex-row flex-wrap gap-2">
+              <ChipBtn label="All" on={!floor} onPress={() => setFloor(null)} c={c} />
+              {floors.map((f) => <ChipBtn key={f} label={f === '0' ? 'G' : f} on={floor === f} onPress={() => setFloor(f)} c={c} />)}
+            </View>
+          </>
+        ) : null}
+
+        <View className="mt-1 flex-row gap-2">
+          <Button label="Clear" variant="outline" fullWidth onPress={() => { setBlock(null); setFloor(null); setSort('flat'); }} />
+          <Button label="Done" fullWidth onPress={() => setShowFilters(false)} />
+        </View>
+      </Sheet>
     </View>
   );
 }
 
+function ChipBtn({ label, on, onPress, c }: { label: string; on: boolean; onPress: () => void; c: ReturnType<typeof useThemeColors> }) {
+  return (
+    <Pressable onPress={onPress} className={`min-w-[44px] items-center rounded-full border px-3.5 py-1.5 ${on ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
+      <Text className={`text-[13px] font-sans-sb ${on ? 'text-accent' : 'text-muted'}`}>{label}</Text>
+    </Pressable>
+  );
+}
+
 function ResidentRow({
-  r, first, c, onOpen, onCall, onWhatsApp, onMessage, onInvite, onRemove,
+  r, first, showFlat, c, onOpen, onCall, onWhatsApp, onMessage, onInvite, onRemove,
 }: {
-  r: Resident; first: boolean; c: ReturnType<typeof useThemeColors>;
+  r: Resident; first: boolean; showFlat?: boolean; c: ReturnType<typeof useThemeColors>;
   onOpen: () => void; onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onRemove: () => void;
 }) {
   const typeColor = r.resident_type === 'owner' ? '#0D9488' : '#7C3AED';
-  const sub = [r.profession, r.native ? `📍 ${r.native}` : null, r.vehicle_no ? `🚗 ${r.vehicle_no}` : null].filter(Boolean).join('  ·  ');
+  const sub = [showFlat && r.flat ? `🏠 ${r.flat}` : null, r.profession, r.native ? `📍 ${r.native}` : null, r.vehicle_no ? `🚗 ${r.vehicle_no}` : null].filter(Boolean).join('  ·  ');
 
   return (
     <Pressable
