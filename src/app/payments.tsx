@@ -118,8 +118,8 @@ export default function PaymentsScreen() {
                         <Text className="text-[10px] font-sans-sb uppercase" style={{ color: st.color }}>{st.label}</Text>
                       </View>
                     </View>
-                    {/* Actions */}
-                    {!iPaid && p.status === 'initiated' ? (
+                    {/* Actions — court/sports dues are managed in Booking dues, so view-only here */}
+                    {p.source === 'court' ? null : !iPaid && p.status === 'initiated' ? (
                       <Pressable onPress={() => onReceived(p)} className="ml-1 rounded-full bg-success px-3 py-1.5 active:opacity-90">
                         <Text className="text-[12px] font-sans-sb text-white">Received</Text>
                       </Pressable>

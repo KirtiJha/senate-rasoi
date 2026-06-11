@@ -17,6 +17,7 @@ export interface PaymentRow {
   received_at: string | null;
   payer?: { name: string | null; flat: string | null } | null;
   payee?: { name: string | null; flat: string | null } | null;
+  source?: 'payment' | 'court'; // 'court' rows come from sports dues (managed there)
 }
 
 /** Build a UPI intent link that opens the payer's UPI app pre-filled. */
@@ -66,13 +67,47 @@ export async function cancelPayment(id: string): Promise<boolean> {
 }
 
 /** All payments the current user is party to (RLS limits to payer/payee). */
+/** All of the user's payments across every category — the neighbour ledger
+ *  (`payments`) PLUS sports court dues (`court_payments`), merged + sorted. */
 export async function fetchMyPayments(): Promise<PaymentRow[]> {
-  const { data, error } = await supabase
-    .from('payments')
-    .select('*, payer:profiles!payments_payer_id_fkey(name, flat), payee:profiles!payments_payee_id_fkey(name, flat)')
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as unknown as PaymentRow[];
+  const [main, court] = await Promise.all([
+    supabase
+      .from('payments')
+      .select('*, payer:profiles!payments_payer_id_fkey(name, flat), payee:profiles!payments_payee_id_fkey(name, flat)')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('court_payments')
+      .select('*, payer:profiles!court_payments_payer_user_id_fkey(name, flat), payee:profiles!court_payments_payee_user_id_fkey(name, flat), session:court_sessions!court_payments_session_id_fkey(session_date, booking:court_bookings!court_sessions_booking_id_fkey(title))')
+      .order('created_at', { ascending: false }),
+  ]);
+  if (main.error) throw main.error;
+
+  const rows: PaymentRow[] = ((main.data ?? []) as unknown as PaymentRow[]).map((p) => ({ ...p, source: 'payment' }));
+
+  // Map court settlements into the common PaymentRow shape (view-only here).
+  for (const cp of (court.error ? [] : (court.data ?? [])) as any[]) {
+    const date = cp.session?.session_date as string | undefined;
+    const title = cp.session?.booking?.title as string | undefined;
+    rows.push({
+      id: cp.id,
+      community_id: cp.community_id,
+      payer_id: cp.payer_user_id,
+      payee_id: cp.payee_user_id,
+      amount: Number(cp.amount),
+      note: `🏸 ${title || 'Court'}${date ? ` · ${new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}` : ''} (Sports dues)`,
+      context_type: 'court',
+      context_id: cp.session_id,
+      upi_id: cp.upi_id ?? null,
+      status: cp.status === 'paid' ? 'received' : (cp.status as PaymentStatus), // court 'paid' == received
+      created_at: cp.created_at,
+      received_at: cp.paid_at ?? null,
+      payer: cp.payer ?? null,
+      payee: cp.payee ?? null,
+      source: 'court',
+    });
+  }
+
+  return rows.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
 }
 
 export function subscribePayments(onChange: () => void): () => void {
@@ -80,6 +115,7 @@ export function subscribePayments(onChange: () => void): () => void {
   const ch = supabase
     .channel('payments-feed')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, onChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'court_payments' }, onChange)
     .subscribe();
   return () => { supabase.removeChannel(ch); };
 }

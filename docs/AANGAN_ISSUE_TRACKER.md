@@ -12,7 +12,7 @@ _Last updated: 12 Jun 2026, 2:00 AM IST_
 
 | Open | In Progress | Implemented | Deferred | Total |
 |---|---|---|---|---|
-| 1 | 0 | 9 | 0 | 10 |
+| 1 | 0 | 10 | 0 | 11 |
 
 ---
 
@@ -110,6 +110,14 @@ _Last updated: 12 Jun 2026, 2:00 AM IST_
   4. **Edit booking** — `court_update_booking()` RPC: the booker edits title/time/duration/charge; changes flow to **upcoming sessions**, and an "Ask everyone to re-confirm" toggle resets RSVPs + **notifies the group**.
   5. **Manual settlement** — payer can "mark paid" without UPI; booker can **"Mark paid"** a due directly (`court_booker_settle()`, e.g. cash) or **undo** a settlement (reverts to owed). Two-step (payer→initiated, booker→received) still works.
   6. **Sync** — booking-update notifications via the RPC; dues + group views already refresh in realtime (#2/#4).
+
+---
+
+### #11 — Payments screen missed whole categories (e.g. sports dues) 🐞
+- **Status:** 🟢 Implemented
+- **Area:** Payments
+- **Root cause:** `/payments` read only the neighbour-ledger `payments` table (dish/tiffin/listing). **Badminton/court dues live in a separate `court_payments` table** (migration 0043), so they never appeared — making it look like it only showed "cooking" payments.
+- **Fix:** `fetchMyPayments` now also reads `court_payments` (RLS-scoped to payer/payee), maps them into the common row shape (court `paid` → `received`, labelled "🏸 … (Sports dues)") and merges + sorts everything by date. Realtime watches both tables. Court rows are **view-only** here (settled in Booking dues), so there's no duplicate/incorrect action path. Client-only — no migration.
 
 ---
 
