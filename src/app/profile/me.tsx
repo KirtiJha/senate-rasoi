@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Field, SectionCard } from '../../components/forms';
 import { Avatar, Button, Container, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { useConfirm } from '../../context/confirm';
 import { changePin, deleteAccount, updateResidentInfo } from '../../lib/auth';
 import { Community, fetchCommunityById } from '../../lib/communities';
 import { isSupabaseConfigured } from '../../lib/supabase';
@@ -16,6 +17,7 @@ import { useThemeColors } from '../../theme';
 export default function ProfileScreen() {
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { profile, communityId, saveProfile, signOut, refreshProfile } = useAuth();
@@ -103,23 +105,14 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleDeleteAccount = () => {
-    if (Platform.OS === 'web') {
-      const confirmed = window.confirm(
-        'Delete your account? This cannot be undone. All your listings and data will be removed.'
-      );
-      if (!confirmed) return;
-      doDelete();
-    } else {
-      Alert.alert(
-        'Delete Account',
-        'This cannot be undone. All your listings and data will be permanently removed.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete', style: 'destructive', onPress: doDelete },
-        ]
-      );
-    }
+  const handleDeleteAccount = async () => {
+    const ok = await confirm({
+      title: 'Delete account',
+      message: 'This cannot be undone. All your listings and data will be permanently removed.',
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (ok) doDelete();
   };
 
   const doDelete = async () => {

@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar, Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
+import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import { deleteMember, listCommunityMembers, setMemberBlocked, setUserRoles } from '../lib/admin';
 import { getOrCreateThread } from '../lib/dm';
@@ -30,6 +31,7 @@ interface JoinRequest {
 export default function AdminScreen() {
   const router = useRouter();
   const toast = useToast();
+  const confirmDialog = useConfirm();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { ready, isAdmin, userId, communityId, refreshProfile } = useAuth();
@@ -88,14 +90,7 @@ export default function AdminScreen() {
   };
 
   const confirm = (title: string, message: string, onYes: () => void, destructive = false) => {
-    if (Platform.OS === 'web') {
-      if (window.confirm(`${title}\n\n${message}`)) onYes();
-    } else {
-      Alert.alert(title, message, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Confirm', style: destructive ? 'destructive' : 'default', onPress: onYes },
-      ]);
-    }
+    confirmDialog({ title, message, confirmLabel: 'Confirm', destructive }).then((ok) => { if (ok) onYes(); });
   };
 
   const startChat = async (m: DbProfile) => {

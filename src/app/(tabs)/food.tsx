@@ -26,6 +26,7 @@ import { Container, DishCardSkeleton, LiveDot, ScreenHeader, useResponsive } fro
 import { useThemeColors } from '../../theme';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { useConfirm } from '../../context/confirm';
 import {
   buildWhatsAppOrderLink,
   deleteDish,
@@ -53,6 +54,7 @@ const FOOD_TABS: { key: FoodTab; label: string }[] = [
 
 export default function FoodScreen() {
   const toast = useToast();
+  const confirm = useConfirm();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { userId, communityId } = useAuth();
@@ -174,14 +176,7 @@ export default function FoodScreen() {
         toast.show('Could not remove — check your connection');
       }
     };
-    if (Platform.OS === 'web') {
-      if (window.confirm(`Remove "${dish.dish_name}" from the board?`)) doDelete();
-    } else {
-      Alert.alert('Remove post', `Remove "${dish.dish_name}" from the board?`, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Remove', style: 'destructive', onPress: doDelete },
-      ]);
-    }
+    confirm({ title: 'Remove post', message: `Remove "${dish.dish_name}" from the board?`, confirmLabel: 'Remove', destructive: true }).then((ok) => { if (ok) doDelete(); });
   };
 
   const todayStr = new Date().toLocaleDateString('en-CA');

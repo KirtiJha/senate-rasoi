@@ -6,6 +6,7 @@ import { T } from '../../components/T';
 import { Avatar, Container, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { useConfirm } from '../../context/confirm';
 import { waLink } from '../../lib/listings';
 import {
   RecoAnswer,
@@ -27,6 +28,7 @@ function openUrl(u: string) { if (Platform.OS === 'web') window.open(u, '_blank'
 export default function RecoDetailScreen() {
   const c = useThemeColors();
   const toast = useToast();
+  const confirm = useConfirm();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { userId, isAdmin } = useAuth();
@@ -76,7 +78,7 @@ export default function RecoDetailScreen() {
   const removeQuestion = async () => {
     if (!q) return;
     const go = async () => { await deleteQuestion(q.id); router.back(); };
-    if (Platform.OS === 'web') { if (window.confirm('Delete this question and its answers?')) go(); } else go();
+    if (await confirm({ title: 'Delete question', message: 'Delete this question and its answers?', confirmLabel: 'Delete', destructive: true })) go();
   };
 
   if (loading) return <View className="flex-1 bg-bg"><ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Question" showBack hideSociety /><View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View></View>;

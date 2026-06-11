@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
+import { useConfirm } from '../context/confirm';
 import { deleteDish, fetchDishes } from '../lib/dishes';
 import { haptics } from '../lib/haptics';
 import { fetchInquiryCountsForOwner } from '../lib/inquiries';
@@ -25,6 +26,7 @@ type MyItem =
 export function MyListingsSection() {
   const { userId, communityId } = useAuth();
   const toast = useToast();
+  const confirm = useConfirm();
   const router = useRouter();
   const c = useThemeColors();
 
@@ -60,8 +62,7 @@ export function MyListingsSection() {
 
   const confirmDelete = (title: string, run: () => Promise<unknown>) => {
     const doIt = async () => { await run(); haptics.success(); toast.show('Removed ✅'); load(); };
-    if (Platform.OS === 'web') { if (window.confirm(`Remove "${title}"?`)) doIt(); }
-    else Alert.alert('Remove', `Remove "${title}"?`, [{ text: 'Cancel', style: 'cancel' }, { text: 'Remove', style: 'destructive', onPress: doIt }]);
+    confirm({ title: 'Remove', message: `Remove "${title}"?`, confirmLabel: 'Remove', destructive: true }).then((ok) => { if (ok) doIt(); });
   };
 
   const onDelete = (it: MyItem) => {

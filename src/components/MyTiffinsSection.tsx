@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { daysLabel } from './TiffinCard';
 import { PayButton } from './PayButton';
 import { Avatar, Badge, Button, Container, VegMark } from './ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
+import { useConfirm } from '../context/confirm';
 import { waLink } from '../lib/dishes';
 import {
   cancelSubscription, chefTiffinForDate, deleteTiffinPlan, listMySubscriptions,
@@ -28,6 +29,7 @@ function openUrl(url: string) {
 export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; onPost?: () => void } = {}) {
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
   const c = useThemeColors();
   const { userId } = useAuth();
   const [plans, setPlans] = useState<TiffinPlan[]>([]);
@@ -76,14 +78,7 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
       toast.show('Subscription cancelled');
       await load();
     };
-    if (Platform.OS === 'web') {
-      if (window.confirm(`Cancel your ${s.plan?.title ?? 'tiffin'} subscription?`)) run();
-    } else {
-      Alert.alert('Cancel subscription', `Cancel your ${s.plan?.title ?? 'tiffin'} subscription?`, [
-        { text: 'Keep', style: 'cancel' },
-        { text: 'Cancel', style: 'destructive', onPress: run },
-      ]);
-    }
+    confirm({ title: 'Cancel subscription', message: `Cancel your ${s.plan?.title ?? 'tiffin'} subscription?`, confirmLabel: 'Cancel subscription', cancelLabel: 'Keep', destructive: true }).then((ok) => { if (ok) run(); });
   };
 
   const empty = !loading && plans.length === 0 && subs.length === 0;

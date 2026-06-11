@@ -25,6 +25,7 @@ import { BottomBar } from '../components/BottomBar';
 import { NavRail } from '../components/NavRail';
 import { useResponsive } from '../components/ui';
 import { AuthProvider } from '../context/auth';
+import { ConfirmProvider } from '../context/confirm';
 import { TranslationProvider } from '../context/translations';
 import { NotificationsProvider } from '../context/notifications';
 import { ThemeProvider } from '../context/theme';
@@ -82,8 +83,10 @@ function AppShell() {
             <UnreadDmsProvider>
               <NotificationsProvider>
                 <ToastProvider>
-                  <StatusBar style={isDark ? 'light' : 'dark'} />
-                  <DesktopShell />
+                  <ConfirmProvider>
+                    <StatusBar style={isDark ? 'light' : 'dark'} />
+                    <DesktopShell />
+                  </ConfirmProvider>
                 </ToastProvider>
               </NotificationsProvider>
             </UnreadDmsProvider>

@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { Avatar, Container, RowSkeleton, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
+import { useConfirm } from '../context/confirm';
 import { PaymentRow, cancelPayment, fetchMyPayments, markReceived, subscribePayments } from '../lib/payments';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { layout, useThemeColors } from '../theme';
@@ -20,6 +21,7 @@ const STATUS_META: Record<string, { label: string; color: string }> = {
 export default function PaymentsScreen() {
   const c = useThemeColors();
   const toast = useToast();
+  const confirm = useConfirm();
   const { userId } = useAuth();
 
   const [rows, setRows] = useState<PaymentRow[]>([]);
@@ -54,8 +56,7 @@ export default function PaymentsScreen() {
 
   const onCancel = (p: PaymentRow) => {
     const run = async () => { try { await cancelPayment(p.id); load(); } catch { toast.show('Could not cancel'); } };
-    if (Platform.OS === 'web') { if (window.confirm('Remove this payment record?')) run(); }
-    else Alert.alert('Cancel', 'Remove this payment record?', [{ text: 'No', style: 'cancel' }, { text: 'Yes', style: 'destructive', onPress: run }]);
+    confirm({ title: 'Remove payment', message: 'Remove this payment record?', confirmLabel: 'Remove', destructive: true }).then((ok) => { if (ok) run(); });
   };
 
   const FILTERS: { key: Filter; label: string }[] = [

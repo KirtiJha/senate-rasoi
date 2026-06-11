@@ -3,8 +3,9 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../context/auth';
+import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import { fetchDirectory, Resident } from '../lib/directory';
 import {
@@ -38,6 +39,7 @@ export function SportGroupBody({
   const c = useThemeColors();
   const toast = useToast();
   const { userId, communityId, isAdmin } = useAuth();
+  const confirm = useConfirm();
 
   const [group, setGroup] = useState<SportGroup | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
@@ -77,8 +79,7 @@ export function SportGroupBody({
     if (!group) return;
     const run = async () => { try { await removeMember(group.id, m.user_id); await reload(); } catch { toast.show('Could not remove'); } };
     const msg = `Remove ${m.profile?.name ?? 'this member'} from ${group.name}?`;
-    if (Platform.OS === 'web') { if (window.confirm(msg)) run(); }
-    else Alert.alert('Remove', msg, [{ text: 'Cancel', style: 'cancel' }, { text: 'Remove', style: 'destructive', onPress: run }]);
+    confirm({ title: 'Remove member', message: msg, confirmLabel: 'Remove', destructive: true }).then((ok) => { if (ok) run(); });
   };
 
   const pickLogo = async () => {
@@ -95,8 +96,7 @@ export function SportGroupBody({
     if (!group) return;
     const run = async () => { try { await deleteGroup(group.id); toast.show('Group deleted'); onDeleted ? onDeleted() : router.back(); } catch { toast.show('Could not delete'); } };
     const msg = `Delete the "${group.name}" group? This removes all members and tournaments.`;
-    if (Platform.OS === 'web') { if (window.confirm(msg)) run(); }
-    else Alert.alert('Delete group', msg, [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: run }]);
+    confirm({ title: 'Delete group', message: msg, confirmLabel: 'Delete', destructive: true }).then((ok) => { if (ok) run(); });
   };
 
   if (loading) return <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={4} /></View>;

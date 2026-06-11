@@ -7,6 +7,7 @@ import { T } from '../../components/T';
 import { Avatar, Button, Container, ScreenHeader, Sheet } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { useConfirm } from '../../context/confirm';
 import {
   BORROW_CATEGORIES,
   BorrowRequest,
@@ -32,6 +33,7 @@ const catMeta = (key: string | null) => BORROW_CATEGORIES.find((c) => c.key === 
 export default function LendItemDetailScreen() {
   const c = useThemeColors();
   const toast = useToast();
+  const confirm = useConfirm();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { userId } = useAuth();
@@ -73,7 +75,7 @@ export default function LendItemDetailScreen() {
   };
   const removeItem = async () => {
     const go = async () => { await deleteItem(item.id); router.back(); };
-    if (Platform.OS === 'web') { if (window.confirm('Delete this item?')) go(); } else go();
+    if (await confirm({ title: 'Delete item', message: 'Delete this borrow item?', confirmLabel: 'Delete', destructive: true })) go();
   };
 
   return (

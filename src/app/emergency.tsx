@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Linking, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Linking, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Container, ScreenHeader, useResponsive } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
+import { useConfirm } from '../context/confirm';
 import {
   ALL_EMERGENCY_ROLES, EMERGENCY_ROLE_COLORS, EMERGENCY_ROLE_ICONS, EMERGENCY_ROLE_LABELS,
   EmergencyContact, EmergencyRole,
@@ -21,6 +22,7 @@ export default function EmergencyScreen() {
   const { isDesktop } = useResponsive();
   const { communityId, isAdmin } = useAuth();
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,14 +52,7 @@ export default function EmergencyScreen() {
         toast.show('Contact removed');
       } catch { toast.show('Could not remove contact'); }
     };
-    if (Platform.OS === 'web') {
-      if (window.confirm(`Remove "${contact.name}"?`)) doDelete();
-    } else {
-      Alert.alert('Remove contact', `Remove "${contact.name}"?`, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Remove', style: 'destructive', onPress: doDelete },
-      ]);
-    }
+    confirm({ title: 'Remove contact', message: `Remove "${contact.name}"?`, confirmLabel: 'Remove', destructive: true }).then((ok) => { if (ok) doDelete(); });
   };
 
   return (

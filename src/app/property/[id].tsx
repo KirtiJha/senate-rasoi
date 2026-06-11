@@ -2,12 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { PropertyChat } from '../../components/PropertyChat';
 import { T } from '../../components/T';
 import { Avatar, Button, Container, ScreenHeader, Sheet } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { useConfirm } from '../../context/confirm';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { waLink } from '../../lib/listings';
 import {
@@ -37,6 +38,7 @@ const PARK: Record<string, string> = { none: 'No parking', open: 'Open', covered
 export default function PropertyDetailScreen() {
   const c = useThemeColors();
   const toast = useToast();
+  const confirm = useConfirm();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { userId, profile } = useAuth();
@@ -107,8 +109,7 @@ export default function PropertyDetailScreen() {
 
   const confirmDelete = () => {
     const go = async () => { await deleteProperty(p.id); router.back(); };
-    if (Platform.OS === 'web') { if (window.confirm('Delete this flat listing? This cannot be undone.')) go(); }
-    else Alert.alert('Delete listing', 'This cannot be undone.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: go }]);
+    confirm({ title: 'Delete flat listing', message: 'This cannot be undone.', confirmLabel: 'Delete', destructive: true }).then((ok) => { if (ok) go(); });
   };
 
   const changeStatus = async (s: PropertyRow['status']) => {

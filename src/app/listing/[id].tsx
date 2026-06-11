@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { InquiryModal } from '../../components/listings/InquiryModal';
 import { ListingChat } from '../../components/listings/ListingChat';
@@ -11,6 +11,7 @@ import { T } from '../../components/T';
 import { Avatar, Badge, Button, Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { useConfirm } from '../../context/confirm';
 import { haptics } from '../../lib/haptics';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { sendInquiry } from '../../lib/inquiries';
@@ -24,6 +25,7 @@ export default function ListingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
   const { userId, profile } = useAuth();
@@ -91,14 +93,7 @@ export default function ListingDetailScreen() {
       toast.show(ok ? 'Listing removed ✅' : 'Could not remove');
       router.back();
     };
-    if (Platform.OS === 'web') {
-      if (window.confirm(`Remove "${listing.title}"?`)) doDelete();
-    } else {
-      Alert.alert('Remove listing', `Remove "${listing.title}"?`, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Remove', style: 'destructive', onPress: doDelete },
-      ]);
-    }
+    confirm({ title: 'Remove listing', message: `Remove "${listing.title}"?`, confirmLabel: 'Remove', destructive: true }).then((ok) => { if (ok) doDelete(); });
   };
 
   const handleMarkSold = async () => {

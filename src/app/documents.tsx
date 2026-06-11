@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Avatar, Button, Container, RowSkeleton, ScreenHeader, Sheet } from '../components/ui';
 import { useAuth } from '../context/auth';
+import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import { fetchDirectory } from '../lib/directory';
 import {
@@ -204,6 +205,7 @@ function UploadSheet({
   const [description, setDescription] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [busy, setBusy] = useState(false);
+  const toast = useToast();
 
   useEffect(() => { if (!visible) { setFile(null); setName(''); setDescription(''); setIsPublic(false); } }, [visible]);
 
@@ -211,7 +213,7 @@ function UploadSheet({
     const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true, multiple: false });
     if (res.canceled) return;
     const a = res.assets[0];
-    if (a.size && a.size > MAX_DOCUMENT_MB * 1024 * 1024) return alert(`That file is too large. The limit is ${MAX_DOCUMENT_MB} MB.`);
+    if (a.size && a.size > MAX_DOCUMENT_MB * 1024 * 1024) return toast.show(`That file is too large — limit is ${MAX_DOCUMENT_MB} MB`);
     setFile({ uri: a.uri, name: a.name, mimeType: a.mimeType, size: a.size });
     if (!name) setName(a.name);
   };
@@ -262,6 +264,7 @@ function ManageSheet({
   doc: DocRow | null; onClose: () => void; communityId: string | null; userId: string | null;
   c: ReturnType<typeof useThemeColors>; onChanged: () => void; toastShow: (m: string) => void;
 }) {
+  const confirm = useConfirm();
   const [isPublic, setIsPublic] = useState(false);
   const [shares, setShares] = useState<ShareUser[]>([]);
   const [people, setPeople] = useState<{ id: string; name: string; flat: string | null }[]>([]);
@@ -297,8 +300,7 @@ function ManageSheet({
   const remove = async () => {
     if (!doc) return;
     const run = async () => { try { await deleteDocument(doc); onClose(); onChanged(); toastShow('Document deleted'); } catch { toastShow('Could not delete'); } };
-    if (Platform.OS === 'web') { if (window.confirm(`Delete "${doc.name}"? This cannot be undone.`)) run(); }
-    else run();
+    if (await confirm({ title: 'Delete document', message: `Delete "${doc.name}"? This cannot be undone.`, confirmLabel: 'Delete', destructive: true })) run();
   };
 
   const filteredPeople = useMemo(() => {

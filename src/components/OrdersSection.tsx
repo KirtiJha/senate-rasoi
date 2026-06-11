@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Empty } from './Empty';
 import { PayButton } from './PayButton';
 import { Avatar, Badge, Button, Container } from './ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
+import { useConfirm } from '../context/confirm';
 import { waLink } from '../lib/dishes';
 import { cancelOrder, canSelfCancel, listMyOrders, subscribeToOrders } from '../lib/orders';
 import { MyOrder, OrderStatus, SLOT_EMOJI } from '../lib/types';
@@ -30,6 +31,7 @@ function openUrl(url: string) {
 export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
   const c = useThemeColors();
   const { userId } = useAuth();
   const [orders, setOrders] = useState<MyOrder[]>([]);
@@ -59,14 +61,7 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
       toast.show(ok ? 'Order cancelled' : 'Too late to self-cancel — please call the chef');
       await load();
     };
-    if (Platform.OS === 'web') {
-      if (window.confirm(`Cancel your order of ${order.dish?.dish_name ?? 'this dish'}?`)) run();
-    } else {
-      Alert.alert('Cancel order', `Cancel your order of ${order.dish?.dish_name ?? 'this dish'}?`, [
-        { text: 'Keep', style: 'cancel' },
-        { text: 'Cancel order', style: 'destructive', onPress: run },
-      ]);
-    }
+    confirm({ title: 'Cancel order', message: `Cancel your order of ${order.dish?.dish_name ?? 'this dish'}?`, confirmLabel: 'Cancel order', cancelLabel: 'Keep', destructive: true }).then((ok) => { if (ok) run(); });
   };
 
   return (

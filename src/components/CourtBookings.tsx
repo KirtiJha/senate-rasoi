@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { useAuth } from '../context/auth';
+import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import {
   SessionView, cancelSession, createBooking, deleteBooking, fetchGroupSessions, respondToSession,
@@ -34,6 +35,7 @@ export function CourtBookings({
   const toast = useToast();
   const router = useRouter();
   const { userId } = useAuth();
+  const confirm = useConfirm();
 
   const [sessions, setSessions] = useState<SessionView[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,8 +61,7 @@ export function CourtBookings({
   const onCancelSession = (s: SessionView) => {
     const run = async () => { try { await cancelSession(s.id); await load(); } catch { toast.show('Could not cancel'); } };
     const msg = `Cancel the ${fmtDate(s.session_date)} session?`;
-    if (Platform.OS === 'web') { if (window.confirm(msg)) run(); }
-    else Alert.alert('Cancel session', msg, [{ text: 'Back', style: 'cancel' }, { text: 'Cancel session', style: 'destructive', onPress: run }]);
+    confirm({ title: 'Cancel session', message: msg, confirmLabel: 'Cancel session', destructive: true }).then((ok) => { if (ok) run(); });
   };
 
   const upcoming = sessions.filter((s) => !s.ended);

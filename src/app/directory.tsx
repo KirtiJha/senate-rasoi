@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ReactNode, useCallback, useMemo, useState } from 'react';
-import { Alert, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, RowSkeleton, ScreenHeader, Sheet, useResponsive } from '../components/ui';
 import { Field } from '../components/forms';
 import { useAuth } from '../context/auth';
+import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import { Resident, addDirectoryEntry, adminSetDirectoryVisibility, deleteDirectoryEntry, fetchDirectory } from '../lib/directory';
 import { waLink } from '../lib/dishes';
@@ -43,6 +44,7 @@ export default function DirectoryScreen() {
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
   const { userId, communityId, isAdmin } = useAuth();
+  const confirm = useConfirm();
 
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
@@ -139,20 +141,22 @@ export default function DirectoryScreen() {
     openUrl(waLink(wa, `Hi ${r.name.split(' ')[0]}! 🏡 Join our society on Aangan — ${appUrl()}\n\nSee neighbours, order home food, post listings, polls & more.`));
   };
 
-  const remove = (r: Resident) => {
-    const run = async () => {
-      try {
-        if (r.removeKind === 'entry' && r.entryId) await deleteDirectoryEntry(r.entryId);
-        else if (r.removeKind === 'hide' && r.userId) await adminSetDirectoryVisibility(r.userId, false);
-        toast.show('Removed from directory');
-        await load();
-      } catch { toast.show('Could not remove'); }
-    };
-    const msg = r.removeKind === 'hide'
-      ? `Hide ${r.name} from the resident directory?`
-      : `Remove ${r.name} from the directory?`;
-    if (Platform.OS === 'web') { if (window.confirm(msg)) run(); }
-    else Alert.alert('Remove', msg, [{ text: 'Cancel', style: 'cancel' }, { text: 'Remove', style: 'destructive', onPress: run }]);
+  const remove = async (r: Resident) => {
+    const ok = await confirm({
+      title: r.removeKind === 'hide' ? 'Hide from directory' : 'Remove resident',
+      message: r.removeKind === 'hide'
+        ? `Hide ${r.name} from the resident directory?`
+        : `Remove ${r.name} from the directory?`,
+      confirmLabel: r.removeKind === 'hide' ? 'Hide' : 'Remove',
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      if (r.removeKind === 'entry' && r.entryId) await deleteDirectoryEntry(r.entryId);
+      else if (r.removeKind === 'hide' && r.userId) await adminSetDirectoryVisibility(r.userId, false);
+      toast.show('Removed from directory');
+      await load();
+    } catch { toast.show('Could not remove'); }
   };
 
   const FILTERS: { key: Filter; label: string }[] = [
