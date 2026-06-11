@@ -17,14 +17,15 @@ const DIR_MAX = layout.maxContent;
 type Filter = 'all' | 'owner' | 'tenant';
 type SortKey = 'flat' | 'name';
 
-/** Block = leading letters; Floor = first digit of the unit number (user's rule). */
-function parseFlat(flat: string | null): { block: string | null; floor: string | null } {
-  if (!flat) return { block: null, floor: null };
-  const m = /^([A-Za-z]+)?[-\s]*(\d+)/.exec(flat.trim());
-  if (!m) return { block: null, floor: null };
-  return { block: m[1] ? m[1].toUpperCase() : null, floor: m[2] ? m[2][0] : null };
-}
+/** Floor = first digit of the unit number (user's rule). */
+const floorOf = (flat: string | null): string | null => {
+  const m = /\d/.exec(flat ?? '');
+  return m ? m[0] : null;
+};
 const floorLabel = (f: string) => (f === '0' ? 'Ground' : `Floor ${f}`);
+/** "E-004" display from separate block + flat. */
+const flatDisplay = (block: string | null, flat: string | null): string =>
+  [block, flat].filter(Boolean).join('-');
 
 function openUrl(url: string) {
   if (Platform.OS === 'web') window.open(url, '_blank');
@@ -57,8 +58,8 @@ export default function DirectoryScreen() {
   const { blocks, floors } = useMemo(() => {
     const bs = new Set<string>(); const fs = new Set<string>();
     for (const r of residents) {
-      const { block: b, floor: f } = parseFlat(r.flat);
-      if (b) bs.add(b); if (f) fs.add(f);
+      if (r.block) bs.add(r.block);
+      const f = floorOf(r.flat); if (f) fs.add(f);
     }
     return {
       blocks: [...bs].sort(),
@@ -81,15 +82,12 @@ export default function DirectoryScreen() {
     const q = query.trim().toLowerCase();
     return residents.filter((r) => {
       if (filter !== 'all' && r.resident_type !== filter) return false;
-      if (block || floor) {
-        const p = parseFlat(r.flat);
-        if (block && p.block !== block) return false;
-        if (floor && p.floor !== floor) return false;
-      }
+      if (block && r.block !== block) return false;
+      if (floor && floorOf(r.flat) !== floor) return false;
       if (!q) return true;
       return (
         r.name.toLowerCase().includes(q) ||
-        (r.flat ?? '').toLowerCase().includes(q) ||
+        flatDisplay(r.block, r.flat).toLowerCase().includes(q) ||
         (r.profession ?? '').toLowerCase().includes(q) ||
         (r.native ?? '').toLowerCase().includes(q) ||
         (r.vehicle_no ?? '').toLowerCase().includes(q) ||
@@ -106,9 +104,10 @@ export default function DirectoryScreen() {
     }
     const out: { flat: string | null; rows: Resident[] }[] = [];
     for (const r of filtered) {
+      const key = flatDisplay(r.block, r.flat) || null;
       const last = out[out.length - 1];
-      if (last && last.flat === (r.flat ?? null)) last.rows.push(r);
-      else out.push({ flat: r.flat ?? null, rows: [r] });
+      if (last && last.flat === key) last.rows.push(r);
+      else out.push({ flat: key, rows: [r] });
     }
     return out;
   }, [filtered, sort]);
@@ -325,7 +324,7 @@ function ResidentRow({
   onOpen: () => void; onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onRemove: () => void;
 }) {
   const typeColor = r.resident_type === 'owner' ? '#0D9488' : '#7C3AED';
-  const sub = [showFlat && r.flat ? `🏠 ${r.flat}` : null, r.profession, r.native ? `📍 ${r.native}` : null, r.vehicle_no ? `🚗 ${r.vehicle_no}` : null].filter(Boolean).join('  ·  ');
+  const sub = [showFlat && (r.block || r.flat) ? `🏠 ${flatDisplay(r.block, r.flat)}` : null, r.profession, r.native ? `📍 ${r.native}` : null, r.vehicle_no ? `🚗 ${r.vehicle_no}` : null].filter(Boolean).join('  ·  ');
 
   return (
     <Pressable
@@ -381,10 +380,11 @@ function AddResidentModal({
 }: {
   visible: boolean;
   onClose: () => void;
-  onAdd: (f: { name: string; flat: string | null; phone: string | null; resident_type: 'owner' | 'tenant' | null; profession: string | null; vehicle_no: string | null; native: string | null; alt_phone: string | null; email: string | null }) => void;
+  onAdd: (f: { name: string; block: string | null; flat: string | null; phone: string | null; resident_type: 'owner' | 'tenant' | null; profession: string | null; vehicle_no: string | null; native: string | null; alt_phone: string | null; email: string | null }) => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
   const [name, setName] = useState('');
+  const [block, setBlock] = useState('');
   const [flat, setFlat] = useState('');
   const [phone, setPhone] = useState('');
   const [type, setType] = useState<'owner' | 'tenant' | null>(null);
@@ -398,7 +398,7 @@ function AddResidentModal({
   const submit = () => {
     if (!name.trim()) return;
     setBusy(true);
-    onAdd({ name, flat: flat || null, phone: phone || null, resident_type: type, profession: profession || null, vehicle_no: vehicle || null, native: native || null, alt_phone: altPhone || null, email: email || null });
+    onAdd({ name, block: block || null, flat: flat || null, phone: phone || null, resident_type: type, profession: profession || null, vehicle_no: vehicle || null, native: native || null, alt_phone: altPhone || null, email: email || null });
     setBusy(false);
   };
 
@@ -410,9 +410,10 @@ function AddResidentModal({
       footer={<Button label={busy ? 'Adding…' : 'Add resident'} loading={busy} fullWidth disabled={!name.trim()} onPress={submit} />}
     >
       <Text className="mb-4 text-[13px] text-muted">Add a neighbour to the directory. If they're not on Aangan yet, you can invite them after.</Text>
+      <Field label="Name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} />
       <View className="flex-row gap-3">
-        <View className="flex-1"><Field label="Name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} /></View>
-        <View className="w-28"><Field label="Flat" placeholder="A-204" value={flat} onChangeText={setFlat} /></View>
+        <View className="w-24"><Field label="Block" autoCapitalize="characters" placeholder="E" value={block} onChangeText={setBlock} /></View>
+        <View className="flex-1"><Field label="Flat number" placeholder="204" value={flat} onChangeText={setFlat} /></View>
       </View>
       <Field label="Phone" hint="For contact & invite" keyboardType="phone-pad" placeholder="98765 43210" value={phone} onChangeText={setPhone} />
       <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Owner / Tenant (optional)</Text>

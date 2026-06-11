@@ -5,6 +5,7 @@ export interface DirectoryEntry {
   id: string;
   community_id: string;
   name: string;
+  block: string | null;
   flat: string | null;
   phone: string | null;
   resident_type: 'owner' | 'tenant' | null;
@@ -19,10 +20,19 @@ export interface DirectoryEntry {
   created_at: string;
 }
 
+/** Split a free-typed flat like "E-101" / "E 101" into block + unit number. */
+export function splitFlat(flat: string | null): { block: string | null; unit: string | null } {
+  if (!flat) return { block: null, unit: null };
+  const m = /^([A-Za-z]+)?[-\s]*(.*)$/.exec(flat.trim());
+  if (!m) return { block: null, unit: flat.trim() };
+  return { block: m[1] ? m[1].toUpperCase() : null, unit: (m[2] || '').trim() || null };
+}
+
 /** A unified directory row — a registered member OR a manually-added resident. */
 export interface Resident {
   key: string;
   name: string;
+  block: string | null;
   flat: string | null;
   phone: string | null;
   whatsapp: string | null;
@@ -62,10 +72,12 @@ export async function fetchDirectory(
     // `show_in_directory === false` now means "hide my phone number" — the
     // member still appears in the directory, just without a contactable number.
     const hidePhone = m.show_in_directory === false;
+    const mf = splitFlat(m.flat);
     residents.push({
       key: `m:${m.id}`,
       name: m.name || 'Resident',
-      flat: m.flat,
+      block: mf.block,
+      flat: mf.block ? mf.unit : m.flat, // strip the block prefix if the member typed one
       phone: hidePhone ? null : m.phone,
       whatsapp: hidePhone ? null : m.whatsapp,
       resident_type: m.resident_type,
@@ -87,6 +99,7 @@ export async function fetchDirectory(
     residents.push({
       key: `e:${e.id}`,
       name: e.name,
+      block: e.block,
       flat: e.flat,
       phone: e.phone,
       whatsapp: e.phone,
@@ -104,6 +117,8 @@ export async function fetchDirectory(
   }
 
   residents.sort((a, b) => {
+    const ba = a.block ?? '~'; const bb = b.block ?? '~';
+    if (ba !== bb) return ba.localeCompare(bb);
     const fa = a.flat ?? '~'; const fb = b.flat ?? '~';
     if (fa !== fb) return fa.localeCompare(fb, undefined, { numeric: true });
     return a.name.localeCompare(b.name);
@@ -115,6 +130,7 @@ export interface NewDirectoryEntry {
   communityId: string;
   addedBy: string;
   name: string;
+  block?: string | null;
   flat: string | null;
   phone: string | null;
   resident_type: 'owner' | 'tenant' | null;
@@ -131,6 +147,7 @@ export async function addDirectoryEntry(input: NewDirectoryEntry): Promise<void>
     community_id: input.communityId,
     added_by: input.addedBy,
     name: input.name.trim(),
+    block: input.block?.trim().toUpperCase() || null,
     flat: input.flat?.trim() || null,
     phone: input.phone?.replace(/\D/g, '') || null,
     resident_type: input.resident_type,
