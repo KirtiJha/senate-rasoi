@@ -84,7 +84,7 @@ export async function visionAutofill<K extends AutofillKind>(
 
 // ── Ask Aangan (Phase 2) ──────────────────────────────────────────────
 
-export type AskSource = 'dish' | 'tiffin' | 'listing' | 'property' | 'recommend' | 'borrow';
+export type AskSource = 'dish' | 'tiffin' | 'listing' | 'property' | 'recommend' | 'borrow' | 'post' | 'document' | 'sport' | 'emergency';
 
 export interface AskResultItem {
   source: AskSource;
@@ -134,6 +134,14 @@ export function askResultRoute(item: AskResultItem): string {
       return `/recommend/${item.id}`;
     case 'borrow':
       return `/borrow/${item.id}`;
+    case 'post':
+      return `/feed/${item.id}`;
+    case 'sport':
+      return `/sports/${item.id}`;
+    case 'document':
+      return '/documents';
+    case 'emergency':
+      return '/emergency';
     default:
       return '/';
   }
@@ -146,6 +154,10 @@ const SOURCE_META: Record<AskSource, { label: string; icon: string; color: strin
   property: { label: 'Flat', icon: 'key', color: '#7C3AED' },
   recommend: { label: 'Recommendation', icon: 'star', color: '#CA8A04' },
   borrow: { label: 'Borrow', icon: 'swap-horizontal', color: '#0891B2' },
+  post: { label: 'Post', icon: 'chatbubbles', color: '#2563EB' },
+  document: { label: 'Document', icon: 'document-text', color: '#64748B' },
+  sport: { label: 'Sports', icon: 'basketball', color: '#16A34A' },
+  emergency: { label: 'Contact', icon: 'call', color: '#DC2626' },
 };
 export function askSourceMeta(source: AskSource) {
   return SOURCE_META[source] ?? { label: 'Result', icon: 'ellipse', color: '#0F6E56' };

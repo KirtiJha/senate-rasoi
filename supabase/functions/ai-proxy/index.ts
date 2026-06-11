@@ -21,7 +21,8 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 const MODEL = 'gemini-2.5-flash';
-const EMBED_MODEL = 'text-embedding-004'; // 768-dim, free tier
+const EMBED_MODEL = 'gemini-embedding-001'; // current GA embedding model (text-embedding-004 is retired)
+const EMBED_DIM = 768; // request 768-dim output so it fits the vector(768) column
 const DAILY_LIMIT = 40; // AI actions per user per day
 const MAX_IMAGE_CHARS = 8_000_000; // ~6 MB of base64 — a comfortably large photo
 
@@ -97,32 +98,44 @@ const SCHEMAS: Record<Kind, { instruction: string; schema: Record<string, unknow
 };
 
 // Low-level Gemini call → parsed structured JSON. `parts` may mix text + image.
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** POST with retry/backoff on transient Gemini errors (429 rate-limit, 503 overload). */
+async function postWithRetry(url: string, body: unknown, label: string, tries = 4): Promise<Response> {
+  let last = '';
+  for (let i = 0; i < tries; i++) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) return res;
+    last = `${res.status}: ${(await res.text()).slice(0, 200)}`;
+    // Only retry the transient ones; fail fast on 400/401/404 etc.
+    if (res.status !== 429 && res.status !== 503 && res.status !== 500) break;
+    if (i < tries - 1) await sleep(400 * 2 ** i); // 0.4s, 0.8s, 1.6s
+  }
+  throw new Error(`${label} ${last}`);
+}
+
 async function geminiJSON(
   parts: unknown[],
   schema: Record<string, unknown>,
   temperature: number,
 ): Promise<Record<string, unknown>> {
-  const res = await fetch(
+  const res = await postWithRetry(
     `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_KEY}`,
     {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts }],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          responseSchema: schema,
-          temperature,
-          thinkingConfig: { thinkingBudget: 0 }, // fast + cheap
-        },
-      }),
+      contents: [{ role: 'user', parts }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: schema,
+        temperature,
+        thinkingConfig: { thinkingBudget: 0 }, // fast + cheap
+      },
     },
+    'Gemini',
   );
-
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`Gemini ${res.status}: ${detail.slice(0, 300)}`);
-  }
   const data = await res.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('Gemini returned no content');
@@ -135,21 +148,18 @@ async function embedTexts(
   taskType: 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY',
 ): Promise<number[][]> {
   if (!texts.length) return [];
-  const res = await fetch(
+  const res = await postWithRetry(
     `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:batchEmbedContents?key=${GEMINI_KEY}`,
     {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        requests: texts.map((t) => ({
-          model: `models/${EMBED_MODEL}`,
-          content: { parts: [{ text: t.slice(0, 2000) }] },
-          taskType,
-        })),
-      }),
+      requests: texts.map((t) => ({
+        model: `models/${EMBED_MODEL}`,
+        content: { parts: [{ text: t.slice(0, 2000) }] },
+        taskType,
+        outputDimensionality: EMBED_DIM,
+      })),
     },
+    'Embed',
   );
-  if (!res.ok) throw new Error(`Embed ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const data = await res.json();
   // deno-lint-ignore no-explicit-any
   return (data.embeddings ?? []).map((e: any) => e.values as number[]);
@@ -192,7 +202,7 @@ const ASK_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          source: { type: 'string', enum: ['dish', 'tiffin', 'listing', 'property', 'recommend', 'borrow'] },
+          source: { type: 'string', enum: ['dish', 'tiffin', 'listing', 'property', 'recommend', 'borrow', 'post', 'document', 'sport', 'emergency'] },
           id: { type: 'string' },
           title: { type: 'string' },
           reason: { type: 'string', description: 'One short phrase on why it fits' },
@@ -252,6 +262,27 @@ const SOURCES: Record<string, SourceDef> = {
     cols: 'id,title,description,category,status,created_at',
     map: (r) => ({ title: String(r.title), info: `To borrow · ${r.category ?? ''}${r.description ? ` · ${r.description}` : ''}` }),
     fresh: (q) => q.eq('status', 'available'),
+  },
+  post: {
+    table: 'posts',
+    cols: 'id,title,body,category,created_at',
+    map: (r) => ({ title: String(r.title?.trim() || String(r.body ?? '').slice(0, 60) || 'Post'), info: `Community post${r.category ? ` · ${r.category}` : ''}${r.body ? ` · ${String(r.body).slice(0, 140)}` : ''}` }),
+  },
+  document: {
+    table: 'documents',
+    cols: 'id,name,description,is_public,created_at',
+    map: (r) => ({ title: String(r.name), info: `Document${r.description ? ` · ${r.description}` : ''}` }),
+    fresh: (q) => q.eq('is_public', true), // never surface private files
+  },
+  sport: {
+    table: 'sport_groups',
+    cols: 'id,name,sport,description,practice_location,created_at',
+    map: (r) => ({ title: String(r.name), info: `${r.sport} group${r.practice_location ? ` · ${r.practice_location}` : ''}${r.description ? ` · ${r.description}` : ''}` }),
+  },
+  emergency: {
+    table: 'emergency_contacts',
+    cols: 'id,name,category,role,created_at', // no phone — PII stays out of the model input
+    map: (r) => ({ title: String(r.name), info: `${r.category ?? r.role ?? 'Contact'} · tap to view number` }),
   },
 };
 
@@ -342,9 +373,11 @@ async function callAsk(question: string, catalog: CatalogItem[], facts: string, 
     "You are Aangan, a friendly assistant for an Indian residential society, having an ongoing chat with a resident. " +
     'Answer using ONLY the society info and catalog below. Use the conversation so far to resolve follow-ups ' +
     '(e.g. "any cheaper?", "what about veg ones?", "in tower B?"). For questions about members, residents, who lives ' +
-    'where, professions, announcements or polls, use the "Society info" section. For things to buy/borrow/eat/rent, use ' +
-    'the catalog and list the matching items (best first) in results. Write a short, warm, conversational answer. Never ' +
-    'invent people, items, prices or contacts. If you genuinely have nothing relevant, say so politely.\n\n' +
+    'where, professions, announcements or polls, use the "Society info" section. For things to buy/borrow/eat/rent, ' +
+    'community posts & notices, documents, sports groups, or service/emergency contacts, use the catalog and list the ' +
+    'matching items (best first) in results. For a service or emergency contact, point them to the contact card rather ' +
+    'than guessing a number. Write a short, warm, conversational answer. Never invent people, items, prices or contacts. ' +
+    'If you genuinely have nothing relevant, say so politely.\n\n' +
     (convo ? `Conversation so far:\n${convo}\n\n` : '') +
     `Resident's new message: "${question}"\n\n` +
     (facts ? `Society info:\n${facts}\n\n` : '') +
@@ -634,21 +667,24 @@ Deno.serve(async (req) => {
 
     // Semantic (pgvector) path — best-effort; falls back to the recent catalog.
     try {
-      // 1. Lazily embed any rows the triggers marked dirty (usually a handful).
-      const { data: dirty } = await admin.from('search_documents')
-        .select('source,source_id,content').eq('community_id', communityId).is('embedding', null).limit(60);
-      if (dirty?.length) {
+      // 1. Lazily embed any rows the triggers marked dirty. Loop in batches so the
+      //    index is fully embedded after the first ask (not just the first 60 rows).
+      for (let round = 0; round < 8; round++) {
+        const { data: dirty } = await admin.from('search_documents')
+          .select('source,source_id,content').eq('community_id', communityId).is('embedding', null).limit(80);
+        if (!dirty?.length) break;
         const vecs = await embedTexts(dirty.map((d: { content: string }) => d.content), 'RETRIEVAL_DOCUMENT');
         await Promise.all(dirty.map((d: { source: string; source_id: string }, i: number) =>
           vecs[i]
             ? admin.from('search_documents').update({ embedding: toVec(vecs[i]) }).eq('source', d.source).eq('source_id', d.source_id)
             : Promise.resolve()));
+        if (dirty.length < 80) break;
       }
 
       // 2. Embed the question (blended with the prior turn) and cosine-search.
       const [qVec] = await embedTexts([retrievalText], 'RETRIEVAL_QUERY');
       if (qVec) {
-        const { data: matches } = await admin.rpc('match_documents', { p_community: communityId, p_embedding: toVec(qVec), p_count: 18 });
+        const { data: matches } = await admin.rpc('match_documents', { p_community: communityId, p_embedding: toVec(qVec), p_count: 24 });
         if (matches?.length) {
           const idsBySource: Record<string, string[]> = {};
           for (const m of matches as { source: string; source_id: string }[]) (idsBySource[m.source] ??= []).push(m.source_id);
