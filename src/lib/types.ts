@@ -100,6 +100,8 @@ export interface DbProfile {
   donor_available: boolean;
   helper_skills: string[];
   preferred_lang: string | null;
+  moved_in: boolean;
+  alt_phone: string | null;
   created_at: string;
 }
 

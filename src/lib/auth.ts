@@ -20,6 +20,8 @@ export interface SignUpInput {
   residentType?: 'owner' | 'tenant' | null;
   profession?: string;
   vehicleNo?: string;
+  block?: string;
+  movedIn?: boolean;
 }
 
 export async function signUp(input: SignUpInput): Promise<DbProfile> {
@@ -55,11 +57,13 @@ export async function signUp(input: SignUpInput): Promise<DbProfile> {
     }
   }
 
+  const blockUp = input.block?.trim().toUpperCase();
+  const unit = input.flat.trim();
   const row = {
     id: userId,
     phone: input.phone.replace(/\D/g, ''),
     name: input.name.trim(),
-    flat: input.flat.trim() || null,
+    flat: (blockUp && unit ? `${blockUp}-${unit}` : unit) || null,
     whatsapp: input.whatsapp.trim() || null,
     upi: input.upi.trim() || null,
     roles,
@@ -74,11 +78,12 @@ export async function signUp(input: SignUpInput): Promise<DbProfile> {
 
   // Best-effort resident-directory fields — kept out of the core insert so a
   // missing column (migration 0027/0028 not yet run) can never break sign-up.
-  if (input.residentType || input.profession?.trim() || input.vehicleNo?.trim()) {
+  if (input.residentType || input.profession?.trim() || input.vehicleNo?.trim() || input.movedIn) {
     await updateResidentInfo(userId, {
       resident_type: input.residentType ?? null,
       profession: input.profession?.trim() || null,
       vehicle_no: input.vehicleNo?.trim() || null,
+      moved_in: input.movedIn ?? false,
     }); // error (if column absent) is intentionally ignored
   }
   return profile as DbProfile;
@@ -143,6 +148,7 @@ export async function updateResidentInfo(
     profession?: string | null;
     vehicle_no?: string | null;
     show_in_directory?: boolean;
+    moved_in?: boolean;
   },
 ): Promise<void> {
   await supabase.from('profiles').update(fields).eq('id', userId);

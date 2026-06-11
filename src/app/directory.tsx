@@ -8,7 +8,7 @@ import { Field } from '../components/forms';
 import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
-import { Resident, addDirectoryEntry, adminSetDirectoryVisibility, deleteDirectoryEntry, fetchDirectory } from '../lib/directory';
+import { Resident, addDirectoryEntry, adminSetDirectoryVisibility, adminSetMovedIn, deleteDirectoryEntry, fetchDirectory } from '../lib/directory';
 import { waLink } from '../lib/dishes';
 import { getOrCreateThread } from '../lib/dm';
 import { isSupabaseConfigured } from '../lib/supabase';
@@ -350,6 +350,12 @@ export default function DirectoryScreen() {
         onInvite={() => selected && invite(selected)}
         onProfile={() => { if (selected?.userId) { router.push(`/profile/${selected.userId}` as any); setSelected(null); } }}
         onRemove={() => { if (selected) { remove(selected); setSelected(null); } }}
+        isAdmin={!!isAdmin}
+        onToggleMovedIn={async () => {
+          if (!selected?.userId) return;
+          try { await adminSetMovedIn(selected.userId, !selected.shifted); toast.show('Updated'); setSelected(null); await load(); }
+          catch { toast.show('Could not update'); }
+        }}
       />
     </View>
   );
@@ -373,10 +379,10 @@ function ChipBtn({ label, on, onPress, c }: { label: string; on: boolean; onPres
 }
 
 function ResidentDetailSheet({
-  r, onClose, c, onCall, onWhatsApp, onMessage, onInvite, onProfile, onRemove,
+  r, onClose, c, isAdmin, onCall, onWhatsApp, onMessage, onInvite, onProfile, onRemove, onToggleMovedIn,
 }: {
-  r: Resident | null; onClose: () => void; c: ReturnType<typeof useThemeColors>;
-  onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onProfile: () => void; onRemove: () => void;
+  r: Resident | null; onClose: () => void; c: ReturnType<typeof useThemeColors>; isAdmin: boolean;
+  onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onProfile: () => void; onRemove: () => void; onToggleMovedIn: () => void;
 }) {
   const typeColor = r?.resident_type === 'owner' ? '#0D9488' : '#7C3AED';
   return (
@@ -409,6 +415,7 @@ function ResidentDetailSheet({
             {r.phone ? <Button label="WhatsApp" icon="logo-whatsapp" variant="whatsapp" onPress={onWhatsApp} /> : null}
             {r.onboarded ? <Button label="Message" icon="chatbubble-ellipses-outline" variant="outline" onPress={onMessage} /> : (r.phone ? <Button label="Invite" icon="paper-plane-outline" onPress={onInvite} /> : null)}
             {r.onboarded ? <Button label="View profile" variant="ghost" onPress={onProfile} /> : null}
+            {isAdmin && r.onboarded ? <Button label={r.shifted ? 'Mark not moved in' : 'Mark moved in'} icon="home-outline" variant="ghost" onPress={onToggleMovedIn} /> : null}
             {r.removeKind ? <Button label={r.removeKind === 'hide' ? 'Hide from directory' : 'Remove'} icon="trash-outline" variant="danger" onPress={onRemove} /> : null}
           </View>
         </View>

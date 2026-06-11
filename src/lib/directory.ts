@@ -86,10 +86,10 @@ export async function fetchDirectory(
       profession: m.profession,
       vehicle_no: m.vehicle_no,
       native: null,
-      alt_phone: null,
+      alt_phone: m.alt_phone ?? null,
       email: null,
       registration_status: 'done', // a registered member
-      shifted: false,
+      shifted: m.moved_in ?? false, // occupancy: has the member moved in
       onboarded: true,
       userId: m.id,
       entryId: null,
@@ -175,6 +175,50 @@ export async function addDirectoryEntry(input: NewDirectoryEntry): Promise<void>
 export async function deleteDirectoryEntry(id: string): Promise<void> {
   const { error } = await supabase.from('directory_entries').delete().eq('id', id);
   if (error) throw error;
+}
+
+/**
+ * Find a roster entry that likely belongs to a just-registered member: same
+ * block + flat, a similar name, and a DIFFERENT phone than the one they signed
+ * up with. Used to offer a merge at sign-up.
+ */
+export async function findRosterMatch(
+  communityId: string,
+  name: string,
+  block: string | null,
+  flat: string | null,
+  signupPhone: string,
+): Promise<DirectoryEntry | null> {
+  if (!flat) return null;
+  const sp = norm(signupPhone);
+  const { data } = await supabase
+    .from('directory_entries')
+    .select('*')
+    .eq('community_id', communityId)
+    .eq('flat', flat);
+  const entries = ((data ?? []) as DirectoryEntry[]).filter((e) => {
+    if ((e.block ?? null) !== (block ?? null)) return false;
+    if (e.phone && norm(e.phone) === sp) return false; // already the same number — nothing to merge
+    return true;
+  });
+  if (!entries.length) return null;
+  // Prefer a name match; otherwise the first same-flat entry.
+  const first = name.trim().toLowerCase().split(/\s+/)[0];
+  return entries.find((e) => e.name.toLowerCase().includes(first)) ?? entries[0];
+}
+
+/** New member claims a matching roster entry: keep its number (alternate) or just replace it. */
+export async function reconcileDirectoryEntry(entryId: string, keepNumber: boolean): Promise<boolean> {
+  const { data, error } = await supabase.rpc('reconcile_my_directory_entry', { p_entry_id: entryId, p_keep_number: keepNumber });
+  if (error) throw error;
+  return Boolean(data);
+}
+
+/** Admin sets a member's moved-in (occupancy) status. */
+export async function adminSetMovedIn(targetId: string, value: boolean): Promise<boolean> {
+  const { data, error } = await supabase.rpc('admin_set_moved_in', { p_target: targetId, p_value: value });
+  if (error) throw error;
+  return Boolean(data);
 }
 
 /** Admin hides/shows a registered member in the directory. */

@@ -31,6 +31,7 @@ export default function ProfileScreen() {
   const [profession, setProfession] = useState(profile?.profession ?? '');
   const [vehicleNo, setVehicleNo] = useState(profile?.vehicle_no ?? '');
   const [showInDirectory, setShowInDirectory] = useState(profile?.show_in_directory ?? true);
+  const [movedIn, setMovedIn] = useState(profile?.moved_in ?? false);
   const [lang, setLang] = useState(profile?.preferred_lang ?? detectDeviceLang());
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -64,6 +65,7 @@ export default function ProfileScreen() {
       setProfession(profile.profession ?? '');
       setVehicleNo(profile.vehicle_no ?? '');
       setShowInDirectory(profile.show_in_directory ?? true);
+      setMovedIn(profile.moved_in ?? false);
       if (profile.preferred_lang) setLang(profile.preferred_lang);
     }
   }, [profile]);
@@ -78,6 +80,7 @@ export default function ProfileScreen() {
         profession: profession.trim() || null,
         vehicle_no: vehicleNo.trim() || null,
         show_in_directory: showInDirectory,
+        moved_in: movedIn,
       });
       await refreshProfile();
       toast.show('Profile updated ✅');
@@ -201,6 +204,20 @@ export default function ProfileScreen() {
               </View>
               <View className={`h-6 w-10 rounded-full p-0.5 ${showInDirectory ? 'bg-accent' : 'bg-line'}`}>
                 <View className={`h-5 w-5 rounded-full bg-white ${showInDirectory ? 'self-end' : 'self-start'}`} />
+              </View>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setMovedIn((v) => !v)}
+              className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-inset px-4 py-3"
+            >
+              <Ionicons name={movedIn ? 'home' : 'home-outline'} size={18} color={movedIn ? c.accent : c.muted} />
+              <View className="flex-1">
+                <Text className="font-sans-sb text-[14px] text-ink">I've moved into the society</Text>
+                <Text className="text-[12px] text-muted">{movedIn ? 'Shown as living here' : 'Shown as not moved in yet'}</Text>
+              </View>
+              <View className={`h-6 w-10 rounded-full p-0.5 ${movedIn ? 'bg-accent' : 'bg-line'}`}>
+                <View className={`h-5 w-5 rounded-full bg-white ${movedIn ? 'self-end' : 'self-start'}`} />
               </View>
             </Pressable>
             <Button label={savingProfile ? 'Saving…' : 'Save Changes'} loading={savingProfile} onPress={handleSaveProfile} fullWidth />

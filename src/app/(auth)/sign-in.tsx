@@ -10,6 +10,7 @@ import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { signIn, signUp } from '../../lib/auth';
 import { Community, fetchCommunities, fetchCommunityById, submitJoinRequest } from '../../lib/communities';
+import { DirectoryEntry, findRosterMatch, reconcileDirectoryEntry } from '../../lib/directory';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useThemeColors } from '../../theme';
 
@@ -23,13 +24,16 @@ export default function SignInScreen() {
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
+  const [block, setBlock] = useState('');
   const [flat, setFlat] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [upi, setUpi] = useState('');
   const [residentType, setResidentType] = useState<'owner' | 'tenant' | null>(null);
+  const [movedIn, setMovedIn] = useState(false);
   const [profession, setProfession] = useState('');
   const [vehicleNo, setVehicleNo] = useState('');
   const [busy, setBusy] = useState(false);
+  const [reconcile, setReconcile] = useState<DirectoryEntry | null>(null);
 
   // Society picker
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -82,12 +86,19 @@ export default function SignInScreen() {
       } else {
         if (!name.trim()) { setBusy(false); return toast.show('Please enter your name'); }
         if (!newCommunity && !selectedCommunity) { setBusy(false); return toast.show('Please select your society'); }
-        await signUp({
+        const profile = await signUp({
           phone, code, name, flat, whatsapp, upi, roles: ['foodie'],
           communityId: newCommunity ? undefined : selectedCommunity!.id,
           newCommunity: newCommunity ?? undefined,
           residentType, profession, vehicleNo,
+          block: block.trim() || undefined, movedIn,
         });
+        // If a roster entry already exists for this flat under a different number,
+        // offer to merge before finishing (keeps the directory free of duplicates).
+        if (profile.community_id) {
+          const m = await findRosterMatch(profile.community_id, name, block.trim().toUpperCase() || null, flat.trim() || null, phone).catch(() => null);
+          if (m) { setReconcile(m); setBusy(false); return; }
+        }
       }
       await refreshProfile();
     } catch (e) {
@@ -95,6 +106,15 @@ export default function SignInScreen() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const finishReconcile = async (action: 'keep' | 'replace' | 'skip') => {
+    const entry = reconcile;
+    setReconcile(null);
+    if (entry && action !== 'skip') {
+      try { await reconcileDirectoryEntry(entry.id, action === 'keep'); } catch { /* best-effort */ }
+    }
+    await refreshProfile();
   };
 
   const submitJoinReq = async () => {
@@ -197,12 +217,13 @@ export default function SignInScreen() {
                 </Pressable>
               ) : null}
 
+              <Field label="Your name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} />
               <View className="flex-row gap-3">
-                <View className="flex-1">
-                  <Field label="Your name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} />
+                <View className="w-24">
+                  <Field label="Block" autoCapitalize="characters" placeholder="E" value={block} onChangeText={setBlock} />
                 </View>
-                <View className="w-28">
-                  <Field label="Flat" placeholder="A-204" value={flat} onChangeText={setFlat} />
+                <View className="flex-1">
+                  <Field label="Flat number" placeholder="204" value={flat} onChangeText={setFlat} />
                 </View>
               </View>
               <Field label="WhatsApp" hint="For coordination with neighbours" placeholder="98765 43210" keyboardType="phone-pad" value={whatsapp} onChangeText={setWhatsapp} />
@@ -219,6 +240,21 @@ export default function SignInScreen() {
                     <View className="flex-row items-center justify-between">
                       <Text className="font-sans-sb text-[14px] text-ink">{t === 'owner' ? 'Owner' : 'Tenant'}</Text>
                       <Ionicons name={residentType === t ? 'checkmark-circle' : 'ellipse-outline'} size={18} color={residentType === t ? c.accent : c.faint} />
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+              <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Have you moved in?</Text>
+              <View className="mb-4 flex-row gap-2.5">
+                {([['no', false], ['yes', true]] as const).map(([lbl, v]) => (
+                  <Pressable
+                    key={lbl}
+                    onPress={() => setMovedIn(v)}
+                    className={`flex-1 rounded-2xl border-[1.5px] p-3 ${movedIn === v ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <Text className="font-sans-sb text-[14px] text-ink">{lbl === 'yes' ? 'Yes, living here' : 'Not yet'}</Text>
+                      <Ionicons name={movedIn === v ? 'checkmark-circle' : 'ellipse-outline'} size={18} color={movedIn === v ? c.accent : c.faint} />
                     </View>
                   </Pressable>
                 ))}
@@ -328,6 +364,27 @@ export default function SignInScreen() {
               </View>
             )}
           </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Sign-up reconcile: an entry already exists for this flat with a different number */}
+      <Modal visible={!!reconcile} transparent animationType="fade" onRequestClose={() => finishReconcile('skip')}>
+        <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: '#0008' }}>
+          <View style={{ width: '100%', maxWidth: 380, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}>
+            <Text className="font-display-x text-[19px] text-ink">You're already in the directory</Text>
+            <Text className="mt-2 text-[14px] leading-[20px] text-muted">
+              <Text className="font-sans-sb text-ink">{reconcile?.name}</Text>
+              {reconcile?.flat ? ` (Flat ${[reconcile?.block, reconcile?.flat].filter(Boolean).join('-')})` : ''} is listed with the number{' '}
+              <Text className="font-sans-sb text-ink">{reconcile?.phone ?? '—'}</Text>. You signed up with a different number.
+            </Text>
+            <View className="mt-5 gap-2">
+              <Button label="Keep both numbers" icon="git-merge-outline" fullWidth onPress={() => finishReconcile('keep')} />
+              <Button label="Use only my new number" variant="outline" fullWidth onPress={() => finishReconcile('replace')} />
+              <Pressable onPress={() => finishReconcile('skip')} className="items-center py-2 active:opacity-70">
+                <Text className="font-sans-sb text-[13px] text-muted">That's not me</Text>
+              </Pressable>
+            </View>
+          </View>
         </View>
       </Modal>
     </KeyboardAvoidingView>
