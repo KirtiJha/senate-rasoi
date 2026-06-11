@@ -324,21 +324,33 @@ async function fetchByIds(admin: any, idsBySource: Record<string, string[]>): Pr
 async function buildFacts(admin: any, communityId: string): Promise<string> {
   const lines: string[] = [];
 
+  // Residents = registered members (profiles) + roster entries (directory_entries),
+  // de-duped by phone (an entry whose phone matches a member is the same person).
   try {
-    const { count } = await admin.from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .eq('community_id', communityId).neq('blocked', true);
-    if (typeof count === 'number') lines.push(`The society has ${count} member${count === 1 ? '' : 's'} on Aangan.`);
-  } catch { /* skip */ }
-
-  try {
-    const { data } = await admin.from('profiles')
-      .select('name,flat,profession').eq('community_id', communityId).neq('blocked', true).limit(200);
-    const r = (data ?? []).filter((x: { name?: string }) => x.name);
-    if (r.length) {
-      lines.push('Residents (name · flat · profession): ' +
-        r.map((x: { name: string; flat?: string; profession?: string }) =>
-          `${x.name}${x.flat ? ` · ${x.flat}` : ''}${x.profession ? ` · ${x.profession}` : ''}`).join('; '));
+    // deno-lint-ignore no-explicit-any
+    const norm = (p: any) => String(p ?? '').replace(/\D/g, '');
+    const [mRes, eRes] = await Promise.all([
+      admin.from('profiles').select('name,flat,profession,phone').eq('community_id', communityId).neq('blocked', true).limit(500),
+      admin.from('directory_entries').select('name,block,flat,profession,phone').eq('community_id', communityId).limit(1000),
+    ]);
+    // deno-lint-ignore no-explicit-any
+    const members = (mRes.data ?? []).filter((x: any) => x.name);
+    // deno-lint-ignore no-explicit-any
+    const memberPhones = new Set(members.map((m: any) => norm(m.phone)).filter(Boolean));
+    // deno-lint-ignore no-explicit-any
+    const entries = (eRes.data ?? []).filter((e: any) => e.name && !(e.phone && memberPhones.has(norm(e.phone))));
+    const total = members.length + entries.length;
+    if (total) {
+      lines.push(`The society directory has ${total} resident${total === 1 ? '' : 's'} — ${members.length} registered on Aangan, ${entries.length} not yet.`);
+      const fmt = (name: string, flat?: string, block?: string, prof?: string) =>
+        `${name}${(block || flat) ? ` · ${[block, flat].filter(Boolean).join('-')}` : ''}${prof ? ` · ${prof}` : ''}`;
+      const all = [
+        // deno-lint-ignore no-explicit-any
+        ...members.map((m: any) => fmt(m.name, m.flat, undefined, m.profession)),
+        // deno-lint-ignore no-explicit-any
+        ...entries.map((e: any) => fmt(e.name, e.flat, e.block, e.profession)),
+      ];
+      lines.push('Residents (name · flat · profession): ' + all.join('; '));
     }
   } catch { /* skip */ }
 
