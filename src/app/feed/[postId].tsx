@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
 import { Avatar, Container } from '../../components/ui';
 import { useAuth } from '../../context/auth';
+import { useDraft } from '../../lib/draft';
 import { useToast } from '../../context/toast';
 import {
   CommentRow, POST_CATEGORY_COLORS, POST_CATEGORY_ICONS, POST_CATEGORY_LABELS,
@@ -28,7 +29,7 @@ export default function PostThreadScreen() {
   const [post, setPost] = useState<PostRow | null>(null);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [commentBody, setCommentBody] = useState('');
+  const [commentBody, setCommentBody] = useDraft('comments:' + (postId ?? ''), '');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 

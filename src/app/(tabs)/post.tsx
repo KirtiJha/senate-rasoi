@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -16,6 +16,7 @@ import { useProfile } from '../../context/profile';
 import { useToast } from '../../context/toast';
 import { AIError, visionAutofill } from '../../lib/ai';
 import { fetchMyRecentDishes, postDish } from '../../lib/dishes';
+import { clearDraft, getDraft, setDraft } from '../../lib/draft';
 import { haptics } from '../../lib/haptics';
 import { SERVICES, getService } from '../../lib/services';
 import { isSupabaseConfigured } from '../../lib/supabase';
@@ -59,27 +60,35 @@ export default function PostScreen({
   const [upi, setUpi] = useState('');
   const [editingIdentity, setEditingIdentity] = useState(false);
 
-  const [dishName, setDishName] = useState('');
-  const [slot, setSlot] = useState<Slot | null>(null);
-  const [vegType, setVegType] = useState<VegType | null>(null);
-  const [price, setPrice] = useState('');
-  const [maxPlates, setMaxPlates] = useState(5);
-  const [description, setDescription] = useState('');
+  // Session draft so a half-filled post survives navigating away (photo excluded).
+  const d0 = useRef(getDraft<Record<string, any>>('post:form') ?? {}).current;
+
+  const [dishName, setDishName] = useState<string>(d0.dishName ?? '');
+  const [slot, setSlot] = useState<Slot | null>(d0.slot ?? null);
+  const [vegType, setVegType] = useState<VegType | null>(d0.vegType ?? null);
+  const [price, setPrice] = useState<string>(d0.price ?? '');
+  const [maxPlates, setMaxPlates] = useState<number>(d0.maxPlates ?? 5);
+  const [description, setDescription] = useState<string>(d0.description ?? '');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [serveOffset, setServeOffset] = useState(0);
-  const [cutoff, setCutoff] = useState<CutoffKey>('auto');
+  const [serveOffset, setServeOffset] = useState<number>(d0.serveOffset ?? 0);
+  const [cutoff, setCutoff] = useState<CutoffKey>(d0.cutoff ?? 'auto');
   const [submitting, setSubmitting] = useState(false);
   const [autofilling, setAutofilling] = useState(false);
   const [photoFlagged, setPhotoFlagged] = useState(false); // AI said the photo isn't food
 
-  const [tTitle, setTTitle] = useState('');
-  const [tDesc, setTDesc] = useState('');
-  const [tVeg, setTVeg] = useState<VegType | null>(null);
-  const [tSlot, setTSlot] = useState<Slot | null>(null);
-  const [tPrice, setTPrice] = useState('');
-  const [tDays, setTDays] = useState<number[]>([1, 2, 3, 4, 5]);
-  const [tMax, setTMax] = useState(5);
-  const [tCutoff, setTCutoff] = useState('');
+  const [tTitle, setTTitle] = useState<string>(d0.tTitle ?? '');
+  const [tDesc, setTDesc] = useState<string>(d0.tDesc ?? '');
+  const [tVeg, setTVeg] = useState<VegType | null>(d0.tVeg ?? null);
+  const [tSlot, setTSlot] = useState<Slot | null>(d0.tSlot ?? null);
+  const [tPrice, setTPrice] = useState<string>(d0.tPrice ?? '');
+  const [tDays, setTDays] = useState<number[]>(d0.tDays ?? [1, 2, 3, 4, 5]);
+  const [tMax, setTMax] = useState<number>(d0.tMax ?? 5);
+  const [tCutoff, setTCutoff] = useState<string>(d0.tCutoff ?? '');
+
+  // Persist the draft on every change (cheap Map write).
+  useEffect(() => {
+    setDraft('post:form', { dishName, slot, vegType, price, maxPlates, description, serveOffset, cutoff, tTitle, tDesc, tVeg, tSlot, tPrice, tDays, tMax, tCutoff });
+  }, [dishName, slot, vegType, price, maxPlates, description, serveOffset, cutoff, tTitle, tDesc, tVeg, tSlot, tPrice, tDays, tMax, tCutoff]);
 
   const [recent, setRecent] = useState<DishRow[]>([]);
 

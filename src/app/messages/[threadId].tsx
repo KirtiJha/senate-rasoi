@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { useDraft } from '../../lib/draft';
 import { haptics } from '../../lib/haptics';
 import {
   DmMessageRow, InboxThread, fetchMessages, fetchThread,
@@ -27,7 +28,7 @@ export default function DmThreadScreen() {
   const [thread, setThread] = useState<InboxThread | null>(null);
   const [messages, setMessages] = useState<DmMessageRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [body, setBody] = useState('');
+  const [body, setBody] = useDraft('dm:' + (threadId ?? ''), '');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 

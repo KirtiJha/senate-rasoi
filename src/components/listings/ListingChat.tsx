@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, LayoutAnimation, Platform, Pressable, Text, TextInput, UIManager, View } from 'react-native';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { useDraft } from '../../lib/draft';
 import { haptics } from '../../lib/haptics';
 import {
   ListingMessageRow,
@@ -38,7 +39,7 @@ export function ListingChat({ listingId, ownerUserId, ownerName, accent }: Listi
   const [open, setOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [messages, setMessages] = useState<ListingMessageRow[]>([]);
-  const [body, setBody] = useState('');
+  const [body, setBody] = useDraft('lchat:' + listingId, '');
   const [sending, setSending] = useState(false);
   const loadedOnce = useRef(false);
 
