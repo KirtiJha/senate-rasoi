@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Button, Container, RowSkeleton, ScreenHeader, Sheet } from '../components/ui';
@@ -19,6 +19,7 @@ const COLORS = ['#16A34A', '#2563EB', '#EA580C', '#DC2626', '#9333EA', '#0891B2'
 export default function SportsScreen() {
   const c = useThemeColors();
   const toast = useToast();
+  const router = useRouter();
   const { userId, communityId } = useAuth();
 
   const [groups, setGroups] = useState<SportGroupWithMeta[]>([]);
@@ -57,7 +58,18 @@ export default function SportsScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="football-outline" iconColor="#16A34A" title="Sports" showBack onAdd={onAdd} addLabel="Add a sport" />
+      <ScreenHeader
+        icon="football-outline" iconColor="#16A34A" title="Sports" showBack onAdd={onAdd} addLabel="Add a sport"
+        right={(
+          <Pressable
+            onPress={() => router.push('/sports/dues' as any)}
+            accessibilityLabel="Court dues"
+            className="h-9 w-9 items-center justify-center rounded-full bg-inset active:opacity-80"
+          >
+            <Ionicons name="wallet-outline" size={18} color={c.muted} />
+          </Pressable>
+        )}
+      />
 
       {/* Sport tabs */}
       {tabs.length > 0 ? (
