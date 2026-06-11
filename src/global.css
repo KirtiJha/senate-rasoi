@@ -76,4 +76,16 @@
   [tabindex] {
     outline: none;
   }
+
+  /* iOS Safari auto-zooms into any input with font-size < 16px on focus, which
+     enlarges the page past the visual viewport and lets it pan sideways when the
+     keyboard opens. Force 16px on touch devices (where the soft keyboard — and
+     the bug — exist) so focusing never zooms. Overrides RN-Web's inline size. */
+  @media (pointer: coarse) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
 }
