@@ -159,6 +159,14 @@ export default function AskScreen() {
               placeholderTextColor={c.faint}
               returnKeyType="send"
               onSubmitEditing={() => send(input)}
+              onKeyPress={(e: any) => {
+                // Web: multiline renders a <textarea>, so onSubmitEditing never
+                // fires — submit on Enter (Shift+Enter keeps the newline).
+                if (Platform.OS === 'web' && e?.nativeEvent?.key === 'Enter' && !e.nativeEvent.shiftKey) {
+                  e.preventDefault?.();
+                  send(input);
+                }
+              }}
               multiline
               className="min-w-0 flex-1 max-h-28 text-[15px] text-ink"
               style={{ paddingVertical: 11, outline: 'none', minWidth: 0 } as any}

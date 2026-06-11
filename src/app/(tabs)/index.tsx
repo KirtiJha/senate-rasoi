@@ -220,7 +220,7 @@ export default function HomeScreen() {
           <View style={{ marginLeft: 12, marginVertical: 11 }}>
             <BrandMark size={42} />
           </View>
-          <View className="flex-1 py-3">
+          <View className="min-w-0 flex-1 py-3">
             <Text className="font-sans-bold text-[15px] text-ink">Ask Aangan</Text>
             <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>Food, flats, borrow, recommendations — just ask</Text>
           </View>
@@ -245,7 +245,7 @@ export default function HomeScreen() {
                   {digest.highlights.map((h, i) => (
                     <View key={i} className="flex-row gap-2">
                       <Text className="text-[13px]" style={{ color: c.accent }}>•</Text>
-                      <Text className="flex-1 text-[13px] leading-5 text-muted">{h}</Text>
+                      <Text className="min-w-0 flex-1 text-[13px] leading-5 text-muted">{h}</Text>
                     </View>
                   ))}
                 </View>
@@ -266,7 +266,7 @@ export default function HomeScreen() {
               <View className="h-9 w-9 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: '#F59E0B22' }}>
                 <Ionicons name="megaphone" size={18} color="#F59E0B" />
               </View>
-              <View className="flex-1">
+              <View className="min-w-0 flex-1">
                 <Text className="text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: '#B45309' }}>Announcement</Text>
                 {announcement.title ? <T source="post" id={announcement.id} field="title" text={announcement.title} showToggle={false} className="font-sans-bold text-[14px] text-ink" numberOfLines={1} /> : null}
                 <T source="post" id={announcement.id} field="body" text={announcement.body} showToggle={false} className="text-[13px] text-muted" numberOfLines={2} />
@@ -292,7 +292,7 @@ export default function HomeScreen() {
               >
                 <Ionicons name="arrow-up-circle-outline" size={20} color={updateBanner.force_update ? '#EF4444' : c.accent} />
               </View>
-              <View className="flex-1">
+              <View className="min-w-0 flex-1">
                 <Text className="font-sans-sb text-[14px] text-ink">
                   {updateBanner.force_update ? 'Update required' : `Version ${updateBanner.version} available`}
                 </Text>
