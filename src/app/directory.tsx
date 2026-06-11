@@ -255,8 +255,9 @@ export default function DirectoryScreen() {
         onAdd={async (fields) => {
           if (!communityId || !userId) return;
           const d = (fields.phone ?? '').replace(/\D/g, '');
-          if (d && residents.some((r) => (r.phone ?? '').replace(/\D/g, '') === d)) {
-            return toast.show('That person is already in the directory');
+          // Same number in a different flat is allowed (one owner, multiple flats).
+          if (d && residents.some((r) => (r.phone ?? '').replace(/\D/g, '') === d && (r.flat ?? '') === (fields.flat ?? '') && (r.block ?? '') === (fields.block ?? ''))) {
+            return toast.show('That person is already listed in this flat');
           }
           try {
             await addDirectoryEntry({ communityId, addedBy: userId, ...fields });
