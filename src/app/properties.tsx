@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { T } from '../components/T';
 import { Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { IMAGE_CACHE_PROPS } from '../lib/image';
@@ -129,7 +130,7 @@ function PropertyCard({ p, onPress, c }: { p: PropertyRow; onPress: () => void; 
             </View>
           ) : null}
         </View>
-        <Text className="mt-1 font-sans-bold text-[14px] text-ink" numberOfLines={1}>{p.title}</Text>
+        <T source="property" id={p.id} field="title" text={p.title} showToggle={false} className="mt-1 font-sans-bold text-[14px] text-ink" numberOfLines={1} />
         {sub ? <Text className="text-[12px] text-muted" numberOfLines={1}>{sub}</Text> : null}
         <View className="mt-auto flex-row items-center gap-1 pt-1.5">
           <Ionicons name="pricetag-outline" size={12} color={c.faint} />

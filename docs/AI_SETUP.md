@@ -24,6 +24,8 @@ In **Supabase → SQL Editor**, run:
   semantic search index for Ask Aangan (`search_documents` + triggers +
   `match_documents()`). Embeddings (`text-embedding-004`, free) are filled lazily by
   the function on the first Ask after items are posted — no extra setup, no cron.
+- `supabase/migrations/0041_translations.sql` — `profiles.preferred_lang` + the
+  `translations` cache for multilingual auto-translate.
 
 ## 3. Deploy the Edge Function
 You need the Supabase CLI once (`npm i -g supabase`, then `supabase login` and
@@ -51,6 +53,10 @@ automatically — don't set them.)
   like *"any veg tiffin for lunch?"*. It searches your society's current dishes,
   flats, listings, borrow items and recommendations and answers with tappable
   cards. (Post a couple of items first so there's something to find.)
+- **Multilingual:** Profile → **Language** → pick e.g. Bengali. Now feed posts,
+  food menus and listings show in Bengali automatically, with a "Translated · see
+  original" toggle. The first reader of each item in a given language triggers one
+  translation; it's cached after that (free for everyone else).
 
 ## Tuning
 - **Daily limit per user:** `DAILY_LIMIT` in the function (default 40). Change it

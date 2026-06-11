@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { T } from '../components/T';
 import { Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { BORROW_CATEGORIES, LendItem, fetchItems, subscribeItems } from '../lib/borrow';
@@ -86,8 +87,8 @@ export default function BorrowScreen() {
                         <Text className="text-[11px] font-sans-sb" style={{ color: ACCENT }}>{m.label}</Text>
                         {lent ? <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#9CA3AF22' }}><Text className="text-[10px] font-sans-sb text-muted">{it.status === 'lent' ? 'Lent out' : 'Unavailable'}</Text></View> : <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#16A34A22' }}><Text className="text-[10px] font-sans-sb" style={{ color: '#16A34A' }}>Available</Text></View>}
                       </View>
-                      <Text className="mt-0.5 font-sans-bold text-[14px] text-ink" numberOfLines={1}>{it.title}</Text>
-                      {it.description ? <Text className="text-[12px] text-muted" numberOfLines={2}>{it.description}</Text> : null}
+                      <T source="borrow" id={it.id} field="title" text={it.title} showToggle={false} className="mt-0.5 font-sans-bold text-[14px] text-ink" numberOfLines={1} />
+                      {it.description ? <T source="borrow" id={it.id} field="description" text={it.description} showToggle={false} className="text-[12px] text-muted" numberOfLines={2} /> : null}
                       <Text className="mt-auto pt-1 text-[11px] text-faint">{it.owner?.name ?? 'A neighbour'}{it.owner?.flat ? ` · Flat ${it.owner.flat}` : ''}</Text>
                     </View>
                   </Pressable>

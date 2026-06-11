@@ -6,6 +6,7 @@ import {
   ScrollView, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { T } from '../../components/T';
 import { Avatar, Container } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -136,9 +137,9 @@ export default function PostThreadScreen() {
             ) : null}
 
             {post.title ? (
-              <Text className="mb-2 font-display-x text-[22px] text-ink">{post.title}</Text>
+              <T source="post" id={post.id} field="title" text={post.title} className="mb-2 font-display-x text-[22px] text-ink" />
             ) : null}
-            <Text className="text-[15px] leading-6 text-ink">{post.body}</Text>
+            <T source="post" id={post.id} field="body" text={post.body} className="text-[15px] leading-6 text-ink" />
 
             {/* Author */}
             <View className="mt-4 flex-row items-center gap-2.5">
@@ -210,7 +211,7 @@ function CommentBubble({ comment, userId, isAdmin, onDelete, c }: {
           {comment.author?.flat ? <Text className="text-[11px] text-faint">Flat {comment.author.flat}</Text> : null}
           <Text className="ml-auto text-[11px] text-faint">{formatTimeAgo(comment.created_at)}</Text>
         </View>
-        <Text className="text-[13px] leading-5 text-ink">{comment.body}</Text>
+        <T source="comment" id={comment.id} field="body" text={comment.body} className="text-[13px] leading-5 text-ink" />
       </View>
       {(isOwn || isAdmin) ? (
         <Pressable onPress={onDelete} hitSlop={8} className="mt-0.5">

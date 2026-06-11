@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { T } from '../components/T';
 import { Avatar, Button, Container, ScreenHeader, Sheet } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
@@ -81,8 +82,8 @@ export default function RecommendScreen() {
                       </View>
                       <Text className="ml-auto text-[11px] text-faint">{q.answer_count} {q.answer_count === 1 ? 'answer' : 'answers'}</Text>
                     </View>
-                    <Text className="font-sans-bold text-[15px] text-ink">{q.title}</Text>
-                    {q.detail ? <Text className="mt-0.5 text-[13px] text-muted" numberOfLines={2}>{q.detail}</Text> : null}
+                    <T source="recommend" id={q.id} field="title" text={q.title} showToggle={false} className="font-sans-bold text-[15px] text-ink" />
+                    {q.detail ? <T source="recommend" id={q.id} field="detail" text={q.detail} showToggle={false} className="mt-0.5 text-[13px] text-muted" numberOfLines={2} /> : null}
                     <View className="mt-2 flex-row items-center gap-2">
                       <Avatar name={q.author?.name ?? '?'} size={20} />
                       <Text className="text-[11.5px] text-faint">{q.author?.name ?? 'A neighbour'}{q.author?.flat ? ` · Flat ${q.author.flat}` : ''}</Text>

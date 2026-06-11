@@ -7,6 +7,7 @@ import {
   RefreshControl, ScrollView, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { T } from '../../components/T';
 import { Avatar, Button, ScreenHeader, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -257,9 +258,9 @@ const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userI
 
         {/* Content */}
         {post.title ? (
-          <Text className="mb-1 font-sans-sb text-[15px] text-ink" numberOfLines={2}>{post.title}</Text>
+          <T source="post" id={post.id} field="title" text={post.title} showToggle={false} className="mb-1 font-sans-sb text-[15px] text-ink" numberOfLines={2} />
         ) : null}
-        <Text className="text-[13px] leading-5 text-muted" numberOfLines={post.title ? 2 : 3}>{post.body}</Text>
+        <T source="post" id={post.id} field="body" text={post.body} showToggle={false} className="text-[13px] leading-5 text-muted" numberOfLines={post.title ? 2 : 3} />
 
         {/* Author row */}
         <View className="mt-3 flex-row items-center gap-2">

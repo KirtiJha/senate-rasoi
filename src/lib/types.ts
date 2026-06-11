@@ -99,6 +99,7 @@ export interface DbProfile {
   blood_group: string | null;
   donor_available: boolean;
   helper_skills: string[];
+  preferred_lang: string | null;
   created_at: string;
 }
 

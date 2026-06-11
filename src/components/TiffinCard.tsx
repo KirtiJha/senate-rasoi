@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { DOW_LABELS, SLOT_EMOJI, TiffinPlanWithChef } from '../lib/types';
+import { T } from './T';
 import { Avatar, Badge, VegMark } from './ui';
 
 export function daysLabel(days: number[]): string {
@@ -43,7 +44,7 @@ function TiffinCardBase({ plan, subscribed, onPress, width }: TiffinCardProps) {
       </View>
 
       <View className="p-3">
-        <Text className="font-display text-[16px] text-ink" numberOfLines={1}>{plan.title}</Text>
+        <T source="tiffin" id={plan.id} field="title" text={plan.title} showToggle={false} className="font-display text-[16px] text-ink" numberOfLines={1} />
         <View className="mt-1 flex-row items-center gap-1.5">
           <Avatar name={plan.chef?.name ?? '?'} size={16} />
           <Text className="flex-1 text-[12px] text-muted" numberOfLines={1}>{plan.chef?.name ?? 'Chef'}</Text>

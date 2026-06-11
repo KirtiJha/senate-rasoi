@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { T } from '../../components/T';
 import { Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useUnreadDms } from '../../context/unread';
@@ -211,8 +212,8 @@ export default function HomeScreen() {
               </View>
               <View className="flex-1">
                 <Text className="text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: '#B45309' }}>Announcement</Text>
-                {announcement.title ? <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{announcement.title}</Text> : null}
-                <Text className="text-[13px] text-muted" numberOfLines={2}>{announcement.body}</Text>
+                {announcement.title ? <T source="post" id={announcement.id} field="title" text={announcement.title} showToggle={false} className="font-sans-bold text-[14px] text-ink" numberOfLines={1} /> : null}
+                <T source="post" id={announcement.id} field="body" text={announcement.body} showToggle={false} className="text-[13px] text-muted" numberOfLines={2} />
               </View>
               <Pressable onPress={dismissAnnouncement} hitSlop={8}>
                 <Ionicons name="close" size={18} color={c.faint} />

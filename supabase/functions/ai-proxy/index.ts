@@ -291,6 +291,88 @@ async function callAsk(question: string, catalog: CatalogItem[]): Promise<Record
   return geminiJSON([{ text: prompt }], ASK_SCHEMA, 0.3);
 }
 
+// ════════════════════════════════════════════════════════════════════
+// Multilingual — translate content into the reader's language, cached.
+// ════════════════════════════════════════════════════════════════════
+
+type TranslateItem = { source: string; id: string; field: string; text: string };
+const itemKey = (i: { source: string; id: string; field: string }) => `${i.source}:${i.id}:${i.field}`;
+
+// Tiny non-crypto hash (FNV-1a) for cache invalidation when the original changes.
+function hashText(s: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(16);
+}
+
+const TRANSLATE_SCHEMA = {
+  type: 'object',
+  properties: { translations: { type: 'array', items: { type: 'string' } } },
+  required: ['translations'],
+};
+
+async function handleTranslate(
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  targetLang: string,
+  rawItems: TranslateItem[],
+): Promise<Record<string, string>> {
+  const target = targetLang.trim().slice(0, 40);
+  const items = (Array.isArray(rawItems) ? rawItems : [])
+    .filter((i) => i && i.source && i.id && i.field && typeof i.text === 'string' && i.text.trim())
+    .slice(0, 50);
+  if (!target || !items.length) return {};
+
+  const result: Record<string, string> = {};
+
+  // 1. Look up the cache for these ids in this language.
+  const ids = [...new Set(items.map((i) => i.id))];
+  const { data: cached } = await admin.from('translations')
+    .select('source,source_id,field,content,source_hash')
+    .eq('target_lang', target).in('source_id', ids);
+  const cacheMap = new Map<string, { content: string; source_hash: string }>();
+  for (const r of (cached ?? []) as { source: string; source_id: string; field: string; content: string; source_hash: string }[]) {
+    cacheMap.set(`${r.source}:${r.source_id}:${r.field}`, { content: r.content, source_hash: r.source_hash });
+  }
+
+  // 2. Split into hits (fresh cache) and misses.
+  const misses: TranslateItem[] = [];
+  for (const it of items) {
+    const hit = cacheMap.get(itemKey(it));
+    if (hit && hit.source_hash === hashText(it.text)) result[itemKey(it)] = hit.content;
+    else misses.push(it);
+  }
+  if (!misses.length) return result;
+
+  // 3. Translate the misses in one batched call.
+  const numbered = misses.map((m, i) => `${i + 1}. ${m.text.replace(/\s+/g, ' ').trim().slice(0, 1200)}`).join('\n');
+  const prompt =
+    `Translate each numbered text into ${target}, for residents of an Indian apartment community. ` +
+    'Keep proper nouns, people\'s names, brand names, prices, ₹ amounts, numbers, phone numbers, @handles and URLs EXACTLY as-is. ' +
+    'Keep it natural and concise. If a text is already in ' + target + ', return it unchanged. ' +
+    'Return a JSON object {"translations": [...]} with one translated string per input, in the same order.\n\n' +
+    numbered;
+
+  const out = await geminiJSON([{ text: prompt }], TRANSLATE_SCHEMA, 0.2);
+  const arr = (out.translations as string[]) ?? [];
+
+  // 4. Store + return.
+  const rows: Record<string, unknown>[] = [];
+  misses.forEach((m, i) => {
+    const t = arr[i];
+    if (typeof t === 'string' && t.trim()) {
+      result[itemKey(m)] = t;
+      rows.push({ source: m.source, source_id: m.id, field: m.field, target_lang: target, content: t, source_hash: hashText(m.text) });
+    }
+  });
+  if (rows.length) await admin.from('translations').upsert(rows, { onConflict: 'source,source_id,field,target_lang' });
+
+  return result;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -306,17 +388,32 @@ Deno.serve(async (req) => {
   const userId = userData.user.id;
 
   // ── 2. Parse the request ──
-  let body: { action?: string; kind?: Kind; note?: string; image?: string; question?: string };
+  let body: {
+    action?: string; kind?: Kind; note?: string; image?: string; question?: string;
+    target_lang?: string; items?: TranslateItem[];
+  };
   try {
     body = await req.json();
   } catch {
     return json({ error: 'Bad request' }, 400);
   }
-  if (body.action !== 'autofill' && body.action !== 'ask') {
+  if (body.action !== 'autofill' && body.action !== 'ask' && body.action !== 'translate') {
     return json({ error: 'Unknown action' }, 400);
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+  // ── Translate: NOT metered against the AI-helper quota (cached + batched,
+  //    and it must work freely while browsing). ──
+  if (body.action === 'translate') {
+    try {
+      const translations = await handleTranslate(admin, body.target_lang ?? '', body.items ?? []);
+      return json({ translations });
+    } catch (e) {
+      console.error('ai-proxy translate error:', e);
+      return json({ translations: {} }); // fail soft → reader just sees the original
+    }
+  }
 
   // ── 3. Meter usage (service role; the RPC is locked to definer-only) ──
   const { data: allowed, error: quotaErr } = await admin.rpc('check_and_increment_ai_quota', {

@@ -7,6 +7,7 @@ import { useThemeColors } from '../theme';
 import { IMAGE_CACHE_PROPS } from '../lib/image';
 import { countdown } from '../lib/time';
 import { DishRow, SLOT_EMOJI } from '../lib/types';
+import { T } from './T';
 import { Avatar, Badge, Button, VegMark } from './ui';
 
 // Warm two-tone backdrop for photo-less dishes, themed by meal slot.
@@ -108,11 +109,11 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCar
 
       {/* ── Body ──────────────────────────────────────────────────── */}
       <View className="p-4">
-        <Text className="font-display text-ink" style={{ fontSize: hero ? 23 : 19, lineHeight: hero ? 28 : 24 }} numberOfLines={2}>
-          {dish.dish_name}
-        </Text>
+        <T source="dish" id={dish.id} field="dish_name" text={dish.dish_name} showToggle={false}
+          className="font-display text-ink" style={{ fontSize: hero ? 23 : 19, lineHeight: hero ? 28 : 24 }} numberOfLines={2} />
         {dish.description ? (
-          <Text className="mt-1 text-[13px] leading-5 text-muted" numberOfLines={2}>{dish.description}</Text>
+          <T source="dish" id={dish.id} field="description" text={dish.description} showToggle={false}
+            className="mt-1 text-[13px] leading-5 text-muted" numberOfLines={2} />
         ) : null}
 
         <View className="mt-3 flex-row items-center gap-2">

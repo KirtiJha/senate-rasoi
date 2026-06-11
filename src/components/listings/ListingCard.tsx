@@ -6,6 +6,7 @@ import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { getService } from '../../lib/services';
 import { ListingRow } from '../../lib/types';
 import { useThemeColors } from '../../theme';
+import { T } from '../T';
 import { Avatar } from '../ui';
 
 interface ListingCardProps {
@@ -58,9 +59,14 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
           </View>
         )}
 
-        <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={2}>
-          {listing.is_referral ? listing.referral_name ?? listing.title : listing.title}
-        </Text>
+        {listing.is_referral ? (
+          <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={2}>
+            {listing.referral_name ?? listing.title}
+          </Text>
+        ) : (
+          <T source="listing" id={listing.id} field="title" text={listing.title} showToggle={false}
+            className="font-sans-bold text-[14px] text-ink" numberOfLines={2} />
+        )}
 
         {listing.price != null && (
           <Text className="mt-0.5 text-[13px] font-sans-md text-accent">

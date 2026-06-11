@@ -25,6 +25,7 @@ import { BottomBar } from '../components/BottomBar';
 import { NavRail } from '../components/NavRail';
 import { useResponsive } from '../components/ui';
 import { AuthProvider } from '../context/auth';
+import { TranslationProvider } from '../context/translations';
 import { NotificationsProvider } from '../context/notifications';
 import { ThemeProvider } from '../context/theme';
 import { ToastProvider } from '../context/toast';
@@ -77,14 +78,16 @@ function AppShell() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.bg }}>
       <SafeAreaProvider>
         <AuthProvider>
-          <UnreadDmsProvider>
-            <NotificationsProvider>
-              <ToastProvider>
-                <StatusBar style={isDark ? 'light' : 'dark'} />
-                <DesktopShell />
-              </ToastProvider>
-            </NotificationsProvider>
-          </UnreadDmsProvider>
+          <TranslationProvider>
+            <UnreadDmsProvider>
+              <NotificationsProvider>
+                <ToastProvider>
+                  <StatusBar style={isDark ? 'light' : 'dark'} />
+                  <DesktopShell />
+                </ToastProvider>
+              </NotificationsProvider>
+            </UnreadDmsProvider>
+          </TranslationProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
