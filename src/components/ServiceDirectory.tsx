@@ -11,7 +11,7 @@ import { ServiceCategory } from '../lib/services';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { ListingRow } from '../lib/types';
 import { layout, useThemeColors } from '../theme';
-import { Avatar, Button, RowSkeleton, ScreenHeader, Sheet } from './ui';
+import { Avatar, RowSkeleton, ScreenHeader } from './ui';
 
 type SortKey = 'trade' | 'name';
 const tradeOf = (l: ListingRow) => (l.attributes?.trade as string) || 'Other';
@@ -101,11 +101,30 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
             </View>
             <View className="mt-2.5 flex-row items-center justify-between">
               <Text className="text-[12px] font-sans-md text-muted">{filtered.length} contact{filtered.length === 1 ? '' : 's'}{trade ? ` · ${trade}` : ''}</Text>
-              <Pressable onPress={() => setShowFilters(true)} className={`flex-row items-center gap-1 rounded-full px-3 py-1.5 ${activeFilters ? 'bg-accent-soft' : 'bg-inset'}`}>
+              <Pressable onPress={() => setShowFilters((v) => !v)} className={`flex-row items-center gap-1 rounded-full px-3 py-1.5 ${activeFilters ? 'bg-accent-soft' : 'bg-inset'}`}>
                 <Ionicons name="options-outline" size={14} color={activeFilters ? c.accent : c.muted} />
                 <Text className={`text-[12px] font-sans-sb ${activeFilters ? 'text-accent' : 'text-muted'}`}>{activeFilters ? `Filters · ${activeFilters}` : 'Filter & sort'}</Text>
+                <Ionicons name={showFilters ? 'chevron-up' : 'chevron-down'} size={13} color={activeFilters ? c.accent : c.muted} />
               </Pressable>
             </View>
+
+            {showFilters ? (
+              <View className="mt-2.5 rounded-2xl border border-line bg-surface p-3">
+                <FilterGroup label="Sort by">
+                  <Chip label="Category" on={sort === 'trade'} onPress={() => setSort('trade')} c={c} />
+                  <Chip label="Name (A–Z)" on={sort === 'name'} onPress={() => setSort('name')} c={c} />
+                </FilterGroup>
+                <FilterGroup label="Category" last>
+                  <Chip label="All" on={!trade} onPress={() => setTrade(null)} c={c} />
+                  {trades.map((t) => <Chip key={t} label={t} on={trade === t} onPress={() => setTrade(trade === t ? null : t)} c={c} />)}
+                </FilterGroup>
+                {activeFilters > 0 ? (
+                  <Pressable onPress={() => { setTrade(null); setSort('trade'); }} className="mt-2 self-start">
+                    <Text className="text-[12px] font-sans-sb text-accent">Clear all</Text>
+                  </Pressable>
+                ) : null}
+              </View>
+            ) : null}
           </View>
         }
       />
@@ -142,32 +161,24 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
         </View>
       </ScrollView>
 
-      <Sheet visible={showFilters} onClose={() => setShowFilters(false)} title="Filter & sort">
-        <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Sort by</Text>
-        <View className="mb-4 flex-row gap-2">
-          {([['trade', 'Category'], ['name', 'Name (A–Z)']] as const).map(([k, lbl]) => (
-            <Pressable key={k} onPress={() => setSort(k)} className={`flex-1 items-center rounded-xl border py-2.5 ${sort === k ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
-              <Text className={`text-[13px] font-sans-sb ${sort === k ? 'text-accent' : 'text-muted'}`}>{lbl}</Text>
-            </Pressable>
-          ))}
-        </View>
-        <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Category</Text>
-        <View className="mb-4 flex-row flex-wrap gap-2">
-          <Pressable onPress={() => setTrade(null)} className={`rounded-full border px-3.5 py-1.5 ${!trade ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
-            <Text className={`text-[13px] font-sans-sb ${!trade ? 'text-accent' : 'text-muted'}`}>All</Text>
-          </Pressable>
-          {trades.map((t) => (
-            <Pressable key={t} onPress={() => setTrade(t)} className={`rounded-full border px-3.5 py-1.5 ${trade === t ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
-              <Text className={`text-[13px] font-sans-sb ${trade === t ? 'text-accent' : 'text-muted'}`}>{t}</Text>
-            </Pressable>
-          ))}
-        </View>
-        <View className="flex-row gap-2">
-          <Button label="Clear" variant="outline" fullWidth onPress={() => { setTrade(null); setSort('trade'); }} />
-          <Button label="Done" fullWidth onPress={() => setShowFilters(false)} />
-        </View>
-      </Sheet>
     </View>
+  );
+}
+
+function FilterGroup({ label, children, last }: { label: string; children: React.ReactNode; last?: boolean }) {
+  return (
+    <View className={last ? '' : 'mb-3'}>
+      <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">{label}</Text>
+      <View className="flex-row flex-wrap gap-2">{children}</View>
+    </View>
+  );
+}
+
+function Chip({ label, on, onPress, c }: { label: string; on: boolean; onPress: () => void; c: ReturnType<typeof useThemeColors> }) {
+  return (
+    <Pressable onPress={onPress} className={`rounded-full border px-3.5 py-1.5 ${on ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
+      <Text className={`text-[13px] font-sans-sb ${on ? 'text-accent' : 'text-muted'}`}>{label}</Text>
+    </Pressable>
   );
 }
 

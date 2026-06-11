@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
-import { fetchDirectory } from '../lib/directory';
+import { fetchDirectory, Resident } from '../lib/directory';
 import {
   GroupMember, SportGroup, Tournament, addMember, addTournament, deleteGroup, deleteTournament,
   fetchGroup, fetchGroupMembers, fetchTournaments, getSport, joinGroup, leaveGroup, removeMember,
@@ -234,7 +234,10 @@ export function SportGroupBody({
         isAdmin={!!isAdmin}
         existing={new Set(members.map((m) => m.user_id))}
         c={c}
-        onAdd={async (uid) => { try { await addMember(group.id, uid); setShowAddMember(false); await reload(); } catch { toast.show('Could not add'); } }}
+        onAddMany={async (uids) => {
+          try { for (const uid of uids) await addMember(group.id, uid); setShowAddMember(false); await reload(); }
+          catch { toast.show('Could not add'); }
+        }}
       />
       <AddTournamentSheet
         visible={showAddTourney}
@@ -247,49 +250,103 @@ export function SportGroupBody({
 }
 
 function AddMemberSheet({
-  visible, onClose, communityId, userId, isAdmin, existing, onAdd, c,
+  visible, onClose, communityId, userId, isAdmin, existing, onAddMany, c,
 }: {
   visible: boolean; onClose: () => void; communityId: string | null; userId: string | null; isAdmin: boolean;
-  existing: Set<string>; onAdd: (uid: string) => void; c: ReturnType<typeof useThemeColors>;
+  existing: Set<string>; onAddMany: (uids: string[]) => void; c: ReturnType<typeof useThemeColors>;
 }) {
-  const [people, setPeople] = useState<{ id: string; name: string; flat: string | null }[]>([]);
+  const [people, setPeople] = useState<Resident[]>([]);
   const [q, setQ] = useState('');
+  const [block, setBlock] = useState<string | null>(null);
+  const [sort, setSort] = useState<'flat' | 'name'>('flat');
+  const [picked, setPicked] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!visible || !communityId) return;
-    fetchDirectory(communityId, userId, isAdmin)
-      .then((rs) => setPeople(rs.filter((r) => r.userId && !existing.has(r.userId)).map((r) => ({ id: r.userId!, name: r.name, flat: r.flat }))))
-      .catch(() => {});
-  }, [visible, communityId, userId, isAdmin, existing]);
+    if (!visible || !communityId) { return; }
+    setPicked(new Set()); setQ(''); setBlock(null);
+    fetchDirectory(communityId, userId, isAdmin).then(setPeople).catch(() => {});
+  }, [visible, communityId, userId, isAdmin]);
+
+  const blocks = useMemo(() => [...new Set(people.map((p) => p.block).filter(Boolean) as string[])].sort(), [people]);
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return s ? people.filter((p) => p.name.toLowerCase().includes(s) || (p.flat ?? '').toLowerCase().includes(s)) : people;
-  }, [people, q]);
+    const rows = people.filter((p) => {
+      if (block && p.block !== block) return false;
+      if (!s) return true;
+      return p.name.toLowerCase().includes(s) || `${p.block ?? ''}${p.flat ?? ''}`.toLowerCase().includes(s);
+    });
+    return rows.sort((a, b) => sort === 'name'
+      ? a.name.localeCompare(b.name)
+      : `${a.block ?? '~'}${a.flat ?? ''}`.localeCompare(`${b.block ?? '~'}${b.flat ?? ''}`, undefined, { numeric: true }));
+  }, [people, q, block, sort]);
+
+  const toggle = (r: Resident) => {
+    if (!r.userId) return; // only registered residents can join a group
+    setPicked((s) => { const n = new Set(s); n.has(r.userId!) ? n.delete(r.userId!) : n.add(r.userId!); return n; });
+  };
+
+  const flatLabel = (r: Resident) => [r.block, r.flat].filter(Boolean).join('-');
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="Add member">
+    <Sheet
+      visible={visible}
+      onClose={onClose}
+      title="Add members"
+      footer={<Button label={picked.size ? `Add ${picked.size} selected` : 'Select residents to add'} fullWidth disabled={!picked.size} onPress={() => onAddMany([...picked])} />}
+    >
       <View className="mb-3 flex-row items-center gap-2 rounded-2xl border border-line bg-inset px-3 py-2.5">
         <Ionicons name="search-outline" size={17} color={c.faint} />
-        <TextInput value={q} onChangeText={setQ} placeholder="Search residents…" placeholderTextColor={c.faint} className="flex-1 text-[15px] text-ink" style={{ outline: 'none' } as any} />
+        <TextInput value={q} onChangeText={setQ} placeholder="Search by name or flat…" placeholderTextColor={c.faint} className="flex-1 text-[15px] text-ink" style={{ outline: 'none' } as any} />
       </View>
+
+      <View className="mb-3 flex-row flex-wrap items-center gap-2">
+        <MiniChip label={sort === 'flat' ? 'By flat' : 'By name'} on onPress={() => setSort(sort === 'flat' ? 'name' : 'flat')} c={c} />
+        {blocks.length > 1 ? (
+          <>
+            <View className="mx-0.5 h-4 w-px" style={{ backgroundColor: c.line }} />
+            <MiniChip label="All" on={!block} onPress={() => setBlock(null)} c={c} />
+            {blocks.map((b) => <MiniChip key={b} label={b} on={block === b} onPress={() => setBlock(block === b ? null : b)} c={c} />)}
+          </>
+        ) : null}
+      </View>
+
       {filtered.length === 0 ? (
-        <Text className="py-6 text-center text-[13px] text-muted">No one to add.</Text>
+        <Text className="py-6 text-center text-[13px] text-muted">No residents found.</Text>
       ) : (
         <View className="gap-1">
-          {filtered.map((p) => (
-            <Pressable key={p.id} onPress={() => onAdd(p.id)} className="flex-row items-center gap-3 rounded-xl px-2 py-2 active:bg-inset">
-              <Avatar name={p.name} size={34} />
-              <View className="flex-1">
-                <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{p.name}</Text>
-                {p.flat ? <Text className="text-[12px] text-faint">Flat {p.flat}</Text> : null}
-              </View>
-              <Ionicons name="add-circle" size={22} color={c.accent} />
-            </Pressable>
-          ))}
+          {filtered.map((r) => {
+            const inGroup = !!r.userId && existing.has(r.userId);
+            const sel = !!r.userId && picked.has(r.userId);
+            const addable = !!r.userId && !inGroup;
+            return (
+              <Pressable key={r.key} onPress={() => addable && toggle(r)} disabled={!addable} className="flex-row items-center gap-3 rounded-xl px-2 py-2 active:bg-inset" style={{ opacity: addable ? 1 : 0.55 }}>
+                <Avatar name={r.name} size={34} />
+                <View className="flex-1">
+                  <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{r.name}</Text>
+                  <Text className="text-[12px] text-faint">{[flatLabel(r) && `Flat ${flatLabel(r)}`, inGroup ? 'Already in group' : (!r.userId ? 'Not on Aangan' : null)].filter(Boolean).join(' · ')}</Text>
+                </View>
+                {inGroup ? (
+                  <Ionicons name="checkmark-circle" size={22} color={c.muted} />
+                ) : addable ? (
+                  <Ionicons name={sel ? 'checkbox' : 'square-outline'} size={22} color={sel ? c.accent : c.faint} />
+                ) : (
+                  <Ionicons name="lock-closed-outline" size={16} color={c.faint} />
+                )}
+              </Pressable>
+            );
+          })}
         </View>
       )}
     </Sheet>
+  );
+}
+
+function MiniChip({ label, on, onPress, c }: { label: string; on: boolean; onPress: () => void; c: ReturnType<typeof useThemeColors> }) {
+  return (
+    <Pressable onPress={onPress} className={`rounded-full border px-3 py-1 ${on ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
+      <Text className={`text-[12px] font-sans-sb ${on ? 'text-accent' : 'text-muted'}`}>{label}</Text>
+    </Pressable>
   );
 }
 

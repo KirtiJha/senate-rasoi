@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { ReactNode, useCallback, useMemo, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, RowSkeleton, ScreenHeader, Sheet, useResponsive } from '../components/ui';
@@ -192,11 +192,48 @@ export default function DirectoryScreen() {
                 </Pressable>
               ))}
               <View className="flex-1" />
-              <Pressable onPress={() => setShowFilters(true)} className={`flex-row items-center gap-1 rounded-full px-3 py-1.5 ${activeFilters ? 'bg-accent-soft' : 'bg-inset'}`}>
+              <Pressable onPress={() => setShowFilters((v) => !v)} className={`flex-row items-center gap-1 rounded-full px-3 py-1.5 ${activeFilters ? 'bg-accent-soft' : 'bg-inset'}`}>
                 <Ionicons name="options-outline" size={14} color={activeFilters ? c.accent : c.muted} />
                 <Text className={`text-[12px] font-sans-sb ${activeFilters ? 'text-accent' : 'text-muted'}`}>{activeFilters ? `Filters · ${activeFilters}` : 'Filter & sort'}</Text>
+                <Ionicons name={showFilters ? 'chevron-up' : 'chevron-down'} size={13} color={activeFilters ? c.accent : c.muted} />
               </Pressable>
             </View>
+
+            {showFilters ? (
+              <View className="mt-2.5 rounded-2xl border border-line bg-surface p-3">
+                <FilterGroup label="Sort by">
+                  <ChipBtn label="Flat" on={sort === 'flat'} onPress={() => setSort('flat')} c={c} />
+                  <ChipBtn label="Name (A–Z)" on={sort === 'name'} onPress={() => setSort('name')} c={c} />
+                </FilterGroup>
+                {blocks.length > 1 ? (
+                  <FilterGroup label="Block">
+                    <ChipBtn label="All" on={!block} onPress={() => setBlock(null)} c={c} />
+                    {blocks.map((b) => <ChipBtn key={b} label={b} on={block === b} onPress={() => setBlock(block === b ? null : b)} c={c} />)}
+                  </FilterGroup>
+                ) : null}
+                {floors.length > 1 ? (
+                  <FilterGroup label="Floor">
+                    <ChipBtn label="All" on={!floor} onPress={() => setFloor(null)} c={c} />
+                    {floors.map((f) => <ChipBtn key={f} label={f === '0' ? 'G' : f} on={floor === f} onPress={() => setFloor(floor === f ? null : f)} c={c} />)}
+                  </FilterGroup>
+                ) : null}
+                <FilterGroup label="Registration">
+                  {([['all', 'All'], ['done', 'Registered'], ['pending', 'Pending']] as const).map(([k, lbl]) => (
+                    <ChipBtn key={k} label={lbl} on={reg === k} onPress={() => setReg(k)} c={c} />
+                  ))}
+                </FilterGroup>
+                <FilterGroup label="Residence" last>
+                  {([['all', 'All'], ['no', 'Living here'], ['yes', 'Shifted out']] as const).map(([k, lbl]) => (
+                    <ChipBtn key={k} label={lbl} on={shf === k} onPress={() => setShf(k)} c={c} />
+                  ))}
+                </FilterGroup>
+                {activeFilters > 0 ? (
+                  <Pressable onPress={() => { setBlock(null); setFloor(null); setReg('all'); setShf('all'); setSort('flat'); }} className="mt-1 self-start">
+                    <Text className="text-[12px] font-sans-sb text-accent">Clear all</Text>
+                  </Pressable>
+                ) : null}
+              </View>
+            ) : null}
           </View>
         }
       />
@@ -276,55 +313,6 @@ export default function DirectoryScreen() {
         c={c}
       />
 
-      <Sheet visible={showFilters} onClose={() => setShowFilters(false)} title="Filter & sort">
-        <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Sort by</Text>
-        <View className="mb-4 flex-row gap-2">
-          {([['flat', 'Flat number'], ['name', 'Name (A–Z)']] as const).map(([k, lbl]) => (
-            <Pressable key={k} onPress={() => setSort(k)} className={`flex-1 items-center rounded-xl border py-2.5 ${sort === k ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
-              <Text className={`text-[13px] font-sans-sb ${sort === k ? 'text-accent' : 'text-muted'}`}>{lbl}</Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {blocks.length > 1 ? (
-          <>
-            <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Block</Text>
-            <View className="mb-4 flex-row flex-wrap gap-2">
-              <ChipBtn label="All" on={!block} onPress={() => setBlock(null)} c={c} />
-              {blocks.map((b) => <ChipBtn key={b} label={b} on={block === b} onPress={() => setBlock(b)} c={c} />)}
-            </View>
-          </>
-        ) : null}
-
-        {floors.length > 1 ? (
-          <>
-            <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Floor</Text>
-            <View className="mb-4 flex-row flex-wrap gap-2">
-              <ChipBtn label="All" on={!floor} onPress={() => setFloor(null)} c={c} />
-              {floors.map((f) => <ChipBtn key={f} label={f === '0' ? 'G' : f} on={floor === f} onPress={() => setFloor(f)} c={c} />)}
-            </View>
-          </>
-        ) : null}
-
-        <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Registration</Text>
-        <View className="mb-4 flex-row flex-wrap gap-2">
-          {([['all', 'All'], ['done', 'Registered'], ['pending', 'Pending']] as const).map(([k, lbl]) => (
-            <ChipBtn key={k} label={lbl} on={reg === k} onPress={() => setReg(k)} c={c} />
-          ))}
-        </View>
-        <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Residence</Text>
-        <View className="mb-4 flex-row flex-wrap gap-2">
-          {([['all', 'All'], ['no', 'Living here'], ['yes', 'Shifted out']] as const).map(([k, lbl]) => (
-            <ChipBtn key={k} label={lbl} on={shf === k} onPress={() => setShf(k)} c={c} />
-          ))}
-        </View>
-
-        <View className="mt-1 flex-row gap-2">
-          <Button label="Clear" variant="outline" fullWidth onPress={() => { setBlock(null); setFloor(null); setReg('all'); setShf('all'); setSort('flat'); }} />
-          <Button label="Done" fullWidth onPress={() => setShowFilters(false)} />
-        </View>
-      </Sheet>
-
       <ResidentDetailSheet
         r={selected}
         onClose={() => setSelected(null)}
@@ -335,6 +323,15 @@ export default function DirectoryScreen() {
         onInvite={() => selected && invite(selected)}
         onProfile={() => { if (selected?.userId) { router.push(`/profile/${selected.userId}` as any); setSelected(null); } }}
       />
+    </View>
+  );
+}
+
+function FilterGroup({ label, children, last }: { label: string; children: ReactNode; last?: boolean }) {
+  return (
+    <View className={last ? '' : 'mb-3'}>
+      <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">{label}</Text>
+      <View className="flex-row flex-wrap gap-2">{children}</View>
     </View>
   );
 }

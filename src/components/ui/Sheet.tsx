@@ -42,7 +42,7 @@ export function Sheet({
             style={{ width: '100%', maxWidth, maxHeight: '86%', borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, overflow: 'hidden' }}
           >
             {header}
-            <ScrollView contentContainerStyle={{ padding: 20 }} keyboardShouldPersistTaps="handled">{children}</ScrollView>
+            <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ padding: 20 }} keyboardShouldPersistTaps="handled">{children}</ScrollView>
             {footer ? <View className="border-t border-line px-5 py-3">{footer}</View> : null}
           </Pressable>
         </Pressable>
@@ -54,7 +54,7 @@ export function Sheet({
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View className="flex-1 bg-bg">
         {header}
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }} keyboardShouldPersistTaps="handled">{children}</ScrollView>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }} keyboardShouldPersistTaps="handled">{children}</ScrollView>
         {footer ? <View className="border-t border-line px-4 pt-3" style={{ paddingBottom: insets.bottom + 8 }}>{footer}</View> : null}
       </View>
     </Modal>
