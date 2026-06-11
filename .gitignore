@@ -49,3 +49,5 @@ screenshots
 # Resident roster PII — local only, never commit
 docs/*.xlsx
 docs/import_*.sql
+
+docs/_residents.json
