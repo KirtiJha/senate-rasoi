@@ -7,6 +7,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput,
 import { Button, Container, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { AIError, visionAutofill } from '../../lib/ai';
 import { BORROW_CATEGORIES, postItem } from '../../lib/borrow';
 import { useThemeColors } from '../../theme';
 
@@ -25,10 +26,26 @@ export default function NewLendItemScreen() {
   const [wa, setWa] = useState(profile?.whatsapp ?? '');
   const [phone, setPhone] = useState(profile?.phone ?? '');
   const [submitting, setSubmitting] = useState(false);
+  const [autofilling, setAutofilling] = useState(false);
 
   const pick = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
     if (!res.canceled) setPhoto(res.assets[0].uri);
+  };
+
+  const autofillFromPhoto = async () => {
+    if (!photo) return;
+    setAutofilling(true);
+    try {
+      const r = await visionAutofill('borrow', photo, title || undefined);
+      setTitle(r.item_name);
+      if (r.description) setDesc(r.description);
+      toast.show('Filled from your photo ✨ — check & tweak it');
+    } catch (e) {
+      toast.show(e instanceof AIError ? e.message : 'Could not read the photo — fill it in');
+    } finally {
+      setAutofilling(false);
+    }
   };
 
   const submit = async () => {
@@ -56,6 +73,20 @@ export default function NewLendItemScreen() {
               <><Ionicons name="camera-outline" size={26} color={ACCENT} /><Text className="mt-1 text-[12px] text-muted">Add a photo</Text></>
             )}
           </Pressable>
+
+          {photo ? (
+            <Pressable
+              onPress={autofillFromPhoto}
+              disabled={autofilling}
+              className="-mt-2 mb-4 flex-row items-center justify-center gap-2 rounded-2xl border py-3 active:opacity-80"
+              style={{ borderColor: ACCENT + '66', backgroundColor: ACCENT + '14', opacity: autofilling ? 0.6 : 1 }}
+            >
+              <Ionicons name="sparkles" size={16} color={ACCENT} />
+              <Text className="font-sans-sb text-[13px]" style={{ color: ACCENT }}>
+                {autofilling ? 'Reading your photo…' : 'Autofill details from photo'}
+              </Text>
+            </Pressable>
+          ) : null}
 
           <Text className={label}>What are you lending?</Text>
           <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Bosch drill machine" placeholderTextColor={c.faint} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />

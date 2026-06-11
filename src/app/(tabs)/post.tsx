@@ -14,6 +14,7 @@ import { Avatar, Button, ChoiceTiles, Container, Stepper, useResponsive, VegMark
 import { useAuth } from '../../context/auth';
 import { useProfile } from '../../context/profile';
 import { useToast } from '../../context/toast';
+import { AIError, visionAutofill } from '../../lib/ai';
 import { fetchMyRecentDishes, postDish } from '../../lib/dishes';
 import { haptics } from '../../lib/haptics';
 import { SERVICES, getService } from '../../lib/services';
@@ -68,6 +69,7 @@ export default function PostScreen({
   const [serveOffset, setServeOffset] = useState(0);
   const [cutoff, setCutoff] = useState<CutoffKey>('auto');
   const [submitting, setSubmitting] = useState(false);
+  const [autofilling, setAutofilling] = useState(false);
 
   const [tTitle, setTTitle] = useState('');
   const [tDesc, setTDesc] = useState('');
@@ -126,6 +128,25 @@ export default function PostScreen({
       aspect: [4, 3],
     });
     if (!result.canceled) setPhotoUri(result.assets[0].uri);
+  };
+
+  const autofillFromPhoto = async () => {
+    if (!photoUri) return;
+    haptics.tap();
+    setAutofilling(true);
+    try {
+      const r = await visionAutofill('dish', photoUri, dishName || undefined);
+      setDishName(r.dish_name);
+      setVegType(r.veg_type);
+      if (r.suggested_slot && !slot) setSlot(r.suggested_slot);
+      if (r.description) setDescription(r.description);
+      haptics.success();
+      toast.show('Filled from your photo ✨ — check & tweak it');
+    } catch (e) {
+      toast.show(e instanceof AIError ? e.message : 'Could not read the photo — fill it in');
+    } finally {
+      setAutofilling(false);
+    }
   };
 
   const submit = async () => {
@@ -328,6 +349,21 @@ export default function PostScreen({
               <Text className="mt-0.5 text-[12px] text-faint">A tasty photo gets more orders (optional)</Text>
             </Pressable>
           ))}
+
+          {/* AI autofill — read the photo and pre-fill the form */}
+          {mode === 'dish' && photoUri ? (
+            <Pressable
+              onPress={autofillFromPhoto}
+              disabled={autofilling}
+              className="-mt-1 mb-4 flex-row items-center justify-center gap-2 rounded-2xl border border-accent/40 bg-accent-soft py-3 active:opacity-80"
+              style={{ opacity: autofilling ? 0.6 : 1 }}
+            >
+              <Ionicons name="sparkles" size={16} color={c.accent} />
+              <Text className="font-sans-sb text-[13px] text-accent">
+                {autofilling ? 'Reading your photo…' : 'Autofill details from photo'}
+              </Text>
+            </Pressable>
+          ) : null}
 
           {/* identity */}
           {showIdentityForm ? (

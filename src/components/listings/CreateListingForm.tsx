@@ -8,6 +8,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, Text, Vi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { AIError, visionAutofill } from '../../lib/ai';
 import { haptics } from '../../lib/haptics';
 import { postListing } from '../../lib/listings';
 import { AttrField, ServiceCategory } from '../../lib/services';
@@ -46,6 +47,7 @@ export function CreateListingForm({ cat, onBack }: Props) {
   const [attrs, setAttrs] = useState<Record<string, unknown>>({});
 
   const [submitting, setSubmitting] = useState(false);
+  const [autofilling, setAutofilling] = useState(false);
 
   const setAttr = (key: string, value: unknown) => {
     setAttrs((prev) => ({ ...prev, [key]: value }));
@@ -65,6 +67,23 @@ export function CreateListingForm({ cat, onBack }: Props) {
       aspect: [4, 3],
     });
     if (!result.canceled) setPhotoUri(result.assets[0].uri);
+  };
+
+  const autofillFromPhoto = async () => {
+    if (!photoUri) return;
+    haptics.tap();
+    setAutofilling(true);
+    try {
+      const r = await visionAutofill('listing', photoUri, title || undefined);
+      setTitle(r.title);
+      if (r.description) setDescription(r.description);
+      haptics.success();
+      toast.show('Filled from your photo ✨ — check & tweak it');
+    } catch (e) {
+      toast.show(e instanceof AIError ? e.message : 'Could not read the photo — fill it in');
+    } finally {
+      setAutofilling(false);
+    }
   };
 
   const submit = async () => {
@@ -182,6 +201,21 @@ export function CreateListingForm({ cat, onBack }: Props) {
               <Text className="mt-0.5 text-[11px] text-faint">Optional but recommended</Text>
             </Pressable>
           ))}
+
+          {/* AI autofill — read the item photo and pre-fill title + description */}
+          {!isDirectory && photoUri ? (
+            <Pressable
+              onPress={autofillFromPhoto}
+              disabled={autofilling}
+              className="-mt-1 mb-4 flex-row items-center justify-center gap-2 rounded-2xl border border-accent/40 bg-accent-soft py-3 active:opacity-80"
+              style={{ opacity: autofilling ? 0.6 : 1 }}
+            >
+              <Ionicons name="sparkles" size={16} color={c.accent} />
+              <Text className="font-sans-sb text-[13px] text-accent">
+                {autofilling ? 'Reading your photo…' : 'Autofill details from photo'}
+              </Text>
+            </Pressable>
+          ) : null}
 
           {/* Who is posting (identity card) */}
           {profile && (
