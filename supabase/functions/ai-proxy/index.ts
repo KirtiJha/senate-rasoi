@@ -373,6 +373,93 @@ async function handleTranslate(
   return result;
 }
 
+// ════════════════════════════════════════════════════════════════════
+// Weekly society digest — "This week in your society", cached per week.
+// ════════════════════════════════════════════════════════════════════
+
+type Digest = { summary: string; highlights: string[] };
+
+const DIGEST_SCHEMA = {
+  type: 'object',
+  properties: {
+    summary: { type: 'string', description: 'One warm, welcoming sentence about the week in the society.' },
+    highlights: { type: 'array', items: { type: 'string' }, description: 'Up to 4 short bullet highlights.' },
+  },
+  required: ['summary', 'highlights'],
+};
+
+// Monday (UTC) of the current week, as YYYY-MM-DD.
+function weekStartUTC(): string {
+  const d = new Date();
+  const day = (d.getUTCDay() + 6) % 7; // 0 = Monday
+  d.setUTCDate(d.getUTCDate() - day);
+  return d.toISOString().slice(0, 10);
+}
+
+async function handleDigest(
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  communityId: string,
+): Promise<Digest> {
+  const weekStart = weekStartUTC();
+
+  // 1. Cache hit?
+  const { data: cached } = await admin.from('society_digests')
+    .select('content').eq('community_id', communityId).eq('week_start', weekStart).maybeSingle();
+  if (cached?.content) {
+    try { return JSON.parse(cached.content) as Digest; } catch { /* regenerate */ }
+  }
+
+  // 2. Gather the last 7 days of activity (community-scoped, best-effort).
+  const since = new Date(Date.now() - 7 * 86400000).toISOString();
+  // deno-lint-ignore no-explicit-any
+  const grab = async (table: string, cols: string, label: string): Promise<{ label: string; count: number; titles: string[] }> => {
+    try {
+      const { data } = await admin.from(table).select(cols).eq('community_id', communityId).gte('created_at', since).limit(20);
+      const rows = (data ?? []) as Record<string, unknown>[];
+      const titles = rows.map((r) => String(r[cols.split(',')[0]] ?? '').trim()).filter(Boolean).slice(0, 6);
+      return { label, count: rows.length, titles };
+    } catch {
+      return { label, count: 0, titles: [] };
+    }
+  };
+
+  const groups = await Promise.all([
+    grab('posts', 'title,body', 'community posts'),
+    grab('dishes', 'dish_name', 'home-cooked dishes'),
+    grab('tiffin_plans', 'title', 'tiffin services'),
+    grab('listings', 'title', 'marketplace listings'),
+    grab('property_listings', 'title', 'flats for sale/rent'),
+    grab('reco_questions', 'title', 'recommendation requests'),
+    grab('lend_items', 'title', 'items to borrow'),
+    grab('polls', 'question', 'polls'),
+  ]);
+
+  const total = groups.reduce((n, g) => n + g.count, 0);
+  if (total < 3) {
+    const quiet: Digest = { summary: '', highlights: [] };
+    await admin.from('society_digests').upsert({ community_id: communityId, week_start: weekStart, content: JSON.stringify(quiet) });
+    return quiet;
+  }
+
+  // 3. Summarise with Gemini.
+  const activity = groups.filter((g) => g.count > 0)
+    .map((g) => `- ${g.count} ${g.label}${g.titles.length ? `: ${g.titles.join('; ')}` : ''}`).join('\n');
+  const prompt =
+    "Write a short, warm 'This week in your society' digest for residents of an Indian apartment community, " +
+    'based only on this week\'s activity below. One friendly summary sentence, then up to 4 concrete highlight bullets ' +
+    '(mention real items by name where useful). Encouraging and neighbourly; never invent anything not listed.\n\n' +
+    `This week's activity:\n${activity}`;
+
+  const out = await geminiJSON([{ text: prompt }], DIGEST_SCHEMA, 0.5);
+  const digest: Digest = {
+    summary: String(out.summary ?? ''),
+    highlights: Array.isArray(out.highlights) ? (out.highlights as string[]).slice(0, 4) : [],
+  };
+  await admin.from('society_digests').upsert({ community_id: communityId, week_start: weekStart, content: JSON.stringify(digest) });
+  return digest;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -397,7 +484,7 @@ Deno.serve(async (req) => {
   } catch {
     return json({ error: 'Bad request' }, 400);
   }
-  if (body.action !== 'autofill' && body.action !== 'ask' && body.action !== 'translate') {
+  if (body.action !== 'autofill' && body.action !== 'ask' && body.action !== 'translate' && body.action !== 'digest') {
     return json({ error: 'Unknown action' }, 400);
   }
 
@@ -412,6 +499,19 @@ Deno.serve(async (req) => {
     } catch (e) {
       console.error('ai-proxy translate error:', e);
       return json({ translations: {} }); // fail soft → reader just sees the original
+    }
+  }
+
+  // ── Digest: cached once per society per week, so it isn't metered per user. ──
+  if (body.action === 'digest') {
+    try {
+      const { data: prof } = await admin.from('profiles').select('community_id').eq('id', userId).single();
+      const communityId = prof?.community_id as string | undefined;
+      if (!communityId) return json({ digest: { summary: '', highlights: [] } });
+      return json({ digest: await handleDigest(admin, communityId) });
+    } catch (e) {
+      console.error('ai-proxy digest error:', e);
+      return json({ digest: { summary: '', highlights: [] } });
     }
   }
 

@@ -149,6 +149,26 @@ export function askSourceMeta(source: AskSource) {
   return SOURCE_META[source] ?? { label: 'Result', icon: 'ellipse', color: '#0F6E56' };
 }
 
+// ── Weekly society digest (Phase 3) ───────────────────────────────────
+
+export interface SocietyDigest {
+  summary: string;
+  highlights: string[];
+}
+
+/** "This week in your society" — generated once per society per week, cached. */
+export async function fetchSocietyDigest(): Promise<SocietyDigest> {
+  const empty: SocietyDigest = { summary: '', highlights: [] };
+  if (!isSupabaseConfigured) return empty;
+  try {
+    const { data, error } = await supabase.functions.invoke('ai-proxy', { body: { action: 'digest' } });
+    if (error) return empty;
+    return (data as { digest?: SocietyDigest } | null)?.digest ?? empty;
+  } catch {
+    return empty;
+  }
+}
+
 function friendly(code: string): string {
   if (code === 'over_quota') return "You've used today's AI helper limit. Try again tomorrow.";
   return 'AI could not help with this — fill the form manually.';

@@ -9,6 +9,7 @@ import { T } from '../../components/T';
 import { Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useUnreadDms } from '../../context/unread';
+import { fetchSocietyDigest, SocietyDigest } from '../../lib/ai';
 import { PostRow, fetchLatestAnnouncement } from '../../lib/posts';
 import { SERVICES, ServiceCategory } from '../../lib/services';
 import { isSupabaseConfigured } from '../../lib/supabase';
@@ -16,6 +17,15 @@ import { AppVersion, fetchLatestVersion, isNewer } from '../../lib/appVersion';
 import { useThemeColors } from '../../theme';
 
 const DISMISSED_ANNOUNCEMENT_KEY = 'aangan:dismissed-announcement';
+const DISMISSED_DIGEST_KEY = 'aangan:dismissed-digest';
+
+/** Monday (local) of the current week — used to dismiss the digest for the week. */
+function currentWeekId(): string {
+  const d = new Date();
+  const day = (d.getDay() + 6) % 7; // 0 = Monday
+  d.setDate(d.getDate() - day);
+  return d.toLocaleDateString('en-CA');
+}
 
 type CommunityTile = { key: string; label: string; blurb: string; icon: string; color: string; href: string };
 
@@ -128,6 +138,7 @@ export default function HomeScreen() {
   const [updateBanner, setUpdateBanner] = useState<AppVersion | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [announcement, setAnnouncement] = useState<PostRow | null>(null);
+  const [digest, setDigest] = useState<SocietyDigest | null>(null);
 
   useEffect(() => {
     if (communityId && isSupabaseConfigured) {
@@ -138,6 +149,23 @@ export default function HomeScreen() {
       }).catch(() => {});
     }
   }, [communityId]);
+
+  useEffect(() => {
+    if (!communityId || !isSupabaseConfigured) return;
+    let cancelled = false;
+    (async () => {
+      const dismissed = await AsyncStorage.getItem(DISMISSED_DIGEST_KEY).catch(() => null);
+      if (dismissed === currentWeekId()) return;
+      const d = await fetchSocietyDigest();
+      if (!cancelled && d.summary) setDigest(d);
+    })();
+    return () => { cancelled = true; };
+  }, [communityId]);
+
+  const dismissDigest = () => {
+    AsyncStorage.setItem(DISMISSED_DIGEST_KEY, currentWeekId()).catch(() => {});
+    setDigest(null);
+  };
 
   const dismissAnnouncement = () => {
     if (announcement) AsyncStorage.setItem(DISMISSED_ANNOUNCEMENT_KEY, announcement.id).catch(() => {});
@@ -197,6 +225,33 @@ export default function HomeScreen() {
           </View>
           <Ionicons name="arrow-forward" size={18} color={c.accent} style={{ marginRight: 14 }} />
         </Pressable>
+
+        {/* Weekly society digest */}
+        {digest ? (
+          <View className="mb-5 overflow-hidden rounded-2xl border border-line bg-surface">
+            <View style={{ height: 3, backgroundColor: c.accent }} />
+            <View className="p-4">
+              <View className="mb-1.5 flex-row items-center gap-2">
+                <Ionicons name="sparkles" size={14} color={c.accent} />
+                <Text className="flex-1 text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: c.accent }}>This week in your society</Text>
+                <Pressable onPress={dismissDigest} hitSlop={8}>
+                  <Ionicons name="close" size={16} color={c.faint} />
+                </Pressable>
+              </View>
+              <Text className="text-[14px] leading-5 text-ink">{digest.summary}</Text>
+              {digest.highlights.length ? (
+                <View className="mt-2.5 gap-1.5">
+                  {digest.highlights.map((h, i) => (
+                    <View key={i} className="flex-row gap-2">
+                      <Text className="text-[13px]" style={{ color: c.accent }}>•</Text>
+                      <Text className="flex-1 text-[13px] leading-5 text-muted">{h}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
 
         {/* Announcement banner */}
         {announcement ? (

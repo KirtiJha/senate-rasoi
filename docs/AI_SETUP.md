@@ -26,6 +26,8 @@ In **Supabase → SQL Editor**, run:
   the function on the first Ask after items are posted — no extra setup, no cron.
 - `supabase/migrations/0041_translations.sql` — `profiles.preferred_lang` + the
   `translations` cache for multilingual auto-translate.
+- `supabase/migrations/0042_society_digest.sql` — `society_digests` cache for the
+  weekly "This week in your society" Home card.
 
 ## 3. Deploy the Edge Function
 You need the Supabase CLI once (`npm i -g supabase`, then `supabase login` and
