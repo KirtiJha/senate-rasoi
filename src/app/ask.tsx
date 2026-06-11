@@ -63,7 +63,7 @@ export default function AskScreen() {
   const empty = messages.length === 0;
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView className="flex-1 overflow-hidden bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScreenHeader
         iconNode={<BrandMark size={26} />}
         title="Ask Aangan"
@@ -122,7 +122,7 @@ export default function AskScreen() {
                         <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: meta.color + '20' }}>
                           <Ionicons name={meta.icon as any} size={17} color={meta.color} />
                         </View>
-                        <View className="flex-1">
+                        <View className="min-w-0 flex-1">
                           <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{item.title}</Text>
                           <Text className="text-[11px] text-muted" numberOfLines={1}>
                             <Text style={{ color: meta.color }}>{meta.label}</Text>{item.reason ? ` · ${item.reason}` : ''}
@@ -151,7 +151,7 @@ export default function AskScreen() {
       {/* Composer */}
       <View style={{ paddingBottom: Platform.OS === 'ios' ? 8 : 12 }} className="border-t border-line bg-bg px-3 pt-2.5">
         <View className="flex-row items-end gap-2">
-          <View className="flex-1 flex-row items-center gap-2 rounded-2xl border border-line bg-inset px-3.5">
+          <View className="min-w-0 flex-1 flex-row items-center gap-2 rounded-2xl border border-line bg-inset px-3.5">
             <TextInput
               value={input}
               onChangeText={setInput}
@@ -160,8 +160,8 @@ export default function AskScreen() {
               returnKeyType="send"
               onSubmitEditing={() => send(input)}
               multiline
-              className="flex-1 max-h-28 text-[15px] text-ink"
-              style={{ paddingVertical: 11, outline: 'none' } as any}
+              className="min-w-0 flex-1 max-h-28 text-[15px] text-ink"
+              style={{ paddingVertical: 11, outline: 'none', minWidth: 0 } as any}
             />
           </View>
           <Pressable

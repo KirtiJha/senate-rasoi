@@ -113,8 +113,8 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
                 value={query} onChangeText={setQuery}
                 placeholder="Search a service, name or number…"
                 placeholderTextColor={c.faint}
-                className="flex-1 font-sans text-[15px] text-ink"
-                style={{ outline: 'none' } as any}
+                className="min-w-0 flex-1 font-sans text-[15px] text-ink"
+                style={{ outline: 'none', minWidth: 0 } as any}
               />
               {query ? <Pressable onPress={() => setQuery('')} hitSlop={8}><Ionicons name="close-circle" size={18} color={c.faint} /></Pressable> : null}
             </View>

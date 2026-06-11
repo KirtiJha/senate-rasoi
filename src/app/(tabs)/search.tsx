@@ -180,7 +180,7 @@ export default function SearchScreen() {
   };
 
   return (
-    <View className="flex-1 bg-bg">
+    <View className="flex-1 overflow-hidden bg-bg">
       <ScreenHeader
         icon="search-outline"
         title="Search"
@@ -195,8 +195,8 @@ export default function SearchScreen() {
               autoFocus
               placeholder="Search residents, food, listings, posts…"
               placeholderTextColor={c.faint}
-              className="flex-1 font-sans text-[15px] text-ink"
-              style={{ outline: 'none' } as any}
+              className="min-w-0 flex-1 font-sans text-[15px] text-ink"
+              style={{ outline: 'none', minWidth: 0 } as any}
               returnKeyType="search"
             />
             {query.length > 0 ? (

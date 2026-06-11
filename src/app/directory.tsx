@@ -220,8 +220,8 @@ export default function DirectoryScreen() {
                 onChangeText={setQuery}
                 placeholder="Search by name, flat or profession…"
                 placeholderTextColor={c.faint}
-                className="flex-1 font-sans text-[15px] text-ink"
-                style={{ outline: 'none' } as any}
+                className="min-w-0 flex-1 font-sans text-[15px] text-ink"
+                style={{ outline: 'none', minWidth: 0 } as any}
               />
               {query.length > 0 ? (
                 <Pressable onPress={() => setQuery('')} hitSlop={8}><Ionicons name="close-circle" size={18} color={c.faint} /></Pressable>
