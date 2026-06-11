@@ -50,9 +50,12 @@ export default function DirectoryScreen() {
   const [filter, setFilter] = useState<Filter>('all');
   const [block, setBlock] = useState<string | null>(null);
   const [floor, setFloor] = useState<string | null>(null);
+  const [reg, setReg] = useState<'all' | 'done' | 'pending'>('all');
+  const [shf, setShf] = useState<'all' | 'no' | 'yes'>('all');
   const [sort, setSort] = useState<SortKey>('flat');
   const [showFilters, setShowFilters] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [selected, setSelected] = useState<Resident | null>(null);
 
   // Distinct blocks / floors present (for the filter sheet).
   const { blocks, floors } = useMemo(() => {
@@ -66,7 +69,7 @@ export default function DirectoryScreen() {
       floors: [...fs].sort((a, b) => Number(a) - Number(b)),
     };
   }, [residents]);
-  const activeFilters = (block ? 1 : 0) + (floor ? 1 : 0) + (sort !== 'flat' ? 1 : 0);
+  const activeFilters = (block ? 1 : 0) + (floor ? 1 : 0) + (reg !== 'all' ? 1 : 0) + (shf !== 'all' ? 1 : 0) + (sort !== 'flat' ? 1 : 0);
 
   const load = useCallback(async () => {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
@@ -84,6 +87,8 @@ export default function DirectoryScreen() {
       if (filter !== 'all' && r.resident_type !== filter) return false;
       if (block && r.block !== block) return false;
       if (floor && floorOf(r.flat) !== floor) return false;
+      if (reg !== 'all' && r.registration_status !== reg) return false;
+      if (shf !== 'all' && (r.shifted ? 'yes' : 'no') !== shf) return false;
       if (!q) return true;
       return (
         r.name.toLowerCase().includes(q) ||
@@ -94,7 +99,7 @@ export default function DirectoryScreen() {
         (r.phone ?? '').includes(q)
       );
     });
-  }, [residents, query, filter, block, floor]);
+  }, [residents, query, filter, block, floor, reg, shf]);
 
   // Sort=name → a single flat list; sort=flat → grouped by flat (already flat-sorted).
   const groups = useMemo(() => {
@@ -234,7 +239,7 @@ export default function DirectoryScreen() {
                       first={i === 0}
                       showFlat={sort === 'name'}
                       c={c}
-                      onOpen={() => r.userId && router.push(`/profile/${r.userId}` as any)}
+                      onOpen={() => setSelected(r)}
                       onCall={() => call(r)}
                       onWhatsApp={() => whatsapp(r)}
                       onMessage={() => message(r)}
@@ -301,11 +306,35 @@ export default function DirectoryScreen() {
           </>
         ) : null}
 
+        <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Registration</Text>
+        <View className="mb-4 flex-row flex-wrap gap-2">
+          {([['all', 'All'], ['done', 'Registered'], ['pending', 'Pending']] as const).map(([k, lbl]) => (
+            <ChipBtn key={k} label={lbl} on={reg === k} onPress={() => setReg(k)} c={c} />
+          ))}
+        </View>
+        <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Residence</Text>
+        <View className="mb-4 flex-row flex-wrap gap-2">
+          {([['all', 'All'], ['no', 'Living here'], ['yes', 'Shifted out']] as const).map(([k, lbl]) => (
+            <ChipBtn key={k} label={lbl} on={shf === k} onPress={() => setShf(k)} c={c} />
+          ))}
+        </View>
+
         <View className="mt-1 flex-row gap-2">
-          <Button label="Clear" variant="outline" fullWidth onPress={() => { setBlock(null); setFloor(null); setSort('flat'); }} />
+          <Button label="Clear" variant="outline" fullWidth onPress={() => { setBlock(null); setFloor(null); setReg('all'); setShf('all'); setSort('flat'); }} />
           <Button label="Done" fullWidth onPress={() => setShowFilters(false)} />
         </View>
       </Sheet>
+
+      <ResidentDetailSheet
+        r={selected}
+        onClose={() => setSelected(null)}
+        c={c}
+        onCall={() => selected && call(selected)}
+        onWhatsApp={() => selected && whatsapp(selected)}
+        onMessage={() => { if (selected) { message(selected); setSelected(null); } }}
+        onInvite={() => selected && invite(selected)}
+        onProfile={() => { if (selected?.userId) { router.push(`/profile/${selected.userId}` as any); setSelected(null); } }}
+      />
     </View>
   );
 }
@@ -315,6 +344,69 @@ function ChipBtn({ label, on, onPress, c }: { label: string; on: boolean; onPres
     <Pressable onPress={onPress} className={`min-w-[44px] items-center rounded-full border px-3.5 py-1.5 ${on ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
       <Text className={`text-[13px] font-sans-sb ${on ? 'text-accent' : 'text-muted'}`}>{label}</Text>
     </Pressable>
+  );
+}
+
+function ResidentDetailSheet({
+  r, onClose, c, onCall, onWhatsApp, onMessage, onInvite, onProfile,
+}: {
+  r: Resident | null; onClose: () => void; c: ReturnType<typeof useThemeColors>;
+  onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onProfile: () => void;
+}) {
+  const typeColor = r?.resident_type === 'owner' ? '#0D9488' : '#7C3AED';
+  return (
+    <Sheet visible={!!r} onClose={onClose} title={r?.name ?? 'Resident'}>
+      {r ? (
+        <View>
+          {/* Identity badges */}
+          <View className="mb-4 flex-row flex-wrap items-center gap-2">
+            {(r.block || r.flat) ? <Badge label={`🏠 ${flatDisplay(r.block, r.flat)}`} c={c} /> : null}
+            {r.resident_type ? <Badge label={r.resident_type === 'owner' ? 'Owner' : 'Tenant'} color={typeColor} c={c} /> : null}
+            <Badge label={r.registration_status === 'done' ? '✓ Registered' : 'Not registered'} color={r.registration_status === 'done' ? '#16A34A' : '#CA8A04'} c={c} />
+            <Badge label={r.shifted ? 'Shifted out' : 'Resident'} color={r.shifted ? '#9CA3AF' : '#16A34A'} c={c} />
+            {!r.onboarded ? <Badge label="Not on Aangan" c={c} /> : null}
+          </View>
+
+          {/* Details */}
+          <View className="mb-4 gap-0.5 rounded-2xl border border-line bg-inset px-1">
+            <DetailRow icon="call-outline" label="Phone" value={r.phone} c={c} />
+            <DetailRow icon="call-outline" label="Alternate" value={r.alt_phone} c={c} />
+            <DetailRow icon="mail-outline" label="Email" value={r.email} c={c} />
+            <DetailRow icon="location-outline" label="Native" value={r.native} c={c} />
+            <DetailRow icon="briefcase-outline" label="Profession" value={r.profession} c={c} />
+            <DetailRow icon="car-outline" label="Vehicle" value={r.vehicle_no} c={c} last />
+          </View>
+
+          {/* Actions */}
+          <View className="flex-row flex-wrap gap-2">
+            {r.phone ? <Button label="Call" icon="call" variant="outline" onPress={onCall} /> : null}
+            {r.phone ? <Button label="WhatsApp" icon="logo-whatsapp" variant="whatsapp" onPress={onWhatsApp} /> : null}
+            {r.onboarded ? <Button label="Message" icon="chatbubble-ellipses-outline" variant="outline" onPress={onMessage} /> : (r.phone ? <Button label="Invite" icon="paper-plane-outline" onPress={onInvite} /> : null)}
+            {r.onboarded ? <Button label="View profile" variant="ghost" onPress={onProfile} /> : null}
+          </View>
+        </View>
+      ) : null}
+    </Sheet>
+  );
+}
+
+function Badge({ label, color, c }: { label: string; color?: string; c: ReturnType<typeof useThemeColors> }) {
+  const col = color ?? c.muted;
+  return (
+    <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: col + '1A' }}>
+      <Text className="text-[11px] font-sans-sb" style={{ color: col }}>{label}</Text>
+    </View>
+  );
+}
+
+function DetailRow({ icon, label, value, c, last }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string | null; c: ReturnType<typeof useThemeColors>; last?: boolean }) {
+  if (!value) return null;
+  return (
+    <View className={`flex-row items-center gap-3 px-2.5 py-2.5 ${last ? '' : 'border-b border-line'}`}>
+      <Ionicons name={icon} size={16} color={c.faint} />
+      <Text className="w-20 text-[12px] font-sans-sb uppercase tracking-wide text-faint">{label}</Text>
+      <Text className="flex-1 text-[14px] text-ink" selectable>{value}</Text>
+    </View>
   );
 }
 
@@ -329,8 +421,8 @@ function ResidentRow({
 
   return (
     <Pressable
-      onPress={r.onboarded ? onOpen : undefined}
-      className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'} ${r.onboarded ? 'active:bg-inset' : ''}`}
+      onPress={onOpen}
+      className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'} active:bg-inset`}
     >
       <Avatar name={r.name} size={40} />
       <View className="flex-1" style={{ minWidth: 0 }}>
@@ -339,6 +431,11 @@ function ResidentRow({
           {r.resident_type ? (
             <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: typeColor + '20' }}>
               <Text className="text-[9px] font-sans-sb uppercase" style={{ color: typeColor }}>{r.resident_type}</Text>
+            </View>
+          ) : null}
+          {r.shifted ? (
+            <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: '#9CA3AF22' }}>
+              <Text className="text-[9px] font-sans-sb uppercase text-muted">Shifted</Text>
             </View>
           ) : null}
           {!r.onboarded ? (
@@ -381,10 +478,12 @@ function AddResidentModal({
 }: {
   visible: boolean;
   onClose: () => void;
-  onAdd: (f: { name: string; block: string | null; flat: string | null; phone: string | null; resident_type: 'owner' | 'tenant' | null; profession: string | null; vehicle_no: string | null; native: string | null; alt_phone: string | null; email: string | null }) => void;
+  onAdd: (f: { name: string; block: string | null; flat: string | null; phone: string | null; resident_type: 'owner' | 'tenant' | null; profession: string | null; vehicle_no: string | null; native: string | null; alt_phone: string | null; email: string | null; registration_status: 'pending' | 'done'; shifted: boolean }) => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
   const [name, setName] = useState('');
+  const [registration, setRegistration] = useState<'pending' | 'done'>('pending');
+  const [shifted, setShifted] = useState(false);
   const [block, setBlock] = useState('');
   const [flat, setFlat] = useState('');
   const [phone, setPhone] = useState('');
@@ -399,7 +498,7 @@ function AddResidentModal({
   const submit = () => {
     if (!name.trim()) return;
     setBusy(true);
-    onAdd({ name, block: block || null, flat: flat || null, phone: phone || null, resident_type: type, profession: profession || null, vehicle_no: vehicle || null, native: native || null, alt_phone: altPhone || null, email: email || null });
+    onAdd({ name, block: block || null, flat: flat || null, phone: phone || null, resident_type: type, profession: profession || null, vehicle_no: vehicle || null, native: native || null, alt_phone: altPhone || null, email: email || null, registration_status: registration, shifted });
     setBusy(false);
   };
 
@@ -432,6 +531,29 @@ function AddResidentModal({
         <View className="flex-1"><Field label="Alternate phone" keyboardType="phone-pad" placeholder="98765 43210" value={altPhone} onChangeText={setAltPhone} /></View>
       </View>
       <Field label="Email" keyboardType="email-address" autoCapitalize="none" placeholder="name@email.com" value={email} onChangeText={setEmail} />
+
+      <View className="flex-row gap-3">
+        <View className="flex-1">
+          <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Registration</Text>
+          <View className="flex-row gap-2">
+            {(['done', 'pending'] as const).map((s) => (
+              <Pressable key={s} onPress={() => setRegistration(s)} className={`flex-1 items-center rounded-xl border py-2 ${registration === s ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
+                <Text className={`text-[13px] font-sans-sb ${registration === s ? 'text-accent' : 'text-muted'}`}>{s === 'done' ? 'Done' : 'Pending'}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+        <View className="flex-1">
+          <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Shifted out</Text>
+          <View className="flex-row gap-2">
+            {([['no', false], ['yes', true]] as const).map(([lbl, v]) => (
+              <Pressable key={lbl} onPress={() => setShifted(v)} className={`flex-1 items-center rounded-xl border py-2 ${shifted === v ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
+                <Text className={`text-[13px] font-sans-sb ${shifted === v ? 'text-accent' : 'text-muted'}`}>{lbl === 'yes' ? 'Yes' : 'No'}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </View>
     </Sheet>
   );
 }

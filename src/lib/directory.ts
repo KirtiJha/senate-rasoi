@@ -42,6 +42,8 @@ export interface Resident {
   native: string | null;
   alt_phone: string | null;
   email: string | null;
+  registration_status: 'pending' | 'done';
+  shifted: boolean;
   onboarded: boolean;       // has an Aangan account
   userId: string | null;    // member id (DM / public profile)
   entryId: string | null;   // directory_entries id (delete)
@@ -86,6 +88,8 @@ export async function fetchDirectory(
       native: null,
       alt_phone: null,
       email: null,
+      registration_status: 'done', // a registered member
+      shifted: false,
       onboarded: true,
       userId: m.id,
       entryId: null,
@@ -94,7 +98,6 @@ export async function fetchDirectory(
   }
 
   for (const e of entries) {
-    if (e.shifted) continue; // moved out — kept in the roster, hidden from the live directory
     if (e.phone && memberPhones.has(norm(e.phone))) continue; // member already represents them
     residents.push({
       key: `e:${e.id}`,
@@ -109,6 +112,8 @@ export async function fetchDirectory(
       native: e.native,
       alt_phone: e.alt_phone,
       email: e.email,
+      registration_status: e.registration_status ?? 'pending',
+      shifted: e.shifted ?? false,
       onboarded: false,
       userId: null,
       entryId: e.id,
@@ -139,6 +144,8 @@ export interface NewDirectoryEntry {
   native?: string | null;
   alt_phone?: string | null;
   email?: string | null;
+  registration_status?: 'pending' | 'done';
+  shifted?: boolean;
 }
 
 /** Add a non-member resident. Throws 'duplicate' if the phone already exists. */
@@ -156,6 +163,8 @@ export async function addDirectoryEntry(input: NewDirectoryEntry): Promise<void>
     native: input.native?.trim() || null,
     alt_phone: input.alt_phone?.replace(/\D/g, '') || null,
     email: input.email?.trim() || null,
+    registration_status: input.registration_status ?? 'pending',
+    shifted: input.shifted ?? false,
   });
   if (error) {
     if (error.code === '23505') throw new Error('duplicate');
