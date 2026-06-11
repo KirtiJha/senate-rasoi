@@ -48,6 +48,7 @@ export function CreateListingForm({ cat, onBack }: Props) {
 
   const [submitting, setSubmitting] = useState(false);
   const [autofilling, setAutofilling] = useState(false);
+  const [photoFlagged, setPhotoFlagged] = useState(false); // AI said the photo isn't a sellable item
 
   const setAttr = (key: string, value: unknown) => {
     setAttrs((prev) => ({ ...prev, [key]: value }));
@@ -66,7 +67,7 @@ export function CreateListingForm({ cat, onBack }: Props) {
       allowsEditing: true,
       aspect: [4, 3],
     });
-    if (!result.canceled) setPhotoUri(result.assets[0].uri);
+    if (!result.canceled) { setPhotoUri(result.assets[0].uri); setPhotoFlagged(false); }
   };
 
   const autofillFromPhoto = async () => {
@@ -77,9 +78,11 @@ export function CreateListingForm({ cat, onBack }: Props) {
       const r = await visionAutofill('listing', photoUri, title || undefined);
       setTitle(r.title);
       if (r.description) setDescription(r.description);
+      setPhotoFlagged(false);
       haptics.success();
       toast.show('Filled from your photo ✨ — check & tweak it');
     } catch (e) {
+      if (e instanceof AIError && e.code === 'not_relevant') setPhotoFlagged(true);
       toast.show(e instanceof AIError ? e.message : 'Could not read the photo — fill it in');
     } finally {
       setAutofilling(false);
@@ -89,6 +92,10 @@ export function CreateListingForm({ cat, onBack }: Props) {
   const submit = async () => {
     if (!isSupabaseConfigured) {
       toast.show('Connect Supabase first ⚙️');
+      return;
+    }
+    if (photoFlagged) {
+      toast.show("This photo doesn't match the listing — change or remove it ⚠️");
       return;
     }
     if (!userId) {
@@ -186,7 +193,7 @@ export function CreateListingForm({ cat, onBack }: Props) {
                   <Ionicons name="camera-outline" size={14} color="#16171A" />
                   <Text className="font-sans-sb text-[12px] text-[#16171A]">Change</Text>
                 </Pressable>
-                <Pressable onPress={() => setPhotoUri(null)} className="rounded-full bg-white/95 px-3 py-2">
+                <Pressable onPress={() => { setPhotoUri(null); setPhotoFlagged(false); }} className="rounded-full bg-white/95 px-3 py-2">
                   <Ionicons name="trash-outline" size={14} color="#E0322B" />
                 </Pressable>
               </View>
@@ -215,6 +222,16 @@ export function CreateListingForm({ cat, onBack }: Props) {
                 {autofilling ? 'Reading your photo…' : 'Autofill details from photo'}
               </Text>
             </Pressable>
+          ) : null}
+
+          {/* photo doesn't look like a sellable item — block posting until changed */}
+          {!isDirectory && photoUri && photoFlagged ? (
+            <View className="-mt-1 mb-4 flex-row items-start gap-2 rounded-2xl border border-nonveg/40 bg-nonveg/10 px-3.5 py-3">
+              <Ionicons name="alert-circle" size={16} color={c.nonveg} />
+              <Text className="flex-1 text-[12px] leading-[17px] text-nonveg">
+                This photo doesn't look like an item you can list. Please change or remove it before posting.
+              </Text>
+            </View>
           ) : null}
 
           {/* Who is posting (identity card) */}
@@ -301,6 +318,7 @@ export function CreateListingForm({ cat, onBack }: Props) {
             size="lg"
             fullWidth
             loading={submitting}
+            disabled={photoFlagged}
             onPress={submit}
           />
           <Text className="mt-2 text-center text-[12px] leading-4 text-faint">

@@ -27,10 +27,11 @@ export default function NewLendItemScreen() {
   const [phone, setPhone] = useState(profile?.phone ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [autofilling, setAutofilling] = useState(false);
+  const [photoFlagged, setPhotoFlagged] = useState(false); // AI said the photo isn't a lendable item
 
   const pick = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
-    if (!res.canceled) setPhoto(res.assets[0].uri);
+    if (!res.canceled) { setPhoto(res.assets[0].uri); setPhotoFlagged(false); }
   };
 
   const autofillFromPhoto = async () => {
@@ -40,8 +41,10 @@ export default function NewLendItemScreen() {
       const r = await visionAutofill('borrow', photo, title || undefined);
       setTitle(r.item_name);
       if (r.description) setDesc(r.description);
+      setPhotoFlagged(false);
       toast.show('Filled from your photo ✨ — check & tweak it');
     } catch (e) {
+      if (e instanceof AIError && e.code === 'not_relevant') setPhotoFlagged(true);
       toast.show(e instanceof AIError ? e.message : 'Could not read the photo — fill it in');
     } finally {
       setAutofilling(false);
@@ -50,6 +53,7 @@ export default function NewLendItemScreen() {
 
   const submit = async () => {
     if (!userId) return;
+    if (photoFlagged) return toast.show("This photo doesn't match the item — change or remove it ⚠️");
     if (!title.trim()) return toast.show('What are you lending?');
     setSubmitting(true);
     try {
@@ -88,6 +92,20 @@ export default function NewLendItemScreen() {
             </Pressable>
           ) : null}
 
+          {photo && photoFlagged ? (
+            <View className="-mt-2 mb-4 flex-row items-start gap-2 rounded-2xl border border-nonveg/40 bg-nonveg/10 px-3.5 py-3">
+              <Ionicons name="alert-circle" size={16} color={c.nonveg} />
+              <View className="flex-1">
+                <Text className="text-[12px] leading-[17px] text-nonveg">
+                  This photo doesn't look like an item you can lend. Please change it before posting.
+                </Text>
+                <Pressable onPress={() => { setPhoto(null); setPhotoFlagged(false); }} hitSlop={6} className="mt-1 self-start">
+                  <Text className="text-[12px] font-sans-sb text-nonveg underline">Remove photo</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : null}
+
           <Text className={label}>What are you lending?</Text>
           <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Bosch drill machine" placeholderTextColor={c.faint} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />
 
@@ -110,7 +128,7 @@ export default function NewLendItemScreen() {
           <Text className={label}>WhatsApp (for coordination)</Text>
           <TextInput value={wa} onChangeText={setWa} keyboardType="phone-pad" placeholder="98765 43210" placeholderTextColor={c.faint} className={`mb-5 ${input}`} style={{ outline: 'none' } as any} />
 
-          <Button label="List it to lend" icon="checkmark" size="lg" fullWidth loading={submitting} onPress={submit} />
+          <Button label="List it to lend" icon="checkmark" size="lg" fullWidth loading={submitting} disabled={photoFlagged} onPress={submit} />
           <Text className="mt-3 text-center text-[12px] leading-[18px] text-faint">It's a free favour between neighbours — you'll approve who borrows and mark it returned.</Text>
         </Container>
       </ScrollView>

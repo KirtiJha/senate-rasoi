@@ -70,6 +70,7 @@ export default function PostScreen({
   const [cutoff, setCutoff] = useState<CutoffKey>('auto');
   const [submitting, setSubmitting] = useState(false);
   const [autofilling, setAutofilling] = useState(false);
+  const [photoFlagged, setPhotoFlagged] = useState(false); // AI said the photo isn't food
 
   const [tTitle, setTTitle] = useState('');
   const [tDesc, setTDesc] = useState('');
@@ -127,7 +128,7 @@ export default function PostScreen({
       allowsEditing: true,
       aspect: [4, 3],
     });
-    if (!result.canceled) setPhotoUri(result.assets[0].uri);
+    if (!result.canceled) { setPhotoUri(result.assets[0].uri); setPhotoFlagged(false); }
   };
 
   const autofillFromPhoto = async () => {
@@ -140,9 +141,11 @@ export default function PostScreen({
       setVegType(r.veg_type);
       if (r.suggested_slot && !slot) setSlot(r.suggested_slot);
       if (r.description) setDescription(r.description);
+      setPhotoFlagged(false);
       haptics.success();
       toast.show('Filled from your photo ✨ — check & tweak it');
     } catch (e) {
+      if (e instanceof AIError && e.code === 'not_relevant') setPhotoFlagged(true);
       toast.show(e instanceof AIError ? e.message : 'Could not read the photo — fill it in');
     } finally {
       setAutofilling(false);
@@ -152,6 +155,10 @@ export default function PostScreen({
   const submit = async () => {
     if (!isSupabaseConfigured) {
       toast.show('Connect Supabase first — see the banner on Discover ⚙️');
+      return;
+    }
+    if (photoFlagged) {
+      toast.show("This photo doesn't look like food — change or remove it ⚠️");
       return;
     }
     const priceNum = parseInt(price, 10);
@@ -332,7 +339,7 @@ export default function PostScreen({
                   <Ionicons name="camera-outline" size={15} color="#16171A" />
                   <Text className="font-sans-sb text-[12px] text-[#16171A]">Change</Text>
                 </Pressable>
-                <Pressable onPress={() => setPhotoUri(null)} className="rounded-full bg-white/95 px-3 py-2">
+                <Pressable onPress={() => { setPhotoUri(null); setPhotoFlagged(false); }} className="rounded-full bg-white/95 px-3 py-2">
                   <Ionicons name="trash-outline" size={15} color="#E0322B" />
                 </Pressable>
               </View>
@@ -363,6 +370,16 @@ export default function PostScreen({
                 {autofilling ? 'Reading your photo…' : 'Autofill details from photo'}
               </Text>
             </Pressable>
+          ) : null}
+
+          {/* photo doesn't look like food — block posting until it's changed */}
+          {mode === 'dish' && photoUri && photoFlagged ? (
+            <View className="-mt-1 mb-4 flex-row items-start gap-2 rounded-2xl border border-nonveg/40 bg-nonveg/10 px-3.5 py-3">
+              <Ionicons name="alert-circle" size={16} color={c.nonveg} />
+              <Text className="flex-1 text-[12px] leading-[17px] text-nonveg">
+                This photo doesn't look like food. Please change or remove it before posting your dish.
+              </Text>
+            </View>
           ) : null}
 
           {/* identity */}
@@ -540,6 +557,7 @@ export default function PostScreen({
             size="lg"
             fullWidth
             loading={submitting}
+            disabled={mode === 'dish' && photoFlagged}
             onPress={mode === 'dish' ? submit : submitTiffin}
           />
           <Text className="mt-2.5 text-center text-[12px] leading-4 text-faint">
