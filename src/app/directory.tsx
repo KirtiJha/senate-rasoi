@@ -185,8 +185,8 @@ export default function DirectoryScreen() {
           <ChipBtn key={k} label={lbl} on={reg === k} onPress={() => setReg(k)} c={c} />
         ))}
       </FilterGroup>
-      <FilterGroup label="Residence" last>
-        {([['all', 'All'], ['no', 'Living here'], ['yes', 'Shifted out']] as const).map(([k, lbl]) => (
+      <FilterGroup label="Occupancy" last>
+        {([['all', 'All'], ['yes', 'Living here'], ['no', 'Not moved in']] as const).map(([k, lbl]) => (
           <ChipBtn key={k} label={lbl} on={shf === k} onPress={() => setShf(k)} c={c} />
         ))}
       </FilterGroup>
@@ -385,7 +385,7 @@ function ResidentDetailSheet({
             {r.block ? <Badge label={`Block ${r.block}`} color="#8B5CF6" c={c} /> : null}
             {r.resident_type ? <Badge label={r.resident_type === 'owner' ? 'Owner' : 'Tenant'} color={typeColor} c={c} /> : null}
             <Badge label={r.registration_status === 'done' ? '✓ Registered' : 'Not registered'} color={r.registration_status === 'done' ? '#16A34A' : '#CA8A04'} c={c} />
-            <Badge label={r.shifted ? 'Shifted out' : 'Resident'} color={r.shifted ? '#9CA3AF' : '#16A34A'} c={c} />
+            <Badge label={r.shifted ? 'Living here' : 'Not moved in yet'} color={r.shifted ? '#16A34A' : '#CA8A04'} c={c} />
             {!r.onboarded ? <Badge label="Not on Aangan" c={c} /> : null}
           </View>
 
@@ -464,9 +464,9 @@ function ResidentRow({
               <Text className="text-[9px] font-sans-sb uppercase" style={{ color: '#A16207' }}>Not on Aangan</Text>
             </View>
           ) : null}
-          {r.shifted ? (
+          {!r.shifted ? (
             <View className="rounded px-1.5 py-0.5" style={{ backgroundColor: '#9CA3AF22' }}>
-              <Text className="text-[9px] font-sans-sb uppercase text-muted">Shifted</Text>
+              <Text className="text-[9px] font-sans-sb uppercase text-muted">Not moved in</Text>
             </View>
           ) : null}
           {sub ? <Text className="flex-1 text-[12px] text-muted" numberOfLines={1}>{sub}</Text> : null}
@@ -564,7 +564,7 @@ function AddResidentModal({
           </View>
         </View>
         <View className="flex-1">
-          <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Shifted out</Text>
+          <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Moved in?</Text>
           <View className="flex-row gap-2">
             {([['no', false], ['yes', true]] as const).map(([lbl, v]) => (
               <Pressable key={lbl} onPress={() => setShifted(v)} className={`flex-1 items-center rounded-xl border py-2 ${shifted === v ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
