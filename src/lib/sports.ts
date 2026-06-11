@@ -8,15 +8,17 @@ export interface Sport {
   label: string;
   emoji: string;
   color: string;
+  /** Bookable facility for this sport (e.g. 'Court', 'Net', 'Table'). Omitted = no booking. */
+  booking?: string;
 }
 export const SPORTS: Sport[] = [
-  { key: 'badminton', label: 'Badminton', emoji: '🏸', color: '#16A34A' },
-  { key: 'cricket', label: 'Cricket', emoji: '🏏', color: '#2563EB' },
+  { key: 'badminton', label: 'Badminton', emoji: '🏸', color: '#16A34A', booking: 'Court' },
+  { key: 'cricket', label: 'Cricket', emoji: '🏏', color: '#2563EB', booking: 'Net' },
   { key: 'football', label: 'Football', emoji: '⚽', color: '#EA580C' },
-  { key: 'tennis', label: 'Tennis', emoji: '🎾', color: '#CA8A04' },
-  { key: 'tabletennis', label: 'Table Tennis', emoji: '🏓', color: '#DC2626' },
-  { key: 'basketball', label: 'Basketball', emoji: '🏀', color: '#9333EA' },
-  { key: 'volleyball', label: 'Volleyball', emoji: '🏐', color: '#0891B2' },
+  { key: 'tennis', label: 'Tennis', emoji: '🎾', color: '#CA8A04', booking: 'Court' },
+  { key: 'tabletennis', label: 'Table Tennis', emoji: '🏓', color: '#DC2626', booking: 'Table' },
+  { key: 'basketball', label: 'Basketball', emoji: '🏀', color: '#9333EA', booking: 'Court' },
+  { key: 'volleyball', label: 'Volleyball', emoji: '🏐', color: '#0891B2', booking: 'Court' },
   { key: 'swimming', label: 'Swimming', emoji: '🏊', color: '#0284C7' },
   { key: 'cycling', label: 'Cycling', emoji: '🚴', color: '#0D9488' },
   { key: 'running', label: 'Running', emoji: '🏃', color: '#DB2777' },

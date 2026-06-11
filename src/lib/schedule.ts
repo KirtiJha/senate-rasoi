@@ -60,6 +60,43 @@ export function upcomingDates(days: number[], weeks: number, fromISO?: string): 
   return out;
 }
 
+// ── Reverse parsers (formatted label → editable input), for the edit form ──
+export function parseDaysLabel(s: string | null | undefined): number[] {
+  if (!s) return [];
+  const t = s.trim();
+  if (/daily/i.test(t)) return [0, 1, 2, 3, 4, 5, 6];
+  if (/weekend/i.test(t)) return [0, 6];
+  if (/mon.?fri/i.test(t)) return [1, 2, 3, 4, 5];
+  const map: Record<string, number> = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+  const out: number[] = [];
+  for (const part of t.split(/[,\s]+/)) {
+    const k = part.slice(0, 3).toLowerCase();
+    if (k in map) out.push(map[k]);
+  }
+  return [...new Set(out)].sort((a, b) => a - b);
+}
+
+export function parseTimeLabel(s: string | null | undefined): string {
+  if (!s) return '';
+  const m = /(\d{1,2}):(\d{2})\s*(AM|PM)?/i.exec(s.trim());
+  if (!m) return '';
+  let h = parseInt(m[1], 10);
+  const ap = (m[3] || '').toUpperCase();
+  if (ap === 'PM' && h < 12) h += 12;
+  if (ap === 'AM' && h === 12) h = 0;
+  return `${String(h).padStart(2, '0')}:${m[2]}`;
+}
+
+export function parseDurationLabel(s: string | null | undefined): string {
+  if (!s) return '';
+  const minOnly = /^(\d+)\s*min/i.exec(s.trim());
+  if (minOnly) return minOnly[1];
+  const hM = /(\d+)\s*h/i.exec(s);
+  const mM = /(\d+)\s*m(?!in)/i.exec(s.replace(/\d+\s*h/i, ''));
+  const total = (hM ? parseInt(hM[1], 10) * 60 : 0) + (mM ? parseInt(mM[1], 10) : 0);
+  return total ? String(total) : '';
+}
+
 /** Has this session's end time passed (so the split is final)? */
 export function sessionEnded(dateISO: string, hhmm: string, durationMin: number): boolean {
   const t = /^(\d{1,2}):(\d{2})$/.exec((hhmm || '00:00').trim());

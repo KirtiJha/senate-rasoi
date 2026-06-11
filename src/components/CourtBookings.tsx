@@ -21,13 +21,15 @@ function fmtDate(iso: string): string {
 
 /** Court bookings, attendance and the live cost-split for one sports group. */
 export function CourtBookings({
-  groupId, communityId, accent, isMember,
+  groupId, communityId, accent, isMember, facility,
 }: {
   groupId: string;
   communityId: string;
   accent: string;
   isMember: boolean;
+  facility: string; // 'Court' | 'Net' | 'Table' …
 }) {
+  const noun = facility.toLowerCase();
   const c = useThemeColors();
   const toast = useToast();
   const router = useRouter();
@@ -67,7 +69,7 @@ export function CourtBookings({
   return (
     <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
       <View className="mb-3 flex-row items-center justify-between">
-        <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-muted">Court bookings</Text>
+        <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-muted">{facility} bookings</Text>
         <View className="flex-row items-center gap-2">
           <Pressable onPress={() => router.push('/sports/dues' as any)} hitSlop={6} className="flex-row items-center gap-1 rounded-full bg-inset px-2.5 py-1 active:opacity-80">
             <Ionicons name="wallet-outline" size={13} color={c.muted} />
@@ -85,7 +87,7 @@ export function CourtBookings({
       {loading ? (
         <Text className="py-2 text-[13px] text-muted">Loading…</Text>
       ) : sessions.length === 0 ? (
-        <Text className="py-2 text-[13px] text-muted">No court booked yet. {isMember ? 'Book one and your group gets notified to confirm.' : ''}</Text>
+        <Text className="py-2 text-[13px] text-muted">No {noun} booked yet. {isMember ? 'Book one and your group gets notified to confirm.' : ''}</Text>
       ) : (
         <View className="gap-2.5">
           {upcoming.map((s) => (
@@ -108,13 +110,14 @@ export function CourtBookings({
         visible={showCreate}
         onClose={() => setShowCreate(false)}
         accent={accent}
+        facility={facility}
         c={c}
         onCreate={async (form) => {
           if (!userId) return;
           setShowCreate(false);
           try {
             await createBooking({ groupId, communityId, bookerUserId: userId, ...form });
-            toast.show('Court booked — your group has been notified 🏸');
+            toast.show(`${facility} booked — your group has been notified 🏸`);
             await load();
           } catch { toast.show('Could not create booking'); }
         }}
@@ -193,15 +196,17 @@ function SessionCard({
 }
 
 function CreateBookingSheet({
-  visible, onClose, onCreate, accent, c,
+  visible, onClose, onCreate, accent, facility, c,
 }: {
   visible: boolean;
   onClose: () => void;
   onCreate: (form: { title: string | null; location: string | null; days: number[]; startTime: string; durationMin: number; charge: number; weeks: number; oneOffDate: string | null; upi: string | null }) => void;
   accent: string;
+  facility: string;
   c: ReturnType<typeof useThemeColors>;
 }) {
   const { profile } = useAuth();
+  const noun = facility.toLowerCase();
   const [mode, setMode] = useState<'weekly' | 'oneoff'>('weekly');
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
@@ -236,7 +241,7 @@ function CreateBookingSheet({
   };
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="Book the court" footer={<Button label="Book & notify group" fullWidth disabled={!valid} onPress={submit} />}>
+    <Sheet visible={visible} onClose={onClose} title={`Book the ${noun}`} footer={<Button label="Book & notify group" fullWidth disabled={!valid} onPress={submit} />}>
       <Text className={lbl}>Title (optional)</Text>
       <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Evening doubles" placeholderTextColor={c.faint} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />
 
@@ -276,12 +281,12 @@ function CreateBookingSheet({
 
       <View className="mb-3 flex-row gap-2">
         <View className="flex-1">
-          <Text className={lbl}>Court charge / session</Text>
+          <Text className={lbl}>{facility} charge / session</Text>
           <TextInput value={charge} onChangeText={setCharge} keyboardType="decimal-pad" placeholder="₹ 400" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
         </View>
         <View className="flex-1">
-          <Text className={lbl}>Court / venue</Text>
-          <TextInput value={location} onChangeText={setLocation} placeholder="Court 1" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
+          <Text className={lbl}>{facility} / venue</Text>
+          <TextInput value={location} onChangeText={setLocation} placeholder={`${facility} 1`} placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
         </View>
       </View>
 

@@ -90,7 +90,7 @@ export default function DuesScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="wallet-outline" iconColor={ACCENT} title="Court dues" showBack hideSociety />
+      <ScreenHeader icon="wallet-outline" iconColor={ACCENT} title="Booking dues" showBack hideSociety />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* tabs */}

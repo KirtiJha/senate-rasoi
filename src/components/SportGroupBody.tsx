@@ -8,12 +8,17 @@ import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { fetchDirectory, Resident } from '../lib/directory';
 import {
+  durationLabel, formatDays, formatTime, isValidTime,
+  parseDaysLabel, parseDurationLabel, parseTimeLabel,
+} from '../lib/schedule';
+import {
   GroupMember, SportGroup, Tournament, addMember, addTournament, deleteGroup, deleteTournament,
   fetchGroup, fetchGroupMembers, fetchTournaments, getSport, joinGroup, leaveGroup, removeMember,
   updateGroup, uploadGroupLogo,
 } from '../lib/sports';
 import { useThemeColors } from '../theme';
 import { CourtBookings } from './CourtBookings';
+import { WeekdayChips } from './WeekdayChips';
 import { Avatar, Button, RowSkeleton, Sheet } from './ui';
 
 /**
@@ -40,6 +45,7 @@ export function SportGroupBody({
   const [loading, setLoading] = useState(true);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAddTourney, setShowAddTourney] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
 
   const load = useCallback(async () => {
     if (!groupId) return;
@@ -107,6 +113,12 @@ export function SportGroupBody({
     <>
       {/* Identity */}
       <View className="items-center rounded-3xl border border-line bg-surface px-6 py-6">
+        {canManage ? (
+          <Pressable onPress={() => setShowEdit(true)} hitSlop={8} className="absolute right-3 top-3 flex-row items-center gap-1 rounded-full bg-inset px-2.5 py-1.5 active:opacity-80">
+            <Ionicons name="pencil" size={12} color={c.muted} />
+            <Text className="text-[12px] font-sans-sb text-muted">Edit</Text>
+          </Pressable>
+        ) : null}
         <Pressable onPress={canManage ? pickLogo : undefined} disabled={!canManage} className="h-20 w-20 items-center justify-center overflow-hidden rounded-3xl" style={{ backgroundColor: color + '22' }}>
           {group.logo_url ? (
             <Image source={{ uri: group.logo_url }} style={{ width: 80, height: 80 }} contentFit="cover" />
@@ -181,8 +193,10 @@ export function SportGroupBody({
         )}
       </View>
 
-      {/* Court bookings, attendance & cost-split */}
-      <CourtBookings groupId={group.id} communityId={group.community_id} accent={color} isMember={isMember} />
+      {/* Facility bookings, attendance & cost-split — only for sports that book one */}
+      {sport?.booking ? (
+        <CourtBookings groupId={group.id} communityId={group.community_id} accent={color} isMember={isMember} facility={sport.booking} />
+      ) : null}
 
       {/* Tournaments */}
       <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
@@ -226,6 +240,16 @@ export function SportGroupBody({
         </Pressable>
       ) : null}
 
+      <EditGroupSheet
+        visible={showEdit}
+        group={group}
+        c={c}
+        onClose={() => setShowEdit(false)}
+        onSave={async (patch) => {
+          try { await updateGroup(group.id, patch); setShowEdit(false); await reload(); }
+          catch { toast.show('Could not save'); }
+        }}
+      />
       <AddMemberSheet
         visible={showAddMember}
         onClose={() => setShowAddMember(false)}
@@ -246,6 +270,73 @@ export function SportGroupBody({
         onAdd={async (form) => { try { await addTournament({ groupId: group.id, ...form }); setShowAddTourney(false); await reload(); } catch { toast.show('Could not add'); } }}
       />
     </>
+  );
+}
+
+function EditGroupSheet({
+  visible, group, c, onClose, onSave,
+}: {
+  visible: boolean; group: SportGroup; c: ReturnType<typeof useThemeColors>;
+  onClose: () => void; onSave: (patch: Partial<SportGroup>) => void;
+}) {
+  const [name, setName] = useState(group.name);
+  const [desc, setDesc] = useState(group.description ?? '');
+  const [days, setDays] = useState<number[]>(parseDaysLabel(group.practice_days));
+  const [time, setTime] = useState(parseTimeLabel(group.practice_time));
+  const [duration, setDuration] = useState(parseDurationLabel(group.practice_duration));
+  const [location, setLocation] = useState(group.practice_location ?? '');
+
+  useEffect(() => {
+    if (!visible) return;
+    setName(group.name); setDesc(group.description ?? '');
+    setDays(parseDaysLabel(group.practice_days)); setTime(parseTimeLabel(group.practice_time));
+    setDuration(parseDurationLabel(group.practice_duration)); setLocation(group.practice_location ?? '');
+  }, [visible, group]);
+
+  const input = 'rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink';
+  const lbl = 'mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted';
+  const durMin = parseInt(duration, 10) || 0;
+  const timeOk = !time.trim() || isValidTime(time);
+  const valid = !!name.trim() && timeOk;
+
+  const save = () => {
+    if (!valid) return;
+    onSave({
+      name: name.trim(),
+      description: desc.trim() || null,
+      practice_days: days.length ? formatDays(days) : null,
+      practice_time: time.trim() && isValidTime(time) ? formatTime(time) : null,
+      practice_duration: durMin > 0 ? durationLabel(durMin) : null,
+      practice_location: location.trim() || null,
+    } as Partial<SportGroup>);
+  };
+
+  return (
+    <Sheet visible={visible} onClose={onClose} title="Edit group" footer={<Button label="Save changes" fullWidth disabled={!valid} onPress={save} />}>
+      <Text className={lbl}>Group / team name</Text>
+      <TextInput value={name} onChangeText={setName} placeholder="e.g. Morning Smashers" placeholderTextColor={c.faint} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />
+
+      <Text className={lbl}>About</Text>
+      <TextInput value={desc} onChangeText={setDesc} placeholder="Who's it for, skill level, etc." placeholderTextColor={c.faint} multiline className={`mb-3 ${input}`} style={{ minHeight: 60, outline: 'none' } as any} />
+
+      <Text className={lbl}>Practice days</Text>
+      <View className="mb-3"><WeekdayChips value={days} onChange={setDays} /></View>
+
+      <View className="mb-2 flex-row gap-2">
+        <View className="flex-1">
+          <Text className={lbl}>Time</Text>
+          <TextInput value={time} onChangeText={setTime} placeholder="18:00" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
+        </View>
+        <View className="flex-1">
+          <Text className={lbl}>Duration (min)</Text>
+          <TextInput value={duration} onChangeText={setDuration} keyboardType="number-pad" placeholder="90" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
+        </View>
+      </View>
+      {!timeOk ? <Text className="mb-2 text-[11px] text-nonveg">Enter time as HH:MM (e.g. 18:00)</Text> : null}
+
+      <Text className={lbl}>Court / ground</Text>
+      <TextInput value={location} onChangeText={setLocation} placeholder="e.g. Clubhouse court 1" placeholderTextColor={c.faint} className={`mb-1 ${input}`} style={{ outline: 'none' } as any} />
+    </Sheet>
   );
 }
 
