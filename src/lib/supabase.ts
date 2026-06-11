@@ -41,8 +41,8 @@ export function phoneToEmail(phone: string): string {
   return `${phone.replace(/\D/g, '')}@senate.app`;
 }
 
-/** The single society for v1 (seeded in the migration). */
-export const COMMUNITY_ID = '00000000-0000-0000-0000-000000000001';
+/** The default society (fallback when a logged-in user's own community is unknown). */
+export const COMMUNITY_ID = 'd836e935-4622-4289-8136-11ca73b54a39';
 
 /** Storage bucket for dish photos (create it in the Supabase dashboard). */
 export const DISH_PHOTOS_BUCKET = 'dish-photos';
