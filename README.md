@@ -41,6 +41,15 @@ realtime:
   with upvotes), **Borrow & Lend** (a community share board), a **blood-donor &
   emergency-helper registry**, **direct messages** between neighbours, and
   **universal fuzzy search** across everything.
+- **AI (Google Gemini)** — **Ask Aangan**, a conversational assistant that
+  answers questions across your whole society (food, flats, services, neighbours,
+  posts, documents, sports, contacts) using **pgvector RAG over your society's own
+  data**; **snap-to-post** photo autofill for dishes/listings/items (with an
+  irrelevant-photo guard); **auto-translation** of posts, listings and menus into
+  each reader's preferred language (12 Indian languages, one tap to see the
+  original); and a **weekly AI digest** of society activity. Every call runs
+  through one server-side edge function, so the API key never ships in the app —
+  with per-user daily quotas and personal data kept out of the model input.
 - **Identity & roles** — phone + 6-digit PIN accounts (no SMS/OTP), roles
   **chef / member / admin**, public profiles, and a society admin panel.
 
@@ -58,12 +67,16 @@ realtime:
 | Backend / DB | **Supabase** — Postgres + Row-Level Security + Realtime + Storage |
 | Auth | Supabase Auth via a phone→email alias (`<digits>@senate.app`) + PIN-as-password |
 | Notifications | Expo push (native) via a `pg_net` Postgres trigger; WhatsApp deep-links everywhere |
+| AI | **Google Gemini** (free tier) behind a Supabase **Edge Function** (`ai-proxy`) — chat & vision via `gemini-2.5-flash`, embeddings via `gemini-embedding-001` with **pgvector** RAG |
 | Web hosting | **Vercel** · Native builds | **EAS** (bundle id `com.aangan.app`) |
 
 **Security model:** everything is scoped to the signed-in user's `community_id`
 and enforced by RLS, with `SECURITY DEFINER` RPCs for atomic/privileged actions
 (order placement, role edits, account deletion, DM thread creation). The anon key
-is meant to be public — security lives server-side, not in hiding the key.
+is meant to be public — security lives server-side, not in hiding the key. The
+**Gemini API key never ships in the bundle**: all AI runs in the `ai-proxy` edge
+function, which verifies the caller's JWT, meters a per-user daily quota, and
+strips personal data (e.g. phone numbers) before calling the model.
 
 ---
 
@@ -94,12 +107,14 @@ npx tsc --noEmit                  # type-check
 1. **Create a Supabase project** at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. **Run the migrations in order.** Open **SQL Editor** and run every file in
    [`supabase/migrations/`](./supabase/migrations) from `0001_init.sql` through
-   the latest (`0037_neighbourhood_services.sql`). They create all tables (communities,
+   the latest (`0048_search_full_coverage.sql`). They create all tables (communities,
    profiles, dishes, orders, tiffin, listings, inquiries, posts, comments, polls,
    emergency contacts, saved listings, per-listing chat, direct messages,
-   notifications, resident directory, sports groups, document vault), RLS
-   policies, RPCs, full-text indexes, realtime publications, and the push
-   pipeline.
+   notifications, resident directory, sports groups, document vault, properties,
+   recommendations, borrow & lend, court bookings, payments), RLS policies, RPCs,
+   full-text indexes, realtime publications, the push pipeline, and the **AI layer**
+   (`ai_usage` quota, **pgvector** `search_documents` + `match_documents`,
+   `translations`, `society_digests`).
 3. **Disable email confirmation.** Auth → Providers → Email → turn **off**
    "Confirm email" (the phone-as-email aliases can't receive confirmation mail).
 4. **Create the Storage buckets:** `listing-photos`, `dish-photos` and
@@ -122,6 +137,16 @@ npx tsc --noEmit                  # type-check
    EXPO_PUBLIC_SUPABASE_URL=https://YOURPROJECT.supabase.co
    EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJ...
    ```
+7. **Enable AI (optional but recommended).** Get a free key from
+   [aistudio.google.com](https://aistudio.google.com), then deploy the proxy and
+   set the secret (the key lives only here, never in the app bundle):
+   ```bash
+   supabase functions deploy ai-proxy
+   supabase secrets set GEMINI_API_KEY=...
+   ```
+   The migrations in step 2 already create the AI tables. Without this the app
+   works normally — AI buttons just show a friendly "unavailable" message. See
+   [`docs/AI_SETUP.md`](./docs/AI_SETUP.md) for details.
 
 See [`PLATFORM_PLAN.md` §12](./PLATFORM_PLAN.md) for a full end-to-end testing guide.
 
@@ -159,6 +184,7 @@ src/
       post.tsx               # Category picker → create listing/dish
       you.tsx                # My orders, tiffins, listings, saved, kitchen
       c/[category].tsx       # Category listing feed (FlashList)
+    ask.tsx                  # Ask Aangan — conversational AI (RAG over the society)
     listing/[id].tsx         # Listing detail + inquiry + per-listing chat
     directory.tsx            # Resident directory (members + manual entries)
     sports.tsx · sports/[id].tsx   # Sports groups list + group detail
@@ -174,9 +200,11 @@ src/
     feed/[postId].tsx        # Post thread + comments
     admin.tsx · about.tsx · polls.tsx · emergency.tsx
   components/                # DishCard, ListingCard, NavRail, ScreenHeader, ui/ kit, ...
-  context/                   # auth, theme, toast, unread (shared providers)
-  lib/                       # supabase client + service layer (one module per domain)
-supabase/migrations/         # 0001–0030: schema, RLS, RPCs, FTS, realtime, push, directory, sports
+  context/                   # auth, theme, toast, confirm, translations, unread (shared providers)
+  lib/                       # supabase client + service layer (one module per domain; ai.ts, translate.ts, …)
+supabase/
+  migrations/                # 0001–0048: schema, RLS, RPCs, FTS, realtime, push + AI (pgvector, translations, digest)
+  functions/ai-proxy/        # Deno edge function — the only place the Gemini key lives (5 actions)
 public/                      # PWA manifest, icons, service worker
 assets/images/               # app icon, adaptive icon layers, splash
 docs/                        # the original Firebase prototype (reference)

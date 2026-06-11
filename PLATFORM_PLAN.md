@@ -1,7 +1,7 @@
 # Aangan — Community Platform Plan
 > **Living document.** Always kept in sync with the codebase. Update on every significant commit.
 > **App:** Aangan (आँगन — courtyard) · **From:** Senate Rasoi (single-society food app)
-> **Last updated:** 2026-06-08 (migrations 0022–0024 all run; polish: unread-DM badge + recent searches. All web work to date is live)
+> **Last updated:** 2026-06-11 (migrations through 0048; AI layer live — ai-proxy edge function with Vision autofill, Ask Aangan pgvector RAG, multilingual auto-translate, weekly digest; sports court bookings + cost-split; app-wide confirm dialog; moved-in/occupancy + sign-up directory reconcile. To activate AI: run migrations 0039–0048 + `supabase functions deploy ai-proxy` + set GEMINI_API_KEY)
 
 ---
 
@@ -86,6 +86,15 @@
 | Recent searches | ✅ | `lib/recentSearches.ts` (AsyncStorage); chips in Search empty state |
 | Food photo resize | ✅ | Already done — uploadDishPhoto resizes 1000px/JPEG-0.7 |
 | PWA preconnect + shell precache | ✅ | Supabase preconnect/dns-prefetch in +html; sw.js precaches shell on install (cache → aangan-v2) |
+| Sports court bookings + cost-split | ✅ | court_bookings/sessions/players/payments (migration 0043); per-sport facility (Court/Net/Table or none), attendance confirm/decline, equal split, UPI settlement, group editor |
+| AI: ai-proxy edge function | ✅ | One Deno function = the only place the Gemini key lives; JWT-gated, per-user daily quota (40), PII-stripped; 5 actions (autofill, ask, translate, digest) — migration 0039 |
+| AI: Vision autofill ("snap to post") | ✅ | Photo → form fields for dishes/listings/borrow via gemini-2.5-flash; irrelevant-photo guard disables Post |
+| AI: Ask Aangan (RAG) | ✅ | Conversational assistant over the whole society — pgvector `search_documents` + `match_documents`, gemini-embedding-001 (768-dim); covers dishes/tiffins/listings/flats/recos/borrow/posts/documents/sports/contacts + always-on facts (residents from profiles+directory_entries, announcements, polls); retry/backoff (migrations 0040, 0048) |
+| AI: Multilingual auto-translate | ✅ | `translations` cache + `<T>` component/provider; posts/listings/menus into reader's preferred_lang (12 Indian langs), see-original toggle (migration 0041) |
+| AI: Weekly society digest | ✅ | `society_digests` cache; AI recap of the week on Home, weekly-dismissable (migration 0042) |
+| App-wide confirm dialog | ✅ | `context/confirm` themed modal replacing window.confirm / Alert.alert across every confirmation (consistent desktop + mobile) |
+| Moved-in + sign-up reconcile | ✅ | profiles.moved_in (occupancy) at sign-up + profile + admin; sign-up directory merge for a same-flat roster entry under a different number; profiles.alt_phone (migration 0047) |
+| Responsive filter/sort + a11y polish | ✅ | Desktop side panel / mobile modal filters (Directory, Service Directory); cleaner resident rows; horizontal-scroll fixes (flex min-width:0) on Search/Ask/Home; Ask submits on Enter |
 | Sentry / PostHog monitoring | ⬜ | Requires external accounts |
 | iOS / Android (EAS) | ⬜ | After web version is stable |
 | App store submissions | ⬜ | After iOS/Android phase |

@@ -75,7 +75,7 @@ export default function LandingScreen() {
                   </Pressable>
                 </View>
                 <View className="mt-6 flex-row flex-wrap items-center gap-x-5 gap-y-2">
-                  {['Society-verified', 'No SMS/OTP — phone + PIN', 'Works on web & mobile'].map((t) => (
+                  {['Society-verified', 'Built-in AI assistant', 'No SMS/OTP — phone + PIN', 'Works on web & mobile'].map((t) => (
                     <View key={t} className="flex-row items-center gap-1.5">
                       <Ionicons name="checkmark-circle" size={15} color="#16A34A" />
                       <Text className="font-sans-md" style={{ fontSize: 13, color: P.muted }}>{t}</Text>
@@ -101,7 +101,7 @@ export default function LandingScreen() {
                 <Ionicons name="chatbubbles-outline" size={20} color={P.faint} />
                 <Text className="font-sans-bold" style={{ fontSize: 15, color: P.muted }}>Today, with WhatsApp groups</Text>
               </View>
-              {['Dishes & orders lost in the scroll', 'No directory — who lives where?', 'Polls become 40 "+1" messages', "Listings & services nobody can find later", 'Payments chased one-by-one'].map((t) => (
+              {['Dishes & orders lost in the scroll', 'No directory — who lives where?', 'Polls become 40 "+1" messages', "Listings & services nobody can find later", 'Payments chased one-by-one', 'Need an answer? Scroll 500 messages'].map((t) => (
                 <View key={t} className="mb-2 flex-row items-center gap-2">
                   <Ionicons name="close" size={15} color="#EF4444" />
                   <Text className="font-sans-md" style={{ fontSize: 14, color: P.muted }}>{t}</Text>
@@ -114,7 +114,7 @@ export default function LandingScreen() {
                   <BrandMark size={20} id="vs-mark" />
                   <Text className="font-sans-bold" style={{ fontSize: 15, color: P.ink }}>With Aangan</Text>
                 </View>
-                {['A live food board with reserve & pay', 'Owner/tenant directory with one-tap contact', 'Real polls with instant results', 'A searchable marketplace & services', 'A payment ledger both sides confirm'].map((t) => (
+                {['A live food board with reserve & pay', 'Owner/tenant directory with one-tap contact', 'Real polls with instant results', 'A searchable marketplace & services', 'A payment ledger both sides confirm', 'Ask Aangan — answers in your language'].map((t) => (
                   <View key={t} className="mb-2 flex-row items-center gap-2">
                     <Ionicons name="checkmark" size={15} color="#16A34A" />
                     <Text className="font-sans-md" style={{ fontSize: 14, color: P.ink }}>{t}</Text>
@@ -122,6 +122,53 @@ export default function LandingScreen() {
                 ))}
               </View>
             </View>
+          </View>
+        </Section>
+
+        {/* ── AI ── */}
+        <Section>
+          <Kicker>Powered by AI · private by design</Kicker>
+          <Heading isDesktop={isDesktop}>Your society's own assistant</Heading>
+          <Text className="mt-3 w-full max-w-[640px] self-center text-center font-sans-md" style={{ fontSize: 15, lineHeight: 23, color: P.muted }}>
+            Ask in plain words, snap a photo to post, and read everything in your language. The AI works only
+            over your own society's data — and personal phone numbers are never sent.
+          </Text>
+
+          {/* Ask Aangan showcase */}
+          <View className="mt-9 overflow-hidden rounded-3xl p-[1.5px]" style={{ backgroundColor: P.accent }}>
+            <View className={`rounded-[22px] p-6 ${isWide ? 'flex-row items-center gap-10' : ''}`} style={{ backgroundColor: P.surface }}>
+              <View className="flex-1">
+                <View className="mb-3 flex-row items-center gap-2">
+                  <BrandMark size={30} id="ai-mark" />
+                  <Text className="font-display" style={{ fontSize: 21, color: P.ink }}>Ask Aangan</Text>
+                </View>
+                <Text className="font-sans-md" style={{ fontSize: 15, lineHeight: 23, color: P.muted }}>
+                  A friendly chat that answers anything about your society — food, flats to rent, things to
+                  borrow, trusted services, who lives where, announcements and more. Just ask the way you'd ask
+                  a neighbour, follow-up questions and all.
+                </Text>
+                <View className="mt-4 flex-row flex-wrap gap-2">
+                  {['Any veg tiffin for lunch?', '2 BHK for rent?', 'Is there a doctor here?', 'Where can I borrow a drill?'].map((q) => (
+                    <View key={q} className="rounded-full px-3 py-1.5" style={{ borderWidth: 1, borderColor: P.line, backgroundColor: P.bg }}>
+                      <Text className="font-sans-md" style={{ fontSize: 12.5, color: P.muted }}>{q}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+              <View className={isWide ? '' : 'mt-6'}>
+                <AskPreview />
+              </View>
+            </View>
+          </View>
+
+          {/* Supporting AI features */}
+          <View className={`mt-4 ${isWide ? 'flex-row' : ''} gap-4`}>
+            <Feature icon="camera" color="#0F6E56" title="Snap to post"
+              body="Photograph your dish, listing or item — AI fills in the title, category and details, so posting takes seconds. It also flags photos that don't match." />
+            <Feature icon="language" color="#7C3AED" title="Every language"
+              body="Posts, listings and menus auto-translate into each reader's preferred language — 12 Indian languages — with one tap to see the original." />
+            <Feature icon="sparkles" color="#E8650A" title="Weekly digest"
+              body="A warm AI recap of the week in your society — new dishes, listings, polls and announcements — waiting on your home screen." />
           </View>
         </Section>
 
@@ -283,9 +330,37 @@ function LogoLockup({ emblem = 94 }: { emblem?: number }) {
   );
 }
 
+// ── Ask Aangan mini-chat preview (for the AI section) ───────────────
+function AskPreview() {
+  return (
+    <View className="w-full max-w-[340px] rounded-[24px] p-3.5" style={{ borderWidth: 1, borderColor: P.line, backgroundColor: P.bg, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 24, shadowOffset: { width: 0, height: 12 } }}>
+      <View className="max-w-[80%] self-end rounded-2xl rounded-br-md px-3.5 py-2.5" style={{ backgroundColor: P.accent }}>
+        <Text className="font-sans-md" style={{ fontSize: 13, color: '#fff' }}>Any veg tiffin for lunch?</Text>
+      </View>
+      <View className="mt-2.5 flex-row items-end gap-2">
+        <BrandMark size={22} id="ask-preview-mark" />
+        <View className="flex-1 rounded-2xl rounded-bl-md px-3.5 py-2.5" style={{ borderWidth: 1, borderColor: P.line, backgroundColor: P.surface }}>
+          <Text className="font-sans-md" style={{ fontSize: 13, lineHeight: 19, color: P.ink }}>Yes! Found 2 veg lunch tiffins in your society 🍱</Text>
+        </View>
+      </View>
+      <View className="ml-8 mt-2 flex-row items-center gap-2.5 rounded-2xl p-2.5" style={{ borderWidth: 1, borderColor: P.line, backgroundColor: P.surface }}>
+        <View className="h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: '#F59E0B20' }}>
+          <Ionicons name="repeat" size={16} color="#F59E0B" />
+        </View>
+        <View className="flex-1">
+          <Text className="font-sans-bold" style={{ fontSize: 12.5, color: P.ink }} numberOfLines={1}>Annapurna veg tiffin</Text>
+          <Text className="font-sans-md" style={{ fontSize: 11, color: P.muted }} numberOfLines={1}>Tiffin · ₹70/day</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={14} color={P.faint} />
+      </View>
+    </View>
+  );
+}
+
 // ── Hero visual: a stacked "app preview" card ───────────────────────
 function HeroCard() {
   const rows = [
+    { icon: 'sparkles', color: '#0F6E56', title: '“Any veg tiffin today?”', sub: 'Ask Aangan · 2 matches found' },
     { icon: 'restaurant', color: '#E8650A', title: 'Aalu parwal sabji', sub: 'Pratibha · 3 plates left · ₹80' },
     { icon: 'pricetags', color: '#14B8A6', title: 'Maths tuition (Class 9–10)', sub: 'Flat C-204 · ₹4,000/mo' },
     { icon: 'stats-chart', color: '#6366F1', title: 'New gym equipment?', sub: 'Poll · 28 votes' },
