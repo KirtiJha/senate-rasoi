@@ -101,18 +101,19 @@ export default function DirectoryScreen() {
     });
   }, [residents, query, filter, block, floor, reg, shf]);
 
-  // Sort=name → a single flat list; sort=flat → grouped by flat (already flat-sorted).
-  const groups = useMemo(() => {
+  // Sort=name → a single flat list; sort=flat → grouped by block+flat.
+  type Group = { key: string; block: string | null; flat: string | null; byName: boolean; rows: Resident[] };
+  const groups = useMemo<Group[]>(() => {
     if (sort === 'name') {
       const rows = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
-      return rows.length ? [{ flat: '__byname', rows }] : [];
+      return rows.length ? [{ key: '__byname', block: null, flat: null, byName: true, rows }] : [];
     }
-    const out: { flat: string | null; rows: Resident[] }[] = [];
+    const out: Group[] = [];
     for (const r of filtered) {
-      const key = flatDisplay(r.block, r.flat) || null;
+      const key = `${r.block ?? ''}|${r.flat ?? ''}`;
       const last = out[out.length - 1];
-      if (last && last.flat === key) last.rows.push(r);
-      else out.push({ flat: key, rows: [r] });
+      if (last && last.key === key) last.rows.push(r);
+      else out.push({ key, block: r.block, flat: r.flat, byName: false, rows: [r] });
     }
     return out;
   }, [filtered, sort]);
@@ -252,8 +253,8 @@ export default function DirectoryScreen() {
             </View>
           ) : (
             groups.map((g) => (
-              <View key={g.flat ?? '__none'} className="mb-5">
-                {g.flat === '__byname' ? (
+              <View key={g.key} className="mb-5">
+                {g.byName ? (
                   <View className="mb-2 flex-row items-center gap-2">
                     <Ionicons name="text-outline" size={14} color={c.muted} />
                     <Text className="font-sans-bold text-[13px] uppercase tracking-wider text-muted">All residents · A–Z</Text>
@@ -265,6 +266,11 @@ export default function DirectoryScreen() {
                     <Text className="font-sans-bold text-[13px] uppercase tracking-wider text-muted">
                       {g.flat ? `Flat ${g.flat}` : 'No flat listed'}
                     </Text>
+                    {g.block ? (
+                      <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#8B5CF620' }}>
+                        <Text className="text-[10px] font-sans-sb uppercase" style={{ color: '#8B5CF6' }}>Block {g.block}</Text>
+                      </View>
+                    ) : null}
                     {g.rows.length > 1 ? <Text className="text-[12px] text-faint">· {g.rows.length} residents</Text> : null}
                   </View>
                 )}
@@ -357,7 +363,8 @@ function ResidentDetailSheet({
         <View>
           {/* Identity badges */}
           <View className="mb-4 flex-row flex-wrap items-center gap-2">
-            {(r.block || r.flat) ? <Badge label={`🏠 ${flatDisplay(r.block, r.flat)}`} c={c} /> : null}
+            {r.flat ? <Badge label={`🏠 Flat ${r.flat}`} c={c} /> : null}
+            {r.block ? <Badge label={`Block ${r.block}`} color="#8B5CF6" c={c} /> : null}
             {r.resident_type ? <Badge label={r.resident_type === 'owner' ? 'Owner' : 'Tenant'} color={typeColor} c={c} /> : null}
             <Badge label={r.registration_status === 'done' ? '✓ Registered' : 'Not registered'} color={r.registration_status === 'done' ? '#16A34A' : '#CA8A04'} c={c} />
             <Badge label={r.shifted ? 'Shifted out' : 'Resident'} color={r.shifted ? '#9CA3AF' : '#16A34A'} c={c} />
@@ -414,7 +421,11 @@ function ResidentRow({
   onOpen: () => void; onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onRemove: () => void;
 }) {
   const typeColor = r.resident_type === 'owner' ? '#0D9488' : '#7C3AED';
-  const sub = [showFlat && (r.block || r.flat) ? `🏠 ${flatDisplay(r.block, r.flat)}` : null, r.profession, r.native ? `📍 ${r.native}` : null, r.vehicle_no ? `🚗 ${r.vehicle_no}` : null].filter(Boolean).join('  ·  ');
+  const sub = [
+    showFlat && r.flat ? `🏠 Flat ${r.flat}` : null,
+    showFlat && r.block ? `Block ${r.block}` : null,
+    r.profession, r.native ? `📍 ${r.native}` : null, r.vehicle_no ? `🚗 ${r.vehicle_no}` : null,
+  ].filter(Boolean).join('  ·  ');
 
   return (
     <Pressable
