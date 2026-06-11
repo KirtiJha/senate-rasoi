@@ -7,11 +7,12 @@ import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import {
-  SessionView, cancelSession, createBooking, deleteBooking, fetchGroupSessions, respondToSession,
-  subscribeGroupSessions,
+  SessionView, bookerSetAttendance, cancelSession, createBooking, deleteBooking, fetchGroupSessions,
+  respondToSession, subscribeGroupSessions, updateBooking,
 } from '../lib/courts';
 import { haptics } from '../lib/haptics';
-import { durationLabel, formatTime, isValidTime } from '../lib/schedule';
+import { durationLabel, formatTime, isValidTime, rsvpLocked } from '../lib/schedule';
+import { GroupMember, fetchGroupMembers } from '../lib/sports';
 import { useThemeColors } from '../theme';
 import { WeekdayChips } from './WeekdayChips';
 import { Button, Sheet } from './ui';
@@ -40,8 +41,11 @@ export function CourtBookings({
   const confirm = useConfirm();
 
   const [sessions, setSessions] = useState<SessionView[]>([]);
+  const [members, setMembers] = useState<GroupMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [manageSession, setManageSession] = useState<SessionView | null>(null);
+  const [editSession, setEditSession] = useState<SessionView | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -51,9 +55,14 @@ export function CourtBookings({
   }, [groupId, userId]);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { fetchGroupMembers(groupId).then(setMembers).catch(() => {}); }, [groupId]);
 
   // Live updates: counts & statuses refresh when anyone in the group responds.
   useEffect(() => subscribeGroupSessions(groupId, load), [groupId, load]);
+
+  // Keep the open manage/edit sheet in sync with reloaded session data.
+  const liveManage = manageSession ? sessions.find((s) => s.id === manageSession.id) ?? manageSession : null;
+  const liveEdit = editSession ? sessions.find((s) => s.id === editSession.id) ?? editSession : null;
 
   const respond = async (s: SessionView, status: 'confirmed' | 'declined') => {
     if (!userId || busy) return;
@@ -114,14 +123,14 @@ export function CourtBookings({
         <View className="gap-2.5">
           {upcoming.map((s) => (
             <SessionCard key={s.id} s={s} userId={userId} accent={accent} c={c} busy={busy === s.id}
-              onRespond={respond} onCancel={onCancelSession} />
+              onRespond={respond} onCancel={onCancelSession} onManage={setManageSession} onEdit={setEditSession} />
           ))}
           {recent.length ? (
             <>
               <Text className="mt-1 text-[10px] font-sans-sb uppercase tracking-wider text-faint">Recent</Text>
               {recent.map((s) => (
                 <SessionCard key={s.id} s={s} userId={userId} accent={accent} c={c} busy={busy === s.id}
-                  onRespond={respond} onCancel={onCancelSession} />
+                  onRespond={respond} onCancel={onCancelSession} onManage={setManageSession} onEdit={setEditSession} />
               ))}
             </>
           ) : null}
@@ -144,18 +153,44 @@ export function CourtBookings({
           } catch { toast.show('Could not create booking'); }
         }}
       />
+
+      <ManagePlayersSheet
+        session={liveManage} members={members} accent={accent} c={c}
+        onClose={() => setManageSession(null)}
+        onSet={async (uid, status) => {
+          if (!liveManage) return;
+          try { await bookerSetAttendance(liveManage.id, uid, status); await load(); }
+          catch { toast.show('Could not update'); }
+        }}
+      />
+
+      <EditBookingSheet
+        session={liveEdit} accent={accent} facility={facility} c={c}
+        onClose={() => setEditSession(null)}
+        onSave={async (f) => {
+          if (!liveEdit) return;
+          try {
+            await updateBooking(liveEdit.booking_id, f);
+            setEditSession(null);
+            toast.show(f.reset ? 'Booking updated — group asked to re-confirm' : 'Booking updated');
+            await load();
+          } catch { toast.show('Could not update booking'); }
+        }}
+      />
     </View>
   );
 }
 
 function SessionCard({
-  s, userId, accent, c, busy, onRespond, onCancel,
+  s, userId, accent, c, busy, onRespond, onCancel, onManage, onEdit,
 }: {
   s: SessionView; userId: string | null; accent: string; c: ReturnType<typeof useThemeColors>;
   busy: boolean; onRespond: (s: SessionView, status: 'confirmed' | 'declined') => void; onCancel: (s: SessionView) => void;
+  onManage: (s: SessionView) => void; onEdit: (s: SessionView) => void;
 }) {
   const isBooker = s.booker_user_id === userId;
   const time = s.start_time ? formatTime(s.start_time) : '';
+  const locked = rsvpLocked(s.session_date, s.start_time ?? '');
   return (
     <View className="rounded-xl border border-line bg-inset p-3">
       <View className="flex-row items-start justify-between">
@@ -166,7 +201,10 @@ function SessionCard({
           </Text>
         </View>
         {isBooker ? (
-          <Pressable onPress={() => onCancel(s)} hitSlop={6}><Ionicons name="trash-outline" size={15} color={c.faint} /></Pressable>
+          <View className="flex-row items-center gap-3">
+            {!s.ended ? <Pressable onPress={() => onEdit(s)} hitSlop={6}><Ionicons name="create-outline" size={16} color={c.faint} /></Pressable> : null}
+            <Pressable onPress={() => onCancel(s)} hitSlop={6}><Ionicons name="trash-outline" size={15} color={c.faint} /></Pressable>
+          </View>
         ) : null}
       </View>
 
@@ -186,11 +224,24 @@ function SessionCard({
         </Text>
       ) : null}
 
-      {/* my response */}
-      {s.ended ? (
-        <Text className="mt-2 text-[11px] font-sans-sb text-faint">Session ended{s.myStatus === 'confirmed' && !isBooker ? ' · settle in Dues' : ''}</Text>
-      ) : isBooker ? (
-        <Text className="mt-2 text-[11px] font-sans-sb" style={{ color: accent }}>You booked · you're in</Text>
+      {/* booker controls / my response */}
+      {isBooker ? (
+        <View className="mt-2.5 flex-row items-center justify-between">
+          <Text className="text-[11px] font-sans-sb" style={{ color: accent }}>You booked · you're in</Text>
+          <Pressable onPress={() => onManage(s)} className="flex-row items-center gap-1 rounded-full bg-surface px-2.5 py-1" style={{ borderWidth: 1, borderColor: c.line }}>
+            <Ionicons name="people-outline" size={13} color={c.muted} />
+            <Text className="text-[11.5px] font-sans-sb text-muted">Manage players</Text>
+          </Pressable>
+        </View>
+      ) : s.ended ? (
+        <Text className="mt-2 text-[11px] font-sans-sb text-faint">Session ended{s.myStatus === 'confirmed' ? ' · settle in Dues' : ''}</Text>
+      ) : locked ? (
+        <View className="mt-2.5 rounded-xl px-3 py-2" style={{ backgroundColor: c.surface, borderWidth: 1, borderColor: c.line }}>
+          <Text className="text-[11.5px] font-sans-sb" style={{ color: s.myStatus === 'confirmed' ? accent : c.muted }}>
+            {s.myStatus === 'confirmed' ? "You're in ✓" : s.myStatus === 'declined' ? "You marked: can't come" : 'No response recorded'}
+          </Text>
+          <Text className="mt-0.5 text-[11px] text-faint">RSVP closed (15 min after start). Ask the booker to change your attendance.</Text>
+        </View>
       ) : (
         <View className="mt-2.5">
           <Text className="mb-1.5 text-[11px] font-sans-sb text-muted">
@@ -413,5 +464,115 @@ function NumberChips({ options, value, onChange, suffix, accent, c }: { options:
         </Pressable>
       ))}
     </View>
+  );
+}
+
+// ── Booker: mark who actually played (overrides the member RSVP lock) ─
+function ManagePlayersSheet({ session, members, accent, c, onClose, onSet }: {
+  session: SessionView | null; members: GroupMember[]; accent: string; c: Cols;
+  onClose: () => void; onSet: (userId: string, status: 'confirmed' | 'declined') => void;
+}) {
+  const statusOf = (uid: string) => session?.players.find((p) => p.user_id === uid)?.status ?? null;
+  return (
+    <Sheet visible={!!session} onClose={onClose} title="Who played?">
+      <Text className="mb-3 text-[12.5px] leading-[18px] text-muted">
+        Mark each member in or out — the cost splits among everyone marked “in”, so no one who played is left off and your share stays fair.
+      </Text>
+      <View className="gap-1.5">
+        {members.map((m) => {
+          const st = statusOf(m.user_id);
+          const isBooker = session?.booker_user_id === m.user_id;
+          return (
+            <View key={m.user_id} className="flex-row items-center gap-2 rounded-xl border border-line bg-inset px-3 py-2">
+              <View className="flex-1">
+                <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{m.profile?.name ?? 'Member'}{isBooker ? ' · booker' : ''}</Text>
+                {m.profile?.flat ? <Text className="text-[11px] text-faint">Flat {m.profile.flat}</Text> : null}
+              </View>
+              {isBooker ? (
+                <Text className="text-[11.5px] font-sans-sb" style={{ color: accent }}>In</Text>
+              ) : (
+                <View className="flex-row gap-1.5">
+                  <Pressable onPress={() => onSet(m.user_id, 'confirmed')} className="rounded-lg px-2.5 py-1.5" style={chipStyle(st === 'confirmed', accent, c)}>
+                    <Text className="text-[11.5px] font-sans-sb" style={{ color: st === 'confirmed' ? '#fff' : c.muted }}>In</Text>
+                  </Pressable>
+                  <Pressable onPress={() => onSet(m.user_id, 'declined')} className="rounded-lg px-2.5 py-1.5" style={chipStyle(st === 'declined', '#6B7280', c)}>
+                    <Text className="text-[11.5px] font-sans-sb" style={{ color: st === 'declined' ? '#fff' : c.muted }}>Out</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
+          );
+        })}
+        {members.length === 0 ? <Text className="text-[12px] text-faint">No members yet.</Text> : null}
+      </View>
+    </Sheet>
+  );
+}
+
+// ── Booker: edit the booking (flows to upcoming sessions; optional re-confirm) ─
+function EditBookingSheet({ session, accent, facility, c, onClose, onSave }: {
+  session: SessionView | null; accent: string; facility: string; c: Cols;
+  onClose: () => void;
+  onSave: (f: { title: string | null; location: string | null; startTime: string | null; durationMin: number; charge: number; reset: boolean }) => void;
+}) {
+  const [title, setTitle] = useState('');
+  const [location, setLocation] = useState('');
+  const [time, setTime] = useState('18:00');
+  const [duration, setDuration] = useState('60');
+  const [charge, setCharge] = useState('');
+  const [reset, setReset] = useState(true);
+
+  useEffect(() => {
+    if (!session) return;
+    setTitle(session.title ?? '');
+    setLocation(session.location ?? '');
+    setTime(session.start_time && isValidTime(session.start_time) ? session.start_time : '18:00');
+    setDuration(String(session.duration_min || 60));
+    setCharge(session.charge ? String(session.charge) : '');
+    setReset(true);
+  }, [session]);
+
+  const input = 'rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink';
+  const lbl = 'mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted';
+  const durMin = parseInt(duration, 10) || 0;
+  const valid = isValidTime(time) && durMin > 0;
+
+  const save = () => {
+    if (!valid) return;
+    onSave({ title: title.trim() || null, location: location.trim() || null, startTime: time.trim(), durationMin: durMin, charge: parseFloat(charge) || 0, reset });
+  };
+
+  return (
+    <Sheet visible={!!session} onClose={onClose} title="Edit booking" footer={<Button label="Save changes" fullWidth disabled={!valid} onPress={save} />}>
+      <Text className="mb-3 text-[12px] leading-[18px] text-faint">Applies to this and any upcoming sessions of this booking. Past sessions are unaffected.</Text>
+
+      <Text className={lbl}>Title (optional)</Text>
+      <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Evening doubles" placeholderTextColor={c.faint} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />
+
+      <Text className={lbl}>Start time</Text>
+      <View className="mb-3"><TimePicker value={time} onChange={setTime} accent={accent} c={c} /></View>
+
+      <Text className={lbl}>Duration</Text>
+      <View className="mb-3"><DurationChips value={durMin} onChange={(m) => setDuration(String(m))} accent={accent} c={c} /></View>
+
+      <View className="mb-3 flex-row gap-2">
+        <View className="flex-1">
+          <Text className={lbl}>{facility} charge / session</Text>
+          <TextInput value={charge} onChangeText={setCharge} keyboardType="decimal-pad" placeholder="₹ 400" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
+        </View>
+        <View className="flex-1">
+          <Text className={lbl}>{facility} / venue</Text>
+          <TextInput value={location} onChangeText={setLocation} placeholder={`${facility} 1`} placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
+        </View>
+      </View>
+
+      <Pressable onPress={() => setReset((v) => !v)} className="mb-1 flex-row items-center gap-2.5 rounded-2xl border border-line bg-inset px-3.5 py-3">
+        <Ionicons name={reset ? 'checkbox' : 'square-outline'} size={20} color={reset ? accent : c.faint} />
+        <View className="flex-1">
+          <Text className="font-sans-sb text-[13px] text-ink">Ask everyone to re-confirm</Text>
+          <Text className="text-[11px] text-muted">Clears current responses for upcoming sessions and notifies the group.</Text>
+        </View>
+      </Pressable>
+    </Sheet>
   );
 }

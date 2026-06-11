@@ -1,4 +1,4 @@
-import { sessionEnded, sessionStarted, upcomingDates } from './schedule';
+import { sessionEnded, upcomingDates } from './schedule';
 import { supabase } from './supabase';
 
 /**
@@ -51,6 +51,7 @@ export interface SessionView extends CourtSession {
   title: string | null;
   location: string | null;
   confirmed: SessionPlayer[];
+  players: SessionPlayer[]; // everyone who responded (confirmed + declined)
   confirmedCount: number;
   myStatus: 'confirmed' | 'declined' | null;
   ended: boolean;
@@ -179,6 +180,7 @@ export async function fetchGroupSessions(groupId: string, userId: string | null)
       title: s.booking?.title ?? null,
       location: s.booking?.location ?? null,
       confirmed,
+      players: all,
       confirmedCount: confirmed.length,
       myStatus: myBySession.get(s.id) ?? null,
       ended,
@@ -208,6 +210,39 @@ export function subscribeGroupSessions(groupId: string, onChange: () => void): (
     .on('postgres_changes', { event: '*', schema: 'public', table: 'court_bookings', filter: `group_id=eq.${groupId}` }, () => onChange())
     .subscribe();
   return () => { supabase.removeChannel(ch); };
+}
+
+/** Booker (or admin) marks any player in/out for a session — overrides the member lock. */
+export async function bookerSetAttendance(sessionId: string, userId: string, status: 'confirmed' | 'declined'): Promise<boolean> {
+  const { data, error } = await supabase.rpc('court_set_attendance', { p_session: sessionId, p_user: userId, p_status: status });
+  if (error) throw error;
+  return Boolean(data);
+}
+
+/** Booker (or admin) edits a booking; flows to upcoming sessions, optionally resets RSVPs + notifies. */
+export async function updateBooking(
+  bookingId: string,
+  f: { title: string | null; location: string | null; startTime: string | null; durationMin: number; charge: number; reset: boolean },
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc('court_update_booking', {
+    p_booking: bookingId, p_title: f.title, p_location: f.location,
+    p_start_time: f.startTime, p_duration_min: f.durationMin, p_charge: f.charge, p_reset: f.reset,
+  });
+  if (error) throw error;
+  return Boolean(data);
+}
+
+/** Booker records a player's share as received (manual / cash), even if never initiated. */
+export async function bookerSettle(sessionId: string, payerId: string, amount: number): Promise<boolean> {
+  const { data, error } = await supabase.rpc('court_booker_settle', { p_session: sessionId, p_payer: payerId, p_amount: amount });
+  if (error) throw error;
+  return Boolean(data);
+}
+
+/** Revert a settlement (booker un-marks received, or payer un-marks paid) → owed again. */
+export async function revertPayment(paymentId: string): Promise<void> {
+  const { error } = await supabase.from('court_payments').update({ status: 'cancelled' }).eq('id', paymentId);
+  if (error) throw error;
 }
 
 /** Live updates for the dues screen — payments and RSVPs that change what's owed/collected. */
@@ -248,9 +283,10 @@ export async function fetchMyDues(userId: string): Promise<DueItem[]> {
     .select('id, group_id, session_date, start_time, duration_min, charge, status, booking:court_bookings!court_sessions_booking_id_fkey(booker_user_id, upi_id, title, booker:profiles!court_bookings_booker_user_id_fkey(name, upi))')
     .in('id', sessionIds).eq('status', 'scheduled');
 
-  // Dues go live once the game has STARTED (not only after it ends), for paid sessions.
+  // Dues are attendance-driven: as soon as you're confirmed for a paid session you
+  // owe your share (charge ÷ confirmed). No time gate — it updates as people change.
   const billable = (sessions ?? []).filter((s: any) =>
-    s.booking?.booker_user_id !== userId && num(s.charge) > 0 && sessionStarted(s.session_date, s.start_time));
+    s.booking?.booker_user_id !== userId && num(s.charge) > 0);
   if (!billable.length) return [];
 
   const endedIds = billable.map((s: any) => s.id);
@@ -266,7 +302,8 @@ export async function fetchMyDues(userId: string): Promise<DueItem[]> {
 
   return billable.map((s: any) => {
     const n = counts.get(s.id) ?? 1;
-    const pay = payBySession.get(s.id);
+    const raw = payBySession.get(s.id);
+    const pay = raw && raw.status !== 'cancelled' ? raw : null; // a reverted payment = owe again
     return {
       session_id: s.id, group_id: s.group_id, session_date: s.session_date,
       title: s.booking?.title ?? null,
@@ -326,7 +363,7 @@ export async function fetchBookerCollections(userId: string): Promise<Collection
     .from('court_sessions')
     .select('id, session_date, start_time, duration_min, charge, status, booking:court_bookings!court_sessions_booking_id_fkey(title)')
     .in('booking_id', bookingIds).eq('status', 'scheduled');
-  const billable = (sessions ?? []).filter((s: any) => num(s.charge) > 0 && sessionStarted(s.session_date, s.start_time));
+  const billable = (sessions ?? []).filter((s: any) => num(s.charge) > 0);
   if (!billable.length) return [];
 
   const ids = billable.map((s: any) => s.id);
@@ -347,7 +384,8 @@ export async function fetchBookerCollections(userId: string): Promise<Collection
     if (p.user_id === userId) continue; // skip the booker's own share
     const s = sessById.get(p.session_id);
     const n = counts.get(p.session_id) ?? 1;
-    const pay = payByKey.get(`${p.session_id}:${p.user_id}`);
+    const raw = payByKey.get(`${p.session_id}:${p.user_id}`);
+    const pay = raw && raw.status !== 'cancelled' ? raw : null; // a reverted payment = owed again
     out.push({
       session_id: p.session_id, session_date: s.session_date, title: s.booking?.title ?? null,
       user_id: p.user_id, name: p.profile?.name ?? null, flat: p.profile?.flat ?? null,

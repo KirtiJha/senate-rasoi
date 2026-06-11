@@ -112,3 +112,12 @@ export function sessionStarted(dateISO: string, hhmm: string): boolean {
   if (t) start.setHours(parseInt(t[1], 10), parseInt(t[2], 10), 0, 0);
   return Date.now() >= start.getTime();
 }
+
+/** Members can't change their own RSVP this many minutes after start (the booker can). */
+export const RSVP_LOCK_MIN = 15;
+export function rsvpLocked(dateISO: string, hhmm: string): boolean {
+  const t = /^(\d{1,2}):(\d{2})$/.exec((hhmm || '00:00').trim());
+  const start = new Date(dateISO + 'T00:00:00');
+  if (t) start.setHours(parseInt(t[1], 10), parseInt(t[2], 10), 0, 0);
+  return Date.now() >= start.getTime() + RSVP_LOCK_MIN * 60000;
+}

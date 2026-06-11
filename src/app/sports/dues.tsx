@@ -7,8 +7,8 @@ import { Container, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import {
-  CollectionPlayer, DueItem, cancelMyPayment, fetchBookerCollections, fetchMyDues,
-  markPaymentReceived, payDues, subscribeCourtPayments,
+  CollectionPlayer, DueItem, bookerSettle, cancelMyPayment, fetchBookerCollections, fetchMyDues,
+  markPaymentReceived, payDues, revertPayment, subscribeCourtPayments,
 } from '../../lib/courts';
 import { upiUri } from '../../lib/payments';
 import { useThemeColors } from '../../theme';
@@ -57,21 +57,23 @@ export default function DuesScreen() {
 
   const toggle = (id: string) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
-  const pay = async (items: DueItem[]) => {
+  const pay = async (items: DueItem[], useUpi: boolean) => {
     if (!userId || !communityId) return;
     const chosen = items.filter((it) => it.status === 'due' && selected.has(it.session_id));
     if (!chosen.length) return toast.show('Select at least one session to pay');
     const total = chosen.reduce((s, it) => s + it.amount, 0);
     const booker = chosen[0];
-    if (booker.booker_upi) {
-      const note = `Badminton · ${chosen.length} session${chosen.length > 1 ? 's' : ''}`;
-      Linking.openURL(upiUri(booker.booker_upi, booker.booker_name ?? 'Booker', total, note)).catch(() => {});
-    } else {
-      toast.show('Booker has no UPI set — pay them directly');
+    if (useUpi) {
+      if (booker.booker_upi) {
+        const note = `Badminton · ${chosen.length} session${chosen.length > 1 ? 's' : ''}`;
+        Linking.openURL(upiUri(booker.booker_upi, booker.booker_name ?? 'Booker', total, note)).catch(() => {});
+      } else {
+        toast.show('Booker has no UPI set — pay them directly, then mark paid');
+      }
     }
     try {
       await payDues(chosen.map((it) => ({ sessionId: it.session_id, groupId: it.group_id, amount: it.amount })), userId, booker.booker_user_id, communityId, booker.booker_upi);
-      toast.show(`Marked ₹${total.toFixed(0)} as paid — awaiting confirmation`);
+      toast.show(`Marked ₹${total.toFixed(0)} as paid — awaiting the booker's confirmation`);
       await load();
     } catch { toast.show('Could not record payment'); }
   };
@@ -81,6 +83,12 @@ export default function DuesScreen() {
     try { const ok = await markPaymentReceived(id); if (ok) { toast.show('Marked received ✓'); await load(); } }
     catch { toast.show('Could not confirm'); }
   };
+  // Booker-side manual settlement (e.g. paid in cash) + revert.
+  const bookerMark = async (p: CollectionPlayer) => {
+    try { await bookerSettle(p.session_id, p.user_id, p.amount); toast.show('Marked as received ✓'); await load(); }
+    catch { toast.show('Could not update'); }
+  };
+  const revert = async (id: string) => { try { await revertPayment(id); toast.show('Reverted — owed again'); await load(); } catch { toast.show('Could not revert'); } };
 
   // ── Owed to me: grouped by member ──
   const byMember = new Map<string, CollectionPlayer[]>();
@@ -135,10 +143,16 @@ export default function DuesScreen() {
                       })}
                     </View>
                     {selectedTotal > 0 ? (
-                      <Pressable onPress={() => pay(items)} className="mt-3 flex-row items-center justify-center gap-2 rounded-xl py-3" style={{ backgroundColor: ACCENT }}>
-                        <Ionicons name="cash-outline" size={16} color="#fff" />
-                        <Text className="font-sans-sb text-[14px] text-white">Pay ₹{selectedTotal.toFixed(0)} via UPI</Text>
-                      </Pressable>
+                      <View className="mt-3 gap-2">
+                        <Pressable onPress={() => pay(items, true)} className="flex-row items-center justify-center gap-2 rounded-xl py-3" style={{ backgroundColor: ACCENT }}>
+                          <Ionicons name="phone-portrait-outline" size={16} color="#fff" />
+                          <Text className="font-sans-sb text-[14px] text-white">Pay ₹{selectedTotal.toFixed(0)} via UPI</Text>
+                        </Pressable>
+                        <Pressable onPress={() => pay(items, false)} className="flex-row items-center justify-center gap-2 rounded-xl border border-line py-2.5">
+                          <Ionicons name="cash-outline" size={15} color={c.muted} />
+                          <Text className="font-sans-sb text-[13px] text-muted">Paid another way — just mark it paid</Text>
+                        </Pressable>
+                      </View>
                     ) : null}
                   </View>
                 );
@@ -171,6 +185,12 @@ export default function DuesScreen() {
                               <Pressable onPress={() => confirmReceived(p.payment_id!)} className="ml-1 rounded-full px-2.5 py-1" style={{ backgroundColor: ACCENT }}>
                                 <Text className="text-[11px] font-sans-sb text-white">Received</Text>
                               </Pressable>
+                            ) : p.status === 'due' ? (
+                              <Pressable onPress={() => bookerMark(p)} className="ml-1 rounded-full border px-2.5 py-1" style={{ borderColor: ACCENT }}>
+                                <Text className="text-[11px] font-sans-sb" style={{ color: ACCENT }}>Mark paid</Text>
+                              </Pressable>
+                            ) : p.status === 'paid' && p.payment_id ? (
+                              <Pressable onPress={() => revert(p.payment_id!)} hitSlop={6} className="ml-1"><Text className="text-[11px] text-faint underline">undo</Text></Pressable>
                             ) : null}
                           </View>
                         );

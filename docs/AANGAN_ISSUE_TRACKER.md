@@ -4,7 +4,7 @@
 > Status legend: 🔴 Open · 🟡 In Progress · 🟢 Implemented · ⚪️ Won't Do / Deferred
 > Type legend: 🐞 Bug · ✨ Enhancement · 💡 Idea/Feature
 
-_Last updated: 12 Jun 2026, 1:00 AM IST_
+_Last updated: 12 Jun 2026, 2:00 AM IST_
 
 ---
 
@@ -12,7 +12,7 @@ _Last updated: 12 Jun 2026, 1:00 AM IST_
 
 | Open | In Progress | Implemented | Deferred | Total |
 |---|---|---|---|---|
-| 1 | 0 | 7 | 0 | 8 |
+| 1 | 0 | 9 | 0 | 10 |
 
 ---
 
@@ -92,6 +92,27 @@ _Last updated: 12 Jun 2026, 1:00 AM IST_
 
 ---
 
+### #9 — No back option on desktop for pushed pages ✨
+- **Status:** 🟢 Implemented
+- **Area:** Navigation (desktop)
+- **Fix:** The `ScreenHeader` back chevron was mobile-only (desktop relied on the NavRail), leaving pushed pages like Booking dues with no way back on computer. It now shows on desktop too, with the same `canGoBack()` → `backHref` fallback.
+
+---
+
+### #10 — Court bookings: attendance-driven dues, booker controls, manual settlement, edit booking ✨
+- **Status:** 🟢 Implemented · **▶️ run migration `0051`**
+- **Area:** Sports / Court bookings & dues
+- **Ask:** dues by who's actually in (not by time); booker can edit a booking (re-notify + re-confirm); booker can mark anyone in/out so they never lose their share; RSVP locks shortly after start; manual "paid / received" when UPI isn't used; notifications + status stay in sync.
+- **Implemented:**
+  1. **Attendance-driven dues** — the split is now `charge ÷ confirmed players`, shown the moment someone confirms (no time gate) and recalculated live as people change. _(migration in `0051`; client gate removed.)_
+  2. **RSVP lock** — members can't change their own in/out **15 min after start** (`rsvpLocked`); the card shows their locked status and points them to the booker.
+  3. **Booker "Manage players"** — `court_set_attendance()` RPC lets the booker (or admin) mark **any** member in/out **anytime** (even after the game), so attendance — and the split — reflect who really played.
+  4. **Edit booking** — `court_update_booking()` RPC: the booker edits title/time/duration/charge; changes flow to **upcoming sessions**, and an "Ask everyone to re-confirm" toggle resets RSVPs + **notifies the group**.
+  5. **Manual settlement** — payer can "mark paid" without UPI; booker can **"Mark paid"** a due directly (`court_booker_settle()`, e.g. cash) or **undo** a settlement (reverts to owed). Two-step (payer→initiated, booker→received) still works.
+  6. **Sync** — booking-update notifications via the RPC; dues + group views already refresh in realtime (#2/#4).
+
+---
+
 ## End-to-end review notes (Home Food + Badminton)
 
 **Verified working in code:** dish posting (now resilient to photo failures); order placement → **chef push on new order** + **buyer push on status change** (0005, title fixed in #3); Kitchen & Orders screens have **realtime**; badminton group create / booking → **member push** (0043) → RSVP (fixed in #2) → session-end **client-side cost split** → **UPI dues** (pay → initiated → booker confirms → paid) with the dues screen now **live** (#4).
@@ -101,6 +122,7 @@ _Last updated: 12 Jun 2026, 1:00 AM IST_
 ---
 
 ## Changelog
+- **12 Jun 2026 (night)** — #9 desktop back control; #10 court overhaul — attendance-driven dues, RSVP lock, booker manage-players + edit-booking, manual settlement (migration 0051).
 - **12 Jun 2026 (later)** — #1 root cause confirmed (no Storage RLS policies → 403); fixed via migration 0050 (photo bucket policies + public). Now 🟢.
 - **12 Jun 2026** — Logged + fixed #6 (back-on-refresh fallback), #7 (dues blank — now live at game start, not only after end), #8 (booking form tap selectors for time/duration/date/weeks).
 - **11 Jun 2026 (later)** — Reviewed Home Food + Badminton end-to-end. #2 fixed (realtime + toast + optimistic RSVP + clearer control); #1 hardened (photo non-fatal + real errors, needs bucket verified). Logged + fixed #3 (order-notify rebrand, migration 0049) and #4 (dues screen realtime). Logged #5 (in-app order notifications, deferred).
