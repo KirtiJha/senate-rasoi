@@ -210,7 +210,23 @@ export default function SearchScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 60 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View className="w-full self-center" style={{ maxWidth: SEARCH_MAX }}>
           {!query.trim() ? (
-            <RecentsOrHint loading={loading} recents={recents} onPick={(q) => setQuery(q)} onClear={() => { clearRecentSearches(); setRecents([]); }} c={c} />
+            <>
+              <Pressable
+                onPress={() => router.push('/ask' as any)}
+                className="mb-5 flex-row items-center gap-3 rounded-2xl border active:opacity-90"
+                style={{ borderColor: c.accent + '55', backgroundColor: c.accent + '12' }}
+              >
+                <View className="h-10 w-10 items-center justify-center rounded-2xl" style={{ backgroundColor: c.accent + '22', marginLeft: 12, marginVertical: 12 }}>
+                  <Ionicons name="sparkles" size={18} color={c.accent} />
+                </View>
+                <View className="flex-1 py-3">
+                  <Text className="font-sans-bold text-[14px] text-ink">Ask Aangan a question</Text>
+                  <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>“Any veg tiffin?” · “2 BHK for rent?” · “Borrow a drill?”</Text>
+                </View>
+                <Ionicons name="arrow-forward" size={16} color={c.accent} style={{ marginRight: 14 }} />
+              </Pressable>
+              <RecentsOrHint loading={loading} recents={recents} onPick={(q) => setQuery(q)} onClear={() => { clearRecentSearches(); setRecents([]); }} c={c} />
+            </>
           ) : total === 0 ? (
             <View className="items-center py-16">
               <Ionicons name="search-outline" size={40} color={c.faint} />

@@ -142,6 +142,7 @@ function DesktopShell() {
           <Stack.Screen name="borrow/new" />
           <Stack.Screen name="borrow/[id]" />
           <Stack.Screen name="helpers" />
+          <Stack.Screen name="ask" />
           <Stack.Screen name="messages/index" />
           <Stack.Screen name="messages/new" />
           <Stack.Screen name="messages/[threadId]" />

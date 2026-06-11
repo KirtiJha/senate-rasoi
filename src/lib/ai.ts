@@ -82,6 +82,73 @@ export async function visionAutofill<K extends AutofillKind>(
   return result;
 }
 
+// ── Ask Aangan (Phase 2) ──────────────────────────────────────────────
+
+export type AskSource = 'dish' | 'tiffin' | 'listing' | 'property' | 'recommend' | 'borrow';
+
+export interface AskResultItem {
+  source: AskSource;
+  id: string;
+  title: string;
+  reason?: string;
+}
+export interface AskResponse {
+  answer: string;
+  results: AskResultItem[];
+}
+
+/** Ask a natural-language question over the society's own listings. */
+export async function askAangan(question: string): Promise<AskResponse> {
+  if (!isSupabaseConfigured) throw new AIError('Connect Supabase to use AI.');
+  const q = question.trim();
+  if (!q) throw new AIError('Type a question first.');
+
+  const { data, error } = await supabase.functions.invoke('ai-proxy', {
+    body: { action: 'ask', question: q },
+  });
+
+  const bodyErr = (data as { error?: string; message?: string } | null)?.error;
+  if (bodyErr) throw new AIError((data as any).message ?? friendly(bodyErr), bodyErr);
+  if (error) {
+    const parsed = await readInvokeError(error);
+    throw new AIError(parsed.message, parsed.code);
+  }
+  const result = (data as { result?: AskResponse } | null)?.result;
+  if (!result) throw new AIError('Ask Aangan is unavailable right now.');
+  return { answer: result.answer ?? '', results: result.results ?? [] };
+}
+
+/** Deep-link route for an Ask Aangan result card. */
+export function askResultRoute(item: AskResultItem): string {
+  switch (item.source) {
+    case 'dish':
+    case 'tiffin':
+      return '/food';
+    case 'listing':
+      return `/listing/${item.id}`;
+    case 'property':
+      return `/property/${item.id}`;
+    case 'recommend':
+      return `/recommend/${item.id}`;
+    case 'borrow':
+      return `/borrow/${item.id}`;
+    default:
+      return '/';
+  }
+}
+
+const SOURCE_META: Record<AskSource, { label: string; icon: string; color: string }> = {
+  dish: { label: 'Home food', icon: 'restaurant', color: '#E8650A' },
+  tiffin: { label: 'Tiffin', icon: 'fast-food', color: '#F59E0B' },
+  listing: { label: 'Listing', icon: 'pricetag', color: '#0F6E56' },
+  property: { label: 'Flat', icon: 'key', color: '#7C3AED' },
+  recommend: { label: 'Recommendation', icon: 'star', color: '#CA8A04' },
+  borrow: { label: 'Borrow', icon: 'swap-horizontal', color: '#0891B2' },
+};
+export function askSourceMeta(source: AskSource) {
+  return SOURCE_META[source] ?? { label: 'Result', icon: 'ellipse', color: '#0F6E56' };
+}
+
 function friendly(code: string): string {
   if (code === 'over_quota') return "You've used today's AI helper limit. Try again tomorrow.";
   return 'AI could not help with this — fill the form manually.';

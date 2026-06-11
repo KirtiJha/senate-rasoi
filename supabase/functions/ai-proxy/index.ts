@@ -86,37 +86,24 @@ const SCHEMAS: Record<Kind, { instruction: string; schema: Record<string, unknow
   },
 };
 
-async function callGemini(
-  instruction: string,
+// Low-level Gemini call → parsed structured JSON. `parts` may mix text + image.
+async function geminiJSON(
+  parts: unknown[],
   schema: Record<string, unknown>,
-  note: string,
-  imageBase64: string,
+  temperature: number,
 ): Promise<Record<string, unknown>> {
-  const prompt =
-    `${instruction}\n\n` +
-    (note ? `The resident added this hint: "${note}".\n\n` : '') +
-    'Respond ONLY with the JSON described by the schema. Keep it truthful to the photo — never guess prices or personal details.';
-
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_KEY}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              { text: prompt },
-              { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
-            ],
-          },
-        ],
+        contents: [{ role: 'user', parts }],
         generationConfig: {
           responseMimeType: 'application/json',
           responseSchema: schema,
-          temperature: 0.4,
-          thinkingConfig: { thinkingBudget: 0 }, // fast + cheap; autofill needs no reasoning budget
+          temperature,
+          thinkingConfig: { thinkingBudget: 0 }, // fast + cheap
         },
       }),
     },
@@ -130,6 +117,115 @@ async function callGemini(
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('Gemini returned no content');
   return JSON.parse(text);
+}
+
+// ── Photo → form fields (Phase 1) ──
+function callAutofill(
+  instruction: string,
+  schema: Record<string, unknown>,
+  note: string,
+  imageBase64: string,
+): Promise<Record<string, unknown>> {
+  const prompt =
+    `${instruction}\n\n` +
+    (note ? `The resident added this hint: "${note}".\n\n` : '') +
+    'Respond ONLY with the JSON described by the schema. Keep it truthful to the photo — never guess prices or personal details.';
+  return geminiJSON(
+    [{ text: prompt }, { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } }],
+    schema,
+    0.4,
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
+// "Ask Aangan" (Phase 2) — answer a natural-language question over the
+// society's own catalog. We fetch a small, community-scoped, PII-free
+// catalog and let Gemini pick the items that answer the question. No
+// embeddings/pgvector: at pilot scale the whole catalog fits in context.
+// ════════════════════════════════════════════════════════════════════
+
+const ASK_SCHEMA = {
+  type: 'object',
+  properties: {
+    answer: { type: 'string', description: 'A short, friendly answer (1–3 sentences). Empty if nothing matches.' },
+    results: {
+      type: 'array',
+      description: 'The catalog items that genuinely answer the question, best first. Empty if none.',
+      items: {
+        type: 'object',
+        properties: {
+          source: { type: 'string', enum: ['dish', 'tiffin', 'listing', 'property', 'recommend', 'borrow'] },
+          id: { type: 'string' },
+          title: { type: 'string' },
+          reason: { type: 'string', description: 'One short phrase on why it fits' },
+        },
+        required: ['source', 'id', 'title'],
+      },
+    },
+  },
+  required: ['answer', 'results'],
+};
+
+type CatalogItem = { source: string; id: string; title: string; info: string };
+
+// deno-lint-ignore no-explicit-any
+async function buildCatalog(admin: any, communityId: string): Promise<CatalogItem[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const cap = 40;
+  const out: CatalogItem[] = [];
+
+  const grab = async (
+    table: string,
+    cols: string,
+    source: string,
+    map: (r: Record<string, unknown>) => { title: string; info: string },
+    // deno-lint-ignore no-explicit-any
+    tune?: (q: any) => any,
+  ) => {
+    let q = admin.from(table).select(cols).eq('community_id', communityId)
+      .order('created_at', { ascending: false }).limit(cap);
+    if (tune) q = tune(q);
+    const { data } = await q;
+    for (const r of (data ?? []) as Record<string, unknown>[]) {
+      const m = map(r);
+      out.push({ source, id: String(r.id), title: m.title, info: m.info });
+    }
+  };
+
+  await Promise.all([
+    grab('dishes', 'id,dish_name,description,veg_type,slot,price,plates_left,serve_date', 'dish',
+      (r) => ({ title: String(r.dish_name), info: `${r.veg_type} · ${r.slot} · ₹${r.price} · ${r.plates_left} left${r.description ? ` · ${r.description}` : ''}` }),
+      (q) => q.gte('serve_date', today).gt('plates_left', 0)),
+    grab('tiffin_plans', 'id,title,description,veg_type,slot,price,created_at', 'tiffin',
+      (r) => ({ title: String(r.title), info: `Tiffin · ${r.veg_type} · ${r.slot} · ₹${r.price}/day${r.description ? ` · ${r.description}` : ''}` }),
+      (q) => q.eq('active', true)),
+    grab('listings', 'id,title,description,category,price,price_unit,created_at', 'listing',
+      (r) => ({ title: String(r.title), info: `${r.category}${r.price ? ` · ₹${r.price}${r.price_unit && r.price_unit !== 'fixed' ? '/' + r.price_unit : ''}` : ''}${r.description ? ` · ${r.description}` : ''}` }),
+      (q) => q.eq('status', 'active')),
+    grab('property_listings', 'id,title,description,listing_type,config,area_sqft,furnishing,created_at', 'property',
+      (r) => ({ title: String(r.title), info: `Flat for ${r.listing_type} · ${r.config ?? ''} ${r.area_sqft ? `· ${r.area_sqft} sqft` : ''} ${r.furnishing ?? ''}${r.description ? ` · ${r.description}` : ''}` }),
+      (q) => q.eq('status', 'available')),
+    grab('reco_questions', 'id,title,detail,category,created_at', 'recommend',
+      (r) => ({ title: String(r.title), info: `Recommendation Q · ${r.category}${r.detail ? ` · ${r.detail}` : ''}` })),
+    grab('lend_items', 'id,title,description,category,created_at', 'borrow',
+      (r) => ({ title: String(r.title), info: `To borrow · ${r.category ?? ''}${r.description ? ` · ${r.description}` : ''}` }),
+      (q) => q.eq('status', 'available')),
+  ]);
+
+  return out;
+}
+
+async function callAsk(question: string, catalog: CatalogItem[]): Promise<Record<string, unknown>> {
+  const lines = catalog.map((c) => `- [${c.source}:${c.id}] ${c.title} — ${c.info}`).join('\n');
+  const prompt =
+    "You are Aangan's helpful assistant for an Indian residential society. A resident asked a question. " +
+    'Using ONLY the catalog of current society listings below, pick the items that genuinely answer it (best first) ' +
+    'and write a short, warm answer. Never invent items, prices or contacts. If nothing in the catalog fits, ' +
+    'return an empty results list and say you could not find anything matching right now.\n\n' +
+    `Resident's question: "${question}"\n\n` +
+    `Catalog (source:id — title — details):\n${lines || '(the catalog is empty)'}\n\n` +
+    'Copy the source and id exactly from the matching catalog lines.';
+  return geminiJSON([{ text: prompt }], ASK_SCHEMA, 0.3);
 }
 
 Deno.serve(async (req) => {
@@ -146,26 +242,20 @@ Deno.serve(async (req) => {
   if (userErr || !userData?.user) return json({ error: 'Not signed in' }, 401);
   const userId = userData.user.id;
 
-  // ── 2. Parse + validate the request ──
-  let body: { action?: string; kind?: Kind; note?: string; image?: string };
+  // ── 2. Parse the request ──
+  let body: { action?: string; kind?: Kind; note?: string; image?: string; question?: string };
   try {
     body = await req.json();
   } catch {
     return json({ error: 'Bad request' }, 400);
   }
-  if (body.action !== 'autofill') return json({ error: 'Unknown action' }, 400);
+  if (body.action !== 'autofill' && body.action !== 'ask') {
+    return json({ error: 'Unknown action' }, 400);
+  }
 
-  const kind = body.kind as Kind;
-  const spec = kind && SCHEMAS[kind];
-  if (!spec) return json({ error: 'Unknown kind' }, 400);
-
-  const image = (body.image ?? '').trim();
-  if (!image) return json({ error: 'A photo is required for autofill' }, 400);
-  if (image.length > MAX_IMAGE_CHARS) return json({ error: 'Photo is too large' }, 413);
-  const note = (body.note ?? '').toString().slice(0, 200);
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
   // ── 3. Meter usage (service role; the RPC is locked to definer-only) ──
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
   const { data: allowed, error: quotaErr } = await admin.rpc('check_and_increment_ai_quota', {
     p_user_id: userId,
     p_limit: DAILY_LIMIT,
@@ -173,12 +263,41 @@ Deno.serve(async (req) => {
   if (quotaErr) return json({ error: 'Quota check failed' }, 500);
   if (!allowed) return json({ error: 'over_quota', message: "You've used today's AI helper limit. Try again tomorrow." }, 429);
 
-  // ── 4. Call Gemini ──
+  // ── 4a. Autofill: photo → form fields ──
+  if (body.action === 'autofill') {
+    const kind = body.kind as Kind;
+    const spec = kind && SCHEMAS[kind];
+    if (!spec) return json({ error: 'Unknown kind' }, 400);
+
+    const image = (body.image ?? '').trim();
+    if (!image) return json({ error: 'A photo is required for autofill' }, 400);
+    if (image.length > MAX_IMAGE_CHARS) return json({ error: 'Photo is too large' }, 413);
+    const note = (body.note ?? '').toString().slice(0, 200);
+
+    try {
+      const result = await callAutofill(spec.instruction, spec.schema, note, image);
+      return json({ result });
+    } catch (e) {
+      console.error('ai-proxy autofill error:', e);
+      return json({ error: 'AI could not read this photo — fill the form manually.' }, 502);
+    }
+  }
+
+  // ── 4b. Ask Aangan: answer over the society's catalog ──
+  const question = (body.question ?? '').toString().trim().slice(0, 300);
+  if (!question) return json({ error: 'Ask a question first' }, 400);
+
+  // Scope strictly to the caller's own society (service role bypasses RLS).
+  const { data: prof } = await admin.from('profiles').select('community_id').eq('id', userId).single();
+  const communityId = prof?.community_id as string | undefined;
+  if (!communityId) return json({ result: { answer: 'Join a society to use Ask Aangan.', results: [] } });
+
   try {
-    const result = await callGemini(spec.instruction, spec.schema, note, image);
+    const catalog = await buildCatalog(admin, communityId);
+    const result = await callAsk(question, catalog);
     return json({ result });
   } catch (e) {
-    console.error('ai-proxy gemini error:', e);
-    return json({ error: 'AI could not read this photo — fill the form manually.' }, 502);
+    console.error('ai-proxy ask error:', e);
+    return json({ error: 'Ask Aangan is unavailable right now — try the Search tab.' }, 502);
   }
 });

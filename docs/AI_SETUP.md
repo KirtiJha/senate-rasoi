@@ -1,9 +1,14 @@
 # Aangan AI — setup (Gemini via Edge Function)
 
-AI features (Vision autofill now; "Ask Aangan" search next) run **server-side** in
-the `ai-proxy` Supabase Edge Function. The Gemini key lives only there — never in
-the app bundle. Until these 4 steps are done, the ✨ Autofill button shows a
-friendly "AI unavailable" toast and the rest of the app works normally.
+Both AI features — **Vision autofill** (photo → form) and **Ask Aangan** (natural-
+language search over your society's listings) — run **server-side** in the single
+`ai-proxy` Supabase Edge Function. The Gemini key lives only there, never in the
+app bundle. Until these 4 steps are done, the ✨ buttons show a friendly "AI
+unavailable" toast and the rest of the app works normally.
+
+> Both features share one function and one key. If you've already deployed for
+> autofill, just **re-deploy** (`supabase functions deploy ai-proxy`) to pick up
+> Ask Aangan — no new key, secret or migration needed.
 
 ## 1. Get a free Gemini API key
 - Go to **https://aistudio.google.com/app/apikey** → **Create API key**.
@@ -35,9 +40,13 @@ supabase secrets set GEMINI_API_KEY=your_key_here
 automatically — don't set them.)
 
 ## Test it
-Open the app → **Post a dish** (or a marketplace listing / a borrow item) → add a
-photo → tap **✨ Autofill details from photo**. The name, veg/non-veg, slot and
-description should fill in for you to edit.
+- **Autofill:** Open the app → **Post a dish** (or a marketplace listing / a borrow
+  item) → add a photo → tap **✨ Autofill details from photo**. Name, veg/non-veg,
+  slot and description fill in for you to edit.
+- **Ask Aangan:** Tap **Ask Aangan** on Home (or in the side nav) → ask something
+  like *"any veg tiffin for lunch?"*. It searches your society's current dishes,
+  flats, listings, borrow items and recommendations and answers with tappable
+  cards. (Post a couple of items first so there's something to find.)
 
 ## Tuning
 - **Daily limit per user:** `DAILY_LIMIT` in the function (default 40). Change it

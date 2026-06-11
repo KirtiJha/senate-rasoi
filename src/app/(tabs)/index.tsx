@@ -181,6 +181,22 @@ export default function HomeScreen() {
           </Text>
         </View>
 
+        {/* Ask Aangan — AI front door */}
+        <Pressable
+          onPress={() => router.push('/ask' as any)}
+          className="mb-5 flex-row items-center gap-3 overflow-hidden rounded-2xl border active:opacity-90"
+          style={{ borderColor: c.accent + '55', backgroundColor: c.accent + '12' }}
+        >
+          <View className="h-11 w-11 items-center justify-center rounded-2xl" style={{ backgroundColor: c.accent + '22', marginLeft: 12, marginVertical: 12 }}>
+            <Ionicons name="sparkles" size={20} color={c.accent} />
+          </View>
+          <View className="flex-1 py-3">
+            <Text className="font-sans-bold text-[15px] text-ink">Ask Aangan</Text>
+            <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>Food, flats, borrow, recommendations — just ask</Text>
+          </View>
+          <Ionicons name="arrow-forward" size={18} color={c.accent} style={{ marginRight: 14 }} />
+        </Pressable>
+
         {/* Announcement banner */}
         {announcement ? (
           <Pressable
