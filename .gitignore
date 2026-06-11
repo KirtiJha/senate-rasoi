@@ -45,3 +45,7 @@ example
 /android
 
 screenshots
+
+# Resident roster PII — local only, never commit
+docs/*.xlsx
+docs/import_*.sql

@@ -210,7 +210,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     cta: 'contact',
     ctaLabel: 'Get contact',
     attributes: [
-      { key: 'trade', label: 'Trade / Service', type: 'select', required: true, options: ['Plumber', 'Electrician', 'Carpenter', 'Painter', 'Maid / Bai', 'Cook', 'Driver', 'AC Repair', 'Security', 'Other'] },
+      { key: 'trade', label: 'Trade / Service', type: 'select', required: true, options: ['Plumber', 'Electrician', 'Carpenter', 'Painter', 'AC Repair', 'Appliance Repair', 'Pest Control', 'Maid / Bai', 'Cook', 'Driver', 'Interior & Modification', 'Internet / Broadband', 'Gas / LPG', 'Builder / Possession', 'Registration / Khata / Civic', 'Packers & Movers', 'Windows, Nets & Blinds', 'Cloth Hangers', 'Tailoring', 'Events', 'Security', 'Other'] },
       { key: 'area', label: 'Area served', type: 'text', placeholder: 'Andheri West, or Anywhere in Mumbai' },
       { key: 'verified', label: 'Personally verified / used', type: 'toggle' },
     ],
