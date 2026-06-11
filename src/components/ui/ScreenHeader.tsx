@@ -60,7 +60,7 @@ export function ScreenHeader({
       ) : null}
 
       <View className="flex-row items-center gap-2">
-        {showBack && !isDesktop ? (
+        {showBack ? (
           <Pressable onPress={goBack} hitSlop={10} className="-ml-1.5 h-9 w-9 items-center justify-center rounded-full active:bg-inset">
             <Ionicons name="chevron-back" size={22} color={c.ink} />
           </Pressable>
