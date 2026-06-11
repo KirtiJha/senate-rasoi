@@ -290,6 +290,7 @@ export default function DirectoryScreen() {
                       onOpen={() => setSelected(r)}
                       onCall={() => call(r)}
                       onWhatsApp={() => whatsapp(r)}
+                      onMessage={() => message(r)}
                     />
                   ))}
                 </View>
@@ -445,10 +446,10 @@ function DetailRow({ icon, label, value, c, last }: { icon: keyof typeof Ionicon
 }
 
 function ResidentRow({
-  r, first, showFlat, c, onOpen, onCall, onWhatsApp,
+  r, first, showFlat, c, onOpen, onCall, onWhatsApp, onMessage,
 }: {
   r: Resident; first: boolean; showFlat?: boolean; c: ReturnType<typeof useThemeColors>;
-  onOpen: () => void; onCall: () => void; onWhatsApp: () => void;
+  onOpen: () => void; onCall: () => void; onWhatsApp: () => void; onMessage: () => void;
 }) {
   const typeColor = r.resident_type === 'owner' ? '#0D9488' : '#7C3AED';
   const sub = [
@@ -484,10 +485,11 @@ function ResidentRow({
         </View>
       </View>
 
-      {r.phone ? (
+      {r.phone || r.onboarded ? (
         <View className="flex-row items-center gap-1.5">
-          <IconBtn icon="call" onPress={onCall} bg={c.inset} color={c.muted} />
-          <IconBtn icon="logo-whatsapp" onPress={onWhatsApp} bg="#25D36618" color="#25D366" />
+          {r.phone ? <IconBtn icon="call" onPress={onCall} bg={c.inset} color={c.muted} /> : null}
+          {r.onboarded ? <IconBtn icon="chatbubble-ellipses-outline" onPress={onMessage} bg={c.inset} color={c.muted} /> : null}
+          {r.phone ? <IconBtn icon="logo-whatsapp" onPress={onWhatsApp} bg="#25D36618" color="#25D366" /> : null}
         </View>
       ) : (
         <Ionicons name="chevron-forward" size={16} color={c.faint} />

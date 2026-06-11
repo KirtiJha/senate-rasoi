@@ -12,7 +12,7 @@ _Last updated: 12 Jun 2026, 2:00 AM IST_
 
 | Open | In Progress | Implemented | Deferred | Total |
 |---|---|---|---|---|
-| 1 | 0 | 10 | 0 | 11 |
+| 1 | 0 | 12 | 0 | 13 |
 
 ---
 
@@ -117,7 +117,23 @@ _Last updated: 12 Jun 2026, 2:00 AM IST_
 - **Status:** 🟢 Implemented
 - **Area:** Payments
 - **Root cause:** `/payments` read only the neighbour-ledger `payments` table (dish/tiffin/listing). **Badminton/court dues live in a separate `court_payments` table** (migration 0043), so they never appeared — making it look like it only showed "cooking" payments.
-- **Fix:** `fetchMyPayments` now also reads `court_payments` (RLS-scoped to payer/payee), maps them into the common row shape (court `paid` → `received`, labelled "🏸 … (Sports dues)") and merges + sorts everything by date. Realtime watches both tables. Court rows are **view-only** here (settled in Booking dues), so there's no duplicate/incorrect action path. Client-only — no migration.
+- **Fix:** `fetchMyPayments` now also reads `court_payments` (RLS-scoped to payer/payee), maps them into the common row shape (court `paid` → `received`, labelled "🏸 … (Sports dues)") and merges + sorts everything by date. Realtime watches both tables. Court rows can now also be **acted on here** (payee "Received" → court RPC; payer can undo) as well as in Booking dues; no duplicate/incorrect action path. There's no duplicate/incorrect action path. Client-only — no migration.
+
+---
+
+### #12 — Opening a DM (Message from a resident) throws a realtime error 🐞
+- **Status:** 🟢 Implemented
+- **Area:** Messaging / Directory
+- **Symptom:** `Uncaught Error: cannot add 'postgres_changes' callbacks for realtime:dm-… after subscribe()` when opening a chat.
+- **Root cause:** The thread screen's subscribe effect depends on `[threadId, userId]`; `userId` flips from `undefined` → set as auth loads, so `subscribeToThread` runs twice in quick succession with the **same channel topic** (`dm-{threadId}`). The first channel's async removal hasn't finished, so supabase-js hands back the existing, already-subscribed channel and `.on()` throws.
+- **Fix:** Each subscription now uses a **unique channel topic** (`dm-{threadId}-{seq}`), so a fresh, unsubscribed channel is always created (thread + inbox).
+
+---
+
+### #13 — Add a Message icon to directory rows ✨
+- **Status:** 🟢 Implemented
+- **Area:** Directory
+- **Fix:** Onboarded residents now show a **chat icon** in the row actions, between Call and WhatsApp, to DM without opening the detail sheet first.
 
 ---
 
@@ -130,6 +146,7 @@ _Last updated: 12 Jun 2026, 2:00 AM IST_
 ---
 
 ## Changelog
+- **12 Jun 2026 (late)** — #12 DM realtime crash fixed (unique channel topic); #13 message icon on directory rows; #11 court payments now actionable on the Payments screen too.
 - **12 Jun 2026 (night)** — #9 desktop back control; #10 court overhaul — attendance-driven dues, RSVP lock, booker manage-players + edit-booking, manual settlement (migration 0051).
 - **12 Jun 2026 (later)** — #1 root cause confirmed (no Storage RLS policies → 403); fixed via migration 0050 (photo bucket policies + public). Now 🟢.
 - **12 Jun 2026** — Logged + fixed #6 (back-on-refresh fallback), #7 (dues blank — now live at game start, not only after end), #8 (booking form tap selectors for time/duration/date/weeks).

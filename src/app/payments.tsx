@@ -6,6 +6,7 @@ import { Avatar, Container, RowSkeleton, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
+import { markPaymentReceived as courtMarkReceived, revertPayment as courtRevert } from '../lib/courts';
 import { PaymentRow, cancelPayment, fetchMyPayments, markReceived, subscribePayments } from '../lib/payments';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { layout, useThemeColors } from '../theme';
@@ -49,14 +50,23 @@ export default function PaymentsScreen() {
 
   const onReceived = async (p: PaymentRow) => {
     try {
-      if (await markReceived(p.id)) { toast.show('Marked received ✓'); load(); }
+      const ok = p.source === 'court' ? await courtMarkReceived(p.id) : await markReceived(p.id);
+      if (ok) { toast.show('Marked received ✓'); load(); }
       else toast.show('Not allowed');
     } catch { toast.show('Could not update'); }
   };
 
   const onCancel = (p: PaymentRow) => {
-    const run = async () => { try { await cancelPayment(p.id); load(); } catch { toast.show('Could not cancel'); } };
-    confirm({ title: 'Remove payment', message: 'Remove this payment record?', confirmLabel: 'Remove', destructive: true }).then((ok) => { if (ok) run(); });
+    const run = async () => {
+      try { if (p.source === 'court') await courtRevert(p.id); else await cancelPayment(p.id); load(); }
+      catch { toast.show('Could not cancel'); }
+    };
+    const isCourt = p.source === 'court';
+    confirm({
+      title: isCourt ? 'Undo payment' : 'Remove payment',
+      message: isCourt ? 'Mark this share as unpaid again?' : 'Remove this payment record?',
+      confirmLabel: isCourt ? 'Undo' : 'Remove', destructive: true,
+    }).then((ok) => { if (ok) run(); });
   };
 
   const FILTERS: { key: Filter; label: string }[] = [
@@ -118,8 +128,8 @@ export default function PaymentsScreen() {
                         <Text className="text-[10px] font-sans-sb uppercase" style={{ color: st.color }}>{st.label}</Text>
                       </View>
                     </View>
-                    {/* Actions — court/sports dues are managed in Booking dues, so view-only here */}
-                    {p.source === 'court' ? null : !iPaid && p.status === 'initiated' ? (
+                    {/* Actions — works for neighbour payments and sports dues alike */}
+                    {!iPaid && p.status === 'initiated' ? (
                       <Pressable onPress={() => onReceived(p)} className="ml-1 rounded-full bg-success px-3 py-1.5 active:opacity-90">
                         <Text className="text-[12px] font-sans-sb text-white">Received</Text>
                       </Pressable>

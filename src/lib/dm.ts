@@ -133,10 +133,15 @@ export async function fetchUnreadThreadCount(userId: string): Promise<number> {
   return new Set((data ?? []).map((r) => (r as { thread_id: string }).thread_id)).size;
 }
 
+// Unique suffix per subscription so a re-subscribe (e.g. the effect re-running as
+// userId loads) never reuses an existing, already-subscribed channel — which makes
+// supabase-js throw "cannot add postgres_changes callbacks after subscribe()".
+let channelSeq = 0;
+
 export function subscribeToThread(threadId: string, onChange: () => void): () => void {
   if (!isSupabaseConfigured) return () => {};
   const ch = supabase
-    .channel(`dm-${threadId}`)
+    .channel(`dm-${threadId}-${++channelSeq}`)
     .on('postgres_changes',
       { event: '*', schema: 'public', table: 'dm_messages', filter: `thread_id=eq.${threadId}` },
       onChange)
@@ -147,7 +152,7 @@ export function subscribeToThread(threadId: string, onChange: () => void): () =>
 export function subscribeToInbox(onChange: () => void): () => void {
   if (!isSupabaseConfigured) return () => {};
   const ch = supabase
-    .channel('dm-inbox')
+    .channel(`dm-inbox-${++channelSeq}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'dm_threads' }, onChange)
     .subscribe();
   return () => { supabase.removeChannel(ch); };
