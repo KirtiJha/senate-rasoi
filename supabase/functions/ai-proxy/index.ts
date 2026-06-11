@@ -44,45 +44,54 @@ type Kind = 'dish' | 'listing' | 'borrow';
 const SCHEMAS: Record<Kind, { instruction: string; schema: Record<string, unknown> }> = {
   dish: {
     instruction:
-      'This is a homemade dish a resident wants to sell to neighbours in an Indian apartment society. ' +
-      'Give a short appetising dish name (Indian naming where it fits), classify Veg / Non-veg / Egg from what you see, ' +
-      'suggest the most likely meal slot, and write a warm one-line description (spice/ingredients). Do NOT invent a price.',
+      'A resident is posting a homemade dish to sell to neighbours, and added this photo. ' +
+      'FIRST decide if the photo actually shows food or a cooked/prepared dish. If it does NOT (a person, pet, object, ' +
+      'screenshot, document, random scene, etc.), set is_relevant=false and leave the other fields empty — do NOT invent a dish. ' +
+      'If it IS food, set is_relevant=true and give a short appetising dish name (Indian naming where it fits), classify ' +
+      'Veg / Non-veg / Egg from what you see, suggest the most likely meal slot, and write a warm one-line description. Never invent a price.',
     schema: {
       type: 'object',
       properties: {
-        dish_name: { type: 'string', description: 'Short dish name, e.g. "Masala Dosa with Sambar"' },
+        is_relevant: { type: 'boolean', description: 'true ONLY if the photo actually shows food / a cooked dish' },
+        dish_name: { type: 'string', description: 'Short dish name, e.g. "Masala Dosa with Sambar" (empty if not food)' },
         veg_type: { type: 'string', enum: ['Veg', 'Non-veg', 'Egg'] },
         suggested_slot: { type: 'string', enum: ['Breakfast', 'Lunch', 'Dinner', 'Snack'] },
-        description: { type: 'string', description: 'One warm sentence, max ~120 chars' },
+        description: { type: 'string', description: 'One warm sentence, max ~120 chars (empty if not food)' },
       },
-      required: ['dish_name', 'veg_type', 'description'],
+      required: ['is_relevant'],
     },
   },
   listing: {
     instruction:
-      'This is a second-hand item a resident wants to sell or give away in their apartment society marketplace. ' +
-      'Write a clear, honest listing title and a short factual description (what it is, visible condition, notable details). ' +
-      'Do NOT invent a brand, specs or price you cannot see.',
+      'A resident is posting a second-hand item to sell/give away in their society marketplace, and added this photo. ' +
+      'FIRST decide if the photo actually shows a real, physical item that could be sold or given away. If it does NOT ' +
+      '(a person, pet, screenshot, random scene, etc.), set is_relevant=false and leave the other fields empty — do NOT invent a listing. ' +
+      'If it IS a sellable item, set is_relevant=true and write a clear honest title and a short factual description ' +
+      '(what it is, visible condition). Never invent a brand, specs or price you cannot see.',
     schema: {
       type: 'object',
       properties: {
-        title: { type: 'string', description: 'Concise item title, e.g. "Dell 24-inch monitor, like new"' },
-        description: { type: 'string', description: '1–2 honest sentences about the item and its condition' },
+        is_relevant: { type: 'boolean', description: 'true ONLY if the photo shows a real physical item that could be sold' },
+        title: { type: 'string', description: 'Concise item title, e.g. "Dell 24-inch monitor, like new" (empty if not an item)' },
+        description: { type: 'string', description: '1–2 honest sentences (empty if not an item)' },
       },
-      required: ['title', 'description'],
+      required: ['is_relevant'],
     },
   },
   borrow: {
     instruction:
-      'This is a household item a resident is offering to lend to neighbours. ' +
-      'Name the item plainly and write a one-line description of what it is and what it is good for.',
+      'A resident is offering a household item to lend to neighbours, and added this photo. ' +
+      'FIRST decide if the photo actually shows a real, physical item that could be lent. If it does NOT (a person, pet, ' +
+      'screenshot, random scene, etc.), set is_relevant=false and leave the other fields empty — do NOT invent an item. ' +
+      'If it IS a lendable item, set is_relevant=true, name the item plainly and write a one-line description of what it is good for.',
     schema: {
       type: 'object',
       properties: {
-        item_name: { type: 'string', description: 'Plain item name, e.g. "Cordless drill"' },
-        description: { type: 'string', description: 'One short sentence' },
+        is_relevant: { type: 'boolean', description: 'true ONLY if the photo shows a real physical item that could be lent' },
+        item_name: { type: 'string', description: 'Plain item name, e.g. "Cordless drill" (empty if not an item)' },
+        description: { type: 'string', description: 'One short sentence (empty if not an item)' },
       },
-      required: ['item_name', 'description'],
+      required: ['is_relevant'],
     },
   },
 };
@@ -582,8 +591,13 @@ Deno.serve(async (req) => {
     if (image.length > MAX_IMAGE_CHARS) return json({ error: 'Photo is too large' }, 413);
     const note = (body.note ?? '').toString().slice(0, 200);
 
+    const NOUN: Record<Kind, string> = { dish: 'dish or food', listing: 'item to sell', borrow: 'item to lend' };
     try {
       const result = await callAutofill(spec.instruction, spec.schema, note, image);
+      if (result.is_relevant === false) {
+        return json({ error: 'not_relevant', message: `That photo doesn't look like a ${NOUN[kind]} — pick another, or fill the form in.` });
+      }
+      delete result.is_relevant; // internal flag, not a form field
       return json({ result });
     } catch (e) {
       console.error('ai-proxy autofill error:', e);
