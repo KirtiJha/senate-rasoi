@@ -21,6 +21,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 const MODEL = 'gemini-2.5-flash';
+const EMBED_MODEL = 'text-embedding-004'; // 768-dim, free tier
 const DAILY_LIMIT = 40; // AI actions per user per day
 const MAX_IMAGE_CHARS = 8_000_000; // ~6 MB of base64 — a comfortably large photo
 
@@ -119,6 +120,34 @@ async function geminiJSON(
   return JSON.parse(text);
 }
 
+// Embed texts → 768-dim vectors. taskType tunes for documents vs the query.
+async function embedTexts(
+  texts: string[],
+  taskType: 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY',
+): Promise<number[][]> {
+  if (!texts.length) return [];
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:batchEmbedContents?key=${GEMINI_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: texts.map((t) => ({
+          model: `models/${EMBED_MODEL}`,
+          content: { parts: [{ text: t.slice(0, 2000) }] },
+          taskType,
+        })),
+      }),
+    },
+  );
+  if (!res.ok) throw new Error(`Embed ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const data = await res.json();
+  // deno-lint-ignore no-explicit-any
+  return (data.embeddings ?? []).map((e: any) => e.values as number[]);
+}
+
+const toVec = (v: number[]) => `[${v.join(',')}]`;
+
 // ── Photo → form fields (Phase 1) ──
 function callAutofill(
   instruction: string,
@@ -168,50 +197,84 @@ const ASK_SCHEMA = {
 
 type CatalogItem = { source: string; id: string; title: string; info: string };
 
+type SourceDef = {
+  table: string;
+  cols: string;
+  // deno-lint-ignore no-explicit-any
+  map: (r: any) => { title: string; info: string };
+  // deno-lint-ignore no-explicit-any
+  fresh?: (q: any, today: string) => any; // status/date filter so stale rows never surface
+};
+
+// One definition per Ask Aangan source — used both for the recent-catalog
+// fallback and for re-hydrating vector-match ids from the live tables.
+const SOURCES: Record<string, SourceDef> = {
+  dish: {
+    table: 'dishes',
+    cols: 'id,dish_name,description,veg_type,slot,price,plates_left,serve_date,created_at',
+    map: (r) => ({ title: String(r.dish_name), info: `${r.veg_type} · ${r.slot} · ₹${r.price} · ${r.plates_left} left${r.description ? ` · ${r.description}` : ''}` }),
+    fresh: (q, today) => q.gte('serve_date', today).gt('plates_left', 0),
+  },
+  tiffin: {
+    table: 'tiffin_plans',
+    cols: 'id,title,description,veg_type,slot,price,created_at',
+    map: (r) => ({ title: String(r.title), info: `Tiffin · ${r.veg_type} · ${r.slot} · ₹${r.price}/day${r.description ? ` · ${r.description}` : ''}` }),
+    fresh: (q) => q.eq('active', true),
+  },
+  listing: {
+    table: 'listings',
+    cols: 'id,title,description,category,price,price_unit,created_at',
+    map: (r) => ({ title: String(r.title), info: `${r.category}${r.price ? ` · ₹${r.price}${r.price_unit && r.price_unit !== 'fixed' ? '/' + r.price_unit : ''}` : ''}${r.description ? ` · ${r.description}` : ''}` }),
+    fresh: (q) => q.eq('status', 'active'),
+  },
+  property: {
+    table: 'property_listings',
+    cols: 'id,title,description,listing_type,config,area_sqft,furnishing,created_at',
+    map: (r) => ({ title: String(r.title), info: `Flat for ${r.listing_type} · ${r.config ?? ''} ${r.area_sqft ? `· ${r.area_sqft} sqft` : ''} ${r.furnishing ?? ''}${r.description ? ` · ${r.description}` : ''}` }),
+    fresh: (q) => q.eq('status', 'available'),
+  },
+  recommend: {
+    table: 'reco_questions',
+    cols: 'id,title,detail,category,created_at',
+    map: (r) => ({ title: String(r.title), info: `Recommendation Q · ${r.category}${r.detail ? ` · ${r.detail}` : ''}` }),
+  },
+  borrow: {
+    table: 'lend_items',
+    cols: 'id,title,description,category,status,created_at',
+    map: (r) => ({ title: String(r.title), info: `To borrow · ${r.category ?? ''}${r.description ? ` · ${r.description}` : ''}` }),
+    fresh: (q) => q.eq('status', 'available'),
+  },
+};
+
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+// Recent, fresh items per source (fallback when vectors aren't ready yet).
 // deno-lint-ignore no-explicit-any
 async function buildCatalog(admin: any, communityId: string): Promise<CatalogItem[]> {
-  const today = new Date().toISOString().slice(0, 10);
-  const cap = 40;
   const out: CatalogItem[] = [];
-
-  const grab = async (
-    table: string,
-    cols: string,
-    source: string,
-    map: (r: Record<string, unknown>) => { title: string; info: string },
-    // deno-lint-ignore no-explicit-any
-    tune?: (q: any) => any,
-  ) => {
-    let q = admin.from(table).select(cols).eq('community_id', communityId)
-      .order('created_at', { ascending: false }).limit(cap);
-    if (tune) q = tune(q);
+  await Promise.all(Object.entries(SOURCES).map(async ([source, def]) => {
+    let q = admin.from(def.table).select(def.cols).eq('community_id', communityId)
+      .order('created_at', { ascending: false }).limit(40);
+    if (def.fresh) q = def.fresh(q, todayStr());
     const { data } = await q;
-    for (const r of (data ?? []) as Record<string, unknown>[]) {
-      const m = map(r);
-      out.push({ source, id: String(r.id), title: m.title, info: m.info });
-    }
-  };
+    for (const r of (data ?? [])) { const m = def.map(r); out.push({ source, id: String(r.id), title: m.title, info: m.info }); }
+  }));
+  return out;
+}
 
-  await Promise.all([
-    grab('dishes', 'id,dish_name,description,veg_type,slot,price,plates_left,serve_date', 'dish',
-      (r) => ({ title: String(r.dish_name), info: `${r.veg_type} · ${r.slot} · ₹${r.price} · ${r.plates_left} left${r.description ? ` · ${r.description}` : ''}` }),
-      (q) => q.gte('serve_date', today).gt('plates_left', 0)),
-    grab('tiffin_plans', 'id,title,description,veg_type,slot,price,created_at', 'tiffin',
-      (r) => ({ title: String(r.title), info: `Tiffin · ${r.veg_type} · ${r.slot} · ₹${r.price}/day${r.description ? ` · ${r.description}` : ''}` }),
-      (q) => q.eq('active', true)),
-    grab('listings', 'id,title,description,category,price,price_unit,created_at', 'listing',
-      (r) => ({ title: String(r.title), info: `${r.category}${r.price ? ` · ₹${r.price}${r.price_unit && r.price_unit !== 'fixed' ? '/' + r.price_unit : ''}` : ''}${r.description ? ` · ${r.description}` : ''}` }),
-      (q) => q.eq('status', 'active')),
-    grab('property_listings', 'id,title,description,listing_type,config,area_sqft,furnishing,created_at', 'property',
-      (r) => ({ title: String(r.title), info: `Flat for ${r.listing_type} · ${r.config ?? ''} ${r.area_sqft ? `· ${r.area_sqft} sqft` : ''} ${r.furnishing ?? ''}${r.description ? ` · ${r.description}` : ''}` }),
-      (q) => q.eq('status', 'available')),
-    grab('reco_questions', 'id,title,detail,category,created_at', 'recommend',
-      (r) => ({ title: String(r.title), info: `Recommendation Q · ${r.category}${r.detail ? ` · ${r.detail}` : ''}` })),
-    grab('lend_items', 'id,title,description,category,created_at', 'borrow',
-      (r) => ({ title: String(r.title), info: `To borrow · ${r.category ?? ''}${r.description ? ` · ${r.description}` : ''}` }),
-      (q) => q.eq('status', 'available')),
-  ]);
-
+// Re-hydrate vector-matched ids from the live tables (applies freshness filters,
+// so a sold/expired match is silently dropped).
+// deno-lint-ignore no-explicit-any
+async function fetchByIds(admin: any, idsBySource: Record<string, string[]>): Promise<CatalogItem[]> {
+  const out: CatalogItem[] = [];
+  await Promise.all(Object.entries(idsBySource).map(async ([source, ids]) => {
+    const def = SOURCES[source];
+    if (!def || !ids.length) return;
+    let q = admin.from(def.table).select(def.cols).in('id', ids);
+    if (def.fresh) q = def.fresh(q, todayStr());
+    const { data } = await q;
+    for (const r of (data ?? [])) { const m = def.map(r); out.push({ source, id: String(r.id), title: m.title, info: m.info }); }
+  }));
   return out;
 }
 
@@ -293,7 +356,38 @@ Deno.serve(async (req) => {
   if (!communityId) return json({ result: { answer: 'Join a society to use Ask Aangan.', results: [] } });
 
   try {
-    const catalog = await buildCatalog(admin, communityId);
+    let catalog: CatalogItem[] = [];
+
+    // Semantic (pgvector) path — best-effort; falls back to the recent catalog.
+    try {
+      // 1. Lazily embed any rows the triggers marked dirty (usually a handful).
+      const { data: dirty } = await admin.from('search_documents')
+        .select('source,source_id,content').eq('community_id', communityId).is('embedding', null).limit(60);
+      if (dirty?.length) {
+        const vecs = await embedTexts(dirty.map((d: { content: string }) => d.content), 'RETRIEVAL_DOCUMENT');
+        await Promise.all(dirty.map((d: { source: string; source_id: string }, i: number) =>
+          vecs[i]
+            ? admin.from('search_documents').update({ embedding: toVec(vecs[i]) }).eq('source', d.source).eq('source_id', d.source_id)
+            : Promise.resolve()));
+      }
+
+      // 2. Embed the question and cosine-search the index.
+      const [qVec] = await embedTexts([question], 'RETRIEVAL_QUERY');
+      if (qVec) {
+        const { data: matches } = await admin.rpc('match_documents', { p_community: communityId, p_embedding: toVec(qVec), p_count: 18 });
+        if (matches?.length) {
+          const idsBySource: Record<string, string[]> = {};
+          for (const m of matches as { source: string; source_id: string }[]) (idsBySource[m.source] ??= []).push(m.source_id);
+          catalog = await fetchByIds(admin, idsBySource);
+        }
+      }
+    } catch (e) {
+      console.error('ai-proxy vector path failed, falling back:', e);
+    }
+
+    // Fallback (vectors not ready / no matches): recent fresh catalog.
+    if (!catalog.length) catalog = await buildCatalog(admin, communityId);
+
     const result = await callAsk(question, catalog);
     return json({ result });
   } catch (e) {

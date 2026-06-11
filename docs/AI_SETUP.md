@@ -17,9 +17,13 @@ unavailable" toast and the rest of the app works normally.
   proxy only ever sends the **photo + an optional note** — never phone numbers,
   UPI IDs, flat numbers or blood groups.
 
-## 2. Run the migration
-In **Supabase → SQL Editor**, run `supabase/migrations/0039_ai.sql`
-(adds the `ai_usage` daily-quota table + `check_and_increment_ai_quota()`).
+## 2. Run the migrations
+In **Supabase → SQL Editor**, run:
+- `supabase/migrations/0039_ai.sql` — `ai_usage` daily-quota table + `check_and_increment_ai_quota()`.
+- `supabase/migrations/0040_search_vectors.sql` — enables `pgvector` and builds the
+  semantic search index for Ask Aangan (`search_documents` + triggers +
+  `match_documents()`). Embeddings (`text-embedding-004`, free) are filled lazily by
+  the function on the first Ask after items are posted — no extra setup, no cron.
 
 ## 3. Deploy the Edge Function
 You need the Supabase CLI once (`npm i -g supabase`, then `supabase login` and
