@@ -6,8 +6,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Button, Container, RowSkeleton, ScreenHeader, Sheet } from '../components/ui';
 import { SportGroupBody } from '../components/SportGroupBody';
+import { WeekdayChips } from '../components/WeekdayChips';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
+import { durationLabel, formatDays, formatTime, isValidTime } from '../lib/schedule';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { SPORTS, Sport, SportGroupWithMeta, createGroup, fetchGroups, getSport, updateGroup, uploadGroupLogo } from '../lib/sports';
 import { useThemeColors } from '../theme';
@@ -144,7 +146,7 @@ function CreateGroupSheet({
   const [emoji, setEmoji] = useState('');
   const [color, setColor] = useState(COLORS[0]);
   const [logoUri, setLogoUri] = useState<string | null>(null);
-  const [days, setDays] = useState('');
+  const [days, setDays] = useState<number[]>([]);
   const [time, setTime] = useState('');
   const [duration, setDuration] = useState('');
   const [location, setLocation] = useState('');
@@ -163,13 +165,18 @@ function CreateGroupSheet({
     if (!result.canceled) setLogoUri(result.assets[0].uri);
   };
 
+  const durMin = parseInt(duration, 10);
   const submit = () => {
     if (!name.trim()) return;
+    if (time.trim() && !isValidTime(time)) return;
     setBusy(true);
     onCreate({
       sport: pickedSport, name, emoji: emoji.trim() || null, color, logoUri,
-      description: description || null, practiceDays: days || null, practiceTime: time || null,
-      practiceDuration: duration || null, practiceLocation: location || null,
+      description: description || null,
+      practiceDays: days.length ? formatDays(days) : null,
+      practiceTime: time.trim() && isValidTime(time) ? formatTime(time) : null,
+      practiceDuration: durMin > 0 ? durationLabel(durMin) : null,
+      practiceLocation: location || null,
     });
     setBusy(false);
   };
@@ -208,15 +215,23 @@ function CreateGroupSheet({
         </View>
       </View>
 
-      <Text className={lbl}>Practice schedule</Text>
+      <Text className={lbl}>Practice days</Text>
+      <View className="mb-3">
+        <WeekdayChips value={days} onChange={setDays} />
+      </View>
       <View className="mb-2 flex-row gap-2">
-        <TextInput value={days} onChangeText={setDays} placeholder="Days (Mon, Wed)" placeholderTextColor={c.faint} className={`flex-1 ${input}`} style={{ outline: 'none' } as any} />
-        <TextInput value={time} onChangeText={setTime} placeholder="Time (6 AM)" placeholderTextColor={c.faint} className={`flex-1 ${input}`} style={{ outline: 'none' } as any} />
+        <View className="flex-1">
+          <Text className={lbl}>Time</Text>
+          <TextInput value={time} onChangeText={setTime} placeholder="18:00" keyboardType="numbers-and-punctuation" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
+        </View>
+        <View className="flex-1">
+          <Text className={lbl}>Duration (min)</Text>
+          <TextInput value={duration} onChangeText={setDuration} placeholder="90" keyboardType="number-pad" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
+        </View>
       </View>
-      <View className="mb-4 flex-row gap-2">
-        <TextInput value={duration} onChangeText={setDuration} placeholder="Duration (90 min)" placeholderTextColor={c.faint} className={`flex-1 ${input}`} style={{ outline: 'none' } as any} />
-        <TextInput value={location} onChangeText={setLocation} placeholder="Court / ground" placeholderTextColor={c.faint} className={`flex-1 ${input}`} style={{ outline: 'none' } as any} />
-      </View>
+      <Text className={lbl}>Court / ground</Text>
+      <TextInput value={location} onChangeText={setLocation} placeholder="e.g. Clubhouse court 1" placeholderTextColor={c.faint} className={`mb-4 ${input}`} style={{ outline: 'none' } as any} />
+      {time.trim() && !isValidTime(time) ? <Text className="-mt-2 mb-3 text-[11px] text-nonveg">Enter time as HH:MM (e.g. 18:00)</Text> : null}
 
       <Text className={lbl}>About (optional)</Text>
       <TextInput value={description} onChangeText={setDescription} placeholder="Who's it for, skill level, etc." placeholderTextColor={c.faint} multiline className={input} style={{ minHeight: 64, outline: 'none' } as any} />
