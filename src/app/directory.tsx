@@ -229,7 +229,7 @@ function ResidentRow({
   onOpen: () => void; onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onRemove: () => void;
 }) {
   const typeColor = r.resident_type === 'owner' ? '#0D9488' : '#7C3AED';
-  const sub = [r.profession, r.vehicle_no ? `🚗 ${r.vehicle_no}` : null].filter(Boolean).join('  ·  ');
+  const sub = [r.profession, r.native ? `📍 ${r.native}` : null, r.vehicle_no ? `🚗 ${r.vehicle_no}` : null].filter(Boolean).join('  ·  ');
 
   return (
     <Pressable
@@ -255,6 +255,7 @@ function ResidentRow({
       </View>
 
       <View className="flex-row items-center gap-1.5">
+        {r.email ? <IconBtn icon="mail-outline" onPress={() => Linking.openURL(`mailto:${r.email}`)} bg={c.inset} color={c.muted} /> : null}
         {r.phone ? <IconBtn icon="call" onPress={onCall} bg={c.inset} color={c.muted} /> : null}
         {r.phone ? <IconBtn icon="logo-whatsapp" onPress={onWhatsApp} bg="#25D36618" color="#25D366" /> : null}
         {r.onboarded ? (
@@ -284,7 +285,7 @@ function AddResidentModal({
 }: {
   visible: boolean;
   onClose: () => void;
-  onAdd: (f: { name: string; flat: string | null; phone: string | null; resident_type: 'owner' | 'tenant' | null; profession: string | null; vehicle_no: string | null }) => void;
+  onAdd: (f: { name: string; flat: string | null; phone: string | null; resident_type: 'owner' | 'tenant' | null; profession: string | null; vehicle_no: string | null; native: string | null; alt_phone: string | null; email: string | null }) => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
   const [name, setName] = useState('');
@@ -293,12 +294,15 @@ function AddResidentModal({
   const [type, setType] = useState<'owner' | 'tenant' | null>(null);
   const [profession, setProfession] = useState('');
   const [vehicle, setVehicle] = useState('');
+  const [native, setNative] = useState('');
+  const [altPhone, setAltPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
 
   const submit = () => {
     if (!name.trim()) return;
     setBusy(true);
-    onAdd({ name, flat: flat || null, phone: phone || null, resident_type: type, profession: profession || null, vehicle_no: vehicle || null });
+    onAdd({ name, flat: flat || null, phone: phone || null, resident_type: type, profession: profession || null, vehicle_no: vehicle || null, native: native || null, alt_phone: altPhone || null, email: email || null });
     setBusy(false);
   };
 
@@ -325,6 +329,11 @@ function AddResidentModal({
       </View>
       <Field label="Profession" placeholder="e.g. Doctor, Teacher" value={profession} onChangeText={setProfession} />
       <Field label="Vehicle number" autoCapitalize="characters" placeholder="MH 12 AB 1234" value={vehicle} onChangeText={setVehicle} />
+      <Field label="Native" placeholder="e.g. Lucknow, UP" value={native} onChangeText={setNative} />
+      <View className="flex-row gap-3">
+        <View className="flex-1"><Field label="Alternate phone" keyboardType="phone-pad" placeholder="98765 43210" value={altPhone} onChangeText={setAltPhone} /></View>
+      </View>
+      <Field label="Email" keyboardType="email-address" autoCapitalize="none" placeholder="name@email.com" value={email} onChangeText={setEmail} />
     </Sheet>
   );
 }

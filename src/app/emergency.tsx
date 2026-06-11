@@ -106,7 +106,7 @@ export default function EmergencyScreen() {
                       </View>
                       <View className="flex-1">
                         <Text className="font-sans-sb text-[15px] text-ink">{contact.name}</Text>
-                        <Text className="text-[12px] text-muted">{EMERGENCY_ROLE_LABELS[contact.role]}</Text>
+                        <Text className="text-[12px] text-muted">{contact.category || EMERGENCY_ROLE_LABELS[contact.role]}</Text>
                         <Text className="text-[13px] font-sans-md text-faint mt-0.5">{contact.phone}</Text>
                       </View>
                       <View className="flex-row items-center gap-2">
@@ -165,6 +165,7 @@ function AddContactModal({
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState<EmergencyRole>('security');
+  const [category, setCategory] = useState('');
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
@@ -172,9 +173,9 @@ function AddContactModal({
     if (!phone.trim()) return;
     setSaving(true);
     try {
-      const contact = await addEmergencyContact({ communityId, name, phone, role });
+      const contact = await addEmergencyContact({ communityId, name, phone, role, category: category || null });
       onAdded(contact);
-      setName(''); setPhone(''); setRole('security');
+      setName(''); setPhone(''); setRole('security'); setCategory('');
     } catch {
       // parent handles toast
     } finally { setSaving(false); }
@@ -210,6 +211,18 @@ function AddContactModal({
               onChangeText={setPhone}
               placeholder="98765 43210"
               keyboardType="phone-pad"
+              placeholderTextColor={c.faint}
+              className="rounded-2xl border border-line bg-inset px-3.5 py-3 text-[15px] text-ink"
+              style={{ outline: 'none' } as any}
+            />
+          </View>
+
+          <View className="mb-3.5">
+            <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Service / label (optional)</Text>
+            <TextInput
+              value={category}
+              onChangeText={setCategory}
+              placeholder="e.g. Plumber, Electrician, Water tanker"
               placeholderTextColor={c.faint}
               className="rounded-2xl border border-line bg-inset px-3.5 py-3 text-[15px] text-ink"
               style={{ outline: 'none' } as any}

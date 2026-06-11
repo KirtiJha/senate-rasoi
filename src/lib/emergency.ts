@@ -8,6 +8,7 @@ export interface EmergencyContact {
   name: string;
   phone: string;
   role: EmergencyRole;
+  category: string | null; // free-text label, e.g. "Plumber", "Water tanker"
   order_pos: number;
   created_at: string;
 }
@@ -61,6 +62,7 @@ export async function addEmergencyContact(input: {
   name: string;
   phone: string;
   role: EmergencyRole;
+  category?: string | null;
   orderPos?: number;
 }): Promise<EmergencyContact> {
   const { data, error } = await supabase
@@ -70,6 +72,7 @@ export async function addEmergencyContact(input: {
       name: input.name.trim(),
       phone: input.phone.trim(),
       role: input.role,
+      category: input.category?.trim() || null,
       order_pos: input.orderPos ?? 0,
     })
     .select()

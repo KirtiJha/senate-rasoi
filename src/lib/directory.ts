@@ -10,6 +10,11 @@ export interface DirectoryEntry {
   resident_type: 'owner' | 'tenant' | null;
   profession: string | null;
   vehicle_no: string | null;
+  native: string | null;
+  alt_phone: string | null;
+  email: string | null;
+  registration_status: 'pending' | 'done';
+  shifted: boolean;
   added_by: string | null;
   created_at: string;
 }
@@ -24,6 +29,9 @@ export interface Resident {
   resident_type: 'owner' | 'tenant' | null;
   profession: string | null;
   vehicle_no: string | null;
+  native: string | null;
+  alt_phone: string | null;
+  email: string | null;
   onboarded: boolean;       // has an Aangan account
   userId: string | null;    // member id (DM / public profile)
   entryId: string | null;   // directory_entries id (delete)
@@ -63,6 +71,9 @@ export async function fetchDirectory(
       resident_type: m.resident_type,
       profession: m.profession,
       vehicle_no: m.vehicle_no,
+      native: null,
+      alt_phone: null,
+      email: null,
       onboarded: true,
       userId: m.id,
       entryId: null,
@@ -71,6 +82,7 @@ export async function fetchDirectory(
   }
 
   for (const e of entries) {
+    if (e.shifted) continue; // moved out — kept in the roster, hidden from the live directory
     if (e.phone && memberPhones.has(norm(e.phone))) continue; // member already represents them
     residents.push({
       key: `e:${e.id}`,
@@ -81,6 +93,9 @@ export async function fetchDirectory(
       resident_type: e.resident_type,
       profession: e.profession,
       vehicle_no: e.vehicle_no,
+      native: e.native,
+      alt_phone: e.alt_phone,
+      email: e.email,
       onboarded: false,
       userId: null,
       entryId: e.id,
@@ -105,6 +120,9 @@ export interface NewDirectoryEntry {
   resident_type: 'owner' | 'tenant' | null;
   profession: string | null;
   vehicle_no: string | null;
+  native?: string | null;
+  alt_phone?: string | null;
+  email?: string | null;
 }
 
 /** Add a non-member resident. Throws 'duplicate' if the phone already exists. */
@@ -118,6 +136,9 @@ export async function addDirectoryEntry(input: NewDirectoryEntry): Promise<void>
     resident_type: input.resident_type,
     profession: input.profession?.trim() || null,
     vehicle_no: input.vehicle_no?.trim() || null,
+    native: input.native?.trim() || null,
+    alt_phone: input.alt_phone?.replace(/\D/g, '') || null,
+    email: input.email?.trim() || null,
   });
   if (error) {
     if (error.code === '23505') throw new Error('duplicate');
