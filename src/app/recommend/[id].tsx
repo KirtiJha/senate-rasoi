@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { T } from '../../components/T';
 import { Avatar, Container, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -99,8 +100,8 @@ export default function RecoDetailScreen() {
               <Pressable onPress={removeQuestion} hitSlop={8} className="ml-auto"><Ionicons name="trash-outline" size={15} color={c.faint} /></Pressable>
             ) : null}
           </View>
-          <Text className="mt-2 font-display-x text-[21px] leading-[27px] text-ink">{q.title}</Text>
-          {q.detail ? <Text className="mt-1.5 text-[14px] leading-[21px] text-muted">{q.detail}</Text> : null}
+          <T source="recommend" id={q.id} field="title" text={q.title} className="mt-2 font-display-x text-[21px] leading-[27px] text-ink" />
+          {q.detail ? <T source="recommend" id={q.id} field="detail" text={q.detail} className="mt-1.5 text-[14px] leading-[21px] text-muted" /> : null}
           <View className="mt-2 flex-row items-center gap-2">
             <Avatar name={q.author?.name ?? '?'} size={22} />
             <Text className="text-[12px] text-faint">Asked by {q.author?.name ?? 'a neighbour'}{q.author?.flat ? ` · Flat ${q.author.flat}` : ''}</Text>
@@ -133,7 +134,7 @@ export default function RecoDetailScreen() {
                   <Text className="text-[12px] font-sans-bold" style={{ color: a.voted ? ACCENT : c.muted }}>{a.vote_count}</Text>
                 </Pressable>
                 <View className="flex-1">
-                  <Text className="text-[14px] leading-[20px] text-ink">{a.body}</Text>
+                  <T source="reco_answer" id={a.id} field="body" text={a.body} className="text-[14px] leading-[20px] text-ink" />
                   {a.provider_name || a.provider_phone ? (
                     <View className="mt-2 flex-row flex-wrap items-center gap-2">
                       {a.provider_name ? (

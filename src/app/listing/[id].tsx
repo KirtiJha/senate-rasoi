@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { InquiryModal } from '../../components/listings/InquiryModal';
 import { ListingChat } from '../../components/listings/ListingChat';
 import { PayButton } from '../../components/PayButton';
+import { T } from '../../components/T';
 import { Avatar, Badge, Button, Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -204,9 +205,11 @@ export default function ListingDetailScreen() {
             </View>
 
             {/* Title */}
-            <Text className="mb-1 font-display-x text-[24px] leading-8 text-ink">
-              {listing.is_referral ? listing.referral_name ?? listing.title : listing.title}
-            </Text>
+            {listing.is_referral ? (
+              <Text className="mb-1 font-display-x text-[24px] leading-8 text-ink">{listing.referral_name ?? listing.title}</Text>
+            ) : (
+              <T source="listing" id={listing.id} field="title" text={listing.title} className="mb-1 font-display-x text-[24px] leading-8 text-ink" />
+            )}
 
             {/* Price */}
             {listing.price != null && (
@@ -218,9 +221,7 @@ export default function ListingDetailScreen() {
 
             {/* Description */}
             {listing.description && (
-              <Text className="mb-4 text-[14px] font-sans-md leading-6 text-muted">
-                {listing.description}
-              </Text>
+              <T source="listing" id={listing.id} field="description" text={listing.description} className="mb-4 text-[14px] font-sans-md leading-6 text-muted" />
             )}
 
             {/* Owner card */}

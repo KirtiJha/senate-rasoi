@@ -4,6 +4,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { PropertyChat } from '../../components/PropertyChat';
+import { T } from '../../components/T';
 import { Avatar, Button, Container, ScreenHeader, Sheet } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -149,7 +150,7 @@ export default function PropertyDetailScreen() {
               </View>
             )}
           </View>
-          <Text className="mt-2 font-display-x text-[22px] text-ink">{p.title}</Text>
+          <T source="property" id={p.id} field="title" text={p.title} className="mt-2 font-display-x text-[22px] text-ink" />
 
           {/* Price → contact */}
           <View className="mt-2 flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3.5 py-2.5">
@@ -157,7 +158,7 @@ export default function PropertyDetailScreen() {
             <Text className="flex-1 text-[13px] text-muted">Price on request — contact the owner</Text>
           </View>
 
-          {p.description ? <Text className="mt-3 text-[14px] leading-[21px] text-muted">{p.description}</Text> : null}
+          {p.description ? <T source="property" id={p.id} field="description" text={p.description} className="mt-3 text-[14px] leading-[21px] text-muted" /> : null}
 
           {/* Specs */}
           {specs.length > 0 ? (

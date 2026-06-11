@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { T } from '../../components/T';
 import { Avatar, Button, Container, ScreenHeader, Sheet } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -94,8 +95,8 @@ export default function LendItemDetailScreen() {
               <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#16A34A22' }}><Text className="text-[11px] font-sans-sb" style={{ color: '#16A34A' }}>Available</Text></View>
             )}
           </View>
-          <Text className="mt-1.5 font-display-x text-[21px] text-ink">{item.title}</Text>
-          {item.description ? <Text className="mt-2 text-[14px] leading-[21px] text-muted">{item.description}</Text> : null}
+          <T source="borrow" id={item.id} field="title" text={item.title} className="mt-1.5 font-display-x text-[21px] text-ink" />
+          {item.description ? <T source="borrow" id={item.id} field="description" text={item.description} className="mt-2 text-[14px] leading-[21px] text-muted" /> : null}
 
           <View className="mt-4 flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3.5">
             <Avatar name={ownerName} size={40} />
