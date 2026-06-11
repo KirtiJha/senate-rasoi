@@ -18,7 +18,7 @@ import { useResponsive } from './Container';
  * on the tab screens that already show it in the TopBar, to avoid duplicates.
  */
 export function ScreenHeader({
-  icon, iconNode, iconColor, title, onAdd, addLabel = 'Add', showBack, right, subBar, hideSociety,
+  icon, iconNode, iconColor, title, onAdd, addLabel = 'Add', showBack, backHref, right, subBar, hideSociety,
 }: {
   icon?: keyof typeof Ionicons.glyphMap;
   iconNode?: ReactNode; // custom leading element (e.g. the app logo); overrides `icon`
@@ -27,6 +27,7 @@ export function ScreenHeader({
   onAdd?: () => void;
   addLabel?: string;
   showBack?: boolean;
+  backHref?: string; // fallback target when there's no history (e.g. a hard refresh on web)
   right?: ReactNode;
   subBar?: ReactNode;
   hideSociety?: boolean;
@@ -36,6 +37,13 @@ export function ScreenHeader({
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { community } = useAuth();
+
+  // On web, refreshing a deep route leaves an empty history stack, so router.back()
+  // is a no-op. Fall back to a sensible parent (or Home) in that case.
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace((backHref ?? '/') as any);
+  };
 
   const showSociety = !isDesktop && !hideSociety && !!community;
 
@@ -53,7 +61,7 @@ export function ScreenHeader({
 
       <View className="flex-row items-center gap-2">
         {showBack && !isDesktop ? (
-          <Pressable onPress={() => router.back()} hitSlop={10} className="-ml-1.5 h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+          <Pressable onPress={goBack} hitSlop={10} className="-ml-1.5 h-9 w-9 items-center justify-center rounded-full active:bg-inset">
             <Ionicons name="chevron-back" size={22} color={c.ink} />
           </Pressable>
         ) : null}

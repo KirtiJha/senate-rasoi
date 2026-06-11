@@ -4,7 +4,7 @@
 > Status legend: 🔴 Open · 🟡 In Progress · 🟢 Implemented · ⚪️ Won't Do / Deferred
 > Type legend: 🐞 Bug · ✨ Enhancement · 💡 Idea/Feature
 
-_Last updated: 11 Jun 2026, 11:30 PM IST_
+_Last updated: 12 Jun 2026, 12:30 AM IST_
 
 ---
 
@@ -12,7 +12,7 @@ _Last updated: 11 Jun 2026, 11:30 PM IST_
 
 | Open | In Progress | Implemented | Deferred | Total |
 |---|---|---|---|---|
-| 1 | 1 | 3 | 0 | 5 |
+| 1 | 1 | 6 | 0 | 8 |
 
 ---
 
@@ -66,6 +66,33 @@ _Last updated: 11 Jun 2026, 11:30 PM IST_
 
 ---
 
+### #6 — Back button stops working after a page refresh 🐞
+- **Status:** 🟢 Implemented
+- **Area:** Navigation (web) · e.g. Sports → Booking dues
+- **Reported:** 12 Jun 2026
+- **Root cause:** On web, a hard refresh of a deep route starts a fresh history stack, so `router.back()` (used by every `ScreenHeader` back chevron) had nowhere to go and silently did nothing. Navigating *within* the app built history, so back worked then.
+- **Fix:** `ScreenHeader` back now does `router.canGoBack() ? back() : router.replace(backHref ?? '/')`. Added an optional `backHref` (Booking dues → `/sports`, sports group → `/sports`); everything else falls back to Home. So back always goes somewhere sensible, even after a refresh.
+
+---
+
+### #7 — "I owe" / "Owed to me" always blank 🐞
+- **Status:** 🟢 Implemented
+- **Area:** Sports / Booking dues
+- **Reported:** 12 Jun 2026
+- **Root cause:** `fetchMyDues` and `fetchBookerCollections` only returned sessions where **`sessionEnded`** was true — i.e. dues stayed empty until the session's *end* time (start + duration) had passed. While testing before that, both tabs were blank.
+- **Fix:** Dues now go live once the **game has started** (`sessionStarted` — start time reached), not only after it ends, and only for **paid** sessions (charge > 0). The amount is `charge ÷ confirmed players`, charged to each confirmed non-booker and owed to the booker, and it updates live as people confirm/decline (per #4's realtime). So booking an 8:00 game shows the split from 8:00, finalising at the end.
+
+---
+
+### #8 — Court booking form requires typing date / time / duration ✨
+- **Status:** 🟢 Implemented
+- **Area:** Sports / Book a session
+- **Reported:** 12 Jun 2026
+- **Root cause:** Time (`18:00`), duration (`60`) and one-off date (`2026-06-20`) were free-text inputs — error-prone and unfriendly on mobile.
+- **Fix:** Replaced with tap selectors: a **TimePicker** (hour 1–12 + minute 00/15/30/45 + AM/PM), **duration pills** (30m/45m/1h/1h 30m/2h), a **date picker** (next 14 days as Today/Tomorrow/weekday pills), and **week-count pills** (1/2/4/8/12). Sensible defaults pre-filled (6:00 PM, 1h, today) so a booking is valid in a couple of taps. Charge, venue, title and UPI stay as text.
+
+---
+
 ## End-to-end review notes (Home Food + Badminton)
 
 **Verified working in code:** dish posting (now resilient to photo failures); order placement → **chef push on new order** + **buyer push on status change** (0005, title fixed in #3); Kitchen & Orders screens have **realtime**; badminton group create / booking → **member push** (0043) → RSVP (fixed in #2) → session-end **client-side cost split** → **UPI dues** (pay → initiated → booker confirms → paid) with the dues screen now **live** (#4).
@@ -75,5 +102,6 @@ _Last updated: 11 Jun 2026, 11:30 PM IST_
 ---
 
 ## Changelog
+- **12 Jun 2026** — Logged + fixed #6 (back-on-refresh fallback), #7 (dues blank — now live at game start, not only after end), #8 (booking form tap selectors for time/duration/date/weeks).
 - **11 Jun 2026 (later)** — Reviewed Home Food + Badminton end-to-end. #2 fixed (realtime + toast + optimistic RSVP + clearer control); #1 hardened (photo non-fatal + real errors, needs bucket verified). Logged + fixed #3 (order-notify rebrand, migration 0049) and #4 (dues screen realtime). Logged #5 (in-app order notifications, deferred).
 - **11 Jun 2026** — Tracker created. Logged issues #1 and #2.

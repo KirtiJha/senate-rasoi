@@ -104,3 +104,11 @@ export function sessionEnded(dateISO: string, hhmm: string, durationMin: number)
   if (t) start.setHours(parseInt(t[1], 10), parseInt(t[2], 10), 0, 0);
   return Date.now() >= start.getTime() + (durationMin || 0) * 60000;
 }
+
+/** Has this session's start time passed? Dues go live at game time, not only at the end. */
+export function sessionStarted(dateISO: string, hhmm: string): boolean {
+  const t = /^(\d{1,2}):(\d{2})$/.exec((hhmm || '00:00').trim());
+  const start = new Date(dateISO + 'T00:00:00');
+  if (t) start.setHours(parseInt(t[1], 10), parseInt(t[2], 10), 0, 0);
+  return Date.now() >= start.getTime();
+}

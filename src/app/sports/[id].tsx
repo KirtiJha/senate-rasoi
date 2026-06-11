@@ -10,7 +10,7 @@ export default function SportGroupScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader title={title} showBack />
+      <ScreenHeader title={title} showBack backHref="/sports" />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container>
           <SportGroupBody groupId={id} onTitle={setTitle} />

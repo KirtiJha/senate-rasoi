@@ -239,8 +239,8 @@ function CreateBookingSheet({
   const [location, setLocation] = useState('');
   const [days, setDays] = useState<number[]>([]);
   const [weeks, setWeeks] = useState('4');
-  const [oneOff, setOneOff] = useState('');
-  const [time, setTime] = useState('');
+  const [oneOff, setOneOff] = useState(() => new Date().toLocaleDateString('en-CA'));
+  const [time, setTime] = useState('18:00');
   const [duration, setDuration] = useState('60');
   const [charge, setCharge] = useState('');
   const [upi, setUpi] = useState(profile?.upi ?? '');
@@ -286,25 +286,20 @@ function CreateBookingSheet({
           <Text className={lbl}>Days</Text>
           <View className="mb-3"><WeekdayChips value={days} onChange={setDays} accent={accent} /></View>
           <Text className={lbl}>For how many weeks</Text>
-          <TextInput value={weeks} onChangeText={setWeeks} keyboardType="number-pad" placeholder="4" placeholderTextColor={c.faint} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />
+          <View className="mb-3"><NumberChips options={[1, 2, 4, 8, 12]} value={parseInt(weeks, 10) || 0} onChange={(v) => setWeeks(String(v))} suffix=" wk" accent={accent} c={c} /></View>
         </>
       ) : (
         <>
           <Text className={lbl}>Date</Text>
-          <TextInput value={oneOff} onChangeText={setOneOff} placeholder="2026-06-20" placeholderTextColor={c.faint} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />
+          <View className="mb-3"><DateChips value={oneOff} onChange={setOneOff} accent={accent} c={c} /></View>
         </>
       )}
 
-      <View className="mb-3 flex-row gap-2">
-        <View className="flex-1">
-          <Text className={lbl}>Time</Text>
-          <TextInput value={time} onChangeText={setTime} placeholder="18:00" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
-        </View>
-        <View className="flex-1">
-          <Text className={lbl}>Duration (min)</Text>
-          <TextInput value={duration} onChangeText={setDuration} keyboardType="number-pad" placeholder="60" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
-        </View>
-      </View>
+      <Text className={lbl}>Start time</Text>
+      <View className="mb-3"><TimePicker value={time} onChange={setTime} accent={accent} c={c} /></View>
+
+      <Text className={lbl}>Duration</Text>
+      <View className="mb-3"><DurationChips value={durMin} onChange={(m) => setDuration(String(m))} accent={accent} c={c} /></View>
 
       <View className="mb-3 flex-row gap-2">
         <View className="flex-1">
@@ -323,5 +318,100 @@ function CreateBookingSheet({
         Players confirm per day. After each session the charge splits equally among everyone who played (including you), and they pay their share to this UPI.
       </Text>
     </Sheet>
+  );
+}
+
+// ── Tap-to-select inputs for the booking form ───────────────────────
+const pad2 = (n: number) => String(n).padStart(2, '0');
+type Cols = ReturnType<typeof useThemeColors>;
+
+const chipStyle = (active: boolean, accent: string, c: Cols) => ({
+  backgroundColor: active ? accent : c.surface,
+  borderWidth: 1,
+  borderColor: active ? accent : c.line,
+});
+
+/** Hour (1–12) + minute (00/15/30/45) + AM/PM. Emits "HH:MM" (24-hour). */
+function TimePicker({ value, onChange, accent, c }: { value: string; onChange: (v: string) => void; accent: string; c: Cols }) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(value || '');
+  const h24 = m ? parseInt(m[1], 10) : 18;
+  const min = m ? m[2] : '00';
+  const pm = h24 >= 12;
+  const h12 = h24 % 12 || 12;
+  const set = (nh12: number, nmin: string, npm: boolean) => {
+    let h = nh12 % 12;
+    if (npm) h += 12;
+    onChange(`${pad2(h)}:${nmin}`);
+  };
+  return (
+    <View className="rounded-2xl border border-line bg-inset p-2.5">
+      <View className="flex-row flex-wrap gap-1.5">
+        {Array.from({ length: 12 }, (_, i) => i + 1).map((hh) => (
+          <Pressable key={hh} onPress={() => set(hh, min, pm)} className="items-center justify-center rounded-lg" style={[{ width: 34, height: 30 }, chipStyle(h12 === hh, accent, c)]}>
+            <Text className="text-[12px] font-sans-sb" style={{ color: h12 === hh ? '#fff' : c.ink }}>{hh}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <View className="mt-2 flex-row gap-1.5">
+        {['00', '15', '30', '45'].map((mm) => (
+          <Pressable key={mm} onPress={() => set(h12, mm, pm)} className="flex-1 items-center rounded-lg py-1.5" style={chipStyle(min === mm, accent, c)}>
+            <Text className="text-[12px] font-sans-sb" style={{ color: min === mm ? '#fff' : c.ink }}>:{mm}</Text>
+          </Pressable>
+        ))}
+        {([['AM', false], ['PM', true]] as const).map(([label, p]) => (
+          <Pressable key={label} onPress={() => set(h12, min, p)} className="flex-1 items-center rounded-lg py-1.5" style={chipStyle(pm === p, accent, c)}>
+            <Text className="text-[12px] font-sans-sb" style={{ color: pm === p ? '#fff' : c.ink }}>{label}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/** Duration as tappable pills (30m … 2h). */
+function DurationChips({ value, onChange, accent, c }: { value: number; onChange: (m: number) => void; accent: string; c: Cols }) {
+  return (
+    <View className="flex-row flex-wrap gap-1.5">
+      {[30, 45, 60, 90, 120].map((mins) => (
+        <Pressable key={mins} onPress={() => onChange(mins)} className="rounded-full px-3.5 py-1.5" style={chipStyle(value === mins, accent, c)}>
+          <Text className="text-[12.5px] font-sans-sb" style={{ color: value === mins ? '#fff' : c.muted }}>{durationLabel(mins)}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+/** Next 14 days as tappable date pills. Emits YYYY-MM-DD. */
+function DateChips({ value, onChange, accent, c }: { value: string; onChange: (iso: string) => void; accent: string; c: Cols }) {
+  const base = new Date();
+  base.setHours(0, 0, 0, 0);
+  const days = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date(base);
+    d.setDate(base.getDate() + i);
+    const iso = d.toLocaleDateString('en-CA');
+    const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+    return { iso, label };
+  });
+  return (
+    <View className="flex-row flex-wrap gap-1.5">
+      {days.map((d) => (
+        <Pressable key={d.iso} onPress={() => onChange(d.iso)} className="rounded-full px-3 py-1.5" style={chipStyle(value === d.iso, accent, c)}>
+          <Text className="text-[12px] font-sans-sb" style={{ color: value === d.iso ? '#fff' : c.muted }}>{d.label}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+/** Generic number pills (used for "how many weeks"). */
+function NumberChips({ options, value, onChange, suffix, accent, c }: { options: number[]; value: number; onChange: (v: number) => void; suffix?: string; accent: string; c: Cols }) {
+  return (
+    <View className="flex-row flex-wrap gap-1.5">
+      {options.map((n) => (
+        <Pressable key={n} onPress={() => onChange(n)} className="rounded-full px-3.5 py-1.5" style={chipStyle(value === n, accent, c)}>
+          <Text className="text-[12.5px] font-sans-sb" style={{ color: value === n ? '#fff' : c.muted }}>{n}{suffix ?? ''}</Text>
+        </Pressable>
+      ))}
+    </View>
   );
 }

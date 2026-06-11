@@ -1,4 +1,4 @@
-import { sessionEnded, upcomingDates } from './schedule';
+import { sessionEnded, sessionStarted, upcomingDates } from './schedule';
 import { supabase } from './supabase';
 
 /**
@@ -248,11 +248,12 @@ export async function fetchMyDues(userId: string): Promise<DueItem[]> {
     .select('id, group_id, session_date, start_time, duration_min, charge, status, booking:court_bookings!court_sessions_booking_id_fkey(booker_user_id, upi_id, title, booker:profiles!court_bookings_booker_user_id_fkey(name, upi))')
     .in('id', sessionIds).eq('status', 'scheduled');
 
-  const ended = (sessions ?? []).filter((s: any) =>
-    s.booking?.booker_user_id !== userId && sessionEnded(s.session_date, s.start_time, s.duration_min));
-  if (!ended.length) return [];
+  // Dues go live once the game has STARTED (not only after it ends), for paid sessions.
+  const billable = (sessions ?? []).filter((s: any) =>
+    s.booking?.booker_user_id !== userId && num(s.charge) > 0 && sessionStarted(s.session_date, s.start_time));
+  if (!billable.length) return [];
 
-  const endedIds = ended.map((s: any) => s.id);
+  const endedIds = billable.map((s: any) => s.id);
   const [{ data: confirmRows }, { data: payRows }] = await Promise.all([
     supabase.from('court_session_players').select('session_id, status').in('session_id', endedIds).eq('status', 'confirmed'),
     supabase.from('court_payments').select('*').eq('payer_user_id', userId).in('session_id', endedIds),
@@ -263,7 +264,7 @@ export async function fetchMyDues(userId: string): Promise<DueItem[]> {
   const payBySession = new Map<string, any>();
   for (const p of (payRows ?? []) as any[]) payBySession.set(p.session_id, p);
 
-  return ended.map((s: any) => {
+  return billable.map((s: any) => {
     const n = counts.get(s.id) ?? 1;
     const pay = payBySession.get(s.id);
     return {
@@ -325,10 +326,10 @@ export async function fetchBookerCollections(userId: string): Promise<Collection
     .from('court_sessions')
     .select('id, session_date, start_time, duration_min, charge, status, booking:court_bookings!court_sessions_booking_id_fkey(title)')
     .in('booking_id', bookingIds).eq('status', 'scheduled');
-  const ended = (sessions ?? []).filter((s: any) => sessionEnded(s.session_date, s.start_time, s.duration_min));
-  if (!ended.length) return [];
+  const billable = (sessions ?? []).filter((s: any) => num(s.charge) > 0 && sessionStarted(s.session_date, s.start_time));
+  if (!billable.length) return [];
 
-  const ids = ended.map((s: any) => s.id);
+  const ids = billable.map((s: any) => s.id);
   const [{ data: players }, { data: pays }] = await Promise.all([
     supabase.from('court_session_players').select('session_id, user_id, status, profile:profiles!court_session_players_user_id_fkey(name, flat)').in('session_id', ids).eq('status', 'confirmed'),
     supabase.from('court_payments').select('*').eq('payee_user_id', userId).in('session_id', ids),
@@ -339,7 +340,7 @@ export async function fetchBookerCollections(userId: string): Promise<Collection
   const payByKey = new Map<string, any>();
   for (const p of (pays ?? []) as any[]) payByKey.set(`${p.session_id}:${p.payer_user_id}`, p);
   const sessById = new Map<string, any>();
-  for (const s of ended) sessById.set(s.id, s);
+  for (const s of billable) sessById.set(s.id, s);
 
   const out: CollectionPlayer[] = [];
   for (const p of (players ?? []) as any[]) {
