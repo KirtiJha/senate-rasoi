@@ -97,14 +97,16 @@ export interface AskResponse {
   results: AskResultItem[];
 }
 
-/** Ask a natural-language question over the society's own listings. */
-export async function askAangan(question: string): Promise<AskResponse> {
+export type ChatTurn = { role: 'user' | 'assistant'; text: string };
+
+/** Ask a natural-language question over the society's own listings (with chat history). */
+export async function askAangan(question: string, history: ChatTurn[] = []): Promise<AskResponse> {
   if (!isSupabaseConfigured) throw new AIError('Connect Supabase to use AI.');
   const q = question.trim();
   if (!q) throw new AIError('Type a question first.');
 
   const { data, error } = await supabase.functions.invoke('ai-proxy', {
-    body: { action: 'ask', question: q },
+    body: { action: 'ask', question: q, history: history.slice(-8) },
   });
 
   const bodyErr = (data as { error?: string; message?: string } | null)?.error;

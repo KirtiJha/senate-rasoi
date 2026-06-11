@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BrandMark } from '../../components/BrandMark';
 import { Avatar, RowSkeleton, ScreenHeader, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { fetchDirectory } from '../../lib/directory';
@@ -216,8 +217,8 @@ export default function SearchScreen() {
                 className="mb-5 flex-row items-center gap-3 rounded-2xl border active:opacity-90"
                 style={{ borderColor: c.accent + '55', backgroundColor: c.accent + '12' }}
               >
-                <View className="h-10 w-10 items-center justify-center rounded-2xl" style={{ backgroundColor: c.accent + '22', marginLeft: 12, marginVertical: 12 }}>
-                  <Ionicons name="sparkles" size={18} color={c.accent} />
+                <View style={{ marginLeft: 12, marginVertical: 11 }}>
+                  <BrandMark size={38} />
                 </View>
                 <View className="flex-1 py-3">
                   <Text className="font-sans-bold text-[14px] text-ink">Ask Aangan a question</Text>

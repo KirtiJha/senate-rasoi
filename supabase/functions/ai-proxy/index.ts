@@ -333,18 +333,23 @@ async function buildFacts(admin: any, communityId: string): Promise<string> {
   return lines.join('\n');
 }
 
-async function callAsk(question: string, catalog: CatalogItem[], facts: string): Promise<Record<string, unknown>> {
+type ChatTurn = { role: 'user' | 'assistant'; text: string };
+
+async function callAsk(question: string, catalog: CatalogItem[], facts: string, history: ChatTurn[]): Promise<Record<string, unknown>> {
   const lines = catalog.map((c) => `- [${c.source}:${c.id}] ${c.title} — ${c.info}`).join('\n');
+  const convo = history.map((h) => `${h.role === 'user' ? 'Resident' : 'Aangan'}: ${h.text}`).join('\n');
   const prompt =
-    "You are Aangan's helpful assistant for an Indian residential society. A resident asked a question. " +
-    'Answer using ONLY the society info and catalog below. For questions about members, residents, who lives where, ' +
-    'professions, announcements or polls, use the "Society info" section. For things to buy/borrow/eat/rent, use the catalog ' +
-    'and list the matching items (best first) in results. Write a short, warm answer. Never invent people, items, prices or ' +
-    'contacts. If you genuinely have nothing relevant, say so politely.\n\n' +
-    `Resident's question: "${question}"\n\n` +
+    "You are Aangan, a friendly assistant for an Indian residential society, having an ongoing chat with a resident. " +
+    'Answer using ONLY the society info and catalog below. Use the conversation so far to resolve follow-ups ' +
+    '(e.g. "any cheaper?", "what about veg ones?", "in tower B?"). For questions about members, residents, who lives ' +
+    'where, professions, announcements or polls, use the "Society info" section. For things to buy/borrow/eat/rent, use ' +
+    'the catalog and list the matching items (best first) in results. Write a short, warm, conversational answer. Never ' +
+    'invent people, items, prices or contacts. If you genuinely have nothing relevant, say so politely.\n\n' +
+    (convo ? `Conversation so far:\n${convo}\n\n` : '') +
+    `Resident's new message: "${question}"\n\n` +
     (facts ? `Society info:\n${facts}\n\n` : '') +
     `Catalog (source:id — title — details):\n${lines || '(no listings right now)'}\n\n` +
-    'In results, copy the source and id exactly from the matching catalog lines. Society-info answers usually have no result cards.';
+    'In results, copy the source and id exactly from the matching catalog lines. Society-info or follow-up answers often have no new result cards.';
   return geminiJSON([{ text: prompt }], ASK_SCHEMA, 0.3);
 }
 
@@ -534,7 +539,7 @@ Deno.serve(async (req) => {
   // ── 2. Parse the request ──
   let body: {
     action?: string; kind?: Kind; note?: string; image?: string; question?: string;
-    target_lang?: string; items?: TranslateItem[];
+    target_lang?: string; items?: TranslateItem[]; history?: { role?: string; text?: string }[];
   };
   try {
     body = await req.json();
@@ -605,14 +610,24 @@ Deno.serve(async (req) => {
     }
   }
 
-  // ── 4b. Ask Aangan: answer over the society's catalog ──
+  // ── 4b. Ask Aangan: conversational answer over the society's catalog ──
   const question = (body.question ?? '').toString().trim().slice(0, 300);
   if (!question) return json({ error: 'Ask a question first' }, 400);
+
+  // Prior turns (for follow-up resolution); cap to the last few.
+  const history: ChatTurn[] = (Array.isArray(body.history) ? body.history : [])
+    .slice(-8)
+    .map((h: { role?: string; text?: string }) => ({ role: h.role === 'assistant' ? 'assistant' : 'user', text: String(h.text ?? '').slice(0, 1000) }))
+    .filter((h: ChatTurn) => h.text);
 
   // Scope strictly to the caller's own society (service role bypasses RLS).
   const { data: prof } = await admin.from('profiles').select('community_id').eq('id', userId).single();
   const communityId = prof?.community_id as string | undefined;
   if (!communityId) return json({ result: { answer: 'Join a society to use Ask Aangan.', results: [] } });
+
+  // For retrieval, blend the previous user turn so short follow-ups still match.
+  const prevUser = [...history].reverse().find((h) => h.role === 'user')?.text;
+  const retrievalText = prevUser ? `${prevUser}\n${question}` : question;
 
   try {
     let catalog: CatalogItem[] = [];
@@ -630,8 +645,8 @@ Deno.serve(async (req) => {
             : Promise.resolve()));
       }
 
-      // 2. Embed the question and cosine-search the index.
-      const [qVec] = await embedTexts([question], 'RETRIEVAL_QUERY');
+      // 2. Embed the question (blended with the prior turn) and cosine-search.
+      const [qVec] = await embedTexts([retrievalText], 'RETRIEVAL_QUERY');
       if (qVec) {
         const { data: matches } = await admin.rpc('match_documents', { p_community: communityId, p_embedding: toVec(qVec), p_count: 18 });
         if (matches?.length) {
@@ -650,7 +665,7 @@ Deno.serve(async (req) => {
     // Always-on society facts (members, residents, announcements, polls).
     const facts = await buildFacts(admin, communityId);
 
-    const result = await callAsk(question, catalog, facts);
+    const result = await callAsk(question, catalog, facts, history);
     return json({ result });
   } catch (e) {
     console.error('ai-proxy ask error:', e);

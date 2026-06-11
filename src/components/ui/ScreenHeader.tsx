@@ -18,9 +18,10 @@ import { useResponsive } from './Container';
  * on the tab screens that already show it in the TopBar, to avoid duplicates.
  */
 export function ScreenHeader({
-  icon, iconColor, title, onAdd, addLabel = 'Add', showBack, right, subBar, hideSociety,
+  icon, iconNode, iconColor, title, onAdd, addLabel = 'Add', showBack, right, subBar, hideSociety,
 }: {
   icon?: keyof typeof Ionicons.glyphMap;
+  iconNode?: ReactNode; // custom leading element (e.g. the app logo); overrides `icon`
   iconColor?: string;
   title: string;
   onAdd?: () => void;
@@ -56,7 +57,7 @@ export function ScreenHeader({
             <Ionicons name="chevron-back" size={22} color={c.ink} />
           </Pressable>
         ) : null}
-        {icon ? <Ionicons name={icon} size={20} color={iconColor ?? c.ink} /> : null}
+        {iconNode ?? (icon ? <Ionicons name={icon} size={20} color={iconColor ?? c.ink} /> : null)}
         <Text className="flex-1 font-display-x text-[20px] text-ink" numberOfLines={1}>{title}</Text>
         {right}
         {onAdd ? (

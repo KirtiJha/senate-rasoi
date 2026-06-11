@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BrandMark } from '../../components/BrandMark';
 import { T } from '../../components/T';
 import { Container, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
@@ -216,8 +217,8 @@ export default function HomeScreen() {
           className="mb-5 flex-row items-center gap-3 overflow-hidden rounded-2xl border active:opacity-90"
           style={{ borderColor: c.accent + '55', backgroundColor: c.accent + '12' }}
         >
-          <View className="h-11 w-11 items-center justify-center rounded-2xl" style={{ backgroundColor: c.accent + '22', marginLeft: 12, marginVertical: 12 }}>
-            <Ionicons name="sparkles" size={20} color={c.accent} />
+          <View style={{ marginLeft: 12, marginVertical: 11 }}>
+            <BrandMark size={42} />
           </View>
           <View className="flex-1 py-3">
             <Text className="font-sans-bold text-[15px] text-ink">Ask Aangan</Text>

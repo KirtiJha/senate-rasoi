@@ -143,7 +143,7 @@ export default function PostScreen({
       if (r.description) setDescription(r.description);
       setPhotoFlagged(false);
       haptics.success();
-      toast.show('Filled from your photo ✨ — check & tweak it');
+      toast.show('Filled from your photo ✨ — set the price & post');
     } catch (e) {
       if (e instanceof AIError && e.code === 'not_relevant') setPhotoFlagged(true);
       toast.show(e instanceof AIError ? e.message : 'Could not read the photo — fill it in');
@@ -167,8 +167,13 @@ export default function PostScreen({
       toast.show('Please add your name, flat and WhatsApp ⚠️');
       return;
     }
-    if (!dishName.trim() || !slot || !vegType || !priceNum) {
-      toast.show('Please fill the dish name, slot, type and price ⚠️');
+    const missing: string[] = [];
+    if (!dishName.trim()) missing.push('dish name');
+    if (!slot) missing.push('meal slot');
+    if (!vegType) missing.push('veg / non-veg');
+    if (!priceNum) missing.push('price per plate');
+    if (missing.length) {
+      toast.show(`Please add ${missing.join(', ')} ⚠️`);
       return;
     }
 
@@ -180,8 +185,8 @@ export default function PostScreen({
         communityId,
         profile: { chefName, flat, whatsapp, upi },
         dishName,
-        slot,
-        vegType,
+        slot: slot!,
+        vegType: vegType!,
         price: priceNum,
         maxPlates,
         description,
@@ -222,8 +227,14 @@ export default function PostScreen({
       setEditingIdentity(true);
       return toast.show('Please add your name, flat and WhatsApp ⚠️');
     }
-    if (!tTitle.trim() || !tSlot || !tVeg || !priceNum || tDays.length === 0) {
-      return toast.show('Please fill the title, days, slot, type and price ⚠️');
+    const tMissing: string[] = [];
+    if (!tTitle.trim()) tMissing.push('tiffin name');
+    if (tDays.length === 0) tMissing.push('days of the week');
+    if (!tSlot) tMissing.push('meal slot');
+    if (!tVeg) tMissing.push('veg / non-veg');
+    if (!priceNum) tMissing.push('price per day');
+    if (tMissing.length) {
+      return toast.show(`Please add ${tMissing.join(', ')} ⚠️`);
     }
     if (tCutoff && !/^\d{1,2}:\d{2}$/.test(tCutoff.trim())) {
       return toast.show('Cutoff must look like 09:00 ⚠️');
@@ -237,8 +248,8 @@ export default function PostScreen({
         communityId,
         title: tTitle,
         description: tDesc,
-        vegType: tVeg,
-        slot: tSlot,
+        vegType: tVeg!,
+        slot: tSlot!,
         price: priceNum,
         daysOfWeek: tDays,
         maxPerDay: tMax,

@@ -8,6 +8,7 @@ import { useNotifications } from '../context/notifications';
 import { useThemePreference } from '../context/theme';
 import { useUnreadDms } from '../context/unread';
 import { useThemeColors } from '../theme';
+import { BrandMark } from './BrandMark';
 import { Wordmark } from './Brand';
 import { Avatar } from './ui';
 
@@ -108,11 +109,15 @@ function NavItemRow({
           style={{ marginLeft: av.iconMarginL, paddingVertical: 10, paddingLeft: 12 }}
         >
           <View>
-            <Ionicons
-              name={active ? item.activeIcon : item.icon}
-              size={21}
-              color={iconColor}
-            />
+            {item.href === '/ask' ? (
+              <BrandMark size={22} />
+            ) : (
+              <Ionicons
+                name={active ? item.activeIcon : item.icon}
+                size={21}
+                color={iconColor}
+              />
+            )}
             {badge > 0 ? (
               <View
                 style={{
