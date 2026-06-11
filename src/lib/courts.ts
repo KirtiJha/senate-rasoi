@@ -195,6 +195,31 @@ export async function respondToSession(sessionId: string, userId: string, status
   if (error) throw error;
 }
 
+/**
+ * Live updates for one group's bookings: re-runs `onChange` whenever a session,
+ * booking or RSVP changes. (court_session_players has no group_id column, so it's
+ * subscribed unfiltered — a re-fetch scopes back to this group.)
+ */
+export function subscribeGroupSessions(groupId: string, onChange: () => void): () => void {
+  const ch = supabase
+    .channel(`court-${groupId}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'court_session_players' }, () => onChange())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'court_sessions', filter: `group_id=eq.${groupId}` }, () => onChange())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'court_bookings', filter: `group_id=eq.${groupId}` }, () => onChange())
+    .subscribe();
+  return () => { supabase.removeChannel(ch); };
+}
+
+/** Live updates for the dues screen — payments and RSVPs that change what's owed/collected. */
+export function subscribeCourtPayments(onChange: () => void): () => void {
+  const ch = supabase
+    .channel('court-payments-live')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'court_payments' }, () => onChange())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'court_session_players' }, () => onChange())
+    .subscribe();
+  return () => { supabase.removeChannel(ch); };
+}
+
 // ── Dues (member's perspective) ─────────────────────────────────────
 export interface DueItem {
   session_id: string;

@@ -131,9 +131,16 @@ export async function postDish(input: NewDishInput): Promise<DishRow> {
   // Pre-generate the id (a real UUID) so the photo path can reference it.
   const id = Crypto.randomUUID();
 
+  // Photo upload is best-effort: a Storage hiccup (e.g. the dish-photos bucket or
+  // its policy not yet set) must never block posting the dish. The caller compares
+  // photo_url against the requested photoUri to warn that the image didn't attach.
   let photoUrl: string | null = null;
   if (input.photoUri) {
-    photoUrl = await uploadDishPhoto(input.photoUri, id);
+    try {
+      photoUrl = await uploadDishPhoto(input.photoUri, id);
+    } catch (e) {
+      console.error('dish photo upload failed — posting without it:', e);
+    }
   }
 
   const row = {

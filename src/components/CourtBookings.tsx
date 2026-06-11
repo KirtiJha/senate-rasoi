@@ -8,7 +8,9 @@ import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import {
   SessionView, cancelSession, createBooking, deleteBooking, fetchGroupSessions, respondToSession,
+  subscribeGroupSessions,
 } from '../lib/courts';
+import { haptics } from '../lib/haptics';
 import { durationLabel, formatTime, isValidTime } from '../lib/schedule';
 import { useThemeColors } from '../theme';
 import { WeekdayChips } from './WeekdayChips';
@@ -50,12 +52,31 @@ export function CourtBookings({
 
   useEffect(() => { load(); }, [load]);
 
+  // Live updates: counts & statuses refresh when anyone in the group responds.
+  useEffect(() => subscribeGroupSessions(groupId, load), [groupId, load]);
+
   const respond = async (s: SessionView, status: 'confirmed' | 'declined') => {
-    if (!userId) return;
+    if (!userId || busy) return;
+    haptics.tap();
     setBusy(s.id);
-    try { await respondToSession(s.id, userId, status); await load(); }
-    catch { toast.show('Could not update — try again'); }
-    finally { setBusy(null); }
+    // Optimistic: flip my choice (and the live count) instantly so the control reflects it.
+    setSessions((prev) => prev.map((x) => {
+      if (x.id !== s.id) return x;
+      const was = x.myStatus;
+      let confirmedCount = x.confirmedCount;
+      if (status === 'confirmed' && was !== 'confirmed') confirmedCount += 1;
+      if (status !== 'confirmed' && was === 'confirmed') confirmedCount = Math.max(0, confirmedCount - 1);
+      const perHead = confirmedCount > 0 ? Math.ceil(x.charge / confirmedCount) : x.charge;
+      return { ...x, myStatus: status, confirmedCount, perHead };
+    }));
+    try {
+      await respondToSession(s.id, userId, status);
+      toast.show(status === 'confirmed' ? "You're in ✓" : "Marked as can't come");
+      await load();
+    } catch {
+      toast.show('Could not update — try again');
+      await load(); // reconcile back to the server truth
+    } finally { setBusy(null); }
   };
 
   const onCancelSession = (s: SessionView) => {
@@ -171,25 +192,30 @@ function SessionCard({
       ) : isBooker ? (
         <Text className="mt-2 text-[11px] font-sans-sb" style={{ color: accent }}>You booked · you're in</Text>
       ) : (
-        <View className="mt-2.5 flex-row gap-2">
-          <Pressable
-            onPress={() => onRespond(s, 'confirmed')}
-            disabled={busy}
-            className="flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2"
-            style={{ backgroundColor: s.myStatus === 'confirmed' ? accent : c.surface, borderWidth: 1, borderColor: s.myStatus === 'confirmed' ? accent : c.line }}
-          >
-            <Ionicons name="checkmark" size={14} color={s.myStatus === 'confirmed' ? '#fff' : c.muted} />
-            <Text className="text-[12px] font-sans-sb" style={{ color: s.myStatus === 'confirmed' ? '#fff' : c.muted }}>I'm in</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => onRespond(s, 'declined')}
-            disabled={busy}
-            className="flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2"
-            style={{ backgroundColor: s.myStatus === 'declined' ? '#9CA3AF' : c.surface, borderWidth: 1, borderColor: s.myStatus === 'declined' ? '#9CA3AF' : c.line }}
-          >
-            <Ionicons name="close" size={14} color={s.myStatus === 'declined' ? '#fff' : c.muted} />
-            <Text className="text-[12px] font-sans-sb" style={{ color: s.myStatus === 'declined' ? '#fff' : c.muted }}>Can't</Text>
-          </Pressable>
+        <View className="mt-2.5">
+          <Text className="mb-1.5 text-[11px] font-sans-sb text-muted">
+            {s.myStatus === 'confirmed' ? "You're in — tap to change" : s.myStatus === 'declined' ? "Not coming — tap to change" : 'Coming along?'}
+          </Text>
+          <View className="flex-row gap-2">
+            <Pressable
+              onPress={() => onRespond(s, 'confirmed')}
+              disabled={busy}
+              className="flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2"
+              style={{ backgroundColor: s.myStatus === 'confirmed' ? accent : c.surface, borderWidth: 1.5, borderColor: s.myStatus === 'confirmed' ? accent : c.line, opacity: busy ? 0.6 : 1 }}
+            >
+              <Ionicons name={s.myStatus === 'confirmed' ? 'checkmark-circle' : 'checkmark'} size={15} color={s.myStatus === 'confirmed' ? '#fff' : c.muted} />
+              <Text className="text-[12.5px] font-sans-sb" style={{ color: s.myStatus === 'confirmed' ? '#fff' : c.muted }}>I'm in</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => onRespond(s, 'declined')}
+              disabled={busy}
+              className="flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2"
+              style={{ backgroundColor: s.myStatus === 'declined' ? '#6B7280' : c.surface, borderWidth: 1.5, borderColor: s.myStatus === 'declined' ? '#6B7280' : c.line, opacity: busy ? 0.6 : 1 }}
+            >
+              <Ionicons name={s.myStatus === 'declined' ? 'close-circle' : 'close'} size={15} color={s.myStatus === 'declined' ? '#fff' : c.muted} />
+              <Text className="text-[12.5px] font-sans-sb" style={{ color: s.myStatus === 'declined' ? '#fff' : c.muted }}>Can't</Text>
+            </Pressable>
+          </View>
         </View>
       )}
     </View>

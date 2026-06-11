@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Container, ScreenHeader } from '../../components/ui';
@@ -8,7 +8,7 @@ import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import {
   CollectionPlayer, DueItem, cancelMyPayment, fetchBookerCollections, fetchMyDues,
-  markPaymentReceived, payDues,
+  markPaymentReceived, payDues, subscribeCourtPayments,
 } from '../../lib/courts';
 import { upiUri } from '../../lib/payments';
 import { useThemeColors } from '../../theme';
@@ -46,6 +46,7 @@ export default function DuesScreen() {
   }, [userId]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
+  useEffect(() => subscribeCourtPayments(load), [load]);
 
   // ── I owe: grouped by the person I owe (one UPI payee per group) ──
   const byBooker = new Map<string, DueItem[]>();

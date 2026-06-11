@@ -189,7 +189,8 @@ export default function PostScreen({
     setSubmitting(true);
     try {
       await update({ chefName, flat, whatsapp, upi });
-      await postDish({
+      const hadPhoto = !!photoUri;
+      const dish = await postDish({
         chefUserId: userId!,
         communityId,
         profile: { chefName, flat, whatsapp, upi },
@@ -216,11 +217,13 @@ export default function PostScreen({
       setEditingIdentity(false);
 
       haptics.success();
-      toast.show('Your dish is live on the board! 🎉');
+      toast.show(hadPhoto && !dish.photo_url
+        ? 'Dish posted ✅ — but the photo could not upload'
+        : 'Your dish is live on the board! 🎉');
       finishOrHome();
     } catch (e) {
       console.error(e);
-      toast.show('Could not post — check your connection');
+      toast.show(e instanceof Error && e.message ? `Could not post: ${e.message}` : 'Could not post — check your connection');
     } finally {
       setSubmitting(false);
     }
