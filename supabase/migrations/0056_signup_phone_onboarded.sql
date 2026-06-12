@@ -9,6 +9,10 @@
 -- match (an onboarded member's roster entry may have been merged away).
 -- ════════════════════════════════════════════════════════════════════
 
+-- The return signature changed (added already_onboarded), and Postgres won't let
+-- CREATE OR REPLACE change a function's OUT columns — so drop the old one first.
+drop function if exists public.find_resident_by_phone(text);
+
 create or replace function public.find_resident_by_phone(p_phone text)
 returns table (
   entry_id          uuid,
