@@ -114,7 +114,7 @@ export default function LandingScreen() {
                   <BrandMark size={20} id="vs-mark" />
                   <Text className="font-sans-bold" style={{ fontSize: 15, color: P.ink }}>With Aangan</Text>
                 </View>
-                {['A live food board with reserve & pay', 'Owner/tenant directory with one-tap contact', 'Real polls with instant results', 'A searchable marketplace & services', 'A payment ledger both sides confirm', 'Ask Aangan — answers in your language'].map((t) => (
+                {['A live food board with reserve & pay', 'Owner/tenant directory with one-tap contact', 'Real polls with instant results', 'A searchable marketplace & services', 'A payment ledger both sides confirm', 'Ask Aangan — your society’s own assistant'].map((t) => (
                   <View key={t} className="mb-2 flex-row items-center gap-2">
                     <Ionicons name="checkmark" size={15} color="#16A34A" />
                     <Text className="font-sans-md" style={{ fontSize: 14, color: P.ink }}>{t}</Text>
@@ -130,8 +130,8 @@ export default function LandingScreen() {
           <Kicker>Powered by AI · private by design</Kicker>
           <Heading isDesktop={isDesktop}>Your society's own assistant</Heading>
           <Text className="mt-3 w-full max-w-[640px] self-center text-center font-sans-md" style={{ fontSize: 15, lineHeight: 23, color: P.muted }}>
-            Ask in plain words, snap a photo to post, and read everything in your language. The AI works only
-            over your own society's data — and personal phone numbers are never sent.
+            Ask in plain words and snap a photo to post. The AI works only over your own society's data —
+            and personal phone numbers are never sent.
           </Text>
 
           {/* Ask Aangan showcase */}
@@ -165,8 +165,6 @@ export default function LandingScreen() {
           <View className={`mt-4 ${isWide ? 'flex-row' : ''} gap-4`}>
             <Feature icon="camera" color="#0F6E56" title="Snap to post"
               body="Photograph your dish, listing or item — AI fills in the title, category and details, so posting takes seconds. It also flags photos that don't match." />
-            <Feature icon="language" color="#7C3AED" title="Every language"
-              body="Posts, listings and menus auto-translate into each reader's preferred language — 12 Indian languages — with one tap to see the original." />
             <Feature icon="sparkles" color="#E8650A" title="Weekly digest"
               body="A warm AI recap of the week in your society — new dishes, listings, polls and announcements — waiting on your home screen." />
           </View>
@@ -324,7 +322,7 @@ function LogoLockup({ emblem = 94 }: { emblem?: number }) {
             <View key={p.a} style={{ width: 15, height: 3.5, borderRadius: 2, backgroundColor: p.c, marginRight: 3 }} />
           ))}
         </View>
-        <Text className="font-sans" style={{ fontSize: emblem * 0.1, letterSpacing: 1.3, color: '#B4B2A9' }}>every home. every language. one courtyard.</Text>
+        <Text className="font-sans" style={{ fontSize: emblem * 0.1, letterSpacing: 1.3, color: '#B4B2A9' }}>every home. every neighbour. one courtyard.</Text>
       </View>
     </View>
   );

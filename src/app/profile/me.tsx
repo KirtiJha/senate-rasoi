@@ -11,7 +11,6 @@ import { useConfirm } from '../../context/confirm';
 import { changePin, deleteAccount, updateResidentInfo } from '../../lib/auth';
 import { Community, fetchCommunityById } from '../../lib/communities';
 import { isSupabaseConfigured } from '../../lib/supabase';
-import { detectDeviceLang, SUPPORTED_LANGS } from '../../lib/translate';
 import { useThemeColors } from '../../theme';
 
 export default function ProfileScreen() {
@@ -32,13 +31,7 @@ export default function ProfileScreen() {
   const [vehicleNo, setVehicleNo] = useState(profile?.vehicle_no ?? '');
   const [showInDirectory, setShowInDirectory] = useState(profile?.show_in_directory ?? true);
   const [movedIn, setMovedIn] = useState(profile?.moved_in ?? false);
-  const [lang, setLang] = useState(profile?.preferred_lang ?? detectDeviceLang());
   const [savingProfile, setSavingProfile] = useState(false);
-
-  const pickLang = async (code: string) => {
-    setLang(code);
-    try { await saveProfile({ preferred_lang: code }); toast.show('Language updated 🌐'); } catch { /* best-effort */ }
-  };
 
   // PIN change state
   const [newPin, setNewPin] = useState('');
@@ -66,7 +59,6 @@ export default function ProfileScreen() {
       setVehicleNo(profile.vehicle_no ?? '');
       setShowInDirectory(profile.show_in_directory ?? true);
       setMovedIn(profile.moved_in ?? false);
-      if (profile.preferred_lang) setLang(profile.preferred_lang);
     }
   }, [profile]);
 
@@ -221,30 +213,6 @@ export default function ProfileScreen() {
               </View>
             </Pressable>
             <Button label={savingProfile ? 'Saving…' : 'Save Changes'} loading={savingProfile} onPress={handleSaveProfile} fullWidth />
-          </SectionCard>
-
-          {/* Language */}
-          <SectionCard title="Language">
-            <Text className="mb-3 -mt-1 text-[12px] leading-[18px] text-muted">
-              Read posts, food menus and listings in your language — Aangan translates them for you automatically. The original is always one tap away.
-            </Text>
-            <View className="flex-row flex-wrap" style={{ marginHorizontal: -3 }}>
-              {SUPPORTED_LANGS.map((l) => {
-                const on = lang === l.code;
-                return (
-                  <View key={l.code} style={{ padding: 3 }}>
-                    <Pressable
-                      onPress={() => pickLang(l.code)}
-                      className={`rounded-full border px-3.5 py-2 ${on ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}
-                    >
-                      <Text className={`text-[13px] ${on ? 'font-sans-sb text-accent' : 'font-sans-md text-muted'}`}>
-                        {l.label}{l.code !== 'en' ? ` · ${l.name}` : ''}
-                      </Text>
-                    </Pressable>
-                  </View>
-                );
-              })}
-            </View>
           </SectionCard>
 
           {/* Change PIN */}
