@@ -8,7 +8,7 @@ import { Field } from '../../components/forms';
 import { Button, Container } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
-import { signIn, signUp } from '../../lib/auth';
+import { requestPinReset, signIn, signUp } from '../../lib/auth';
 import { Community, fetchCommunities, fetchCommunityById, submitJoinRequest } from '../../lib/communities';
 import { DirectoryEntry, PhoneDirectoryMatch, findDirectoryByPhone, findRosterMatch, reconcileDirectoryEntry } from '../../lib/directory';
 import { isSupabaseConfigured } from '../../lib/supabase';
@@ -36,6 +36,12 @@ export default function SignInScreen() {
   const [reconcile, setReconcile] = useState<DirectoryEntry | null>(null);
   const [phoneMatch, setPhoneMatch] = useState<PhoneDirectoryMatch | null>(null);
   const phoneMatchDismissed = useRef(false);
+
+  // Forgot PIN flow
+  const [showForgotPin, setShowForgotPin] = useState(false);
+  const [resetPhone, setResetPhone] = useState('');
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   // Society picker
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -98,6 +104,30 @@ export default function SignInScreen() {
   const dismissPhoneMatch = () => {
     phoneMatchDismissed.current = true;
     setPhoneMatch(null);
+  };
+
+  const openForgotPin = () => {
+    setResetPhone(phone);
+    setResetSent(false);
+    setShowForgotPin(true);
+  };
+
+  const submitReset = async () => {
+    const digits = resetPhone.replace(/\D/g, '');
+    if (digits.length < 10) { toast.show('Enter a valid phone number'); return; }
+    setResetBusy(true);
+    try {
+      const result = await requestPinReset(resetPhone);
+      if (result === 'not_found') {
+        toast.show('No account found with that number');
+      } else {
+        setResetSent(true);
+      }
+    } catch {
+      toast.show('Could not send — try again');
+    } finally {
+      setResetBusy(false);
+    }
   };
 
   const filteredCommunities = communities.filter(
@@ -213,6 +243,11 @@ export default function SignInScreen() {
             value={code}
             onChangeText={(t: string) => setCode(t.replace(/\D/g, ''))}
           />
+          {mode === 'in' ? (
+            <Pressable onPress={openForgotPin} hitSlop={8} className="-mt-1 mb-3 self-end active:opacity-60">
+              <Text className="text-[12.5px] font-sans-sb text-accent">Forgot PIN?</Text>
+            </Pressable>
+          ) : null}
 
           {mode === 'up' ? (
             <>
@@ -453,6 +488,54 @@ export default function SignInScreen() {
                 <Text className="font-sans-sb text-[13px] text-muted">That's not me</Text>
               </Pressable>
             </View>
+          </View>
+        </View>
+      </Modal>
+      {/* Forgot PIN modal */}
+      <Modal visible={showForgotPin} transparent animationType="fade" onRequestClose={() => setShowForgotPin(false)}>
+        <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: '#0008' }}>
+          <View style={{ width: '100%', maxWidth: 380, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}>
+            {resetSent ? (
+              <>
+                <View className="mb-4 items-center">
+                  <View className="h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: c.accent + '20' }}>
+                    <Ionicons name="checkmark-circle" size={32} color={c.accent} />
+                  </View>
+                </View>
+                <Text className="text-center font-display-x text-[19px] text-ink">Request sent!</Text>
+                <Text className="mt-2 text-center text-[14px] leading-5 text-muted">
+                  Your society admin has been notified. They'll reset your PIN and let you know the new one.
+                </Text>
+                <View className="mt-5">
+                  <Button label="Done" fullWidth onPress={() => setShowForgotPin(false)} />
+                </View>
+              </>
+            ) : (
+              <>
+                <Text className="font-display-x text-[19px] text-ink">Forgot your PIN?</Text>
+                <Text className="mt-2 text-[14px] leading-5 text-muted">
+                  Enter your registered phone number. Your society admin will get a notification to reset your PIN.
+                </Text>
+                <View className="mt-4">
+                  <Field
+                    label="Phone number"
+                    required
+                    placeholder="98765 43210"
+                    keyboardType="phone-pad"
+                    value={resetPhone}
+                    onChangeText={setResetPhone}
+                  />
+                </View>
+                <View className="mt-2 flex-row gap-2">
+                  <View className="flex-1">
+                    <Button label="Cancel" variant="outline" onPress={() => setShowForgotPin(false)} />
+                  </View>
+                  <View className="flex-1">
+                    <Button label={resetBusy ? 'Sending…' : 'Send request'} loading={resetBusy} onPress={submitReset} />
+                  </View>
+                </View>
+              </>
+            )}
           </View>
         </View>
       </Modal>

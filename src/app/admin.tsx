@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
+import { Modal, Platform, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Avatar, Container, ScreenHeader } from '../components/ui';
+import { Avatar, Button, Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
+import { adminResetUserPin } from '../lib/auth';
 import { deleteMember, listCommunityMembers, setMemberBlocked, setUserRoles } from '../lib/admin';
 import { getOrCreateThread } from '../lib/dm';
 import { supabase } from '../lib/supabase';
@@ -46,6 +47,11 @@ export default function AdminScreen() {
   // Join requests state
   const [requests, setRequests] = useState<JoinRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
+
+  // Reset PIN modal
+  const [pinResetMember, setPinResetMember] = useState<DbProfile | null>(null);
+  const [newPin, setNewPin] = useState('');
+  const [pinResetting, setPinResetting] = useState(false);
 
   const loadMembers = useCallback(async () => {
     if (!communityId) return;
@@ -131,6 +137,25 @@ export default function AdminScreen() {
       },
       blocking,
     );
+  };
+
+  const doResetPin = async () => {
+    if (!pinResetMember || !/^\d{6}$/.test(newPin)) {
+      toast.show('Enter a valid 6-digit PIN');
+      return;
+    }
+    setPinResetting(true);
+    try {
+      const ok = await adminResetUserPin(pinResetMember.id, newPin);
+      if (ok) {
+        toast.show(`PIN reset for ${pinResetMember.name || 'member'} ✅`);
+        setPinResetMember(null);
+        setNewPin('');
+      } else {
+        toast.show('Not allowed — are they in your society?');
+      }
+    } catch { toast.show('Could not reset PIN'); }
+    finally { setPinResetting(false); }
   };
 
   const removeMember = (m: DbProfile) => {
@@ -296,6 +321,7 @@ export default function AdminScreen() {
                         onPress={() => toggleBlock(m)}
                         c={c}
                       />
+                      <ActionBtn icon="key-outline" label="Reset PIN" disabled={busy === m.id} onPress={() => { setNewPin(''); setPinResetMember(m); }} c={c} />
                       <ActionBtn icon="trash-outline" label="Delete" danger disabled={busy === m.id} onPress={() => removeMember(m)} c={c} />
                     </View>
                   ) : null}
@@ -324,6 +350,46 @@ export default function AdminScreen() {
           </Container>
         </ScrollView>
       )}
+
+      {/* Reset PIN modal */}
+      <Modal visible={!!pinResetMember} transparent animationType="fade" onRequestClose={() => setPinResetMember(null)}>
+        <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: '#0008' }}>
+          <View style={{ width: '100%', maxWidth: 380, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}>
+            <Text className="font-display-x text-[19px] text-ink">Reset PIN</Text>
+            <Text className="mt-1.5 text-[14px] text-muted">
+              Set a new 6-digit PIN for{' '}
+              <Text className="font-sans-sb text-ink">{pinResetMember?.name || 'this member'}</Text>.
+              Share the new PIN with them securely.
+            </Text>
+            <View className="mt-4 rounded-2xl border border-line bg-inset px-4 py-3">
+              <TextInput
+                value={newPin}
+                onChangeText={(t) => setNewPin(t.replace(/\D/g, '').slice(0, 6))}
+                placeholder="New 6-digit PIN"
+                placeholderTextColor={c.faint}
+                keyboardType="number-pad"
+                secureTextEntry
+                maxLength={6}
+                className="text-[18px] font-sans-bold tracking-widest text-ink text-center"
+                style={{ outline: 'none' } as any}
+              />
+            </View>
+            <View className="mt-4 flex-row gap-2">
+              <View className="flex-1">
+                <Button label="Cancel" variant="outline" onPress={() => setPinResetMember(null)} />
+              </View>
+              <View className="flex-1">
+                <Button
+                  label={pinResetting ? 'Resetting…' : 'Reset PIN'}
+                  loading={pinResetting}
+                  disabled={newPin.length !== 6}
+                  onPress={doResetPin}
+                />
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

@@ -27,7 +27,14 @@ export interface SignUpInput {
 export async function signUp(input: SignUpInput): Promise<DbProfile> {
   const email = phoneToEmail(input.phone);
   const { data, error } = await supabase.auth.signUp({ email, password: input.code });
-  if (error) throw mapAuthError(error.message);
+  if (error) {
+    // When confirm-email is off, Supabase returns "Invalid login credentials" (not
+    // "already registered") when the phone exists but the PIN doesn't match.
+    const m = error.message.toLowerCase();
+    if (m.includes('invalid login') || m.includes('invalid_credentials') || m.includes('already registered') || m.includes('already exists'))
+      throw new Error('That phone number already has an account — sign in instead.');
+    throw mapAuthError(error.message);
+  }
   const userId = data.user?.id;
   if (!userId) throw new Error('Sign-up failed — please try again.');
 
@@ -74,7 +81,14 @@ export async function signUp(input: SignUpInput): Promise<DbProfile> {
     .insert(row)
     .select()
     .single();
-  if (pErr) throw pErr;
+  if (pErr) {
+    // 23505 = unique violation: the profile already exists → Supabase silently
+    // signed this user in (same PIN) instead of creating a new account.
+    await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+    if (pErr.code === '23505')
+      throw new Error('That phone number already has an account — sign in instead.');
+    throw pErr;
+  }
 
   // Best-effort resident-directory fields — kept out of the core insert so a
   // missing column (migration 0027/0028 not yet run) can never break sign-up.
@@ -173,6 +187,20 @@ export async function deleteAccount(): Promise<void> {
   // If this RPC doesn't exist yet, fall back to signing out (account stays).
   const { error } = await supabase.rpc('delete_own_account');
   if (error) throw new Error(error.message);
+}
+
+/** Send a PIN-reset notification to the community's admins (safe for unauthenticated callers). */
+export async function requestPinReset(phone: string): Promise<'sent' | 'not_found'> {
+  const { data, error } = await supabase.rpc('request_pin_reset', { p_phone: phone });
+  if (error) throw new Error(error.message);
+  return (data as 'sent' | 'not_found') ?? 'not_found';
+}
+
+/** Admin: set a community member's PIN to a new 6-digit value. */
+export async function adminResetUserPin(targetId: string, newPin: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('admin_reset_user_pin', { p_target_id: targetId, p_new_pin: newPin });
+  if (error) throw new Error(error.message);
+  return Boolean(data);
 }
 
 function mapAuthError(msg: string): Error {
