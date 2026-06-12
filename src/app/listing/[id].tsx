@@ -120,8 +120,20 @@ export default function ListingDetailScreen() {
 
   if (!listing) {
     return (
-      <View className="flex-1 items-center justify-center bg-bg">
-        <Text className="text-muted">Listing not found.</Text>
+      <View className="flex-1 bg-bg">
+        <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
+          <Pressable onPress={goBack} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+            <Ionicons name="chevron-back" size={22} color={c.ink} />
+          </Pressable>
+        </View>
+        <View className="flex-1 items-center justify-center px-8">
+          <Ionicons name="alert-circle-outline" size={48} color={c.faint} />
+          <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Listing removed</Text>
+          <Text className="mt-1.5 text-center text-[13px] text-muted">This listing is no longer available — it may have been removed by the owner.</Text>
+          <Pressable onPress={goBack} className="mt-5 rounded-xl border border-line bg-surface px-5 py-2.5 active:bg-inset">
+            <Text className="font-sans-sb text-[14px] text-ink">Go back</Text>
+          </Pressable>
+        </View>
       </View>
     );
   }
