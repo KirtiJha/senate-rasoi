@@ -32,6 +32,7 @@ import { ThemeProvider } from '../context/theme';
 import { ToastProvider } from '../context/toast';
 import { UnreadDmsProvider } from '../context/unread';
 import { useAuth } from '../context/auth';
+import i18n from '../i18n';
 import { useIsDark, useThemeColors } from '../theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -106,9 +107,12 @@ function AppShell() {
 function DesktopShell() {
   const c = useThemeColors();
   const { isDesktop } = useResponsive();
-  const { ready, session } = useAuth();
+  const { ready, session, profile } = useAuth();
   const showRail = isDesktop && ready && !!session;
   const showBottomBar = !isDesktop && ready && !!session;
+
+  // Keep the app-UI language in sync with the member's chosen language.
+  useEffect(() => { i18n.changeLanguage(profile?.preferred_lang || 'en'); }, [profile?.preferred_lang]);
 
   return (
     <View

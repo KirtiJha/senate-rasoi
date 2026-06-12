@@ -1,23 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '../theme';
 
 type Item = {
   route: string;
-  label: string;
+  label: string; // i18n key
   icon: keyof typeof Ionicons.glyphMap;
   activeIcon: keyof typeof Ionicons.glyphMap;
 };
 
 // Standard 5-item bar, icons only (Feed lives on the Home hub).
 const ITEMS: Item[] = [
-  { route: '/', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
-  { route: '/listings', label: 'Listings', icon: 'pricetags-outline', activeIcon: 'pricetags' },
-  { route: '/post', label: 'Post', icon: 'add-circle-outline', activeIcon: 'add-circle' },
-  { route: '/search', label: 'Search', icon: 'search-outline', activeIcon: 'search' },
-  { route: '/you', label: 'You', icon: 'person-outline', activeIcon: 'person' },
+  { route: '/', label: 'nav.home', icon: 'home-outline', activeIcon: 'home' },
+  { route: '/listings', label: 'nav.listings', icon: 'pricetags-outline', activeIcon: 'pricetags' },
+  { route: '/post', label: 'nav.post', icon: 'add-circle-outline', activeIcon: 'add-circle' },
+  { route: '/search', label: 'nav.search', icon: 'search-outline', activeIcon: 'search' },
+  { route: '/you', label: 'nav.you', icon: 'person-outline', activeIcon: 'person' },
 ];
 
 /** Persistent phone bottom navigation — rendered at the root so it stays visible
@@ -27,6 +28,7 @@ export function BottomBar() {
   const pathname = usePathname();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   // Keep the bar out of focused, input-heavy flows.
   if (pathname.startsWith('/messages/')) return null;
@@ -44,7 +46,7 @@ export function BottomBar() {
       {ITEMS.map((it) => {
         const active = activeFor(it.route);
         return (
-          <Pressable key={it.route} onPress={() => router.navigate(it.route as any)} hitSlop={6} className="flex-1 items-center pb-1.5" accessibilityLabel={it.label}>
+          <Pressable key={it.route} onPress={() => router.navigate(it.route as any)} hitSlop={6} className="flex-1 items-center pb-1.5" accessibilityLabel={t(it.label)}>
             <Ionicons name={active ? it.activeIcon : it.icon} size={25} color={active ? c.accent : c.faint} />
           </Pressable>
         );

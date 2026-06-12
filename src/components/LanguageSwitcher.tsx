@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
 import { useAuth } from '../context/auth';
@@ -20,6 +21,7 @@ export function LanguageSheet({
   onPick?: (code: string) => void;
 }) {
   const c = useThemeColors();
+  const { t } = useTranslation();
   const { profile, saveProfile } = useAuth();
   const current = value ?? profile?.preferred_lang ?? 'en';
 
@@ -31,9 +33,9 @@ export function LanguageSheet({
   };
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="Choose your language">
+    <Sheet visible={visible} onClose={onClose} title={t('language.title')}>
       <Text className="mb-3 text-[13px] leading-[19px] text-muted">
-        Posts, home food, listings and more will appear in your language. (App menus stay in English for now.)
+        {t('language.hint')}
       </Text>
       <View className="gap-1.5">
         {SUPPORTED_LANGS.map((l) => {

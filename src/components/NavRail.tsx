@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter, usePathname } from 'expo-router';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Animated, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/auth';
@@ -25,31 +26,31 @@ type NavItem = {
 };
 
 const PRIMARY_ITEMS: NavItem[] = [
-  { href: '/', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
-  { href: '/feed', label: 'Feed', icon: 'chatbubbles-outline', activeIcon: 'chatbubbles' },
-  { href: '/search', label: 'Search', icon: 'search-outline', activeIcon: 'search' },
-  { href: '/ask', label: 'Ask Aangan', icon: 'sparkles-outline', activeIcon: 'sparkles', color: '#0F6E56' },
-  { href: '/listings', label: 'Listings', icon: 'pricetags-outline', activeIcon: 'pricetags' },
-  { href: '/messages', label: 'Messages', icon: 'mail-outline', activeIcon: 'mail' },
-  { href: '/you', label: 'You', icon: 'person-outline', activeIcon: 'person' },
+  { href: '/', label: 'nav.home', icon: 'home-outline', activeIcon: 'home' },
+  { href: '/feed', label: 'nav.feed', icon: 'chatbubbles-outline', activeIcon: 'chatbubbles' },
+  { href: '/search', label: 'nav.search', icon: 'search-outline', activeIcon: 'search' },
+  { href: '/ask', label: 'nav.ask', icon: 'sparkles-outline', activeIcon: 'sparkles', color: '#0F6E56' },
+  { href: '/listings', label: 'nav.listings', icon: 'pricetags-outline', activeIcon: 'pricetags' },
+  { href: '/messages', label: 'nav.messages', icon: 'mail-outline', activeIcon: 'mail' },
+  { href: '/you', label: 'nav.you', icon: 'person-outline', activeIcon: 'person' },
 ];
 
 const COMMUNITY_ITEMS: NavItem[] = [
-  { href: '/directory', label: 'Residents', icon: 'people-outline', activeIcon: 'people' },
-  { href: '/sports', label: 'Sports', icon: 'football-outline', activeIcon: 'football', color: '#16A34A' },
-  { href: '/documents', label: 'Documents', icon: 'folder-outline', activeIcon: 'folder', color: '#0EA5E9' },
-  { href: '/payments', label: 'Payments', icon: 'wallet-outline', activeIcon: 'wallet', color: '#16A34A' },
-  { href: '/properties', label: 'Flats', icon: 'key-outline', activeIcon: 'key', color: '#7C3AED' },
-  { href: '/recommend', label: 'Ask & Recommend', icon: 'sparkles-outline', activeIcon: 'sparkles', color: '#CA8A04' },
-  { href: '/borrow', label: 'Borrow & Lend', icon: 'swap-horizontal-outline', activeIcon: 'swap-horizontal', color: '#0891B2' },
-  { href: '/helpers', label: 'Blood & SOS', icon: 'heart-outline', activeIcon: 'heart', color: '#DC2626' },
-  { href: '/polls', label: 'Polls', icon: 'stats-chart-outline', activeIcon: 'stats-chart' },
-  { href: '/emergency', label: 'Emergency', icon: 'call-outline', activeIcon: 'call', color: '#EF4444' },
+  { href: '/directory', label: 'nav.residents', icon: 'people-outline', activeIcon: 'people' },
+  { href: '/sports', label: 'nav.sports', icon: 'football-outline', activeIcon: 'football', color: '#16A34A' },
+  { href: '/documents', label: 'nav.documents', icon: 'folder-outline', activeIcon: 'folder', color: '#0EA5E9' },
+  { href: '/payments', label: 'nav.payments', icon: 'wallet-outline', activeIcon: 'wallet', color: '#16A34A' },
+  { href: '/properties', label: 'nav.properties', icon: 'key-outline', activeIcon: 'key', color: '#7C3AED' },
+  { href: '/recommend', label: 'nav.recommend', icon: 'sparkles-outline', activeIcon: 'sparkles', color: '#CA8A04' },
+  { href: '/borrow', label: 'nav.borrow', icon: 'swap-horizontal-outline', activeIcon: 'swap-horizontal', color: '#0891B2' },
+  { href: '/helpers', label: 'nav.helpers', icon: 'heart-outline', activeIcon: 'heart', color: '#DC2626' },
+  { href: '/polls', label: 'nav.polls', icon: 'stats-chart-outline', activeIcon: 'stats-chart' },
+  { href: '/emergency', label: 'nav.emergency', icon: 'call-outline', activeIcon: 'call', color: '#EF4444' },
 ];
 
 const ADMIN_ITEM: NavItem = {
   href: '/admin',
-  label: 'Admin',
+  label: 'nav.admin',
   icon: 'shield-checkmark-outline',
   activeIcon: 'shield-checkmark',
 };
@@ -73,6 +74,8 @@ function NavItemRow({
   av: AnimVals;
   badge?: number;
 }) {
+  const { t } = useTranslation();
+  const label = t(item.label);
   const active = item.href === '/' ? path === '/' : path.startsWith(item.href);
   const iconColor = item.color
     ? active ? item.color : colors.muted
@@ -89,7 +92,7 @@ function NavItemRow({
           marginBottom: 2,
           overflow: 'hidden',
         }}
-        accessibilityLabel={item.label}
+        accessibilityLabel={label}
       >
         {/* Left accent bar */}
         {active ? (
@@ -159,7 +162,7 @@ function NavItemRow({
               color: active ? colors.ink : colors.muted,
             }}
           >
-            {item.label}
+            {label}
           </Text>
         </Animated.View>
       </Pressable>
@@ -476,6 +479,7 @@ function AccountMenu({
   onNavigate: (href: string) => void;
   insetsBottom: number;
 }) {
+  const { t } = useTranslation();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={{ flex: 1 }} onPress={onClose}>
@@ -507,12 +511,12 @@ function AccountMenu({
             </View>
           </View>
           <View style={{ height: 1, backgroundColor: colors.line, marginVertical: 4 }} />
-          <AccountMenuRow icon="person-outline" label="Profile" colors={colors} onPress={() => { onClose(); onNavigate('/profile/me'); }} />
-          <AccountMenuRow icon="information-circle-outline" label="About" colors={colors} onPress={() => { onClose(); onNavigate('/about'); }} />
-          <AccountMenuRow icon="language-outline" label="Language" colors={colors} onPress={onOpenLanguage} />
-          <AccountMenuRow icon={isDark ? 'sunny-outline' : 'moon-outline'} label={isDark ? 'Light mode' : 'Dark mode'} colors={colors} onPress={onToggleTheme} />
+          <AccountMenuRow icon="person-outline" label={t('nav.profile')} colors={colors} onPress={() => { onClose(); onNavigate('/profile/me'); }} />
+          <AccountMenuRow icon="information-circle-outline" label={t('nav.about')} colors={colors} onPress={() => { onClose(); onNavigate('/about'); }} />
+          <AccountMenuRow icon="language-outline" label={t('common.language')} colors={colors} onPress={onOpenLanguage} />
+          <AccountMenuRow icon={isDark ? 'sunny-outline' : 'moon-outline'} label={isDark ? t('nav.lightMode') : t('nav.darkMode')} colors={colors} onPress={onToggleTheme} />
           <View style={{ height: 1, backgroundColor: colors.line, marginVertical: 4 }} />
-          <AccountMenuRow icon="log-out-outline" label="Sign out" colors={colors} danger onPress={() => { onClose(); onSignOut(); }} />
+          <AccountMenuRow icon="log-out-outline" label={t('nav.signOut')} colors={colors} danger onPress={() => { onClose(); onSignOut(); }} />
         </View>
       </Pressable>
     </Modal>
