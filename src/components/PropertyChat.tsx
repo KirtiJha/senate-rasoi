@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, LayoutAnimation, Platform, Pressable, Text, TextInput, UIManager, View } from 'react-native';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
+import { useConfirm } from '../context/confirm';
 import { useDraft } from '../lib/draft';
 import { haptics } from '../lib/haptics';
 import {
@@ -34,6 +35,7 @@ interface Props {
 export function PropertyChat({ propertyId, ownerUserId, ownerName, accent }: Props) {
   const c = useThemeColors();
   const toast = useToast();
+  const confirm = useConfirm();
   const { userId, isAdmin } = useAuth();
 
   const [open, setOpen] = useState(false);
@@ -76,6 +78,7 @@ export function PropertyChat({ propertyId, ownerUserId, ownerName, accent }: Pro
   };
 
   const remove = async (id: string) => {
+    if (!(await confirm({ title: 'Delete message', message: 'Delete this message?', confirmLabel: 'Delete', destructive: true }))) return;
     try {
       await deletePropertyMessage(id);
       setMessages((prev) => prev.filter((m) => m.id !== id));

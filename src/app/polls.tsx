@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Container, ScreenHeader, Sheet, useResponsive } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
+import { useConfirm } from '../context/confirm';
 import { PollRow, closePoll, createPoll, deletePoll, fetchPolls, subscribeToPolls, votePoll } from '../lib/polls';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { useThemeColors } from '../theme';
@@ -17,6 +18,7 @@ export default function PollsScreen() {
   const { isDesktop } = useResponsive();
   const { communityId, userId, isAdmin } = useAuth();
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [polls, setPolls] = useState<PollRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +64,7 @@ export default function PollsScreen() {
   };
 
   const handleDelete = async (poll: PollRow) => {
+    if (!(await confirm({ title: 'Delete poll', message: `Delete "${poll.question}" and its votes?`, confirmLabel: 'Delete', destructive: true }))) return;
     try {
       await deletePoll(poll.id);
       setPolls((prev: PollRow[]) => prev.filter((p: PollRow) => p.id !== poll.id));

@@ -270,7 +270,7 @@ export function SportGroupBody({
                   {t.notes ? <Text className="mt-0.5 text-[12px] text-faint">{t.notes}</Text> : null}
                 </View>
                 {canManage ? (
-                  <Pressable onPress={async () => { try { await deleteTournament(t.id); await reload(); } catch { toast.show('Could not delete'); } }} hitSlop={6}>
+                  <Pressable onPress={() => confirm({ title: 'Delete tournament', message: `Delete "${t.title}"?`, confirmLabel: 'Delete', destructive: true }).then((ok) => { if (ok) deleteTournament(t.id).then(reload).catch(() => toast.show('Could not delete')); })} hitSlop={6}>
                     <Ionicons name="trash-outline" size={15} color={c.faint} />
                   </Pressable>
                 ) : null}

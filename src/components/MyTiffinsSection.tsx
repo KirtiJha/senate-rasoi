@@ -115,7 +115,10 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
                 plan={p}
                 rows={planRows.filter((r) => r.plan_id === p.id)}
                 onToggle={async () => { await setPlanActive(p.id, !p.active); await load(); }}
-                onDelete={async () => { await deleteTiffinPlan(p.id); toast.show('Tiffin removed'); await load(); }}
+                onDelete={async () => {
+                  if (!(await confirm({ title: 'Remove tiffin', message: `Remove "${p.title}"?`, confirmLabel: 'Remove', destructive: true }))) return;
+                  await deleteTiffinPlan(p.id); toast.show('Tiffin removed'); await load();
+                }}
               />
             ))}
             <Pressable

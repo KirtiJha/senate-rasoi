@@ -72,6 +72,7 @@ export default function RecoDetailScreen() {
   };
 
   const removeAnswer = async (a: RecoAnswer) => {
+    if (!(await confirm({ title: 'Delete answer', message: 'Delete this answer?', confirmLabel: 'Delete', destructive: true }))) return;
     try { await deleteAnswer(a.id); setAnswers((prev) => prev.filter((x) => x.id !== a.id)); } catch { toast.show('Could not delete'); }
   };
 

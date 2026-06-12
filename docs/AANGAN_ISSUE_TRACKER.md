@@ -137,6 +137,22 @@ _Last updated: 12 Jun 2026, 2:00 AM IST_
 
 ---
 
+### #14 — Sign-up: if the number already has an account, prompt Sign in ✨
+- **Status:** 🟢 Implemented · **▶️ run migration `0056`**
+- **Area:** Auth / Sign-up
+- **Ask:** already-onboarded → ask them to sign in; in roster but not onboarded → autofill + continue.
+- **Fix:** `find_resident_by_phone` (migration 0056) now also checks `profiles` and returns `already_onboarded`. Sign-up shows an amber **"… already has an account → Sign in instead"** banner (switches to sign-in, keeps the phone) for onboarded numbers, and the green autofill banner only for roster-but-not-onboarded numbers.
+
+---
+
+### #15 — Some delete/remove actions skipped the confirmation modal 🐞
+- **Status:** 🟢 Implemented
+- **Area:** App-wide
+- **Found:** Auditing all delete/remove paths (incl. mobile-added code), these deleted **without** a confirm modal: sport **tournament**, recommendation **answer**, **poll**, **feed post** + **comment**, **listing-chat** + **property-chat** messages, **tiffin** plan, and document **share-revoke**.
+- **Fix:** All now go through the themed `useConfirm()` dialog before deleting (added the hook to polls/feed/ListingChat/PropertyChat). The mobile-built captain-management (remove member, transfer captaincy, delete group/tournament) and dish-detail delete already confirmed.
+
+---
+
 ## End-to-end review notes (Home Food + Badminton)
 
 **Verified working in code:** dish posting (now resilient to photo failures); order placement → **chef push on new order** + **buyer push on status change** (0005, title fixed in #3); Kitchen & Orders screens have **realtime**; badminton group create / booking → **member push** (0043) → RSVP (fixed in #2) → session-end **client-side cost split** → **UPI dues** (pay → initiated → booker confirms → paid) with the dues screen now **live** (#4).

@@ -295,6 +295,7 @@ function ManageSheet({
   };
   const revoke = async (uid: string) => {
     if (!doc) return;
+    if (!(await confirm({ title: 'Revoke access', message: 'Remove this person’s access to the document?', confirmLabel: 'Revoke', destructive: true }))) return;
     try { await unshareDocument(doc.id, uid); setShares(await fetchShares(doc.id)); } catch { toastShow('Could not revoke'); }
   };
   const remove = async () => {

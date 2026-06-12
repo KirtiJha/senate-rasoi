@@ -11,6 +11,7 @@ import { Avatar, Container } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useDraft } from '../../lib/draft';
 import { useToast } from '../../context/toast';
+import { useConfirm } from '../../context/confirm';
 import {
   CommentRow, POST_CATEGORY_COLORS, POST_CATEGORY_ICONS, POST_CATEGORY_LABELS,
   PostRow, createComment, deleteComment, deletePost,
@@ -22,6 +23,7 @@ export default function PostThreadScreen() {
   const { postId } = useLocalSearchParams<{ postId: string }>();
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { userId, isAdmin } = useAuth();
@@ -74,6 +76,7 @@ export default function PostThreadScreen() {
 
   const handleDeletePost = async () => {
     if (!postId) return;
+    if (!(await confirm({ title: 'Delete post', message: 'Delete this post and its comments?', confirmLabel: 'Delete', destructive: true }))) return;
     try {
       await deletePost(postId);
       goBack();
@@ -81,6 +84,7 @@ export default function PostThreadScreen() {
   };
 
   const handleDeleteComment = async (commentId: string) => {
+    if (!(await confirm({ title: 'Delete comment', message: 'Delete this comment?', confirmLabel: 'Delete', destructive: true }))) return;
     try {
       await deleteComment(commentId);
       setComments((prev) => prev.filter((c) => c.id !== commentId));

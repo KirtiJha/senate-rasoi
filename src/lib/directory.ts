@@ -215,7 +215,7 @@ export async function reconcileDirectoryEntry(entryId: string, keepNumber: boole
 }
 
 export interface PhoneDirectoryMatch {
-  entryId: string;
+  entryId: string | null;
   communityId: string;
   communityName: string;
   name: string;
@@ -224,6 +224,7 @@ export interface PhoneDirectoryMatch {
   residentType: 'owner' | 'tenant' | null;
   profession: string | null;
   vehicleNo: string | null;
+  alreadyOnboarded: boolean; // true → a member account already exists for this number
 }
 
 /**
@@ -237,7 +238,7 @@ export async function findDirectoryByPhone(phone: string): Promise<PhoneDirector
   if (error || !data || data.length === 0) return null;
   const row = data[0];
   return {
-    entryId: row.entry_id,
+    entryId: row.entry_id ?? null,
     communityId: row.community_id,
     communityName: row.community_name ?? 'Your society',
     name: row.res_name,
@@ -246,6 +247,7 @@ export async function findDirectoryByPhone(phone: string): Promise<PhoneDirector
     residentType: (row.resident_type as 'owner' | 'tenant' | null) ?? null,
     profession: row.profession ?? null,
     vehicleNo: row.vehicle_no ?? null,
+    alreadyOnboarded: Boolean(row.already_onboarded),
   };
 }
 

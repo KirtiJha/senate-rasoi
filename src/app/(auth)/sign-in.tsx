@@ -108,6 +108,13 @@ export default function SignInScreen() {
     setPhoneMatch(null);
   };
 
+  // Number already has an account → switch to sign-in (keep the phone they typed).
+  const goSignInWithPhone = () => {
+    phoneMatchDismissed.current = true;
+    setPhoneMatch(null);
+    setMode('in');
+  };
+
   const openForgotPin = () => {
     setResetPhone(phone);
     setResetNewPin('');
@@ -258,8 +265,28 @@ export default function SignInScreen() {
 
           {mode === 'up' ? (
             <>
-              {/* Phone → directory match chip */}
-              {phoneMatch ? (
+              {/* Phone → already-has-an-account nudge */}
+              {phoneMatch?.alreadyOnboarded ? (
+                <View className="mb-4">
+                  <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: '#B45309' }}>Already on Aangan</Text>
+                  <View className="rounded-2xl border px-4 py-3.5" style={{ borderColor: '#CA8A04', backgroundColor: '#CA8A0412' }}>
+                    <View className="flex-row items-start gap-3">
+                      <Ionicons name="information-circle" size={20} color="#CA8A04" />
+                      <View className="flex-1">
+                        <Text className="font-sans-sb text-[14px] text-ink">{phoneMatch.name} already has an account</Text>
+                        <Text className="mt-0.5 text-[12px] text-muted">This number is registered in {phoneMatch.communityName}. Please sign in instead of creating a new account.</Text>
+                      </View>
+                    </View>
+                    <Pressable onPress={goSignInWithPhone} className="mt-3 flex-row items-center justify-center gap-1.5 rounded-xl py-2.5 active:opacity-90" style={{ backgroundColor: c.accent }}>
+                      <Ionicons name="log-in-outline" size={16} color="#fff" />
+                      <Text className="font-sans-sb text-[14px] text-white">Sign in instead</Text>
+                    </Pressable>
+                  </View>
+                  <Pressable onPress={dismissPhoneMatch} hitSlop={8} className="mt-1.5 self-center active:opacity-60">
+                    <Text className="text-[11px] text-faint">That's not me</Text>
+                  </Pressable>
+                </View>
+              ) : phoneMatch ? (
                 <View className="mb-4">
                   <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-accent">Found in directory</Text>
                   <Pressable
