@@ -37,6 +37,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
   const pending = useRef(new Map<string, Item>()); // codeKey → item
   const inFlight = useRef(new Set<string>());
   const attempted = useRef(new Map<string, string>()); // codeKey → original text we already tried
+  const fails = useRef(new Map<string, number>()); // codeKey → consecutive failed attempts
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const codeKey = useCallback((key: string) => `${key}::${lang?.code ?? 'en'}`, [lang]);
@@ -54,16 +55,26 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     const map = await translateBatch(active.name, items);
 
     let changed = false;
+    let retry = false;
     batch.forEach(([ck, it]) => {
       inFlight.current.delete(ck);
-      attempted.current.set(ck, it.text); // don't keep retrying a given text+lang
       const t = map[baseKey(it)];
       if (t) {
         cache.current.set(ck, { original: it.text, value: t });
+        attempted.current.set(ck, it.text); // got it — never re-request this text+lang
         changed = true;
+      } else {
+        // A miss usually means a TRANSIENT failure (Gemini 5xx, a not-yet-deployed
+        // function, a one-off empty batch). Don't permanently fall back to English —
+        // retry a couple of times before giving up, so non-cached languages self-heal.
+        const n = (fails.current.get(ck) ?? 0) + 1;
+        fails.current.set(ck, n);
+        if (n >= 2) attempted.current.set(ck, it.text); // give up after 2 tries
+        else { pending.current.set(ck, it); retry = true; }
       }
     });
     if (changed) setVersion((v) => v + 1);
+    if (retry && !timer.current) timer.current = setTimeout(flush, 1500);
   }, [lang]);
 
   const request = useCallback((item: Item) => {
