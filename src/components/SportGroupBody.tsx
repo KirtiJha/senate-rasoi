@@ -15,7 +15,7 @@ import {
 import {
   GroupMember, SportGroup, Tournament, addMember, addTournament, deleteGroup, deleteTournament,
   fetchGroup, fetchGroupMembers, fetchTournaments, getSport, joinGroup, leaveGroup, removeMember,
-  updateGroup, uploadGroupLogo,
+  setCaptain, updateGroup, uploadGroupLogo,
 } from '../lib/sports';
 import { useThemeColors } from '../theme';
 import { CourtBookings } from './CourtBookings';
@@ -48,6 +48,7 @@ export function SportGroupBody({
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAddTourney, setShowAddTourney] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [managing, setManaging] = useState(false);
 
   const load = useCallback(async () => {
     if (!groupId) return;
@@ -64,7 +65,8 @@ export function SportGroupBody({
   const reload = async () => { await load(); onChanged?.(); };
 
   const isMember = !!userId && members.some((m) => m.user_id === userId);
-  const canManage = !!isAdmin || (!!group && !!userId && group.created_by === userId);
+  const isCaptain = !!userId && members.some((m) => m.user_id === userId && m.is_captain);
+  const canManage = !!isAdmin || isCaptain;
   const sport = group ? getSport(group.sport) : undefined;
   const color = group?.color ?? sport?.color ?? '#16A34A';
   const emoji = group?.emoji ?? sport?.emoji ?? '🏅';
@@ -80,6 +82,16 @@ export function SportGroupBody({
     const run = async () => { try { await removeMember(group.id, m.user_id); await reload(); } catch { toast.show('Could not remove'); } };
     const msg = `Remove ${m.profile?.name ?? 'this member'} from ${group.name}?`;
     confirm({ title: 'Remove member', message: msg, confirmLabel: 'Remove', destructive: true }).then((ok) => { if (ok) run(); });
+  };
+
+  const onMakeCaptain = (m: GroupMember) => {
+    if (!group) return;
+    const run = async () => {
+      try { await setCaptain(group.id, m.user_id); await reload(); toast.show(`${m.profile?.name ?? 'Member'} is now captain`); }
+      catch { toast.show('Could not update captain'); }
+    };
+    const msg = `Make ${m.profile?.name ?? 'this member'} the captain of ${group.name}?`;
+    confirm({ title: 'Transfer captaincy', message: msg, confirmLabel: 'Make captain' }).then((ok) => { if (ok) run(); });
   };
 
   const pickLogo = async () => {
@@ -159,38 +171,72 @@ export function SportGroupBody({
 
       {/* Members */}
       <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
-        <View className="mb-2.5 flex-row items-center justify-between">
-          <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-muted">Members · {members.length}</Text>
+        <View className="mb-2.5 flex-row items-center gap-2">
+          <Text className="flex-1 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Members · {members.length}</Text>
           {canManage ? (
-            <Pressable onPress={() => setShowAddMember(true)} hitSlop={6} className="flex-row items-center gap-1 rounded-full bg-accent-soft px-2.5 py-1 active:opacity-80">
-              <Ionicons name="person-add-outline" size={13} color={c.accent} />
-              <Text className="text-[12px] font-sans-sb text-accent">Add</Text>
-            </Pressable>
+            <>
+              <Pressable
+                onPress={() => setManaging((v) => !v)}
+                hitSlop={6}
+                className="flex-row items-center gap-1 rounded-full px-2.5 py-1 active:opacity-80"
+                style={{ backgroundColor: managing ? c.accent + '20' : c.inset }}
+              >
+                <Ionicons name={managing ? 'checkmark' : 'settings-outline'} size={13} color={managing ? c.accent : c.muted} />
+                <Text className="text-[12px] font-sans-sb" style={{ color: managing ? c.accent : c.muted }}>
+                  {managing ? 'Done' : 'Manage'}
+                </Text>
+              </Pressable>
+              <Pressable onPress={() => setShowAddMember(true)} hitSlop={6} className="flex-row items-center gap-1 rounded-full bg-accent-soft px-2.5 py-1 active:opacity-80">
+                <Ionicons name="person-add-outline" size={13} color={c.accent} />
+                <Text className="text-[12px] font-sans-sb text-accent">Add</Text>
+              </Pressable>
+            </>
           ) : null}
         </View>
         {members.length === 0 ? (
           <Text className="py-2 text-[13px] text-muted">No members yet.</Text>
         ) : (
           <View className="gap-2.5">
-            {members.map((m) => (
-              <View key={m.user_id} className="flex-row items-center gap-3">
-                <Avatar name={m.profile?.name ?? '?'} size={36} />
-                <View className="flex-1">
-                  <View className="flex-row items-center gap-1.5">
-                    <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{m.profile?.name ?? 'Member'}</Text>
-                    {m.is_captain ? <View className="rounded-full bg-inset px-1.5 py-0.5"><Text className="text-[9px] font-sans-sb uppercase text-muted">Captain</Text></View> : null}
+            {members.map((m) => {
+              const isSelf = m.user_id === userId;
+              // Admins can remove anyone except themselves; captains can only remove non-captains.
+              const showRemove = managing && !isSelf && (!!isAdmin || (!m.is_captain && isCaptain));
+              const showMakeCaptain = managing && !m.is_captain && canManage;
+              return (
+                <View key={m.user_id} className="flex-row items-center gap-3">
+                  <Avatar name={m.profile?.name ?? '?'} size={36} />
+                  <View className="flex-1">
+                    <View className="flex-row items-center gap-1.5">
+                      <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{m.profile?.name ?? 'Member'}</Text>
+                      {m.is_captain ? (
+                        <View className="flex-row items-center gap-0.5 rounded-full bg-inset px-1.5 py-0.5">
+                          <Text style={{ fontSize: 9 }}>👑</Text>
+                          <Text className="text-[9px] font-sans-sb uppercase text-muted">Captain</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    {m.profile?.flat ? <Text className="text-[12px] text-faint">Flat {m.profile.flat}</Text> : null}
                   </View>
-                  {m.profile?.flat ? <Text className="text-[12px] text-faint">Flat {m.profile.flat}</Text> : null}
+                  {showMakeCaptain ? (
+                    <Pressable onPress={() => onMakeCaptain(m)} hitSlop={6} className="h-8 w-8 items-center justify-center rounded-full bg-inset active:opacity-70">
+                      <Text style={{ fontSize: 15 }}>👑</Text>
+                    </Pressable>
+                  ) : null}
+                  {showRemove ? (
+                    <Pressable onPress={() => onRemoveMember(m)} hitSlop={6} className="h-8 w-8 items-center justify-center rounded-full bg-inset active:opacity-70">
+                      <Ionicons name="close" size={15} color="#EF4444" />
+                    </Pressable>
+                  ) : null}
                 </View>
-                {canManage && !m.is_captain ? (
-                  <Pressable onPress={() => onRemoveMember(m)} hitSlop={6} className="h-8 w-8 items-center justify-center rounded-full bg-inset active:opacity-70">
-                    <Ionicons name="close" size={15} color="#EF4444" />
-                  </Pressable>
-                ) : null}
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
+        {managing ? (
+          <Text className="mt-3 text-center text-[11px] text-faint">
+            👑 Transfer captaincy &nbsp;·&nbsp; ✕ Remove from group
+          </Text>
+        ) : null}
       </View>
 
       {/* Facility bookings, attendance & cost-split — only for sports that book one */}

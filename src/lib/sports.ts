@@ -181,6 +181,15 @@ export const removeMember = leaveGroup;
 export async function addMember(groupId: string, userId: string): Promise<void> {
   return joinGroup(groupId, userId);
 }
+/** Transfer captaincy to an existing group member. Atomic — old captain is demoted first. */
+export async function setCaptain(groupId: string, newCaptainUserId: string): Promise<void> {
+  const { data, error } = await supabase.rpc('set_group_captain', {
+    p_group_id: groupId,
+    p_new_captain_id: newCaptainUserId,
+  });
+  if (error) throw error;
+  if (!data) throw new Error('Not allowed or member not found');
+}
 
 // ── Tournaments ──────────────────────────────────────────────────────
 export async function fetchTournaments(groupId: string): Promise<Tournament[]> {
