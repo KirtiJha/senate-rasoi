@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { Brandfull } from '../../components/Brand';
@@ -10,7 +10,7 @@ import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { signIn, signUp } from '../../lib/auth';
 import { Community, fetchCommunities, fetchCommunityById, submitJoinRequest } from '../../lib/communities';
-import { DirectoryEntry, findRosterMatch, reconcileDirectoryEntry } from '../../lib/directory';
+import { DirectoryEntry, PhoneDirectoryMatch, findDirectoryByPhone, findRosterMatch, reconcileDirectoryEntry } from '../../lib/directory';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useThemeColors } from '../../theme';
 
@@ -34,6 +34,8 @@ export default function SignInScreen() {
   const [vehicleNo, setVehicleNo] = useState('');
   const [busy, setBusy] = useState(false);
   const [reconcile, setReconcile] = useState<DirectoryEntry | null>(null);
+  const [phoneMatch, setPhoneMatch] = useState<PhoneDirectoryMatch | null>(null);
+  const phoneMatchDismissed = useRef(false);
 
   // Society picker
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -63,6 +65,40 @@ export default function SignInScreen() {
       fetchCommunityById(params.communityId).then((comm) => { if (comm) setSelectedCommunity(comm); }).catch(() => {});
     }
   }, [params.onboard, params.communityId]);
+
+  // Debounced phone → directory lookup (signup mode only, anon-safe RPC)
+  useEffect(() => {
+    if (mode !== 'up') { setPhoneMatch(null); return; }
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length < 10) { setPhoneMatch(null); phoneMatchDismissed.current = false; return; }
+    if (phoneMatchDismissed.current) return;
+    const timer = setTimeout(async () => {
+      const match = await findDirectoryByPhone(phone).catch(() => null);
+      if (!phoneMatchDismissed.current) setPhoneMatch(match);
+    }, 450);
+    return () => clearTimeout(timer);
+  }, [phone, mode]);
+
+  const applyPhoneMatch = async () => {
+    if (!phoneMatch) return;
+    setName(phoneMatch.name);
+    setBlock(phoneMatch.block ?? '');
+    setFlat(phoneMatch.flat ?? '');
+    if (phoneMatch.residentType) setResidentType(phoneMatch.residentType);
+    if (phoneMatch.profession) setProfession(phoneMatch.profession);
+    if (phoneMatch.vehicleNo) setVehicleNo(phoneMatch.vehicleNo);
+    if (!selectedCommunity || selectedCommunity.id !== phoneMatch.communityId) {
+      const comm = await fetchCommunityById(phoneMatch.communityId).catch(() => null);
+      if (comm) setSelectedCommunity(comm);
+    }
+    phoneMatchDismissed.current = true;
+    setPhoneMatch(null);
+  };
+
+  const dismissPhoneMatch = () => {
+    phoneMatchDismissed.current = true;
+    setPhoneMatch(null);
+  };
 
   const filteredCommunities = communities.filter(
     (comm: Community) =>
@@ -180,6 +216,39 @@ export default function SignInScreen() {
 
           {mode === 'up' ? (
             <>
+              {/* Phone → directory match chip */}
+              {phoneMatch ? (
+                <View className="mb-4">
+                  <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-accent">Found in directory</Text>
+                  <Pressable
+                    onPress={applyPhoneMatch}
+                    className="flex-row items-center gap-3 rounded-2xl border px-4 py-3.5"
+                    style={{ borderColor: c.accent, backgroundColor: c.accent + '12' }}
+                  >
+                    <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: c.accent + '20' }}>
+                      <Ionicons name="person-outline" size={18} color={c.accent} />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-sans-sb text-[14px] text-ink">{phoneMatch.name}</Text>
+                      <Text className="text-[12px] text-faint" numberOfLines={1}>
+                        {[
+                          phoneMatch.block ? `Block ${phoneMatch.block}` : null,
+                          phoneMatch.flat ? `Flat ${phoneMatch.flat}` : null,
+                          phoneMatch.communityName,
+                        ].filter(Boolean).join(' · ')}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center gap-1">
+                      <Text className="text-[12px] font-sans-sb" style={{ color: c.accent }}>Fill details</Text>
+                      <Ionicons name="chevron-forward" size={14} color={c.accent} />
+                    </View>
+                  </Pressable>
+                  <Pressable onPress={dismissPhoneMatch} hitSlop={8} className="mt-1.5 self-center active:opacity-60">
+                    <Text className="text-[11px] text-faint">That's not me</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+
               {/* Society */}
               <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Your Society</Text>
               {newCommunity ? (

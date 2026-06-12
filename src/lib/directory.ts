@@ -214,6 +214,41 @@ export async function reconcileDirectoryEntry(entryId: string, keepNumber: boole
   return Boolean(data);
 }
 
+export interface PhoneDirectoryMatch {
+  entryId: string;
+  communityId: string;
+  communityName: string;
+  name: string;
+  block: string | null;
+  flat: string | null;
+  residentType: 'owner' | 'tenant' | null;
+  profession: string | null;
+  vehicleNo: string | null;
+}
+
+/**
+ * Look up a pre-loaded resident by their exact phone number.
+ * Safe to call before sign-in (uses a SECURITY DEFINER RPC accessible to anon).
+ */
+export async function findDirectoryByPhone(phone: string): Promise<PhoneDirectoryMatch | null> {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length < 10) return null;
+  const { data, error } = await supabase.rpc('find_resident_by_phone', { p_phone: digits });
+  if (error || !data || data.length === 0) return null;
+  const row = data[0];
+  return {
+    entryId: row.entry_id,
+    communityId: row.community_id,
+    communityName: row.community_name ?? 'Your society',
+    name: row.res_name,
+    block: row.block ?? null,
+    flat: row.flat ?? null,
+    residentType: (row.resident_type as 'owner' | 'tenant' | null) ?? null,
+    profession: row.profession ?? null,
+    vehicleNo: row.vehicle_no ?? null,
+  };
+}
+
 /** Admin sets a member's moved-in (occupancy) status. */
 export async function adminSetMovedIn(targetId: string, value: boolean): Promise<boolean> {
   const { data, error } = await supabase.rpc('admin_set_moved_in', { p_target: targetId, p_value: value });
