@@ -11,6 +11,8 @@ import { useToast } from '../../context/toast';
 import { selfResetPin, signIn, signUp } from '../../lib/auth';
 import { Community, fetchCommunities, fetchCommunityById, submitJoinRequest } from '../../lib/communities';
 import { DirectoryEntry, PhoneDirectoryMatch, findDirectoryByPhone, findRosterMatch, reconcileDirectoryEntry } from '../../lib/directory';
+import { detectDeviceLang } from '../../lib/translate';
+import { LanguageSheet, langLabel } from '../../components/LanguageSwitcher';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useThemeColors } from '../../theme';
 
@@ -32,6 +34,8 @@ export default function SignInScreen() {
   const [movedIn, setMovedIn] = useState(false);
   const [profession, setProfession] = useState('');
   const [vehicleNo, setVehicleNo] = useState('');
+  const [lang, setLang] = useState(detectDeviceLang());
+  const [langSheet, setLangSheet] = useState(false);
   const [busy, setBusy] = useState(false);
   const [reconcile, setReconcile] = useState<DirectoryEntry | null>(null);
   const [phoneMatch, setPhoneMatch] = useState<PhoneDirectoryMatch | null>(null);
@@ -175,7 +179,7 @@ export default function SignInScreen() {
           communityId: newCommunity ? undefined : selectedCommunity!.id,
           newCommunity: newCommunity ?? undefined,
           residentType, profession, vehicleNo,
-          block: block.trim() || undefined, movedIn,
+          block: block.trim() || undefined, movedIn, preferredLang: lang,
         });
         // If a roster entry already exists for this flat under a different number,
         // offer to merge before finishing (keeps the directory free of duplicates).
@@ -358,6 +362,17 @@ export default function SignInScreen() {
                   <Text className="text-[12.5px] font-sans-sb text-accent">Don't see your society? Find &amp; onboard it →</Text>
                 </Pressable>
               ) : null}
+
+              <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Read Aangan in</Text>
+              <Pressable
+                onPress={() => setLangSheet(true)}
+                className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-inset px-4 py-3 active:opacity-80"
+              >
+                <Ionicons name="language-outline" size={18} color={c.accent} />
+                <Text className="flex-1 font-sans-sb text-[14px] text-ink">{langLabel(lang)}</Text>
+                <Text className="text-[12px] font-sans-sb text-accent">Change</Text>
+                <Ionicons name="chevron-forward" size={14} color={c.faint} />
+              </Pressable>
 
               <Field label="Your name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} />
               <View className="flex-row gap-3">
@@ -598,6 +613,8 @@ export default function SignInScreen() {
           </View>
         </View>
       </Modal>
+
+      <LanguageSheet visible={langSheet} value={lang} onPick={setLang} onClose={() => setLangSheet(false)} />
     </KeyboardAvoidingView>
   );
 }

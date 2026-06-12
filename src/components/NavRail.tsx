@@ -10,6 +10,7 @@ import { useUnreadDms } from '../context/unread';
 import { useThemeColors } from '../theme';
 import { BrandMark } from './BrandMark';
 import { Wordmark } from './Brand';
+import { LanguageSheet } from './LanguageSwitcher';
 import { Avatar } from './ui';
 
 const NAV_EXPANDED = 220;
@@ -203,6 +204,7 @@ export function NavRail() {
 
   const [collapsed, setCollapsed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const anim = useRef(new Animated.Value(0)).current; // 0 = expanded, 1 = collapsed
 
   const handleToggle = () => {
@@ -450,16 +452,18 @@ export function NavRail() {
         colors={colors}
         isDark={isDark}
         onToggleTheme={toggleTheme}
+        onOpenLanguage={() => { setMenuOpen(false); setLangOpen(true); }}
         onSignOut={signOut}
         onNavigate={(href) => router.push(href as any)}
         insetsBottom={insets.bottom}
       />
+      <LanguageSheet visible={langOpen} onClose={() => setLangOpen(false)} />
     </Animated.View>
   );
 }
 
 function AccountMenu({
-  visible, onClose, profile, colors, isDark, onToggleTheme, onSignOut, onNavigate, insetsBottom,
+  visible, onClose, profile, colors, isDark, onToggleTheme, onOpenLanguage, onSignOut, onNavigate, insetsBottom,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -467,6 +471,7 @@ function AccountMenu({
   colors: ReturnType<typeof useThemeColors>;
   isDark: boolean;
   onToggleTheme: () => void;
+  onOpenLanguage: () => void;
   onSignOut: () => void;
   onNavigate: (href: string) => void;
   insetsBottom: number;
@@ -504,6 +509,7 @@ function AccountMenu({
           <View style={{ height: 1, backgroundColor: colors.line, marginVertical: 4 }} />
           <AccountMenuRow icon="person-outline" label="Profile" colors={colors} onPress={() => { onClose(); onNavigate('/profile/me'); }} />
           <AccountMenuRow icon="information-circle-outline" label="About" colors={colors} onPress={() => { onClose(); onNavigate('/about'); }} />
+          <AccountMenuRow icon="language-outline" label="Language" colors={colors} onPress={onOpenLanguage} />
           <AccountMenuRow icon={isDark ? 'sunny-outline' : 'moon-outline'} label={isDark ? 'Light mode' : 'Dark mode'} colors={colors} onPress={onToggleTheme} />
           <View style={{ height: 1, backgroundColor: colors.line, marginVertical: 4 }} />
           <AccountMenuRow icon="log-out-outline" label="Sign out" colors={colors} danger onPress={() => { onClose(); onSignOut(); }} />

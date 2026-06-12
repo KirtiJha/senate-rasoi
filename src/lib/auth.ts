@@ -22,6 +22,7 @@ export interface SignUpInput {
   vehicleNo?: string;
   block?: string;
   movedIn?: boolean;
+  preferredLang?: string;
 }
 
 export async function signUp(input: SignUpInput): Promise<DbProfile> {
@@ -92,12 +93,13 @@ export async function signUp(input: SignUpInput): Promise<DbProfile> {
 
   // Best-effort resident-directory fields — kept out of the core insert so a
   // missing column (migration 0027/0028 not yet run) can never break sign-up.
-  if (input.residentType || input.profession?.trim() || input.vehicleNo?.trim() || input.movedIn) {
+  if (input.residentType || input.profession?.trim() || input.vehicleNo?.trim() || input.movedIn || input.preferredLang) {
     await updateResidentInfo(userId, {
       resident_type: input.residentType ?? null,
       profession: input.profession?.trim() || null,
       vehicle_no: input.vehicleNo?.trim() || null,
       moved_in: input.movedIn ?? false,
+      preferred_lang: input.preferredLang || null,
     }); // error (if column absent) is intentionally ignored
   }
   return profile as DbProfile;
@@ -163,6 +165,7 @@ export async function updateResidentInfo(
     vehicle_no?: string | null;
     show_in_directory?: boolean;
     moved_in?: boolean;
+    preferred_lang?: string | null;
   },
 ): Promise<void> {
   await supabase.from('profiles').update(fields).eq('id', userId);

@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/auth';
@@ -7,6 +8,7 @@ import { useNotifications } from '../context/notifications';
 import { useThemePreference } from '../context/theme';
 import { useThemeColors } from '../theme';
 import { Wordmark } from './Brand';
+import { LanguageSheet } from './LanguageSwitcher';
 import { LiveDot } from './ui/Badge';
 
 // Slim brand bar used as the phone header.
@@ -17,6 +19,7 @@ export function TopBar({ live = false }: { live?: boolean }) {
   const isDark = resolved === 'dark';
   const { unreadCount, open } = useNotifications();
   const { community } = useAuth();
+  const [langOpen, setLangOpen] = useState(false);
 
   return (
     <View className="border-b border-line bg-bg" style={{ paddingTop: insets.top }}>
@@ -42,6 +45,14 @@ export function TopBar({ live = false }: { live?: boolean }) {
               <Text className="font-sans-sb text-[11px] text-muted">Live</Text>
             </View>
           ) : null}
+          <Pressable
+            onPress={() => setLangOpen(true)}
+            hitSlop={8}
+            className="h-9 w-9 items-center justify-center rounded-full bg-inset active:opacity-70"
+            accessibilityLabel="Change language"
+          >
+            <Ionicons name="language-outline" size={18} color={c.muted} />
+          </Pressable>
           <Pressable
             onPress={toggle}
             hitSlop={8}
@@ -70,6 +81,7 @@ export function TopBar({ live = false }: { live?: boolean }) {
           </Pressable>
         </View>
       </View>
+      <LanguageSheet visible={langOpen} onClose={() => setLangOpen(false)} />
     </View>
   );
 }
