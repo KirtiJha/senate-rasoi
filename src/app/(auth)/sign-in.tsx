@@ -8,7 +8,7 @@ import { Field } from '../../components/forms';
 import { Button, Container } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
-import { requestPinReset, signIn, signUp } from '../../lib/auth';
+import { selfResetPin, signIn, signUp } from '../../lib/auth';
 import { Community, fetchCommunities, fetchCommunityById, submitJoinRequest } from '../../lib/communities';
 import { DirectoryEntry, PhoneDirectoryMatch, findDirectoryByPhone, findRosterMatch, reconcileDirectoryEntry } from '../../lib/directory';
 import { isSupabaseConfigured } from '../../lib/supabase';
@@ -40,8 +40,10 @@ export default function SignInScreen() {
   // Forgot PIN flow
   const [showForgotPin, setShowForgotPin] = useState(false);
   const [resetPhone, setResetPhone] = useState('');
+  const [resetNewPin, setResetNewPin] = useState('');
+  const [resetConfirmPin, setResetConfirmPin] = useState('');
   const [resetBusy, setResetBusy] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
 
   // Society picker
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -108,23 +110,28 @@ export default function SignInScreen() {
 
   const openForgotPin = () => {
     setResetPhone(phone);
-    setResetSent(false);
+    setResetNewPin('');
+    setResetConfirmPin('');
+    setResetDone(false);
     setShowForgotPin(true);
   };
 
   const submitReset = async () => {
-    const digits = resetPhone.replace(/\D/g, '');
-    if (digits.length < 10) { toast.show('Enter a valid phone number'); return; }
+    if (resetPhone.replace(/\D/g, '').length < 10) { toast.show('Enter a valid phone number'); return; }
+    if (!/^\d{6}$/.test(resetNewPin)) { toast.show('New PIN must be exactly 6 digits'); return; }
+    if (resetNewPin !== resetConfirmPin) { toast.show('PINs do not match'); return; }
     setResetBusy(true);
     try {
-      const result = await requestPinReset(resetPhone);
-      if (result === 'not_found') {
+      const ok = await selfResetPin(resetPhone, resetNewPin);
+      if (!ok) {
         toast.show('No account found with that number');
       } else {
-        setResetSent(true);
+        setResetDone(true);
+        // Pre-fill the sign-in code field with the new PIN for convenience.
+        setCode(resetNewPin);
       }
     } catch {
-      toast.show('Could not send — try again');
+      toast.show('Could not reset — try again');
     } finally {
       setResetBusy(false);
     }
@@ -495,43 +502,64 @@ export default function SignInScreen() {
       <Modal visible={showForgotPin} transparent animationType="fade" onRequestClose={() => setShowForgotPin(false)}>
         <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: '#0008' }}>
           <View style={{ width: '100%', maxWidth: 380, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}>
-            {resetSent ? (
+            {resetDone ? (
               <>
                 <View className="mb-4 items-center">
                   <View className="h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: c.accent + '20' }}>
                     <Ionicons name="checkmark-circle" size={32} color={c.accent} />
                   </View>
                 </View>
-                <Text className="text-center font-display-x text-[19px] text-ink">Request sent!</Text>
+                <Text className="text-center font-display-x text-[19px] text-ink">PIN reset!</Text>
                 <Text className="mt-2 text-center text-[14px] leading-5 text-muted">
-                  Your society admin has been notified. They'll reset your PIN and let you know the new one.
+                  Your PIN has been updated. Sign in with your new PIN.
                 </Text>
                 <View className="mt-5">
-                  <Button label="Done" fullWidth onPress={() => setShowForgotPin(false)} />
+                  <Button label="Sign in now" fullWidth onPress={() => { setShowForgotPin(false); setMode('in'); }} />
                 </View>
               </>
             ) : (
               <>
-                <Text className="font-display-x text-[19px] text-ink">Forgot your PIN?</Text>
-                <Text className="mt-2 text-[14px] leading-5 text-muted">
-                  Enter your registered phone number. Your society admin will get a notification to reset your PIN.
+                <Text className="font-display-x text-[19px] text-ink">Reset PIN</Text>
+                <Text className="mt-1.5 mb-4 text-[13px] leading-5 text-muted">
+                  Enter your registered phone and choose a new 6-digit PIN.
                 </Text>
-                <View className="mt-4">
-                  <Field
-                    label="Phone number"
-                    required
-                    placeholder="98765 43210"
-                    keyboardType="phone-pad"
-                    value={resetPhone}
-                    onChangeText={setResetPhone}
-                  />
-                </View>
-                <View className="mt-2 flex-row gap-2">
+                <Field
+                  label="Phone number"
+                  required
+                  placeholder="98765 43210"
+                  keyboardType="phone-pad"
+                  value={resetPhone}
+                  onChangeText={setResetPhone}
+                />
+                <Field
+                  label="New PIN"
+                  required
+                  placeholder="••••••"
+                  keyboardType="number-pad"
+                  secureTextEntry
+                  maxLength={6}
+                  value={resetNewPin}
+                  onChangeText={(t) => setResetNewPin(t.replace(/\D/g, ''))}
+                />
+                <Field
+                  label="Confirm new PIN"
+                  required
+                  placeholder="••••••"
+                  keyboardType="number-pad"
+                  secureTextEntry
+                  maxLength={6}
+                  value={resetConfirmPin}
+                  onChangeText={(t) => setResetConfirmPin(t.replace(/\D/g, ''))}
+                />
+                <Text className="mb-4 text-[11px] leading-4 text-faint">
+                  Can't reset? Ask your society admin to set a temporary PIN for you. You can then sign in and change it from your profile.
+                </Text>
+                <View className="flex-row gap-2">
                   <View className="flex-1">
                     <Button label="Cancel" variant="outline" onPress={() => setShowForgotPin(false)} />
                   </View>
                   <View className="flex-1">
-                    <Button label={resetBusy ? 'Sending…' : 'Send request'} loading={resetBusy} onPress={submitReset} />
+                    <Button label={resetBusy ? 'Resetting…' : 'Reset PIN'} loading={resetBusy} onPress={submitReset} />
                   </View>
                 </View>
               </>

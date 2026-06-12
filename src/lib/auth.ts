@@ -189,11 +189,15 @@ export async function deleteAccount(): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/** Send a PIN-reset notification to the community's admins (safe for unauthenticated callers). */
-export async function requestPinReset(phone: string): Promise<'sent' | 'not_found'> {
-  const { data, error } = await supabase.rpc('request_pin_reset', { p_phone: phone });
+/**
+ * Self-service PIN reset: verifies identity by phone number and sets the new PIN.
+ * Safe for unauthenticated callers (forgotten PIN). Returns false if the phone
+ * is not registered.
+ */
+export async function selfResetPin(phone: string, newPin: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('self_reset_pin', { p_phone: phone, p_new_pin: newPin });
   if (error) throw new Error(error.message);
-  return (data as 'sent' | 'not_found') ?? 'not_found';
+  return Boolean(data);
 }
 
 /** Admin: set a community member's PIN to a new 6-digit value. */
