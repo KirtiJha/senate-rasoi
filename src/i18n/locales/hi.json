@@ -57,9 +57,10 @@
     "newPost": "नई पोस्ट"
   },
   "home": {
-    "greetingMorning": "सुप्रभात",
-    "greetingAfternoon": "नमस्ते",
-    "greetingEvening": "शुभ संध्या",
+    "greetingMorning": "सुप्रभात ☀️",
+    "greetingAfternoon": "नमस्ते 🍛",
+    "greetingEvening": "शुभ संध्या 🌙",
+    "greetingNight": "शुभ रात्रि 🌃",
     "hi": "नमस्ते, {{name}} 👋",
     "hubTitle": "आपका पड़ोस केंद्र",
     "prompt": "आज आपकी सोसायटी आपकी कैसे मदद कर सकती है?",

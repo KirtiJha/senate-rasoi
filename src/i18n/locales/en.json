@@ -57,9 +57,10 @@
     "newPost": "New Post"
   },
   "home": {
-    "greetingMorning": "Good morning",
-    "greetingAfternoon": "Good afternoon",
-    "greetingEvening": "Good evening",
+    "greetingMorning": "Good morning ☀️",
+    "greetingAfternoon": "Good afternoon 🍛",
+    "greetingEvening": "Good evening 🌙",
+    "greetingNight": "Good night 🌃",
     "hi": "Hi, {{name}} 👋",
     "hubTitle": "Your neighbourhood hub",
     "prompt": "What can your society help you with today?",

@@ -57,9 +57,10 @@
     "newPost": "ಹೊಸ ಪೋಸ್ಟ್"
   },
   "home": {
-    "greetingMorning": "ಶುಭೋದಯ",
-    "greetingAfternoon": "ನಮಸ್ಕಾರ",
-    "greetingEvening": "ಶುಭ ಸಂಜೆ",
+    "greetingMorning": "ಶುಭೋದಯ ☀️",
+    "greetingAfternoon": "ನಮಸ್ಕಾರ 🍛",
+    "greetingEvening": "ಶುಭ ಸಂಜೆ 🌙",
+    "greetingNight": "ಶುಭ ರಾತ್ರಿ 🌃",
     "hi": "ನಮಸ್ಕಾರ, {{name}} 👋",
     "hubTitle": "ನಿಮ್ಮ ನೆರೆಹೊರೆ ಕೇಂದ್ರ",
     "prompt": "ಇಂದು ನಿಮ್ಮ ಸೊಸೈಟಿ ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಹುದು?",

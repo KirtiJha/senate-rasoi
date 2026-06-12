@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '../../components/BrandMark';
@@ -135,6 +136,7 @@ export default function HomeScreen() {
   const { isDesktop } = useResponsive();
   const { profile, communityId } = useAuth();
   const c = useThemeColors();
+  const { t } = useTranslation();
   const unread = useUnreadDms();
   const [updateBanner, setUpdateBanner] = useState<AppVersion | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -183,7 +185,7 @@ export default function HomeScreen() {
     }).catch(() => {});
   }, []);
 
-  const greeting = getGreeting();
+  const greeting = t(getGreeting());
 
   const handleCategoryPress = (cat: ServiceCategory) => {
     if (cat.key === 'food') {
@@ -204,10 +206,10 @@ export default function HomeScreen() {
         <View className="mb-6">
           <Text className="text-[13px] font-sans-md text-accent">{greeting}</Text>
           <Text className="font-display-x text-[28px] leading-9 text-ink">
-            {profile?.name ? `Hi, ${profile.name.split(' ')[0]} 👋` : 'Your neighbourhood hub'}
+            {profile?.name ? t('home.hi', { name: profile.name.split(' ')[0] }) : t('home.hubTitle')}
           </Text>
           <Text className="mt-2 text-[14px] font-sans-md text-muted">
-            What can your society help you with today?
+            {t('home.prompt')}
           </Text>
         </View>
 
@@ -221,8 +223,8 @@ export default function HomeScreen() {
             <BrandMark size={42} />
           </View>
           <View className="min-w-0 flex-1 py-3">
-            <Text className="font-sans-bold text-[15px] text-ink">Ask Aangan</Text>
-            <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>Food, flats, borrow, recommendations — just ask</Text>
+            <Text className="font-sans-bold text-[15px] text-ink">{t('home.askTitle')}</Text>
+            <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>{t('home.askSub')}</Text>
           </View>
           <Ionicons name="arrow-forward" size={18} color={c.accent} style={{ marginRight: 14 }} />
         </Pressable>
@@ -234,7 +236,7 @@ export default function HomeScreen() {
             <View className="p-4">
               <View className="mb-1.5 flex-row items-center gap-2">
                 <Ionicons name="sparkles" size={14} color={c.accent} />
-                <Text className="flex-1 text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: c.accent }}>This week in your society</Text>
+                <Text className="flex-1 text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: c.accent }}>{t('home.digestTitle')}</Text>
                 <Pressable onPress={dismissDigest} hitSlop={8}>
                   <Ionicons name="close" size={16} color={c.faint} />
                 </Pressable>
@@ -267,7 +269,7 @@ export default function HomeScreen() {
                 <Ionicons name="megaphone" size={18} color="#F59E0B" />
               </View>
               <View className="min-w-0 flex-1">
-                <Text className="text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: '#B45309' }}>Announcement</Text>
+                <Text className="text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: '#B45309' }}>{t('home.announcement')}</Text>
                 {announcement.title ? <T source="post" id={announcement.id} field="title" text={announcement.title} showToggle={false} className="font-sans-bold text-[14px] text-ink" numberOfLines={1} /> : null}
                 <T source="post" id={announcement.id} field="body" text={announcement.body} showToggle={false} className="text-[13px] text-muted" numberOfLines={2} />
               </View>
@@ -398,8 +400,8 @@ function ServiceTile({ cat, onPress }: { cat: ServiceCategory; onPress: () => vo
 
 function getGreeting() {
   const h = new Date().getHours();
-  if (h >= 5 && h < 12) return 'Good morning ☀️';
-  if (h >= 12 && h < 17) return 'Good afternoon 🍛';
-  if (h >= 17 && h < 21) return 'Good evening 🌙';
-  return 'Good night 🌃';
+  if (h >= 5 && h < 12) return 'home.greetingMorning';
+  if (h >= 12 && h < 17) return 'home.greetingAfternoon';
+  if (h >= 17 && h < 21) return 'home.greetingEvening';
+  return 'home.greetingNight';
 }
