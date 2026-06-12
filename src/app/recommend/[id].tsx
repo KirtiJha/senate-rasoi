@@ -77,7 +77,7 @@ export default function RecoDetailScreen() {
 
   const removeQuestion = async () => {
     if (!q) return;
-    const go = async () => { await deleteQuestion(q.id); router.back(); };
+    const go = async () => { await deleteQuestion(q.id); if (router.canGoBack()) router.back(); else router.replace('/recommend' as any); };
     if (await confirm({ title: 'Delete question', message: 'Delete this question and its answers?', confirmLabel: 'Delete', destructive: true })) go();
   };
 

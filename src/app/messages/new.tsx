@@ -53,7 +53,7 @@ export default function NewMessageScreen() {
       {/* Header */}
       <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
         <View className="flex-row items-center gap-2">
-          <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+          <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/messages' as any))} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
             <Ionicons name="chevron-back" size={22} color={c.ink} />
           </Pressable>
           <Text className="font-display-x text-[20px] text-ink">New message</Text>

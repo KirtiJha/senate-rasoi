@@ -108,7 +108,11 @@ export default function PropertyDetailScreen() {
   if (p.available_from) specs.push(['Available from', new Date(p.available_from).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })]);
 
   const confirmDelete = () => {
-    const go = async () => { await deleteProperty(p.id); router.back(); };
+    const go = async () => {
+      await deleteProperty(p.id);
+      if (router.canGoBack()) router.back();
+      else router.replace('/properties' as any);
+    };
     confirm({ title: 'Delete flat listing', message: 'This cannot be undone.', confirmLabel: 'Delete', destructive: true }).then((ok) => { if (ok) go(); });
   };
 

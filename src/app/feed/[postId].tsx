@@ -29,6 +29,13 @@ export default function PostThreadScreen() {
   const [post, setPost] = useState<PostRow | null>(null);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // On web, opening this route directly (or after a refresh) leaves an empty
+  // history stack, so router.back() is a no-op. Fall back to the feed.
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/feed' as any);
+  };
   const [commentBody, setCommentBody] = useDraft('comments:' + (postId ?? ''), '');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
@@ -69,7 +76,7 @@ export default function PostThreadScreen() {
     if (!postId) return;
     try {
       await deletePost(postId);
-      router.back();
+      goBack();
     } catch { toast.show('Could not delete post'); }
   };
 
@@ -106,7 +113,7 @@ export default function PostThreadScreen() {
       {/* Header */}
       <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
         <View className="flex-row items-center gap-2">
-          <Pressable onPress={() => router.back()} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+          <Pressable onPress={goBack} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
             <Ionicons name="chevron-back" size={22} color={c.ink} />
           </Pressable>
           <View className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1" style={{ backgroundColor: color + '20' }}>

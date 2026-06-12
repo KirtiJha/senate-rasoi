@@ -74,7 +74,7 @@ export default function LendItemDetailScreen() {
     catch { toast.show('Could not update'); }
   };
   const removeItem = async () => {
-    const go = async () => { await deleteItem(item.id); router.back(); };
+    const go = async () => { await deleteItem(item.id); if (router.canGoBack()) router.back(); else router.replace('/borrow' as any); };
     if (await confirm({ title: 'Delete item', message: 'Delete this borrow item?', confirmLabel: 'Delete', destructive: true })) go();
   };
 

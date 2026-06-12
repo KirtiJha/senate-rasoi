@@ -36,6 +36,13 @@ export default function ListingDetailScreen() {
   const [inquiryListing, setInquiryListing] = useState<ListingRow | null>(null);
   const [saved, setSaved] = useState(false);
 
+  // On web, opening this route directly (or after a refresh) leaves an empty
+  // history stack, so router.back() is a no-op. Fall back to the listings tab.
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/listings' as any);
+  };
+
   const load = useCallback(async () => {
     if (!id) return;
     try {
@@ -91,7 +98,7 @@ export default function ListingDetailScreen() {
       const ok = await deleteListing(listing.id);
       haptics.success();
       toast.show(ok ? 'Listing removed ✅' : 'Could not remove');
-      router.back();
+      goBack();
     };
     confirm({ title: 'Remove listing', message: `Remove "${listing.title}"?`, confirmLabel: 'Remove', destructive: true }).then((ok) => { if (ok) doDelete(); });
   };
@@ -138,7 +145,7 @@ export default function ListingDetailScreen() {
             <Image source={{ uri: photo }} style={{ width: '100%', height: 280 }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
             {/* Back button overlaid on photo */}
             <Pressable
-              onPress={() => router.back()}
+              onPress={goBack}
               className="absolute items-center justify-center rounded-full bg-black/40"
               style={{ top: insets.top + 12, left: 16, width: 40, height: 40 }}
             >
@@ -162,7 +169,7 @@ export default function ListingDetailScreen() {
             </View>
             {/* Back button */}
             <Pressable
-              onPress={() => router.back()}
+              onPress={goBack}
               className="absolute items-center justify-center rounded-full bg-black/20"
               style={{ top: insets.top + 12, left: 16, width: 40, height: 40 }}
             >
