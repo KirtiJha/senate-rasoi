@@ -56,6 +56,13 @@ export default function DishDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(false);
 
+  // On web, opening this route directly (or after a refresh) leaves an empty
+  // history stack, so router.back() is a no-op. Fall back to the food board.
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/food' as any);
+  };
+
   const load = useCallback(async () => {
     if (!id) return;
     try {
@@ -99,7 +106,7 @@ export default function DishDetailScreen() {
         const ok = await deleteDish(dish.id);
         haptics.success();
         toast.show(ok ? 'Your dish has been removed ✅' : 'Could not remove this dish');
-        router.back();
+        goBack();
       } catch (e) {
         console.error(e);
         toast.show('Could not remove — check your connection');
@@ -148,22 +155,23 @@ export default function DishDetailScreen() {
               <Text style={{ fontSize: 84 }}>{SLOT_EMOJI[dish.slot] ?? '🍽️'}</Text>
             </LinearGradient>
           )}
-          {/* Back button overlaid */}
-          <Pressable
-            onPress={() => router.back()}
-            className="absolute items-center justify-center rounded-full bg-black/40"
-            style={{ top: insets.top + 12, left: 16, width: 40, height: 40 }}
-          >
-            <Ionicons name="chevron-back" size={22} color="#fff" />
-          </Pressable>
-
           {soldOut ? (
-            <View className="absolute inset-0 items-center justify-center bg-black/45">
+            <View className="absolute inset-0 items-center justify-center bg-black/45" pointerEvents="none">
               <View className="rotate-[-7deg] rounded-xl border-2 border-white px-4 py-1.5">
                 <Text className="font-display-x text-lg uppercase tracking-wider text-white">Sold out</Text>
               </View>
             </View>
           ) : null}
+
+          {/* Back button overlaid — rendered last so it stays on top of the overlay */}
+          <Pressable
+            onPress={goBack}
+            hitSlop={8}
+            className="absolute items-center justify-center rounded-full bg-black/40"
+            style={{ top: insets.top + 12, left: 16, width: 40, height: 40 }}
+          >
+            <Ionicons name="chevron-back" size={22} color="#fff" />
+          </Pressable>
         </View>
 
         <View style={{ paddingHorizontal: 16, paddingTop: 20 }}>
