@@ -153,6 +153,15 @@ _Last updated: 12 Jun 2026, 2:00 AM IST_
 
 ---
 
+### #16 — Realtime "after subscribe()" crash on navigating to Sports (and class-wide) 🐞
+- **Status:** 🟢 Implemented
+- **Area:** Realtime (app-wide)
+- **Symptom:** `Uncaught Error: cannot add postgres_changes callbacks for realtime:court-… after subscribe()` when opening Sports; a refresh "fixes" it.
+- **Root cause:** supabase-js returns an **existing** channel when one with the same topic already exists. When a subscribe effect re-runs (its deps change as auth/data settle) before the prior channel's async removal finishes, the second `supabase.channel('same-topic')` hands back an already-subscribed channel and `.on()` throws. Same root cause as #12 (DM) — but **every** fixed-topic channel was vulnerable (court, posts, polls, properties, listings, orders, payments, notifications…).
+- **Fix:** Patched it at the source in `lib/supabase.ts` — `supabase.channel()` now appends a process-unique suffix to every topic, so a fresh, unsubscribed channel is always created. Topic names are cosmetic for `postgres_changes` (the filter is in the `.on()` config), so it's safe and fixes the whole class in one place (supersedes the per-file DM fix).
+
+---
+
 ## End-to-end review notes (Home Food + Badminton)
 
 **Verified working in code:** dish posting (now resilient to photo failures); order placement → **chef push on new order** + **buyer push on status change** (0005, title fixed in #3); Kitchen & Orders screens have **realtime**; badminton group create / booking → **member push** (0043) → RSVP (fixed in #2) → session-end **client-side cost split** → **UPI dues** (pay → initiated → booker confirms → paid) with the dues screen now **live** (#4).

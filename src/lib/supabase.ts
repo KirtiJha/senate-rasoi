@@ -36,6 +36,23 @@ export const supabase = createClient(
   }
 );
 
+// ── Realtime channel-topic uniqueness ───────────────────────────────
+// supabase-js returns an EXISTING channel when one with the same topic already
+// exists. So when a subscribe effect re-runs (e.g. its deps change as auth/data
+// settle) before the previous channel's async removal finishes, the second
+// `supabase.channel('same-topic')` hands back the already-subscribed channel, and
+// chaining `.on('postgres_changes', …)` throws:
+//   "cannot add postgres_changes callbacks … after subscribe()".
+// Make every topic process-unique so a fresh, unsubscribed channel is always
+// created. Topic names are cosmetic for postgres_changes (the filter lives in the
+// `.on()` config), so this is safe — and it fixes the whole class at one point.
+{
+  const origChannel = supabase.channel.bind(supabase);
+  let seq = 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (supabase as any).channel = (name: string, opts?: any) => origChannel(`${name}~${++seq}`, opts);
+}
+
 /** Build the alias email Supabase Auth stores for a phone number. */
 export function phoneToEmail(phone: string): string {
   return `${phone.replace(/\D/g, '')}@senate.app`;
