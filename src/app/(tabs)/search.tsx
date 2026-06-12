@@ -119,7 +119,7 @@ export default function SearchScreen() {
         next.push({
           id: `d:${d.id}`, kind: 'dish', title: d.dish_name, subtitle: `by ${d.chef_name} · ₹${d.price}`,
           haystack: `${d.dish_name} ${d.chef_name}`.toLowerCase(),
-          icon: 'restaurant', color: FOOD_COLOR, open: () => router.push('/food' as any),
+          icon: 'restaurant', color: FOOD_COLOR, open: () => router.push(`/dish/${d.id}` as any),
         });
       }
       for (const t of tiffins) {

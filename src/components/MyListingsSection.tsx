@@ -58,7 +58,9 @@ export function MyListingsSection() {
   useEffect(() => { load(); }, [load]);
 
   const open = (it: MyItem) =>
-    it.kind === 'listing' ? router.push(`/listing/${it.raw.id}` as any) : router.push('/food' as any);
+    it.kind === 'listing' ? router.push(`/listing/${it.raw.id}` as any)
+    : it.kind === 'dish' ? router.push(`/dish/${it.raw.id}` as any)
+    : router.push('/food' as any);
 
   const confirmDelete = (title: string, run: () => Promise<unknown>) => {
     const doIt = async () => { await run(); haptics.success(); toast.show('Removed ✅'); load(); };

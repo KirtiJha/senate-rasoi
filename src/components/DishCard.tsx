@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useThemeColors } from '../theme';
@@ -43,6 +44,8 @@ interface DishCardProps {
 
 function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCardProps) {
   const c = useThemeColors();
+  const router = useRouter();
+  const openDetail = () => router.push(`/dish/${dish.id}` as any);
   const cd = countdown(dish.order_by);
   const closed = cd?.closed ?? false;
   const soldOut = dish.plates_left <= 0;
@@ -54,7 +57,11 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCar
   const serveLabel = futureServeLabel(dish.serve_date);
 
   return (
-    <View className="overflow-hidden rounded-3xl border border-line bg-surface shadow-card">
+    <Pressable
+      onPress={openDetail}
+      accessibilityLabel={`View ${dish.dish_name} details`}
+      className="overflow-hidden rounded-3xl border border-line bg-surface shadow-card active:opacity-95"
+    >
       {/* ── Photo ─────────────────────────────────────────────────── */}
       <View style={{ height: hero ? 230 : 180 }} className="w-full">
         {dish.photo_url ? (
@@ -155,7 +162,7 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCar
           )}
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 

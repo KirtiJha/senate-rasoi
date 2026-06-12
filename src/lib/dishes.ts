@@ -46,6 +46,17 @@ export async function fetchDishes(communityId: string = COMMUNITY_ID): Promise<D
   return rows;
 }
 
+/** Fetch a single dish by id (for the detail screen). Null if not found. */
+export async function fetchDishById(id: string): Promise<DishRow | null> {
+  const { data, error } = await supabase
+    .from('dishes')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as DishRow) ?? null;
+}
+
 /**
  * Subscribe to live changes on the dishes table. Returns an unsubscribe fn.
  * We keep it simple: any change triggers a refetch by the caller.
