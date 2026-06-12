@@ -164,6 +164,10 @@ export default function SignInScreen() {
       if (mode === 'in') {
         await signIn(phone, code);
       } else {
+        if (phoneMatch?.alreadyOnboarded) {
+          setBusy(false); setMode('in');
+          return toast.show('This number already has an account — please sign in.');
+        }
         if (!name.trim()) { setBusy(false); return toast.show('Please enter your name'); }
         if (!newCommunity && !selectedCommunity) { setBusy(false); return toast.show('Please select your society'); }
         const profile = await signUp({

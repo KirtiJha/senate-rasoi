@@ -184,7 +184,7 @@ export async function fetchGroupSessions(groupId: string, userId: string | null)
       confirmedCount: confirmed.length,
       myStatus: myBySession.get(s.id) ?? null,
       ended,
-      perHead: confirmed.length ? round2(charge / confirmed.length) : charge,
+      perHead: confirmed.length ? Math.ceil(charge / confirmed.length) : charge,
     } as SessionView;
   });
 }
@@ -310,7 +310,7 @@ export async function fetchMyDues(userId: string): Promise<DueItem[]> {
       booker_user_id: s.booking?.booker_user_id,
       booker_name: s.booking?.booker?.name ?? null,
       booker_upi: s.booking?.upi_id || s.booking?.booker?.upi || null,
-      amount: pay ? num(pay.amount) : round2(num(s.charge) / n),
+      amount: pay ? num(pay.amount) : Math.ceil(num(s.charge) / n),
       status: (pay?.status as SettleStatus) ?? 'due',
       payment_id: pay?.id ?? null,
     } as DueItem;
@@ -389,7 +389,7 @@ export async function fetchBookerCollections(userId: string): Promise<Collection
     out.push({
       session_id: p.session_id, session_date: s.session_date, title: s.booking?.title ?? null,
       user_id: p.user_id, name: p.profile?.name ?? null, flat: p.profile?.flat ?? null,
-      amount: pay ? num(pay.amount) : round2(num(s.charge) / n),
+      amount: pay ? num(pay.amount) : Math.ceil(num(s.charge) / n),
       status: (pay?.status as SettleStatus) ?? 'due',
       payment_id: pay?.id ?? null,
     });

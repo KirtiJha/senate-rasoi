@@ -4,7 +4,7 @@
 > Status legend: 🔴 Open · 🟡 In Progress · 🟢 Implemented · ⚪️ Won't Do / Deferred
 > Type legend: 🐞 Bug · ✨ Enhancement · 💡 Idea/Feature
 
-_Last updated: 12 Jun 2026, 2:00 AM IST_
+_Last updated: 12 Jun 2026 — final end-to-end audit (Auth + Home Food + Badminton)_
 
 ---
 
@@ -12,7 +12,9 @@ _Last updated: 12 Jun 2026, 2:00 AM IST_
 
 | Open | In Progress | Implemented | Deferred | Total |
 |---|---|---|---|---|
-| 1 | 0 | 12 | 0 | 13 |
+| 1 | 0 | 17 | 0 | 18 |
+
+> Open: **#18** (PIN-reset-by-phone — needs a product/security decision). Pending migrations: run through **0057**.
 
 ---
 
@@ -58,7 +60,7 @@ _Last updated: 12 Jun 2026, 2:00 AM IST_
 ---
 
 ### #5 — Order events don't appear in the in-app notification centre 🐞
-- **Status:** 🔴 Open (low priority for pilot)
+- **Status:** 🟢 Implemented (in #17 / migration 0057)
 - **Area:** Food / Notifications · _found during end-to-end review_
 - **Description:** New orders and order status changes fire an **Expo push** (`notify_user`, migration 0005) but **don't insert an in-app `notifications` row** (unlike posts/listings/polls/dishes). On web (where push isn't wired) a chef/buyer only sees order changes via **realtime on the Orders/Kitchen screen** — if they're elsewhere, nothing surfaces in the bell.
 - **Proposed fix:** Add an in-app `notifications` insert in the order trigger (new migration) so the bell shows "New order" / "Order confirmed", consistent with other events. Deferring until the broader notifications pass.
@@ -159,6 +161,27 @@ _Last updated: 12 Jun 2026, 2:00 AM IST_
 - **Symptom:** `Uncaught Error: cannot add postgres_changes callbacks for realtime:court-… after subscribe()` when opening Sports; a refresh "fixes" it.
 - **Root cause:** supabase-js returns an **existing** channel when one with the same topic already exists. When a subscribe effect re-runs (its deps change as auth/data settle) before the prior channel's async removal finishes, the second `supabase.channel('same-topic')` hands back an already-subscribed channel and `.on()` throws. Same root cause as #12 (DM) — but **every** fixed-topic channel was vulnerable (court, posts, polls, properties, listings, orders, payments, notifications…).
 - **Fix:** Patched it at the source in `lib/supabase.ts` — `supabase.channel()` now appends a process-unique suffix to every topic, so a fresh, unsubscribed channel is always created. Topic names are cosmetic for `postgres_changes` (the filter is in the `.on()` config), so it's safe and fixes the whole class in one place (supersedes the per-file DM fix).
+
+---
+
+### #17 — Final end-to-end audit (Auth + Home Food + Badminton): fixes 🐞✨
+- **Status:** 🟢 Implemented · **▶️ run migration `0057`**
+- A 3-way parallel code review of the Auth, Home Food and Sports flows. Fixed:
+  - **PIN reset was completely broken** (Critical): `self_reset_pin` / `admin_reset_user_pin` set `search_path = public`, but `crypt`/`gen_salt` live in the `extensions` schema → "function gen_salt does not exist". `0057` adds `extensions` to both. (Closes the 0053/0054 feature.)
+  - **Captain controls silently failed** (Moderate): the UI shows Edit/Delete-group + tournament controls to captains, but `sport_groups` / `sport_tournaments` RLS only allowed owner/admin. `0057` extends `sg_update`/`sg_delete`/`st_write` to `is_group_captain`.
+  - **Orders had no in-app notification** (was #5): `on_order_change` only sent an Expo push (dead on web). `0057` also inserts a `notifications` row (new `order` type + bell icon) for the chef on a new order and the buyer on each status change.
+  - **Sports split could short the booker** (Critical): per-head used `round2` (₹400/3 → 3×₹133.33 = ₹399.99). Now `Math.ceil` everywhere (booker absorbs the rounding remainder) — consistent across optimistic UI, session card, and dues.
+  - **Sign-up didn't block a known account**: `submit()` now stops + switches to sign-in when `alreadyOnboarded` (the banner is no longer only advisory).
+  - **Manage-players** now lists group members **plus** anyone who already responded (so a confirmed player who left the group can still be marked out and not skew the split).
+  - Booking-sheet copy updated to match the attendance-driven (live) split.
+
+---
+
+### #18 — Security: PIN can be reset by phone number alone (account takeover) 🐞
+- **Status:** 🔴 Open (needs a product decision)
+- **Area:** Auth / Forgot-PIN
+- **Risk:** `self_reset_pin` is `anon`-callable and verifies identity **only by phone number** (no OTP/SMS) — and phone numbers are openly shared within a society. Anyone who knows a resident's number can set their PIN and sign in as them. The 0054 migration header explicitly accepts this trade-off; flagging it as a real (not theoretical) takeover vector.
+- **Options:** (a) gate behind an SMS/email OTP (needs a provider), (b) require the current PIN to change it and make "forgot PIN" an **admin-only** temp-PIN reset (already built via `admin_reset_user_pin`), (c) accept for the trusted-society pilot and document it. Recommend (b) for launch.
 
 ---
 

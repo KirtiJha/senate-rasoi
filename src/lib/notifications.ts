@@ -2,7 +2,7 @@ import { isSupabaseConfigured, supabase } from './supabase';
 
 export type NotificationType =
   | 'post' | 'announcement' | 'listing' | 'poll' | 'message'
-  | 'dish' | 'tiffin' | 'sport' | 'document' | 'payment' | 'property' | 'recommend' | 'borrow' | 'court';
+  | 'dish' | 'tiffin' | 'sport' | 'document' | 'payment' | 'property' | 'recommend' | 'borrow' | 'court' | 'order';
 
 export interface NotificationRow {
   id: string;

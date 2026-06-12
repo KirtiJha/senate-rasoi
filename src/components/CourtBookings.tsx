@@ -366,7 +366,7 @@ function CreateBookingSheet({
       <Text className={lbl}>Your UPI (to collect shares)</Text>
       <TextInput value={upi} onChangeText={setUpi} autoCapitalize="none" placeholder="name@bank" placeholderTextColor={c.faint} className={`mb-2 ${input}`} style={{ outline: 'none' } as any} />
       <Text className="mb-1 text-[11px] leading-[16px] text-faint">
-        Players confirm per day. After each session the charge splits equally among everyone who played (including you), and they pay their share to this UPI.
+        The charge splits equally among everyone marked “in” (including you) and updates live as people confirm. Each player pays their share to this UPI; you can also mark cash payments yourself.
       </Text>
     </Sheet>
   );
@@ -473,20 +473,28 @@ function ManagePlayersSheet({ session, members, accent, c, onClose, onSet }: {
   onClose: () => void; onSet: (userId: string, status: 'confirmed' | 'declined') => void;
 }) {
   const statusOf = (uid: string) => session?.players.find((p) => p.user_id === uid)?.status ?? null;
+  // Group members PLUS anyone who already responded for this session (so a player
+  // who confirmed then left the group can still be marked out and not skew the split).
+  const roster = (() => {
+    const byId = new Map<string, { user_id: string; name: string | null; flat: string | null }>();
+    for (const m of members) byId.set(m.user_id, { user_id: m.user_id, name: m.profile?.name ?? null, flat: m.profile?.flat ?? null });
+    for (const p of session?.players ?? []) if (!byId.has(p.user_id)) byId.set(p.user_id, { user_id: p.user_id, name: p.profile?.name ?? null, flat: p.profile?.flat ?? null });
+    return [...byId.values()];
+  })();
   return (
     <Sheet visible={!!session} onClose={onClose} title="Who played?">
       <Text className="mb-3 text-[12.5px] leading-[18px] text-muted">
         Mark each member in or out — the cost splits among everyone marked “in”, so no one who played is left off and your share stays fair.
       </Text>
       <View className="gap-1.5">
-        {members.map((m) => {
+        {roster.map((m) => {
           const st = statusOf(m.user_id);
           const isBooker = session?.booker_user_id === m.user_id;
           return (
             <View key={m.user_id} className="flex-row items-center gap-2 rounded-xl border border-line bg-inset px-3 py-2">
               <View className="flex-1">
-                <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{m.profile?.name ?? 'Member'}{isBooker ? ' · booker' : ''}</Text>
-                {m.profile?.flat ? <Text className="text-[11px] text-faint">Flat {m.profile.flat}</Text> : null}
+                <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{m.name ?? 'Member'}{isBooker ? ' · booker' : ''}</Text>
+                {m.flat ? <Text className="text-[11px] text-faint">Flat {m.flat}</Text> : null}
               </View>
               {isBooker ? (
                 <Text className="text-[11.5px] font-sans-sb" style={{ color: accent }}>In</Text>
@@ -503,7 +511,7 @@ function ManagePlayersSheet({ session, members, accent, c, onClose, onSet }: {
             </View>
           );
         })}
-        {members.length === 0 ? <Text className="text-[12px] text-faint">No members yet.</Text> : null}
+        {roster.length === 0 ? <Text className="text-[12px] text-faint">No members yet.</Text> : null}
       </View>
     </Sheet>
   );
