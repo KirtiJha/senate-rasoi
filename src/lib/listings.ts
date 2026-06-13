@@ -94,6 +94,34 @@ export async function searchListings(query: string, communityId: string = COMMUN
 
 export { getCachedListings };
 
+/**
+ * Active-listing count per category for the Home tiles, plus today's available
+ * dishes counted under the `food` key (dishes are a separate engine).
+ */
+export async function fetchCategoryCounts(communityId: string = COMMUNITY_ID): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+  try {
+    const { data } = await supabase
+      .from('listings')
+      .select('category')
+      .eq('community_id', communityId)
+      .eq('status', 'active')
+      .limit(5000);
+    for (const r of (data ?? []) as { category: string }[]) counts[r.category] = (counts[r.category] ?? 0) + 1;
+  } catch { /* best-effort */ }
+  try {
+    const today = new Date().toLocaleDateString('en-CA');
+    const { count } = await supabase
+      .from('dishes')
+      .select('id', { count: 'exact', head: true })
+      .eq('community_id', communityId)
+      .gte('serve_date', today)
+      .gt('plates_left', 0);
+    if (count) counts.food = count;
+  } catch { /* best-effort */ }
+  return counts;
+}
+
 /** All active listings in a community across every category (newest-bumped first). */
 export async function fetchAllListings(
   communityId: string = COMMUNITY_ID,

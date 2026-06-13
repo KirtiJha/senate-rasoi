@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { Image } from 'expo-image';
+import { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '../../components/BrandMark';
@@ -12,7 +13,10 @@ import { useAuth } from '../../context/auth';
 import { useUnreadDms } from '../../context/unread';
 import { fetchSocietyDigest, SocietyDigest } from '../../lib/ai';
 import { PostRow, fetchLatestAnnouncement } from '../../lib/posts';
-import { SERVICES, ServiceCategory } from '../../lib/services';
+import { ListingRow } from '../../lib/types';
+import { fetchAllListings, fetchCategoryCounts } from '../../lib/listings';
+import { IMAGE_CACHE_PROPS } from '../../lib/image';
+import { SERVICES, ServiceCategory, getService } from '../../lib/services';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { AppVersion, fetchLatestVersion, isNewer } from '../../lib/appVersion';
 import { useThemeColors } from '../../theme';
@@ -140,6 +144,15 @@ export default function HomeScreen() {
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [announcement, setAnnouncement] = useState<PostRow | null>(null);
   const [digest, setDigest] = useState<SocietyDigest | null>(null);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [recent, setRecent] = useState<ListingRow[]>([]);
+
+  // Per-category counts + the newest listings — refreshed each time Home is focused.
+  useFocusEffect(useCallback(() => {
+    if (!communityId || !isSupabaseConfigured) return;
+    fetchCategoryCounts(communityId).then(setCounts).catch(() => {});
+    fetchAllListings(communityId, 0, 12).then(setRecent).catch(() => {});
+  }, [communityId]));
 
   useEffect(() => {
     if (communityId && isSupabaseConfigured) {
@@ -322,10 +335,13 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
+        {/* Just listed — newest listings, so there's something to see on arrival */}
+        <JustListedStrip items={recent} isDesktop={isDesktop} />
+
         {/* Service grid */}
         <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
           {SERVICES.map((cat) => (
-            <ServiceTile key={cat.key} cat={cat} onPress={() => handleCategoryPress(cat)} />
+            <ServiceTile key={cat.key} cat={cat} count={counts[cat.key] ?? 0} onPress={() => handleCategoryPress(cat)} />
           ))}
         </View>
 
@@ -371,7 +387,7 @@ export default function HomeScreen() {
   );
 }
 
-function ServiceTile({ cat, onPress }: { cat: ServiceCategory; onPress: () => void }) {
+function ServiceTile({ cat, count = 0, onPress }: { cat: ServiceCategory; count?: number; onPress: () => void }) {
   const c = useThemeColors();
   return (
     <View style={{ width: '50%', padding: 6 }}>
@@ -391,7 +407,76 @@ function ServiceTile({ cat, onPress }: { cat: ServiceCategory; onPress: () => vo
           <Text className="font-sans-bold text-[15px] text-ink" numberOfLines={1}>{cat.label}</Text>
           <Text className="mt-0.5 text-[12px] font-sans-md leading-[18px] text-muted" numberOfLines={2}>{cat.blurb}</Text>
         </View>
+        {count > 0 ? (
+          <View
+            className="absolute items-center justify-center rounded-full px-1.5"
+            style={{ top: 12, right: 12, minWidth: 22, height: 22, backgroundColor: cat.color }}
+            accessibilityLabel={`${count} listed`}
+          >
+            <Text className="font-sans-bold text-white" style={{ fontSize: 11 }}>{count > 99 ? '99+' : count}</Text>
+          </View>
+        ) : null}
       </Pressable>
+    </View>
+  );
+}
+
+/** Horizontal carousel (mobile) / wrapped row (desktop) of the newest listings. */
+function JustListedStrip({ items, isDesktop }: { items: ListingRow[]; isDesktop: boolean }) {
+  const router = useRouter();
+  const c = useThemeColors();
+  if (!items.length) return null;
+
+  const Card = ({ l }: { l: ListingRow }) => {
+    const cat = getService(l.category);
+    const color = cat?.color ?? '#888';
+    const photo = l.photos?.[0];
+    const title = l.is_referral ? (l.referral_name ?? l.title) : l.title;
+    return (
+      <Pressable
+        onPress={() => router.push(`/listing/${l.id}` as any)}
+        className="overflow-hidden rounded-2xl bg-surface active:opacity-90"
+        style={{ width: 152, borderWidth: 1, borderColor: c.line }}
+      >
+        <View style={{ height: 96 }} className="w-full">
+          {photo ? (
+            <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+          ) : (
+            <View style={{ flex: 1, backgroundColor: color + '20', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name={(cat?.icon as any) ?? 'pricetag'} size={28} color={color} />
+            </View>
+          )}
+        </View>
+        <View className="p-2.5">
+          <View className="mb-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: color + '20' }}>
+            <Text className="text-[10px] font-sans-sb" style={{ color }} numberOfLines={1}>{cat?.label ?? l.category}</Text>
+          </View>
+          <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{title}</Text>
+          {l.price != null ? (
+            <Text className="text-[12px] font-sans-md text-muted">₹{l.price.toLocaleString('en-IN')}</Text>
+          ) : (
+            <Text className="text-[11px] text-faint">Contact for price</Text>
+          )}
+        </View>
+      </Pressable>
+    );
+  };
+
+  return (
+    <View className="mb-6">
+      <View className="mb-3 flex-row items-center justify-between px-1.5">
+        <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-muted">Just listed</Text>
+        <Pressable onPress={() => router.push('/listings' as any)} hitSlop={8}>
+          <Text className="text-[12px] font-sans-sb text-accent">See all →</Text>
+        </Pressable>
+      </View>
+      {isDesktop ? (
+        <View className="flex-row flex-wrap gap-3">{items.slice(0, 6).map((l) => <Card key={l.id} l={l} />)}</View>
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 8 }}>
+          {items.map((l) => <Card key={l.id} l={l} />)}
+        </ScrollView>
+      )}
     </View>
   );
 }
