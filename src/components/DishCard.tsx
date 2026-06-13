@@ -11,6 +11,14 @@ import { DishRow, SLOT_EMOJI } from '../lib/types';
 import { T } from './T';
 import { Avatar, Badge, Button, VegMark } from './ui';
 
+// Accent colour per meal slot — for the slot chip on the card.
+const SLOT_COLOR: Record<string, string> = {
+  Breakfast: '#E8650A', // warm orange
+  Lunch: '#16A34A',     // green
+  Dinner: '#6366F1',    // indigo
+  Snack: '#DB2777',     // pink
+};
+
 // Warm two-tone backdrop for photo-less dishes, themed by meal slot.
 const SLOT_PLACEHOLDER: Record<string, [string, string]> = {
   Breakfast: ['#FFD9A8', '#FFB877'],
@@ -148,9 +156,12 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCar
               <Text className="font-display-x text-[22px] text-ink">₹{dish.price}</Text>
               <Text className="-mt-1 text-[11px] text-faint">per plate</Text>
             </View>
-            <View className="mb-0.5 flex-row items-center gap-1 rounded-full bg-inset px-2.5 py-1">
+            <View
+              className="mb-0.5 flex-row items-center gap-1 rounded-full px-2.5 py-1"
+              style={{ backgroundColor: (SLOT_COLOR[dish.slot] ?? '#6B7280') + '22', borderWidth: 1, borderColor: (SLOT_COLOR[dish.slot] ?? '#6B7280') + '44' }}
+            >
               <Text style={{ fontSize: 12 }}>{SLOT_EMOJI[dish.slot] ?? '🍽️'}</Text>
-              <Text className="text-[12px] font-sans-sb text-muted">{dish.slot}</Text>
+              <Text className="text-[12px] font-sans-bold" style={{ color: SLOT_COLOR[dish.slot] ?? '#6B7280' }}>{dish.slot}</Text>
             </View>
           </View>
 
