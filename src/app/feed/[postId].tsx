@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView, Platform, Pressable,
+  KeyboardAvoidingView, Modal, Platform, Pressable,
   ScrollView, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -252,31 +252,34 @@ function PostMenu({ post, isOwner, isAdmin, onDelete, onPinToggle, onResolveTogg
   c: ReturnType<typeof useThemeColors>;
 }) {
   const [open, setOpen] = useState(false);
+  const insets = useSafeAreaInsets();
   const isIssue = post.category === 'issue' || post.category === 'feedback';
+  const canManage = isOwner || isAdmin;
+  if (!canManage) return null; // no actions available → no menu button at all
 
   return (
-    <View>
-      <Pressable onPress={() => setOpen(!open)} hitSlop={8} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+    <>
+      <Pressable onPress={() => setOpen(true)} hitSlop={8} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
         <Ionicons name="ellipsis-horizontal" size={20} color={c.muted} />
       </Pressable>
-      {open ? (
-        <View
-          className="absolute right-0 top-10 z-50 min-w-[180px] rounded-2xl border border-line bg-surface shadow-sm"
-          style={{ elevation: 8 }}
-        >
-          {isAdmin ? (
-            <MenuItem icon="pin-outline" label={post.pinned ? 'Unpin' : 'Pin to top'} onPress={() => { setOpen(false); onPinToggle(); }} c={c} />
-          ) : null}
-          {isAdmin && isIssue ? (
-            <MenuItem icon="checkmark-circle-outline" label={post.resolved ? 'Reopen' : 'Mark resolved'} onPress={() => { setOpen(false); onResolveToggle(); }} c={c} />
-          ) : null}
-          {(isOwner || isAdmin) ? (
+      {/* Rendered in a Modal so it always sits on top (not under later content). */}
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <Pressable className="flex-1" style={{ backgroundColor: '#00000055' }} onPress={() => setOpen(false)}>
+          <View
+            className="absolute overflow-hidden rounded-2xl border border-line bg-surface"
+            style={{ top: insets.top + 52, right: 14, minWidth: 200, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 12 }}
+          >
+            {isAdmin ? (
+              <MenuItem icon="pin-outline" label={post.pinned ? 'Unpin' : 'Pin to top'} onPress={() => { setOpen(false); onPinToggle(); }} c={c} />
+            ) : null}
+            {isAdmin && isIssue ? (
+              <MenuItem icon="checkmark-circle-outline" label={post.resolved ? 'Reopen' : 'Mark resolved'} onPress={() => { setOpen(false); onResolveToggle(); }} c={c} />
+            ) : null}
             <MenuItem icon="trash-outline" label="Delete post" onPress={() => { setOpen(false); onDelete(); }} c={c} danger />
-          ) : null}
-          <MenuItem icon="close-outline" label="Cancel" onPress={() => setOpen(false)} c={c} />
-        </View>
-      ) : null}
-    </View>
+          </View>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 

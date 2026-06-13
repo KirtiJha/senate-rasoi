@@ -288,6 +288,7 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
   const [category, setCategory] = useState<PostCategory>('general');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [bodyHeight, setBodyHeight] = useState(160);
   const [posting, setPosting] = useState(false);
   const bodyRef = useRef<TextInput>(null);
 
@@ -357,7 +358,7 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
             onSubmitEditing={() => bodyRef.current?.focus()}
           />
 
-          {/* Body */}
+          {/* Body — grows with content */}
           <TextInput
             ref={bodyRef}
             value={body}
@@ -365,8 +366,10 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
             placeholder="What's on your mind? Share with your society…"
             placeholderTextColor={c.faint}
             multiline
-            className="min-h-[120px] text-[15px] leading-6 text-ink"
-            style={{ outline: 'none', textAlignVertical: 'top' } as any}
+            scrollEnabled={false}
+            onContentSizeChange={(e) => setBodyHeight(Math.max(160, e.nativeEvent.contentSize.height + 8))}
+            className="text-[15px] leading-6 text-ink"
+            style={{ height: bodyHeight, outline: 'none', textAlignVertical: 'top' } as any}
             autoFocus
           />
         </ScrollView>
