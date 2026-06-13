@@ -3,6 +3,7 @@ import { COMMUNITY_ID, LISTING_PHOTOS_BUCKET, isSupabaseConfigured, supabase } f
 
 export type LendStatus = 'available' | 'lent' | 'unavailable';
 export type BorrowStatus = 'pending' | 'accepted' | 'declined' | 'returned';
+export type LendKind = 'offer' | 'request';
 
 export const BORROW_CATEGORIES = [
   { key: 'tools', label: 'Tools', icon: 'construct' },
@@ -19,6 +20,7 @@ export interface LendItem {
   id: string;
   community_id: string;
   owner_user_id: string;
+  kind: LendKind;
   title: string;
   description: string | null;
   category: string | null;
@@ -44,14 +46,28 @@ export interface BorrowRequest {
 const SELECT = '*, owner:profiles!lend_items_owner_user_id_fkey(name,flat,whatsapp,phone)';
 const REQ_SELECT = '*, requester:profiles!borrow_requests_requester_id_fkey(name,flat,whatsapp,phone)';
 
-export async function fetchItems(opts: { category?: string; availableOnly?: boolean; mine?: string } = {}, communityId: string = COMMUNITY_ID): Promise<LendItem[]> {
+export async function fetchItems(opts: { category?: string; availableOnly?: boolean; mine?: string; kind?: LendKind } = {}, communityId: string = COMMUNITY_ID): Promise<LendItem[]> {
   let q = supabase.from('lend_items').select(SELECT).eq('community_id', communityId);
+  if (opts.kind) q = q.eq('kind', opts.kind);
   if (opts.category && opts.category !== 'all') q = q.eq('category', opts.category);
   if (opts.availableOnly) q = q.eq('status', 'available');
   if (opts.mine) q = q.eq('owner_user_id', opts.mine);
   const { data, error } = await q.order('bump_at', { ascending: false }).limit(100);
   if (error) throw error;
   return (data ?? []) as LendItem[];
+}
+
+export async function fetchBorrowCounts(communityId: string = COMMUNITY_ID): Promise<{ offers: number; requests: number }> {
+  const { data } = await supabase
+    .from('lend_items')
+    .select('kind', { count: 'exact', head: false })
+    .eq('community_id', communityId)
+    .eq('status', 'available');
+  const rows = (data ?? []) as { kind: LendKind }[];
+  return {
+    offers: rows.filter((r) => r.kind === 'offer').length,
+    requests: rows.filter((r) => r.kind === 'request').length,
+  };
 }
 
 export async function fetchItem(id: string): Promise<LendItem | null> {
@@ -71,12 +87,13 @@ export async function uploadItemPhoto(localUri: string, itemId: string): Promise
 }
 
 export async function postItem(input: {
-  communityId?: string; ownerUserId: string; title: string; description: string | null; category: string | null;
+  communityId?: string; ownerUserId: string; kind?: LendKind; title: string; description: string | null; category: string | null;
   photoUri: string | null; contactWhatsapp: string | null; contactPhone: string | null;
 }): Promise<LendItem> {
   const { data, error } = await supabase.from('lend_items').insert({
     community_id: input.communityId ?? COMMUNITY_ID,
     owner_user_id: input.ownerUserId,
+    kind: input.kind ?? 'offer',
     title: input.title.trim(),
     description: input.description?.trim() || null,
     category: input.category,
@@ -97,6 +114,15 @@ export async function postItem(input: {
 
 export async function setItemStatus(id: string, status: LendStatus): Promise<void> {
   const { error } = await supabase.from('lend_items').update({ status }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function updateItem(id: string, patch: { title?: string; description?: string | null; category?: string | null }): Promise<void> {
+  const { error } = await supabase.from('lend_items').update({
+    ...(patch.title !== undefined ? { title: patch.title.trim() } : {}),
+    ...(patch.description !== undefined ? { description: patch.description?.trim() || null } : {}),
+    ...(patch.category !== undefined ? { category: patch.category } : {}),
+  }).eq('id', id);
   if (error) throw error;
 }
 

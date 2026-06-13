@@ -14,18 +14,20 @@ import { SERVICES, getService } from '../../lib/services';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { listTiffinPlans } from '../../lib/tiffin';
 import { DishRow, ListingRow, TiffinPlanWithChef } from '../../lib/types';
+import { LendItem, fetchItems as fetchBorrowItems } from '../../lib/borrow';
 import { layout, useThemeColors } from '../../theme';
 
 const LIST_MAX = layout.maxContent; // same content width as every other tab
 const FOOD_COLOR = '#E8650A';
 const TIFFIN_COLOR = '#F59E0B';
+const BORROW_COLOR = '#0891B2';
 
-// Listings, food dishes and tiffins are different tables — here they're unified
-// into one browsable list with "Home Food" and "Tiffin" as their own categories.
+// Listings, food dishes, tiffins and borrow items — unified into one browsable list.
 type AllItem =
   | { kind: 'listing'; id: string; raw: ListingRow }
   | { kind: 'dish'; id: string; raw: DishRow }
-  | { kind: 'tiffin'; id: string; raw: TiffinPlanWithChef };
+  | { kind: 'tiffin'; id: string; raw: TiffinPlanWithChef }
+  | { kind: 'borrow'; id: string; raw: LendItem };
 
 interface ItemDisplay {
   title: string;
@@ -43,6 +45,18 @@ function display(item: AllItem): ItemDisplay {
   }
   if (item.kind === 'tiffin') {
     return { title: item.raw.title, catKey: 'tiffin', catLabel: 'Tiffin', color: TIFFIN_COLOR, icon: 'repeat', priceText: `₹${item.raw.price}/day`, location: null };
+  }
+  if (item.kind === 'borrow') {
+    const b = item.raw;
+    return {
+      title: b.title,
+      catKey: b.kind === 'request' ? 'borrow-request' : 'borrow-offer',
+      catLabel: b.kind === 'request' ? '🙏 Needs to borrow' : '🤝 Lending',
+      color: BORROW_COLOR,
+      icon: 'swap-horizontal',
+      priceText: 'Free',
+      location: b.owner?.flat ? `Flat ${b.owner.flat}` : null,
+    };
   }
   const l = item.raw;
   const cat = getService(l.category);
@@ -73,20 +87,24 @@ export default function AllListingsScreen() {
   const filterChips = useMemo(() => [
     { key: 'food', label: 'Home Food', color: FOOD_COLOR, icon: 'restaurant' },
     { key: 'tiffin', label: 'Tiffin', color: TIFFIN_COLOR, icon: 'repeat' },
+    { key: 'borrow-offer', label: '🤝 Lending', color: BORROW_COLOR, icon: 'swap-horizontal' },
+    { key: 'borrow-request', label: '🙏 Needs', color: BORROW_COLOR, icon: 'hand-left-outline' },
     ...SERVICES.filter((s) => s.kind === 'listing').map((s) => ({ key: s.key, label: s.label, color: s.color, icon: s.icon })),
   ], []);
 
   const load = useCallback(async () => {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
     try {
-      const [listings, dishes, tiffins] = await Promise.all([
+      const [listings, dishes, tiffins, borrows] = await Promise.all([
         fetchAllListings(communityId, 0, 200),
         fetchDishes(communityId).catch(() => [] as DishRow[]),
         listTiffinPlans(communityId).catch(() => [] as TiffinPlanWithChef[]),
+        fetchBorrowItems({}, communityId).catch(() => [] as LendItem[]),
       ]);
       setItems([
         ...dishes.map((d): AllItem => ({ kind: 'dish', id: d.id, raw: d })),
         ...tiffins.map((t): AllItem => ({ kind: 'tiffin', id: t.id, raw: t })),
+        ...borrows.map((b): AllItem => ({ kind: 'borrow', id: b.id, raw: b })),
         ...listings.map((l): AllItem => ({ kind: 'listing', id: l.id, raw: l })),
       ]);
     } catch { toast.show('Could not load listings'); }
@@ -106,8 +124,11 @@ export default function AllListingsScreen() {
     [items, category],
   );
 
-  const openItem = (i: AllItem) =>
-    i.kind === 'listing' ? router.push(`/listing/${i.raw.id}` as any) : router.push('/food' as any);
+  const openItem = (i: AllItem) => {
+    if (i.kind === 'listing') router.push(`/listing/${i.raw.id}` as any);
+    else if (i.kind === 'borrow') router.push(`/borrow/${i.raw.id}` as any);
+    else router.push('/food' as any);
+  };
 
   const contactItem = (i: AllItem) => {
     let url: string;
@@ -116,6 +137,13 @@ export default function AllListingsScreen() {
       if (userId) sendInquiry(i.raw.id, userId, null).catch(() => {});
     } else if (i.kind === 'dish') {
       url = waLink(i.raw.whatsapp, `Hi ${i.raw.chef_name}! I'm interested in your *${i.raw.dish_name}* on Aangan 🍽️`);
+    } else if (i.kind === 'borrow') {
+      const wa = i.raw.contact_whatsapp ?? i.raw.owner?.whatsapp ?? null;
+      const ownerName = i.raw.owner?.name ?? 'Owner';
+      const msg = i.raw.kind === 'request'
+        ? `Hi ${ownerName}, I saw your request for "${i.raw.title}" on Aangan — I have one you can borrow! 🤝`
+        : `Hi ${ownerName}, I'd like to borrow your "${i.raw.title}" on Aangan 🤝`;
+      url = waLink(wa, msg);
     } else {
       url = waLink(i.raw.chef?.whatsapp, `Hi ${i.raw.chef?.name ?? ''}! About your *${i.raw.title}* tiffin on Aangan 🍱`);
     }
@@ -251,7 +279,7 @@ function ItemRow({
           <Text style={{ width: 130 }} className="text-[13px] font-sans-md text-muted" numberOfLines={1}>{d.catLabel}</Text>
           <Text style={{ width: 100 }} className="text-[13px] font-sans-sb text-accent" numberOfLines={1}>{d.priceText}</Text>
           <View className="flex-row justify-end gap-2" style={{ width: 186 }}>
-            <RowBtn icon="open-outline" label={item.kind === 'listing' ? 'View' : 'Order'} onPress={onOpen} c={c} />
+            <RowBtn icon="open-outline" label={item.kind === 'listing' || item.kind === 'borrow' ? 'View' : 'Order'} onPress={onOpen} c={c} />
             <RowBtn icon="logo-whatsapp" label="Contact" onPress={onContact} c={c} whatsapp />
           </View>
         </>

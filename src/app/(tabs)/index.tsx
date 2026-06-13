@@ -19,6 +19,7 @@ import { fetchDishes } from '../../lib/dishes';
 import { fetchAllListings, fetchCategoryCounts } from '../../lib/listings';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { SERVICES, ServiceCategory, getService } from '../../lib/services';
+import { fetchBorrowCounts } from '../../lib/borrow';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { AppVersion, fetchLatestVersion, isNewer } from '../../lib/appVersion';
 import { useThemeColors } from '../../theme';
@@ -149,13 +150,15 @@ export default function HomeScreen() {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [recent, setRecent] = useState<ListingRow[]>([]);
   const [dishes, setDishes] = useState<DishRow[]>([]);
+  const [borrowCount, setBorrowCount] = useState(0);
 
-  // Per-category counts + the newest listings & dishes — refreshed each time Home is focused.
+  // Per-category counts + newest listings, dishes & borrow count — refreshed on focus.
   useFocusEffect(useCallback(() => {
     if (!communityId || !isSupabaseConfigured) return;
     fetchCategoryCounts(communityId).then(setCounts).catch(() => {});
     fetchAllListings(communityId, 0, 12).then(setRecent).catch(() => {});
     fetchDishes(communityId).then(setDishes).catch(() => {});
+    fetchBorrowCounts(communityId).then((c) => setBorrowCount(c.offers + c.requests)).catch(() => {});
   }, [communityId]));
 
   useEffect(() => {
@@ -356,37 +359,40 @@ export default function HomeScreen() {
         <View className="mt-6">
           <Text className="mb-3 px-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Community</Text>
           <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
-            {COMMUNITY_TILES.map((tile) => (
-              <View key={tile.key} style={{ width: '50%', padding: 6 }}>
-                <Pressable
-                  onPress={() => router.push(tile.href as any)}
-                  className="overflow-hidden rounded-2xl bg-surface active:opacity-80"
-                  style={{ borderWidth: 1, borderColor: c.line }}
-                >
-                  <View style={{ height: 4, backgroundColor: tile.color }} />
-                  <View className="p-4">
-                    <View
-                      className="mb-3 h-11 w-11 items-center justify-center rounded-2xl"
-                      style={{ backgroundColor: tile.color + '20' }}
-                    >
-                      <Ionicons name={tile.icon as any} size={22} color={tile.color} />
+            {COMMUNITY_TILES.map((tile) => {
+              const badge = tile.key === 'messages' ? (unread > 0 ? unread : 0) : tile.key === 'borrow' ? borrowCount : 0;
+              return (
+                <View key={tile.key} style={{ width: '50%', padding: 6 }}>
+                  <Pressable
+                    onPress={() => router.push(tile.href as any)}
+                    className="overflow-hidden rounded-2xl bg-surface active:opacity-80"
+                    style={{ borderWidth: 1, borderColor: c.line }}
+                  >
+                    <View style={{ height: 4, backgroundColor: tile.color }} />
+                    <View className="p-4">
+                      <View
+                        className="mb-3 h-11 w-11 items-center justify-center rounded-2xl"
+                        style={{ backgroundColor: tile.color + '20' }}
+                      >
+                        <Ionicons name={tile.icon as any} size={22} color={tile.color} />
+                      </View>
+                      <Text className="font-sans-bold text-[15px] text-ink" numberOfLines={1}>{tile.label}</Text>
+                      <Text className="mt-0.5 text-[12px] font-sans-md leading-[18px] text-muted" numberOfLines={2}>{tile.blurb}</Text>
                     </View>
-                    <Text className="font-sans-bold text-[15px] text-ink" numberOfLines={1}>{tile.label}</Text>
-                    <Text className="mt-0.5 text-[12px] font-sans-md leading-[18px] text-muted" numberOfLines={2}>{tile.blurb}</Text>
-                  </View>
-                  {tile.key === 'messages' && unread > 0 ? (
-                    <View
-                      className="absolute items-center justify-center rounded-full px-1.5"
-                      style={{ top: 12, right: 12, minWidth: 20, height: 20, backgroundColor: tile.color }}
-                    >
-                      <Text className="font-sans-bold text-white" style={{ fontSize: 11 }}>
-                        {unread > 9 ? '9+' : unread}
-                      </Text>
-                    </View>
-                  ) : null}
-                </Pressable>
-              </View>
-            ))}
+                    {badge > 0 ? (
+                      <View
+                        className="absolute items-center justify-center rounded-full px-1.5"
+                        style={{ top: 12, right: 12, minWidth: 20, height: 20, backgroundColor: tile.color }}
+                      >
+                        <Text className="font-sans-bold text-white" style={{ fontSize: 11 }}>
+                          {badge > 99 ? '99+' : badge > 9 ? '9+' : badge}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </Pressable>
+                </View>
+              );
+            })}
           </View>
         </View>
       </Container>
