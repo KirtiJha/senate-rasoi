@@ -3,17 +3,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '../../components/BrandMark';
 import { T } from '../../components/T';
-import { Container, useResponsive } from '../../components/ui';
+import { Container, useResponsive, VegMark } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useUnreadDms } from '../../context/unread';
 import { fetchSocietyDigest, SocietyDigest } from '../../lib/ai';
 import { PostRow, fetchLatestAnnouncement } from '../../lib/posts';
-import { ListingRow } from '../../lib/types';
+import { DishRow, ListingRow, SLOT_EMOJI } from '../../lib/types';
+import { fetchDishes } from '../../lib/dishes';
 import { fetchAllListings, fetchCategoryCounts } from '../../lib/listings';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { SERVICES, ServiceCategory, getService } from '../../lib/services';
@@ -146,12 +148,14 @@ export default function HomeScreen() {
   const [digest, setDigest] = useState<SocietyDigest | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [recent, setRecent] = useState<ListingRow[]>([]);
+  const [dishes, setDishes] = useState<DishRow[]>([]);
 
-  // Per-category counts + the newest listings — refreshed each time Home is focused.
+  // Per-category counts + the newest listings & dishes — refreshed each time Home is focused.
   useFocusEffect(useCallback(() => {
     if (!communityId || !isSupabaseConfigured) return;
     fetchCategoryCounts(communityId).then(setCounts).catch(() => {});
     fetchAllListings(communityId, 0, 12).then(setRecent).catch(() => {});
+    fetchDishes(communityId).then(setDishes).catch(() => {});
   }, [communityId]));
 
   useEffect(() => {
@@ -335,6 +339,9 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
+        {/* Fresh from kitchens — today's & upcoming home-cooked dishes */}
+        <FreshFoodStrip items={dishes} isDesktop={isDesktop} />
+
         {/* Just listed — newest listings, so there's something to see on arrival */}
         <JustListedStrip items={recent} isDesktop={isDesktop} />
 
@@ -475,6 +482,103 @@ function JustListedStrip({ items, isDesktop }: { items: ListingRow[]; isDesktop:
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 8 }}>
           {items.map((l) => <Card key={l.id} l={l} />)}
+        </ScrollView>
+      )}
+    </View>
+  );
+}
+
+// Accent colour per meal slot — matches the DishCard chip.
+const SLOT_COLOR: Record<string, string> = {
+  Breakfast: '#E8650A',
+  Lunch: '#16A34A',
+  Dinner: '#6366F1',
+  Snack: '#DB2777',
+};
+const SLOT_PLACEHOLDER: Record<string, [string, string]> = {
+  Breakfast: ['#FFD9A8', '#FFB877'],
+  Lunch: ['#CDEBC5', '#A6D89B'],
+  Dinner: ['#C9C2EC', '#A99FE0'],
+  Snack: ['#F6C6DA', '#EFA3C2'],
+};
+
+/** Friendly serve-date label if it isn't today, else null. */
+function freshServeLabel(serveDate: string): string | null {
+  const today = new Date().toLocaleDateString('en-CA');
+  if (!serveDate || serveDate <= today) return null;
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  if (serveDate === tomorrow.toLocaleDateString('en-CA')) return 'Tomorrow';
+  try {
+    return new Date(serveDate + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  } catch {
+    return null;
+  }
+}
+
+/** Horizontal carousel (mobile) / wrapped row (desktop) of the freshest dishes. */
+function FreshFoodStrip({ items, isDesktop }: { items: DishRow[]; isDesktop: boolean }) {
+  const router = useRouter();
+  const c = useThemeColors();
+  if (!items.length) return null;
+
+  const Card = ({ d }: { d: DishRow }) => {
+    const color = SLOT_COLOR[d.slot] ?? '#16A34A';
+    const [g1, g2] = SLOT_PLACEHOLDER[d.slot] ?? ['#CDEBC5', '#A6D89B'];
+    const soldOut = d.plates_left <= 0;
+    const serveLabel = freshServeLabel(d.serve_date);
+    return (
+      <Pressable
+        onPress={() => router.push(`/dish/${d.id}` as any)}
+        className="overflow-hidden rounded-2xl bg-surface active:opacity-90"
+        style={{ width: 152, borderWidth: 1, borderColor: c.line }}
+      >
+        <View style={{ height: 96 }} className="w-full">
+          {d.photo_url ? (
+            <Image source={{ uri: d.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+          ) : (
+            <LinearGradient colors={[g1, g2]} style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 40 }}>{SLOT_EMOJI[d.slot] ?? '🍽️'}</Text>
+            </LinearGradient>
+          )}
+          <View className="absolute left-2 top-2 rounded-md bg-white/95 p-0.5">
+            <VegMark type={d.veg_type} size={13} />
+          </View>
+          {serveLabel ? (
+            <View className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-0.5">
+              <Text className="text-[10px] font-sans-sb text-white">{serveLabel}</Text>
+            </View>
+          ) : null}
+          {soldOut ? (
+            <View className="absolute inset-0 items-center justify-center bg-black/45">
+              <Text className="font-sans-bold text-[12px] uppercase tracking-wide text-white">Sold out</Text>
+            </View>
+          ) : null}
+        </View>
+        <View className="p-2.5">
+          <View className="mb-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: color + '20' }}>
+            <Text className="text-[10px] font-sans-sb" style={{ color }} numberOfLines={1}>{SLOT_EMOJI[d.slot] ?? '🍽️'} {d.slot}</Text>
+          </View>
+          <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{d.dish_name}</Text>
+          <Text className="text-[12px] font-sans-md text-muted">₹{d.price} · Flat {d.flat}</Text>
+        </View>
+      </Pressable>
+    );
+  };
+
+  return (
+    <View className="mb-6">
+      <View className="mb-3 flex-row items-center justify-between px-1.5">
+        <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-muted">Fresh from kitchens</Text>
+        <Pressable onPress={() => router.push('/food' as any)} hitSlop={8}>
+          <Text className="text-[12px] font-sans-sb text-accent">See all →</Text>
+        </Pressable>
+      </View>
+      {isDesktop ? (
+        <View className="flex-row flex-wrap gap-3">{items.slice(0, 6).map((d) => <Card key={d.id} d={d} />)}</View>
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 8 }}>
+          {items.map((d) => <Card key={d.id} d={d} />)}
         </ScrollView>
       )}
     </View>
