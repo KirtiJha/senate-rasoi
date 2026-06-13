@@ -127,13 +127,14 @@ export async function fetchAllListings(
   communityId: string = COMMUNITY_ID,
   offset = 0,
   limit = 30,
+  sortBy: 'bump_at' | 'created_at' = 'bump_at',
 ): Promise<ListingRow[]> {
   const { data, error } = await supabase
     .from('listings')
     .select(LISTING_SELECT)
     .eq('community_id', communityId)
     .eq('status', 'active')
-    .order('bump_at', { ascending: false })
+    .order(sortBy, { ascending: false })
     .range(offset, offset + limit - 1);
   if (error) throw error;
   return (data ?? []) as ListingRow[];

@@ -156,7 +156,7 @@ export default function HomeScreen() {
   useFocusEffect(useCallback(() => {
     if (!communityId || !isSupabaseConfigured) return;
     fetchCategoryCounts(communityId).then(setCounts).catch(() => {});
-    fetchAllListings(communityId, 0, 12).then(setRecent).catch(() => {});
+    fetchAllListings(communityId, 0, 12, 'created_at').then(setRecent).catch(() => {});
     fetchDishes(communityId).then(setDishes).catch(() => {});
     fetchBorrowCounts(communityId).then((c) => setBorrowCount(c.offers + c.requests)).catch(() => {});
   }, [communityId]));
