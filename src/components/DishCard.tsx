@@ -81,11 +81,10 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCar
 
         {/* top row */}
         <View className="absolute left-3 right-3 top-3 flex-row items-start justify-between">
-          <View className="flex-row flex-wrap items-center gap-2">
+          <View className="flex-row items-center gap-2">
             <View className="rounded-lg bg-white/95 p-1">
               <VegMark type={dish.veg_type} size={15} />
             </View>
-            <Badge label={`${SLOT_EMOJI[dish.slot] ?? '🍽️'} ${dish.slot}`} tone="onPhoto" />
             {owned ? <Badge label="Your dish" tone="onPhoto" /> : null}
           </View>
           <Pressable onPress={() => onShare(dish)} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full bg-black/55">
@@ -144,9 +143,15 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCar
         ) : null}
 
         <View className="mt-4 flex-row items-end justify-between">
-          <View>
-            <Text className="font-display-x text-[22px] text-ink">₹{dish.price}</Text>
-            <Text className="-mt-1 text-[11px] text-faint">per plate</Text>
+          <View className="flex-row items-end gap-2.5">
+            <View>
+              <Text className="font-display-x text-[22px] text-ink">₹{dish.price}</Text>
+              <Text className="-mt-1 text-[11px] text-faint">per plate</Text>
+            </View>
+            <View className="mb-0.5 flex-row items-center gap-1 rounded-full bg-inset px-2.5 py-1">
+              <Text style={{ fontSize: 12 }}>{SLOT_EMOJI[dish.slot] ?? '🍽️'}</Text>
+              <Text className="text-[12px] font-sans-sb text-muted">{dish.slot}</Text>
+            </View>
           </View>
 
           {owned ? (
