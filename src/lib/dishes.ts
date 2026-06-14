@@ -207,6 +207,35 @@ export async function setOrderStatus(orderId: string, status: OrderStatus): Prom
   return Boolean(data);
 }
 
+/**
+ * Edit a dish's core fields + photo (owner/admin via RLS). `photoUri` may be an
+ * existing public URL (kept), a new local URI (re-uploaded), or null (removed).
+ * Returns the resolved photo_url so the caller can refresh its copy.
+ */
+export async function updateDish(
+  dishId: string,
+  patch: { dishName?: string; description?: string | null; price?: number; photoUri?: string | null },
+): Promise<{ photo_url: string | null | undefined }> {
+  const row: Record<string, unknown> = {};
+  if (patch.dishName !== undefined) row.dish_name = patch.dishName.trim();
+  if (patch.description !== undefined) row.description = patch.description?.trim() || null;
+  if (patch.price !== undefined) row.price = patch.price;
+  let photo_url: string | null | undefined;
+  if (patch.photoUri !== undefined) {
+    if (patch.photoUri == null) { row.photo_url = null; photo_url = null; }
+    else if (/^https?:\/\//.test(patch.photoUri)) { /* unchanged — leave as-is */ }
+    else {
+      // Re-upload overwrites the same path, so bust caches with a version query.
+      const url = await uploadDishPhoto(patch.photoUri, dishId);
+      photo_url = `${url}?v=${Date.now()}`;
+      row.photo_url = photo_url;
+    }
+  }
+  const { error } = await supabase.from('dishes').update(row).eq('id', dishId);
+  if (error) throw error;
+  return { photo_url };
+}
+
 // ── Remove your own dish (RLS: only owner or admin can delete) ──────
 export async function deleteDish(dishId: string): Promise<boolean> {
   const { data, error } = await supabase.from('dishes').delete().eq('id', dishId).select('id');

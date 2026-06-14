@@ -192,6 +192,36 @@ export async function setPropertyStatus(id: string, status: PropertyStatus): Pro
   if (error) throw error;
 }
 
+/** Update an existing listing. `photos` is the final URL list (kept + newly uploaded). */
+export async function updateProperty(
+  id: string,
+  input: Omit<NewProperty, 'communityId' | 'ownerUserId' | 'photoUris'> & { photos: string[] },
+): Promise<void> {
+  const { error } = await supabase.from('property_listings').update({
+    listing_type: input.listingType,
+    title: input.title.trim(),
+    description: input.description?.trim() || null,
+    config: input.config,
+    area_sqft: input.areaSqft,
+    floor: input.floor,
+    total_floors: input.totalFloors,
+    furnishing: input.furnishing,
+    facing: input.facing,
+    bathrooms: input.bathrooms,
+    balconies: input.balconies,
+    parking: input.parking,
+    tower: input.tower?.trim() || null,
+    flat_no: input.flatNo?.trim() || null,
+    available_from: input.availableFrom,
+    amenities: input.amenities,
+    contact_whatsapp: input.contactWhatsapp?.replace(/\D/g, '') || null,
+    contact_phone: input.contactPhone?.replace(/\D/g, '') || null,
+    photos: input.photos,
+    bump_at: new Date().toISOString(),
+  }).eq('id', id);
+  if (error) throw error;
+}
+
 export async function deleteProperty(id: string): Promise<void> {
   const { error } = await supabase.from('property_listings').delete().eq('id', id);
   if (error) throw error;

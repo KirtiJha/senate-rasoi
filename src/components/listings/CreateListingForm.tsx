@@ -10,7 +10,8 @@ import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { AIError, visionAutofill } from '../../lib/ai';
 import { haptics } from '../../lib/haptics';
-import { postListing } from '../../lib/listings';
+import { postListing, updateListing } from '../../lib/listings';
+import { ListingRow } from '../../lib/types';
 import { AttrField, ServiceCategory } from '../../lib/services';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useThemeColors } from '../../theme';
@@ -20,9 +21,10 @@ import { Avatar, Button, ChoiceTiles, Container, useResponsive } from '../ui';
 interface Props {
   cat: ServiceCategory;
   onBack: () => void;
+  existing?: ListingRow; // when set, the form edits this listing instead of creating
 }
 
-export function CreateListingForm({ cat, onBack }: Props) {
+export function CreateListingForm({ cat, onBack, existing }: Props) {
   const toast = useToast();
   const router = useRouter();
   const c = useThemeColors();
@@ -31,20 +33,21 @@ export function CreateListingForm({ cat, onBack }: Props) {
   const { userId, profile, communityId } = useAuth();
 
   const isDirectory = cat.listingType === 'recommendation';
+  const isEdit = !!existing;
 
   // Core fields
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [price, setPrice] = useState('');
-  const [location, setLocation] = useState('');
+  const [title, setTitle] = useState(existing?.title ?? '');
+  const [description, setDescription] = useState(existing?.description ?? '');
+  const [photoUri, setPhotoUri] = useState<string | null>(existing?.photos?.[0] ?? null);
+  const [price, setPrice] = useState(existing?.price != null ? String(existing.price) : '');
+  const [location, setLocation] = useState(existing?.location ?? '');
 
   // Directory-specific
-  const [referralName, setReferralName] = useState('');
-  const [referralPhone, setReferralPhone] = useState('');
+  const [referralName, setReferralName] = useState(existing?.referral_name ?? '');
+  const [referralPhone, setReferralPhone] = useState(existing?.referral_phone ?? '');
 
   // Dynamic category attributes
-  const [attrs, setAttrs] = useState<Record<string, unknown>>({});
+  const [attrs, setAttrs] = useState<Record<string, unknown>>((existing?.attributes as Record<string, unknown>) ?? {});
 
   const [submitting, setSubmitting] = useState(false);
   const [autofilling, setAutofilling] = useState(false);
@@ -129,25 +132,45 @@ export function CreateListingForm({ cat, onBack }: Props) {
     setSubmitting(true);
     try {
       const priceNum = price.trim() ? parseInt(price, 10) : null;
-      await postListing({
-        category: cat.key,
-        communityId: communityId ?? undefined,
-        ownerUserId: userId,
-        title: isDirectory ? `${referralName} – ${attrs['trade'] ?? ''}`.trim() : effectiveTitle,
-        description,
-        photoUri,
-        price: priceNum && !isNaN(priceNum) ? priceNum : null,
-        priceUnit: cat.priceLabel ?? null,
-        whatsapp: profile?.whatsapp ?? null,
-        location: location || null,
-        isReferral: isDirectory,
-        referralName: isDirectory ? referralName.trim() : null,
-        referralPhone: isDirectory ? referralPhone.trim() : null,
-        attributes: attrs,
-      });
-      haptics.success();
-      toast.show(`Posted to ${cat.label}! 🎉`);
-      router.push(`/c/${cat.key}` as any);
+      const resolvedTitle = isDirectory ? `${referralName} – ${attrs['trade'] ?? ''}`.trim() : effectiveTitle;
+      const finalPrice = priceNum && !isNaN(priceNum) ? priceNum : null;
+      if (isEdit && existing) {
+        await updateListing(existing.id, {
+          title: resolvedTitle,
+          description,
+          photoUri,
+          price: finalPrice,
+          priceUnit: cat.priceLabel ?? null,
+          location: location || null,
+          isReferral: isDirectory,
+          referralName: isDirectory ? referralName.trim() : null,
+          referralPhone: isDirectory ? referralPhone.trim() : null,
+          attributes: attrs,
+        });
+        haptics.success();
+        toast.show('Updated ✓');
+        router.replace(`/listing/${existing.id}` as any);
+      } else {
+        await postListing({
+          category: cat.key,
+          communityId: communityId ?? undefined,
+          ownerUserId: userId,
+          title: resolvedTitle,
+          description,
+          photoUri,
+          price: finalPrice,
+          priceUnit: cat.priceLabel ?? null,
+          whatsapp: profile?.whatsapp ?? null,
+          location: location || null,
+          isReferral: isDirectory,
+          referralName: isDirectory ? referralName.trim() : null,
+          referralPhone: isDirectory ? referralPhone.trim() : null,
+          attributes: attrs,
+        });
+        haptics.success();
+        toast.show(`Posted to ${cat.label}! 🎉`);
+        router.push(`/c/${cat.key}` as any);
+      }
     } catch (e) {
       console.error(e);
       toast.show('Could not post — check your connection');
@@ -180,7 +203,7 @@ export function CreateListingForm({ cat, onBack }: Props) {
             <Text className="font-sans-md text-[13px]" style={{ color: cat.color }}>{cat.label}</Text>
           </View>
           <Text className="mb-4 font-display-x text-[28px] text-ink">
-            {isDirectory ? 'Recommend a contact' : 'Post a listing'}
+            {isEdit ? (isDirectory ? 'Edit contact' : 'Edit listing') : isDirectory ? 'Recommend a contact' : 'Post a listing'}
           </Text>
 
           {/* Photo picker */}
@@ -313,7 +336,7 @@ export function CreateListingForm({ cat, onBack }: Props) {
           )}
 
           <Button
-            label={submitting ? 'Posting…' : `Post to ${cat.label}`}
+            label={isEdit ? (submitting ? 'Saving…' : 'Save changes') : submitting ? 'Posting…' : `Post to ${cat.label}`}
             icon="checkmark-circle"
             size="lg"
             fullWidth

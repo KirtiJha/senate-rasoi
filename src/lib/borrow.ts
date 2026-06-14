@@ -117,11 +117,12 @@ export async function setItemStatus(id: string, status: LendStatus): Promise<voi
   if (error) throw error;
 }
 
-export async function updateItem(id: string, patch: { title?: string; description?: string | null; category?: string | null }): Promise<void> {
+export async function updateItem(id: string, patch: { title?: string; description?: string | null; category?: string | null; photo_url?: string | null }): Promise<void> {
   const { error } = await supabase.from('lend_items').update({
     ...(patch.title !== undefined ? { title: patch.title.trim() } : {}),
     ...(patch.description !== undefined ? { description: patch.description?.trim() || null } : {}),
     ...(patch.category !== undefined ? { category: patch.category } : {}),
+    ...(patch.photo_url !== undefined ? { photo_url: patch.photo_url } : {}),
   }).eq('id', id);
   if (error) throw error;
 }

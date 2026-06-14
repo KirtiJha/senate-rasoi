@@ -1,19 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { OrderModal } from '../../components/OrderModal';
 import { PayButton } from '../../components/PayButton';
 import { T } from '../../components/T';
-import { Avatar, Badge, Button, Container, useResponsive } from '../../components/ui';
+import { Avatar, Badge, Button, Container, Sheet, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useConfirm } from '../../context/confirm';
 import { useToast } from '../../context/toast';
 import {
-  buildWhatsAppOrderLink, deleteDish, fetchDishById, placeOrder, waLink,
+  buildWhatsAppOrderLink, deleteDish, fetchDishById, placeOrder, updateDish, waLink,
 } from '../../lib/dishes';
 import { haptics } from '../../lib/haptics';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
@@ -55,6 +56,12 @@ export default function DishDetailScreen() {
   const [dish, setDish] = useState<DishRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editPrice, setEditPrice] = useState('');
+  const [editPhoto, setEditPhoto] = useState<{ uri: string; isNew: boolean } | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // On web, opening this route directly (or after a refresh) leaves an empty
   // history stack, so router.back() is a no-op. Fall back to the food board.
@@ -114,6 +121,44 @@ export default function DishDetailScreen() {
     };
     confirm({ title: 'Remove dish', message: `Remove "${dish.dish_name}" from the board?`, confirmLabel: 'Remove', destructive: true })
       .then((ok) => { if (ok) doDelete(); });
+  };
+
+  const openEdit = () => {
+    if (!dish) return;
+    setEditName(dish.dish_name);
+    setEditDesc(dish.description ?? '');
+    setEditPrice(String(dish.price));
+    setEditPhoto(dish.photo_url ? { uri: dish.photo_url, isNew: false } : null);
+    setShowEdit(true);
+  };
+
+  const pickEditPhoto = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true, aspect: [4, 3] });
+    if (!res.canceled) setEditPhoto({ uri: res.assets[0].uri, isNew: true });
+  };
+
+  const saveEdit = async () => {
+    if (!dish) return;
+    if (!editName.trim()) return toast.show('Dish needs a name');
+    const priceNum = parseInt(editPrice.replace(/\D/g, ''), 10);
+    setSaving(true);
+    try {
+      const { photo_url } = await updateDish(dish.id, {
+        dishName: editName,
+        description: editDesc || null,
+        price: Number.isFinite(priceNum) ? priceNum : dish.price,
+        photoUri: editPhoto === null ? null : editPhoto.uri,
+      });
+      setDish({
+        ...dish,
+        dish_name: editName.trim(),
+        description: editDesc.trim() || null,
+        price: Number.isFinite(priceNum) ? priceNum : dish.price,
+        photo_url: photo_url !== undefined ? photo_url : dish.photo_url,
+      });
+      setShowEdit(false);
+      toast.show('Updated ✓');
+    } catch { toast.show('Could not save — try again'); } finally { setSaving(false); }
   };
 
   if (loading) {
@@ -245,7 +290,8 @@ export default function DishDetailScreen() {
 
             {/* Owner actions */}
             {isOwner ? (
-              <View className="mb-4">
+              <View className="mb-4 flex-row gap-2">
+                <Button label="Edit" variant="outline" size="sm" icon="create-outline" onPress={openEdit} />
                 <Button label="Remove dish" variant="danger" size="sm" onPress={handleRemove} />
               </View>
             ) : null}
@@ -284,6 +330,32 @@ export default function DishDetailScreen() {
       ) : null}
 
       <OrderModal dish={ordering ? dish : null} onClose={() => setOrdering(false)} onConfirm={handleConfirmOrder} />
+
+      <Sheet visible={showEdit} onClose={() => setShowEdit(false)} title="Edit dish">
+        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Photo</Text>
+        <View className="mb-3 flex-row items-center gap-3">
+          <Pressable onPress={pickEditPhoto} className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface active:opacity-70">
+            {editPhoto
+              ? <Image source={{ uri: editPhoto.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+              : <Ionicons name="camera-outline" size={22} color={c.accent} />}
+          </Pressable>
+          <View className="flex-1 gap-1.5">
+            <Pressable onPress={pickEditPhoto} hitSlop={6} className="self-start"><Text className="text-[13px] font-sans-sb text-accent">{editPhoto ? 'Change photo' : 'Add a photo'}</Text></Pressable>
+            {editPhoto ? <Pressable onPress={() => setEditPhoto(null)} hitSlop={6} className="self-start"><Text className="text-[13px] font-sans-sb text-nonveg">Remove</Text></Pressable> : null}
+          </View>
+        </View>
+
+        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Dish name</Text>
+        <TextInput value={editName} onChangeText={setEditName} className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
+
+        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Price (₹ per plate)</Text>
+        <TextInput value={editPrice} onChangeText={setEditPrice} keyboardType="number-pad" className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
+
+        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Description</Text>
+        <TextInput value={editDesc} onChangeText={setEditDesc} multiline className="mb-4 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ minHeight: 60, outline: 'none' } as any} />
+
+        <Button label="Save changes" icon="checkmark" fullWidth loading={saving} onPress={saveEdit} />
+      </Sheet>
     </View>
   );
 }

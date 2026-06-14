@@ -214,6 +214,10 @@ export default function PropertyDetailScreen() {
                   </Pressable>
                 ))}
               </View>
+              <Pressable onPress={() => router.push(`/property/new?id=${p.id}` as any)} className="mt-3 flex-row items-center justify-center gap-1.5 rounded-xl border border-line py-2.5 active:bg-inset">
+                <Ionicons name="create-outline" size={15} color={c.ink} />
+                <Text className="text-[13px] font-sans-sb text-ink">Edit listing & photos</Text>
+              </Pressable>
               <Pressable onPress={confirmDelete} className="mt-2 flex-row items-center justify-center gap-1.5 py-2 active:opacity-60">
                 <Ionicons name="trash-outline" size={15} color="#EF4444" />
                 <Text className="text-[13px] font-sans-sb text-nonveg">Delete listing</Text>

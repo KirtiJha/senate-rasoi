@@ -133,6 +133,7 @@ function DesktopShell() {
           <Stack.Screen name="profile/[userId]" />
           <Stack.Screen name="feed/[postId]" />
           <Stack.Screen name="listing/[id]" />
+          <Stack.Screen name="listing/edit" />
           <Stack.Screen name="dish/[id]" />
           <Stack.Screen name="emergency" />
           <Stack.Screen name="polls" />

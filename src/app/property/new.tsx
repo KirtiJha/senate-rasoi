@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Button, Container, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -16,7 +16,10 @@ import {
   ListingType,
   PARKING_OPTIONS,
   Parking,
+  fetchPropertyById,
   postProperty,
+  updateProperty,
+  uploadPropertyPhoto,
 } from '../../lib/properties';
 import { useThemeColors } from '../../theme';
 
@@ -28,6 +31,9 @@ export default function NewPropertyScreen() {
   const toast = useToast();
   const router = useRouter();
   const { userId, profile, communityId } = useAuth();
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const isEdit = !!id;
+  const [loading, setLoading] = useState(isEdit);
 
   const [listingType, setListingType] = useState<ListingType>('sale');
   const [photos, setPhotos] = useState<string[]>([]);
@@ -50,6 +56,33 @@ export default function NewPropertyScreen() {
   const [phone, setPhone] = useState(profile?.phone ?? '');
   const [submitting, setSubmitting] = useState(false);
 
+  // Load existing listing for edit.
+  useEffect(() => {
+    if (!id) return;
+    fetchPropertyById(id).then((p) => {
+      if (!p) { toast.show('Listing not found'); router.back(); return; }
+      setListingType(p.listing_type);
+      setPhotos(p.photos ?? []);
+      setTitle(p.title);
+      setDesc(p.description ?? '');
+      setConfig(p.config);
+      setArea(p.area_sqft != null ? String(p.area_sqft) : '');
+      setFloor(p.floor != null ? String(p.floor) : '');
+      setTotalFloors(p.total_floors != null ? String(p.total_floors) : '');
+      setFurnishing(p.furnishing);
+      setFacing(p.facing);
+      setBathrooms(p.bathrooms != null ? String(p.bathrooms) : '');
+      setBalconies(p.balconies != null ? String(p.balconies) : '');
+      setParking(p.parking);
+      setTower(p.tower ?? '');
+      setFlatNo(p.flat_no ?? '');
+      setAvailableFrom(p.available_from ?? '');
+      setAmenities(p.amenities ?? []);
+      setWa(p.contact_whatsapp ?? '');
+      setPhone(p.contact_phone ?? '');
+    }).catch(() => toast.show('Could not load')).finally(() => setLoading(false));
+  }, [id]);
+
   const pickPhotos = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: 8, quality: 0.9 });
     if (!res.canceled) setPhotos((prev) => [...prev, ...res.assets.map((a) => a.uri)].slice(0, 8));
@@ -64,16 +97,29 @@ export default function NewPropertyScreen() {
     setSubmitting(true);
     try {
       const validDate = /^\d{4}-\d{2}-\d{2}$/.test(availableFrom.trim()) ? availableFrom.trim() : null;
-      const prop = await postProperty({
-        communityId, ownerUserId: userId, listingType,
-        title, description: desc, config,
+      const common = {
+        listingType, title, description: desc, config,
         areaSqft: num(area), floor: num(floor), totalFloors: num(totalFloors),
         furnishing, facing, bathrooms: num(bathrooms), balconies: num(balconies), parking,
         tower, flatNo, availableFrom: validDate, amenities,
-        contactWhatsapp: wa || null, contactPhone: phone || null, photoUris: photos,
-      });
-      toast.show('Flat listed 🏠');
-      router.replace(`/property/${prop.id}` as any);
+        contactWhatsapp: wa || null, contactPhone: phone || null,
+      };
+      if (isEdit && id) {
+        // Keep already-uploaded photos (http URLs); upload freshly-picked locals.
+        const finalUrls: string[] = [];
+        let key = Date.now();
+        for (const uri of photos) {
+          if (/^https?:\/\//.test(uri)) { finalUrls.push(uri); continue; }
+          try { finalUrls.push(await uploadPropertyPhoto(uri, id, key++)); } catch { /* skip */ }
+        }
+        await updateProperty(id, { ...common, photos: finalUrls });
+        toast.show('Updated ✓');
+        router.replace(`/property/${id}` as any);
+      } else {
+        const prop = await postProperty({ communityId, ownerUserId: userId, ...common, photoUris: photos });
+        toast.show('Flat listed 🏠');
+        router.replace(`/property/${prop.id}` as any);
+      }
     } catch (e) { toast.show(e instanceof Error ? e.message : 'Could not post — try again'); }
     finally { setSubmitting(false); }
   };
@@ -81,9 +127,18 @@ export default function NewPropertyScreen() {
   const input = 'rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink';
   const label = 'mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted';
 
+  if (loading) {
+    return (
+      <View className="flex-1 bg-bg">
+        <ScreenHeader icon="key-outline" iconColor={ACCENT} title="Edit flat listing" showBack hideSociety />
+        <View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View>
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScreenHeader icon="key-outline" iconColor={ACCENT} title="Post your flat" showBack hideSociety />
+      <ScreenHeader icon="key-outline" iconColor={ACCENT} title={isEdit ? 'Edit flat listing' : 'Post your flat'} showBack hideSociety />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* Sale / Rent */}
@@ -172,7 +227,7 @@ export default function NewPropertyScreen() {
           <Text className={label}>Phone (optional)</Text>
           <TextInput value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="98765 43210" placeholderTextColor={c.faint} className={`mb-5 ${input}`} style={{ outline: 'none' } as any} />
 
-          <Button label="Post flat listing" icon="checkmark" size="lg" fullWidth loading={submitting} onPress={submit} />
+          <Button label={isEdit ? 'Save changes' : 'Post flat listing'} icon="checkmark" size="lg" fullWidth loading={submitting} onPress={submit} />
           <Text className="mt-3 text-center text-[12px] leading-[18px] text-faint">
             The price is never shown — neighbours tap "Contact owner for price". You can mark it sold/rented anytime.
           </Text>

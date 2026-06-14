@@ -241,6 +241,42 @@ export async function postListing(input: NewListingInput): Promise<ListingRow> {
   return data as ListingRow;
 }
 
+/**
+ * Update an existing listing, including its photo. `photoUri` may be an existing
+ * public URL (kept as-is), a new local URI (uploaded), or null (photo removed).
+ */
+export async function updateListing(id: string, input: {
+  title: string;
+  description: string;
+  photoUri: string | null;
+  price: number | null;
+  priceUnit: string | null;
+  location: string | null;
+  isReferral: boolean;
+  referralName: string | null;
+  referralPhone: string | null;
+  attributes: Record<string, unknown>;
+}): Promise<void> {
+  let photos: string[];
+  if (input.photoUri == null) photos = [];
+  else if (/^https?:\/\//.test(input.photoUri)) photos = [input.photoUri];
+  else photos = [await uploadListingPhoto(input.photoUri, id)];
+  const { error } = await supabase.from('listings').update({
+    title: input.title.trim(),
+    description: input.description.trim() || null,
+    photos,
+    price: input.price,
+    price_unit: input.priceUnit,
+    location: input.location?.trim() || null,
+    is_referral: input.isReferral,
+    referral_name: input.referralName?.trim() || null,
+    referral_phone: input.referralPhone?.trim() || null,
+    attributes: input.attributes,
+    bump_at: new Date().toISOString(),
+  }).eq('id', id);
+  if (error) throw error;
+}
+
 // ── Status changes (owner / admin) ──────────────────────────────────
 
 export async function setListingStatus(id: string, status: ListingStatus): Promise<void> {

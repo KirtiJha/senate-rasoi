@@ -289,7 +289,14 @@ export default function ListingDetailScreen() {
 
             {/* Owner actions */}
             {isOwner && (
-              <View className="mb-4 flex-row gap-2">
+              <View className="mb-4 flex-row flex-wrap gap-2">
+                <Button
+                  label="Edit"
+                  variant="outline"
+                  size="sm"
+                  icon="create-outline"
+                  onPress={() => router.push(`/listing/edit?id=${listing.id}` as any)}
+                />
                 {listing.category === 'market' && (
                   <Button
                     label={listing.status === 'sold' ? 'Mark as active' : 'Mark as sold'}

@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -23,6 +24,7 @@ import {
   setRequestStatus,
   subscribeRequests,
   updateItem,
+  uploadItemPhoto,
 } from '../../lib/borrow';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { waLink } from '../../lib/listings';
@@ -50,6 +52,7 @@ export default function LendItemDetailScreen() {
   const [editTitle, setEditTitle] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [editCat, setEditCat] = useState('');
+  const [editPhoto, setEditPhoto] = useState<{ uri: string; isNew: boolean } | null>(null);
   const [saving, setSaving] = useState(false);
 
   const isOwner = !!item && item.owner_user_id === userId;
@@ -75,15 +78,27 @@ export default function LendItemDetailScreen() {
     setEditTitle(item.title);
     setEditDesc(item.description ?? '');
     setEditCat(item.category ?? 'other');
+    setEditPhoto(item.photo_url ? { uri: item.photo_url, isNew: false } : null);
     setShowEdit(true);
+  };
+
+  const pickEditPhoto = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
+    if (!res.canceled) setEditPhoto({ uri: res.assets[0].uri, isNew: true });
   };
 
   const saveEdit = async () => {
     if (!item) return;
     setSaving(true);
     try {
-      await updateItem(item.id, { title: editTitle, description: editDesc || null, category: editCat });
-      setItem({ ...item, title: editTitle, description: editDesc || null, category: editCat });
+      // Resolve the final photo URL: upload a freshly-picked one, keep the
+      // existing URL, or null it out if the owner removed it.
+      let photoUrl: string | null = item.photo_url ?? null;
+      if (editPhoto === null) photoUrl = null;
+      else if (editPhoto.isNew) photoUrl = await uploadItemPhoto(editPhoto.uri, item.id);
+      else photoUrl = editPhoto.uri;
+      await updateItem(item.id, { title: editTitle, description: editDesc || null, category: editCat, photo_url: photoUrl });
+      setItem({ ...item, title: editTitle, description: editDesc || null, category: editCat, photo_url: photoUrl });
       setShowEdit(false);
       toast.show('Updated ✓');
     } catch { toast.show('Could not save — try again'); } finally { setSaving(false); }
@@ -295,6 +310,23 @@ export default function LendItemDetailScreen() {
 
       {/* Edit sheet */}
       <Sheet visible={showEdit} onClose={() => setShowEdit(false)} title="Edit listing">
+        {isOffer ? (
+          <>
+            <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Photo</Text>
+            <View className="mb-3 flex-row items-center gap-3">
+              <Pressable onPress={pickEditPhoto} className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface active:opacity-70">
+                {editPhoto
+                  ? <Image source={{ uri: editPhoto.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+                  : <Ionicons name="camera-outline" size={22} color={ACCENT} />}
+              </Pressable>
+              <View className="flex-1 gap-1.5">
+                <Pressable onPress={pickEditPhoto} hitSlop={6} className="self-start"><Text className="text-[13px] font-sans-sb" style={{ color: ACCENT }}>{editPhoto ? 'Change photo' : 'Add a photo'}</Text></Pressable>
+                {editPhoto ? <Pressable onPress={() => setEditPhoto(null)} hitSlop={6} className="self-start"><Text className="text-[13px] font-sans-sb text-nonveg">Remove</Text></Pressable> : null}
+              </View>
+            </View>
+          </>
+        ) : null}
+
         <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Title</Text>
         <TextInput value={editTitle} onChangeText={setEditTitle} className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
 
