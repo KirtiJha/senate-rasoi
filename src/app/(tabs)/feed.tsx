@@ -267,8 +267,8 @@ const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userI
 
         {/* Photo (first one, full-width; badge shows the total count) */}
         {post.photos?.length ? (
-          <View className="mt-2.5 w-full overflow-hidden rounded-xl bg-inset" style={{ height: 180 }}>
-            <Image source={{ uri: post.photos[0] }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+          <View className="mt-2.5 w-full overflow-hidden rounded-xl bg-inset" style={{ height: 200 }}>
+            <Image source={{ uri: post.photos[0] }} style={{ width: '100%', height: '100%' }} contentFit="contain" {...IMAGE_CACHE_PROPS} />
             {post.photos.length > 1 ? (
               <View className="absolute bottom-2 right-2 flex-row items-center gap-1 rounded-full bg-black/55 px-2 py-0.5">
                 <Ionicons name="images-outline" size={12} color="#fff" />

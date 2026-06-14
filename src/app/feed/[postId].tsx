@@ -169,14 +169,10 @@ export default function PostThreadScreen() {
             ) : null}
             <T source="post" id={post.id} field="body" text={post.body} className="text-[15px] leading-6 text-ink" />
 
-            {/* Photos */}
+            {/* Photos — sized to each photo's aspect ratio so it shows in full */}
             {post.photos?.length ? (
               <View className="mt-3 gap-2">
-                {post.photos.map((url, i) => (
-                  <View key={i} className="w-full overflow-hidden rounded-2xl bg-inset" style={{ height: 260 }}>
-                    <Image source={{ uri: url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
-                  </View>
-                ))}
+                {post.photos.map((url, i) => <PostImage key={i} uri={url} />)}
               </View>
             ) : null}
 
@@ -266,6 +262,23 @@ function CommentBubble({ comment, userId, isAdmin, onDelete, c }: {
           <Ionicons name="trash-outline" size={14} color={c.faint} />
         </Pressable>
       ) : null}
+    </View>
+  );
+}
+
+/** Shows a post photo in full — frame adopts the image's own aspect ratio once
+ *  known (capped so very tall portraits don't dominate), no cropping. */
+function PostImage({ uri }: { uri: string }) {
+  const [ar, setAr] = useState<number | null>(null);
+  return (
+    <View className="w-full overflow-hidden rounded-2xl bg-inset" style={ar ? { aspectRatio: Math.max(ar, 0.6) } : { height: 240 }}>
+      <Image
+        source={{ uri }}
+        style={{ width: '100%', height: '100%' }}
+        contentFit="contain"
+        onLoad={(e) => { const w = e.source?.width, h = e.source?.height; if (w && h) setAr(w / h); }}
+        {...IMAGE_CACHE_PROPS}
+      />
     </View>
   );
 }
