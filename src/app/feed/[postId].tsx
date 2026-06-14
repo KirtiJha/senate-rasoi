@@ -13,9 +13,9 @@ import { useDraft } from '../../lib/draft';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
 import {
-  CommentRow, POST_CATEGORY_COLORS, POST_CATEGORY_ICONS, POST_CATEGORY_LABELS,
-  PostRow, createComment, deleteComment, deletePost,
-  fetchComments, fetchPostById, setPinned, setResolved, subscribeToComments,
+  ALL_POST_CATEGORIES, CommentRow, POST_CATEGORY_COLORS, POST_CATEGORY_ICONS, POST_CATEGORY_LABELS,
+  PostCategory, PostRow, createComment, deleteComment, deletePost,
+  fetchComments, fetchPostById, setPinned, setResolved, subscribeToComments, updatePost,
 } from '../../lib/posts';
 import { useThemeColors } from '../../theme';
 
@@ -31,6 +31,7 @@ export default function PostThreadScreen() {
   const [post, setPost] = useState<PostRow | null>(null);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
 
   // On web, opening this route directly (or after a refresh) leaves an empty
   // history stack, so router.back() is a no-op. Fall back to the feed.
@@ -138,7 +139,7 @@ export default function PostThreadScreen() {
           </View>
           <View className="flex-1" />
           {canManage ? (
-            <PostMenu post={post} isOwner={isOwner} isAdmin={!!isAdmin} onDelete={handleDeletePost} onPinToggle={async () => { await setPinned(post.id, !post.pinned); loadPost(); }} onResolveToggle={async () => { await setResolved(post.id, !post.resolved); loadPost(); }} c={c} />
+            <PostMenu post={post} isOwner={isOwner} isAdmin={!!isAdmin} onEdit={() => setEditing(true)} onDelete={handleDeletePost} onPinToggle={async () => { await setPinned(post.id, !post.pinned); loadPost(); }} onResolveToggle={async () => { await setResolved(post.id, !post.resolved); loadPost(); }} c={c} />
           ) : null}
         </View>
       </View>
@@ -218,6 +219,15 @@ export default function PostThreadScreen() {
           </Pressable>
         </View>
       </View>
+
+      <EditPostModal
+        visible={editing}
+        post={post}
+        isAdmin={!!isAdmin}
+        onClose={() => setEditing(false)}
+        onSaved={() => { setEditing(false); loadPost(); }}
+        c={c}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -246,9 +256,76 @@ function CommentBubble({ comment, userId, isAdmin, onDelete, c }: {
   );
 }
 
-function PostMenu({ post, isOwner, isAdmin, onDelete, onPinToggle, onResolveToggle, c }: {
+function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
+  visible: boolean; post: PostRow; isAdmin: boolean;
+  onClose: () => void; onSaved: () => void; c: ReturnType<typeof useThemeColors>;
+}) {
+  const toast = useToast();
+  const insets = useSafeAreaInsets();
+  const [category, setCategory] = useState<PostCategory>(post.category);
+  const [title, setTitle] = useState(post.title ?? '');
+  const [body, setBody] = useState(post.body);
+  const [saving, setSaving] = useState(false);
+
+  // Re-sync the fields whenever a different post opens.
+  useEffect(() => {
+    if (visible) { setCategory(post.category); setTitle(post.title ?? ''); setBody(post.body); }
+  }, [visible, post.id]);
+
+  // Announcements stay admin-only; everyone else keeps the post's other options.
+  const cats = ALL_POST_CATEGORIES.filter((k) => k !== 'announcement' || isAdmin || post.category === 'announcement');
+
+  const save = async () => {
+    if (!body.trim()) return toast.show('Write something first');
+    setSaving(true);
+    try {
+      await updatePost(post.id, { category, title: title.trim() || null, body });
+      toast.show('Post updated ✓');
+      onSaved();
+    } catch { toast.show('Could not save — try again'); } finally { setSaving(false); }
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View className="flex-1 justify-end" style={{ backgroundColor: '#00000066' }}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View className="rounded-t-3xl bg-bg px-4 pt-3" style={{ paddingBottom: insets.bottom + 16 }}>
+            <View className="mb-3 flex-row items-center justify-between">
+              <Text className="font-display-x text-[18px] text-ink">Edit post</Text>
+              <Pressable onPress={onClose} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full active:bg-inset">
+                <Ionicons name="close" size={20} color={c.muted} />
+              </Pressable>
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3 -mx-1" contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}>
+              {cats.map((k) => {
+                const on = category === k;
+                const color = POST_CATEGORY_COLORS[k];
+                return (
+                  <Pressable key={k} onPress={() => setCategory(k)} className="flex-row items-center gap-1 rounded-full border px-3 py-1.5" style={{ borderColor: on ? color : c.line, backgroundColor: on ? color : c.surface }}>
+                    <Ionicons name={POST_CATEGORY_ICONS[k] as any} size={12} color={on ? '#fff' : c.muted} />
+                    <Text className="text-[12px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{POST_CATEGORY_LABELS[k]}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <TextInput value={title} onChangeText={setTitle} placeholder="Title (optional)" placeholderTextColor={c.faint} className="mb-2 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
+            <TextInput value={body} onChangeText={setBody} placeholder="What's on your mind?" placeholderTextColor={c.faint} multiline className="mb-4 rounded-2xl border border-line bg-inset px-3.5 py-3 text-[15px] text-ink" style={{ minHeight: 120, outline: 'none' } as any} />
+
+            <Pressable onPress={save} disabled={saving} className="items-center rounded-2xl bg-accent py-3 active:opacity-80" style={{ opacity: saving ? 0.6 : 1 }}>
+              <Text className="font-sans-sb text-[15px]" style={{ color: c.onAccent }}>{saving ? 'Saving…' : 'Save changes'}</Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
+  );
+}
+
+function PostMenu({ post, isOwner, isAdmin, onEdit, onDelete, onPinToggle, onResolveToggle, c }: {
   post: PostRow; isOwner: boolean; isAdmin: boolean;
-  onDelete: () => void; onPinToggle: () => void; onResolveToggle: () => void;
+  onEdit: () => void; onDelete: () => void; onPinToggle: () => void; onResolveToggle: () => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
   const [open, setOpen] = useState(false);
@@ -269,6 +346,9 @@ function PostMenu({ post, isOwner, isAdmin, onDelete, onPinToggle, onResolveTogg
             className="absolute overflow-hidden rounded-2xl border border-line bg-surface"
             style={{ top: insets.top + 52, right: 14, minWidth: 200, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 12 }}
           >
+            {isOwner ? (
+              <MenuItem icon="create-outline" label="Edit post" onPress={() => { setOpen(false); onEdit(); }} c={c} />
+            ) : null}
             {isAdmin ? (
               <MenuItem icon="pin-outline" label={post.pinned ? 'Unpin' : 'Pin to top'} onPress={() => { setOpen(false); onPinToggle(); }} c={c} />
             ) : null}

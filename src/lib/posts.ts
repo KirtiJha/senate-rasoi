@@ -181,6 +181,19 @@ export async function createPost(input: NewPostInput): Promise<PostRow> {
   return data as PostRow;
 }
 
+export async function updatePost(
+  id: string,
+  patch: { category?: PostCategory; title?: string | null; body?: string },
+): Promise<void> {
+  const { error } = await supabase.from('posts').update({
+    ...(patch.category !== undefined ? { category: patch.category } : {}),
+    ...(patch.title !== undefined ? { title: patch.title?.trim() || null } : {}),
+    ...(patch.body !== undefined ? { body: patch.body.trim() } : {}),
+    updated_at: new Date().toISOString(),
+  }).eq('id', id);
+  if (error) throw error;
+}
+
 export async function deletePost(id: string): Promise<void> {
   const { error } = await supabase.from('posts').delete().eq('id', id);
   if (error) throw error;
