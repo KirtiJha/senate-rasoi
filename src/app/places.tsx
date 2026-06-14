@@ -31,7 +31,6 @@ export default function PlacesScreen() {
   const { communityId, community } = useAuth();
   const [items, setItems] = useState<PlaceRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string | null>(null); // null = All
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('az');
   const [expanded, setExpanded] = useState<Set<string>>(new Set()); // type keys the user opened
@@ -53,12 +52,11 @@ export default function PlacesScreen() {
 
   const q = query.trim().toLowerCase();
 
-  // Apply type filter + text search.
+  // Apply text search.
   const shown = useMemo(() => {
-    let rows = filter ? items.filter((p) => p.place_type === filter) : items;
-    if (q) rows = rows.filter((p) => p.name.toLowerCase().includes(q) || (p.address ?? '').toLowerCase().includes(q));
-    return rows;
-  }, [items, filter, q]);
+    if (!q) return items;
+    return items.filter((p) => p.name.toLowerCase().includes(q) || (p.address ?? '').toLowerCase().includes(q));
+  }, [items, q]);
 
   const sortRows = useCallback((rows: PlaceRow[]): PlaceRow[] => {
     const arr = [...rows];
@@ -82,14 +80,8 @@ export default function PlacesScreen() {
     return PLACE_TYPES.filter((t) => byType.has(t.key)).map((t) => ({ type: t, rows: sortRows(byType.get(t.key)!) }));
   }, [shown, sortRows]);
 
-  const presentTypes = useMemo(() => {
-    const set = new Set(items.map((p) => p.place_type));
-    return PLACE_TYPES.filter((t) => set.has(t.key));
-  }, [items]);
-
-  // A section is open when: searching (force-show matches), a single type is
-  // filtered, or the user expanded it.
-  const isOpen = (key: string) => !!q || filter === key || expanded.has(key);
+  // A section is open when searching (force-show matches) or the user opened it.
+  const isOpen = (key: string) => !!q || expanded.has(key);
   const toggle = (key: string) =>
     setExpanded((prev) => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
 
@@ -118,16 +110,6 @@ export default function PlacesScreen() {
         </View>
       </View>
 
-      {/* Type filter chips */}
-      {presentTypes.length > 0 ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 10, gap: 8 }}>
-          <Chip label="All" active={filter === null} color={ACCENT} onPress={() => setFilter(null)} />
-          {presentTypes.map((t) => (
-            <Chip key={t.key} label={t.label} icon={t.icon} active={filter === t.key} color={t.color} onPress={() => setFilter(filter === t.key ? null : t.key)} />
-          ))}
-        </ScrollView>
-      ) : null}
-
       {/* Sort + expand/collapse */}
       {!loading && items.length > 0 ? (
         <View className="flex-row items-center justify-between px-4 pb-1 pt-2.5">
@@ -146,7 +128,7 @@ export default function PlacesScreen() {
         </View>
       ) : null}
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 8, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingTop: 8, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container>
           {loading ? (
             <View className="items-center justify-center py-20"><ActivityIndicator color={c.muted} /></View>
@@ -163,7 +145,7 @@ export default function PlacesScreen() {
               const open = isOpen(g.type.key);
               return (
                 <View key={g.type.key} className="mb-2.5 overflow-hidden rounded-2xl border border-line bg-surface">
-                  <Pressable onPress={() => toggle(g.type.key)} disabled={!!q || filter === g.type.key} className="flex-row items-center gap-2.5 px-3.5 py-3 active:bg-inset">
+                  <Pressable onPress={() => toggle(g.type.key)} disabled={!!q} className="flex-row items-center gap-2.5 px-3.5 py-3 active:bg-inset">
                     <View className="h-8 w-8 items-center justify-center rounded-xl" style={{ backgroundColor: g.type.color + '20' }}>
                       <Ionicons name={g.type.icon as any} size={17} color={g.type.color} />
                     </View>
@@ -171,7 +153,7 @@ export default function PlacesScreen() {
                     <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: g.type.color + '18' }}>
                       <Text className="text-[12px] font-sans-bold" style={{ color: g.type.color }}>{g.rows.length}</Text>
                     </View>
-                    {!q && filter !== g.type.key ? <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={c.faint} /> : null}
+                    {!q ? <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={c.faint} /> : null}
                   </Pressable>
                   {open ? (
                     <View className="border-t border-line">
@@ -231,16 +213,6 @@ function EmptyState({ onAdd, c }: { onAdd: () => void; c: ReturnType<typeof useT
         <Ionicons name="add" size={18} color="#fff" /><Text className="font-sans-sb text-[14px] text-white">Add a place</Text>
       </Pressable>
     </View>
-  );
-}
-
-function Chip({ label, icon, active, color, onPress }: { label: string; icon?: string; active: boolean; color: string; onPress: () => void }) {
-  const c = useThemeColors();
-  return (
-    <Pressable onPress={onPress} className="flex-row items-center gap-1 rounded-full border px-3.5 py-1.5" style={{ borderColor: active ? color : c.line, backgroundColor: active ? color : c.surface }}>
-      {icon ? <Ionicons name={icon as any} size={12} color={active ? '#fff' : c.muted} /> : null}
-      <Text className="text-[12px] font-sans-sb" style={{ color: active ? '#fff' : c.muted }}>{label}</Text>
-    </Pressable>
   );
 }
 
