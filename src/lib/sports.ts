@@ -211,6 +211,16 @@ export async function addTournament(input: { groupId: string; title: string; eve
   });
   if (error) throw error;
 }
+export async function updateTournament(id: string, patch: { title?: string; eventDate?: string | null; location?: string | null; notes?: string | null }): Promise<void> {
+  const row: Record<string, unknown> = {};
+  if (patch.title !== undefined) row.title = patch.title.trim();
+  if (patch.eventDate !== undefined) row.event_date = patch.eventDate || null;
+  if (patch.location !== undefined) row.location = patch.location?.trim() || null;
+  if (patch.notes !== undefined) row.notes = patch.notes?.trim() || null;
+  const { error } = await supabase.from('sport_tournaments').update(row).eq('id', id);
+  if (error) throw error;
+}
+
 export async function deleteTournament(id: string): Promise<void> {
   const { error } = await supabase.from('sport_tournaments').delete().eq('id', id);
   if (error) throw error;

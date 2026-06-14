@@ -10,7 +10,7 @@ import { useToast } from '../context/toast';
 import { fetchDirectory } from '../lib/directory';
 import {
   DocRow, ShareUser, deleteDocument, fetchDocuments, fetchShares, fileGlyph, formatBytes,
-  getDocumentUrl, setDocPublic, shareDocument, unshareDocument, uploadDocument,
+  getDocumentUrl, setDocPublic, shareDocument, unshareDocument, updateDocument, uploadDocument,
 } from '../lib/documents';
 import { MAX_DOCUMENT_MB, isSupabaseConfigured } from '../lib/supabase';
 import { useThemeColors } from '../theme';
@@ -26,7 +26,7 @@ function openUrl(url: string) {
 export default function DocumentsScreen() {
   const c = useThemeColors();
   const toast = useToast();
-  const { userId, communityId } = useAuth();
+  const { userId, communityId, isAdmin } = useAuth();
 
   const [docs, setDocs] = useState<DocRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,7 +99,7 @@ export default function DocumentsScreen() {
                   key={d.id}
                   doc={d}
                   first={i === 0}
-                  isOwner={d.owner_id === userId}
+                  isOwner={d.owner_id === userId || isAdmin}
                   c={c}
                   onPreview={() => preview(d)}
                   onDownload={() => download(d)}
@@ -269,10 +269,21 @@ function ManageSheet({
   const [shares, setShares] = useState<ShareUser[]>([]);
   const [people, setPeople] = useState<{ id: string; name: string; flat: string | null }[]>([]);
   const [q, setQ] = useState('');
+  const [name, setName] = useState('');
+  const [desc, setDesc] = useState('');
+  const [savingMeta, setSavingMeta] = useState(false);
+
+  const saveMeta = async () => {
+    if (!doc || !name.trim()) return toastShow('Name can’t be empty');
+    setSavingMeta(true);
+    try { await updateDocument(doc.id, { name, description: desc || null }); onChanged(); toastShow('Saved ✓'); }
+    catch { toastShow('Could not save'); } finally { setSavingMeta(false); }
+  };
 
   useEffect(() => {
     if (!doc) return;
     setIsPublic(doc.is_public);
+    setName(doc.name); setDesc(doc.description ?? '');
     fetchShares(doc.id).then(setShares).catch(() => {});
     if (communityId) {
       fetchDirectory(communityId, userId, false)
@@ -312,6 +323,15 @@ function ManageSheet({
 
   return (
     <Sheet visible={!!doc} onClose={onClose} title="Manage document">
+      {/* Edit name + description */}
+      <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Name</Text>
+      <TextInput value={name} onChangeText={setName} className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
+      <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Description</Text>
+      <TextInput value={desc} onChangeText={setDesc} multiline className="mb-2 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ minHeight: 54, outline: 'none' } as any} />
+      <Pressable onPress={saveMeta} disabled={savingMeta} className="mb-4 items-center rounded-2xl border border-line py-2.5 active:bg-inset" style={{ opacity: savingMeta ? 0.6 : 1 }}>
+        <Text className="font-sans-sb text-[13px] text-ink">{savingMeta ? 'Saving…' : 'Save details'}</Text>
+      </Pressable>
+
       <PublicToggle value={isPublic} onToggle={togglePublic} c={c} />
 
       {!isPublic ? (

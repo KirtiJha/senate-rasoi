@@ -13,7 +13,7 @@ import {
   parseDaysLabel, parseDurationLabel, parseTimeLabel,
 } from '../lib/schedule';
 import {
-  GroupMember, SportGroup, Tournament, addMember, addTournament, deleteGroup, deleteTournament,
+  GroupMember, SportGroup, Tournament, addMember, addTournament, deleteGroup, deleteTournament, updateTournament,
   fetchGroup, fetchGroupMembers, fetchTournaments, getSport, joinGroup, leaveGroup, removeMember,
   setCaptain, updateGroup, uploadGroupLogo,
 } from '../lib/sports';
@@ -47,6 +47,7 @@ export function SportGroupBody({
   const [loading, setLoading] = useState(true);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAddTourney, setShowAddTourney] = useState(false);
+  const [editTourney, setEditTourney] = useState<Tournament | null>(null);
   const [showEdit, setShowEdit] = useState(false);
   const [managing, setManaging] = useState(false);
 
@@ -270,9 +271,14 @@ export function SportGroupBody({
                   {t.notes ? <Text className="mt-0.5 text-[12px] text-faint">{t.notes}</Text> : null}
                 </View>
                 {canManage ? (
-                  <Pressable onPress={() => confirm({ title: 'Delete tournament', message: `Delete "${t.title}"?`, confirmLabel: 'Delete', destructive: true }).then((ok) => { if (ok) deleteTournament(t.id).then(reload).catch(() => toast.show('Could not delete')); })} hitSlop={6}>
-                    <Ionicons name="trash-outline" size={15} color={c.faint} />
-                  </Pressable>
+                  <View className="flex-row items-center gap-2.5">
+                    <Pressable onPress={() => setEditTourney(t)} hitSlop={6}>
+                      <Ionicons name="create-outline" size={15} color={c.faint} />
+                    </Pressable>
+                    <Pressable onPress={() => confirm({ title: 'Delete tournament', message: `Delete "${t.title}"?`, confirmLabel: 'Delete', destructive: true }).then((ok) => { if (ok) deleteTournament(t.id).then(reload).catch(() => toast.show('Could not delete')); })} hitSlop={6}>
+                      <Ionicons name="trash-outline" size={15} color={c.faint} />
+                    </Pressable>
+                  </View>
                 ) : null}
               </View>
             ))}
@@ -314,6 +320,13 @@ export function SportGroupBody({
         onClose={() => setShowAddTourney(false)}
         c={c}
         onAdd={async (form) => { try { await addTournament({ groupId: group.id, ...form }); setShowAddTourney(false); await reload(); } catch { toast.show('Could not add'); } }}
+      />
+      <AddTournamentSheet
+        visible={!!editTourney}
+        initial={editTourney}
+        onClose={() => setEditTourney(null)}
+        c={c}
+        onAdd={async (form) => { if (!editTourney) return; try { await updateTournament(editTourney.id, form); setEditTourney(null); await reload(); } catch { toast.show('Could not save'); } }}
       />
     </>
   );
@@ -488,21 +501,27 @@ function MiniChip({ label, on, onPress, c }: { label: string; on: boolean; onPre
 }
 
 function AddTournamentSheet({
-  visible, onClose, onAdd, c,
+  visible, onClose, onAdd, initial, c,
 }: {
   visible: boolean; onClose: () => void;
   onAdd: (form: { title: string; eventDate: string | null; location: string | null; notes: string | null }) => void;
+  initial?: Tournament | null;
   c: ReturnType<typeof useThemeColors>;
 }) {
+  const isEdit = !!initial;
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
+  useEffect(() => {
+    if (!visible) return;
+    setTitle(initial?.title ?? ''); setDate(initial?.event_date ?? ''); setLocation(initial?.location ?? ''); setNotes(initial?.notes ?? '');
+  }, [visible, initial?.id]);
   const input = 'rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink';
   const submit = () => { if (title.trim()) onAdd({ title, eventDate: date.trim() || null, location: location.trim() || null, notes: notes.trim() || null }); };
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="Add tournament" footer={<Button label="Add tournament" fullWidth disabled={!title.trim()} onPress={submit} />}>
+    <Sheet visible={visible} onClose={onClose} title={isEdit ? 'Edit tournament' : 'Add tournament'} footer={<Button label={isEdit ? 'Save changes' : 'Add tournament'} fullWidth disabled={!title.trim()} onPress={submit} />}>
       <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Title</Text>
       <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Society Summer Cup" placeholderTextColor={c.faint} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />
       <View className="mb-3 flex-row gap-2">

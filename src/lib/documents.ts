@@ -82,6 +82,14 @@ export async function setDocPublic(id: string, isPublic: boolean): Promise<void>
   if (error) throw error;
 }
 
+export async function updateDocument(id: string, patch: { name?: string; description?: string | null }): Promise<void> {
+  const row: Record<string, unknown> = {};
+  if (patch.name !== undefined) row.name = patch.name.trim();
+  if (patch.description !== undefined) row.description = patch.description?.trim() || null;
+  const { error } = await supabase.from('documents').update(row).eq('id', id);
+  if (error) throw error;
+}
+
 /** A short-lived signed URL. Pass `downloadAs` to force a download with that filename. */
 export async function getDocumentUrl(storagePath: string, downloadAs?: string): Promise<string> {
   const { data, error } = await supabase.storage
