@@ -42,6 +42,7 @@ const COMMUNITY_ITEMS: NavItem[] = [
   { href: '/recommend', label: 'Ask & Recommend', icon: 'sparkles-outline', activeIcon: 'sparkles', color: '#CA8A04' },
   { href: '/borrow', label: 'Borrow & Lend', icon: 'swap-horizontal-outline', activeIcon: 'swap-horizontal', color: '#0891B2' },
   { href: '/helpers', label: 'Blood & SOS', icon: 'heart-outline', activeIcon: 'heart', color: '#DC2626' },
+  { href: '/places', label: 'Nearby', icon: 'location-outline', activeIcon: 'location', color: '#0D9488' },
   { href: '/polls', label: 'Polls', icon: 'stats-chart-outline', activeIcon: 'stats-chart' },
   { href: '/emergency', label: 'Emergency', icon: 'call-outline', activeIcon: 'call', color: '#EF4444' },
 ];
