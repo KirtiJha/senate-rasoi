@@ -17,6 +17,8 @@ import { PostRow, fetchLatestAnnouncement } from '../../lib/posts';
 import { DishRow, ListingRow, SLOT_EMOJI } from '../../lib/types';
 import { fetchDishes } from '../../lib/dishes';
 import { fetchAllListings, fetchCategoryCounts } from '../../lib/listings';
+import { fetchHomeTileCounts } from '../../lib/homeCounts';
+import { PropertyRow, fetchProperties, propertySubtitle } from '../../lib/properties';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { SERVICES, ServiceCategory, getService } from '../../lib/services';
 import { fetchBorrowCounts, fetchItems as fetchBorrowItems, LendItem, BORROW_CATEGORIES } from '../../lib/borrow';
@@ -140,7 +142,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { profile, communityId } = useAuth();
+  const { profile, communityId, userId } = useAuth();
   const c = useThemeColors();
   const unread = useUnreadDms();
   const [updateBanner, setUpdateBanner] = useState<AppVersion | null>(null);
@@ -148,7 +150,9 @@ export default function HomeScreen() {
   const [announcement, setAnnouncement] = useState<PostRow | null>(null);
   const [digest, setDigest] = useState<SocietyDigest | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [tileCounts, setTileCounts] = useState<Record<string, number>>({});
   const [recent, setRecent] = useState<ListingRow[]>([]);
+  const [recentProps, setRecentProps] = useState<PropertyRow[]>([]);
   const [dishes, setDishes] = useState<DishRow[]>([]);
   const [recentBorrow, setRecentBorrow] = useState<LendItem[]>([]);
   const [borrowCount, setBorrowCount] = useState(0);
@@ -157,13 +161,15 @@ export default function HomeScreen() {
   useFocusEffect(useCallback(() => {
     if (!communityId || !isSupabaseConfigured) return;
     fetchCategoryCounts(communityId).then(setCounts).catch(() => {});
+    fetchHomeTileCounts(communityId, userId).then(setTileCounts).catch(() => {});
     fetchAllListings(communityId, 0, 12, 'created_at').then(setRecent).catch(() => {});
+    fetchProperties({ availableOnly: true }, communityId).then((r) => setRecentProps(r.slice(0, 12))).catch(() => {});
     fetchDishes(communityId).then(setDishes).catch(() => {});
     fetchBorrowItems({ availableOnly: false }, communityId).then((rows) =>
       setRecentBorrow(rows.slice(0, 10))
     ).catch(() => {});
     fetchBorrowCounts(communityId).then((c) => setBorrowCount(c.offers + c.requests)).catch(() => {});
-  }, [communityId]));
+  }, [communityId, userId]));
 
   useEffect(() => {
     if (communityId && isSupabaseConfigured) {
@@ -350,7 +356,7 @@ export default function HomeScreen() {
         <FreshFoodStrip items={dishes} isDesktop={isDesktop} />
 
         {/* Just listed — newest listings + borrow items */}
-        <JustListedStrip listings={recent} borrows={recentBorrow} isDesktop={isDesktop} />
+        <JustListedStrip listings={recent} borrows={recentBorrow} properties={recentProps} isDesktop={isDesktop} />
 
         {/* Service grid */}
         <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
@@ -364,7 +370,10 @@ export default function HomeScreen() {
           <Text className="mb-3 px-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Community</Text>
           <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
             {COMMUNITY_TILES.map((tile) => {
-              const badge = tile.key === 'messages' ? (unread > 0 ? unread : 0) : tile.key === 'borrow' ? borrowCount : 0;
+              const badge =
+                tile.key === 'messages' ? (unread > 0 ? unread : 0)
+                : tile.key === 'borrow' ? borrowCount
+                : (tileCounts[tile.key] ?? 0);
               return (
                 <View key={tile.key} style={{ width: '50%', padding: 6 }}>
                   <Pressable
@@ -440,17 +449,20 @@ function ServiceTile({ cat, count = 0, onPress }: { cat: ServiceCategory; count?
 
 type StripItem =
   | { kind: 'listing'; id: string; ts: string; raw: ListingRow }
-  | { kind: 'borrow'; id: string; ts: string; raw: LendItem };
+  | { kind: 'borrow'; id: string; ts: string; raw: LendItem }
+  | { kind: 'property'; id: string; ts: string; raw: PropertyRow };
 
 /** Horizontal carousel (mobile) / wrapped row (desktop) of the newest listings + borrow items. */
-function JustListedStrip({ listings, borrows, isDesktop }: { listings: ListingRow[]; borrows: LendItem[]; isDesktop: boolean }) {
+function JustListedStrip({ listings, borrows, properties, isDesktop }: { listings: ListingRow[]; borrows: LendItem[]; properties: PropertyRow[]; isDesktop: boolean }) {
   const router = useRouter();
   const c = useThemeColors();
   const BORROW_COLOR = '#0891B2';
+  const PROP_COLOR = '#7C3AED';
 
   const items: StripItem[] = [
     ...listings.map((l): StripItem => ({ kind: 'listing', id: l.id, ts: l.created_at, raw: l })),
     ...borrows.map((b): StripItem => ({ kind: 'borrow', id: b.id, ts: b.created_at, raw: b })),
+    ...properties.map((p): StripItem => ({ kind: 'property', id: p.id, ts: p.created_at, raw: p })),
   ].sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 12);
 
   if (!items.length) return null;
@@ -509,6 +521,36 @@ function JustListedStrip({ listings, borrows, isDesktop }: { listings: ListingRo
     );
   };
 
+  const PropertyCard = ({ p }: { p: PropertyRow }) => {
+    const photo = p.photos?.[0];
+    const tag = p.listing_type === 'rent' ? '🔑 For rent' : '🏠 For sale';
+    return (
+      <Pressable
+        onPress={() => router.push(`/property/${p.id}` as any)}
+        className="overflow-hidden rounded-2xl bg-surface active:opacity-90"
+        style={{ width: 152, borderWidth: 1, borderColor: c.line }}
+      >
+        <View style={{ height: 96 }} className="w-full">
+          {photo
+            ? <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+            : <View style={{ flex: 1, backgroundColor: PROP_COLOR + '20', alignItems: 'center', justifyContent: 'center' }}><Ionicons name="key" size={28} color={PROP_COLOR} /></View>}
+        </View>
+        <View className="p-2.5">
+          <View className="mb-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: PROP_COLOR + '20' }}>
+            <Text className="text-[10px] font-sans-sb" style={{ color: PROP_COLOR }} numberOfLines={1}>{tag}{p.config ? ` · ${p.config}` : ''}</Text>
+          </View>
+          <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{p.title}</Text>
+          <Text className="text-[11px] text-faint" numberOfLines={1}>{propertySubtitle(p)}</Text>
+        </View>
+      </Pressable>
+    );
+  };
+
+  const renderCard = (i: StripItem) =>
+    i.kind === 'listing' ? <ListingCard key={i.id} l={i.raw} />
+    : i.kind === 'borrow' ? <BorrowCard key={i.id} b={i.raw} />
+    : <PropertyCard key={i.id} p={i.raw} />;
+
   return (
     <View className="mb-6">
       <View className="mb-3 flex-row items-center justify-between px-1.5">
@@ -519,11 +561,11 @@ function JustListedStrip({ listings, borrows, isDesktop }: { listings: ListingRo
       </View>
       {isDesktop ? (
         <View className="flex-row flex-wrap gap-3">
-          {items.slice(0, 6).map((i) => i.kind === 'listing' ? <ListingCard key={i.id} l={i.raw} /> : <BorrowCard key={i.id} b={i.raw} />)}
+          {items.slice(0, 6).map(renderCard)}
         </View>
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 8 }}>
-          {items.map((i) => i.kind === 'listing' ? <ListingCard key={i.id} l={i.raw} /> : <BorrowCard key={i.id} b={i.raw} />)}
+          {items.map(renderCard)}
         </ScrollView>
       )}
     </View>
