@@ -267,6 +267,11 @@ export async function createComment(postId: string, authorId: string, body: stri
   return data as CommentRow;
 }
 
+export async function updateComment(id: string, body: string): Promise<void> {
+  const { error } = await supabase.from('post_comments').update({ body: body.trim() }).eq('id', id);
+  if (error) throw error;
+}
+
 export async function deleteComment(id: string): Promise<void> {
   const { error } = await supabase.from('post_comments').delete().eq('id', id);
   if (error) throw error;

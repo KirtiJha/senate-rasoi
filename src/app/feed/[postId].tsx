@@ -18,7 +18,7 @@ import { useConfirm } from '../../context/confirm';
 import {
   ALL_POST_CATEGORIES, CommentRow, POST_CATEGORY_COLORS, POST_CATEGORY_ICONS, POST_CATEGORY_LABELS,
   PostCategory, PostRow, createComment, deleteComment, deletePost,
-  fetchComments, fetchPostById, setPinned, setResolved, subscribeToComments, updatePost, uploadPostPhoto,
+  fetchComments, fetchPostById, setPinned, setResolved, subscribeToComments, updateComment, updatePost, uploadPostPhoto,
 } from '../../lib/posts';
 import { useThemeColors } from '../../theme';
 
@@ -197,7 +197,7 @@ export default function PostThreadScreen() {
             </Text>
             <View className="gap-3">
               {comments.map((comment) => (
-                <CommentBubble key={comment.id} comment={comment} userId={userId} isAdmin={!!isAdmin} onDelete={() => handleDeleteComment(comment.id)} c={c} />
+                <CommentBubble key={comment.id} comment={comment} userId={userId} isAdmin={!!isAdmin} onDelete={() => handleDeleteComment(comment.id)} onChanged={loadPost} c={c} />
               ))}
             </View>
           </View>
@@ -242,10 +242,22 @@ export default function PostThreadScreen() {
   );
 }
 
-function CommentBubble({ comment, userId, isAdmin, onDelete, c }: {
-  comment: CommentRow; userId: string | null; isAdmin: boolean; onDelete: () => void; c: ReturnType<typeof useThemeColors>;
+function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, c }: {
+  comment: CommentRow; userId: string | null; isAdmin: boolean; onDelete: () => void; onChanged: () => void; c: ReturnType<typeof useThemeColors>;
 }) {
+  const toast = useToast();
   const isOwn = comment.author_id === userId;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(comment.body);
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    if (!draft.trim()) return toast.show('Comment can’t be empty');
+    setSaving(true);
+    try { await updateComment(comment.id, draft); setEditing(false); onChanged(); }
+    catch { toast.show('Could not save'); } finally { setSaving(false); }
+  };
+
   return (
     <View className="flex-row gap-2.5">
       <Avatar name={comment.author?.name ?? '?'} size={28} />
@@ -255,12 +267,35 @@ function CommentBubble({ comment, userId, isAdmin, onDelete, c }: {
           {comment.author?.flat ? <Text className="text-[11px] text-faint">Flat {comment.author.flat}</Text> : null}
           <Text className="ml-auto text-[11px] text-faint">{formatTimeAgo(comment.created_at)}</Text>
         </View>
-        <T source="comment" id={comment.id} field="body" text={comment.body} className="text-[13px] leading-5 text-ink" />
+        {editing ? (
+          <View>
+            <TextInput
+              value={draft} onChangeText={setDraft} multiline autoFocus
+              className="rounded-xl border border-line bg-inset px-3 py-2 text-[13px] text-ink"
+              style={{ outline: 'none' } as any}
+            />
+            <View className="mt-1.5 flex-row gap-2">
+              <Pressable onPress={save} disabled={saving} className="rounded-full bg-accent px-3 py-1"><Text className="text-[12px] font-sans-sb" style={{ color: c.onAccent }}>{saving ? 'Saving…' : 'Save'}</Text></Pressable>
+              <Pressable onPress={() => { setDraft(comment.body); setEditing(false); }} className="rounded-full px-3 py-1" style={{ backgroundColor: c.inset }}><Text className="text-[12px] font-sans-sb text-muted">Cancel</Text></Pressable>
+            </View>
+          </View>
+        ) : (
+          <T source="comment" id={comment.id} field="body" text={comment.body} className="text-[13px] leading-5 text-ink" />
+        )}
       </View>
-      {(isOwn || isAdmin) ? (
-        <Pressable onPress={onDelete} hitSlop={8} className="mt-0.5">
-          <Ionicons name="trash-outline" size={14} color={c.faint} />
-        </Pressable>
+      {!editing ? (
+        <View className="mt-0.5 flex-row gap-2.5">
+          {isOwn ? (
+            <Pressable onPress={() => { setDraft(comment.body); setEditing(true); }} hitSlop={8}>
+              <Ionicons name="create-outline" size={14} color={c.faint} />
+            </Pressable>
+          ) : null}
+          {(isOwn || isAdmin) ? (
+            <Pressable onPress={onDelete} hitSlop={8}>
+              <Ionicons name="trash-outline" size={14} color={c.faint} />
+            </Pressable>
+          ) : null}
+        </View>
       ) : null}
     </View>
   );
