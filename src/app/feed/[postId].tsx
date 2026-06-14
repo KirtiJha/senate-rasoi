@@ -12,6 +12,7 @@ import { T } from '../../components/T';
 import { Avatar, Container } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useDraft } from '../../lib/draft';
+import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
 import {
@@ -172,7 +173,9 @@ export default function PostThreadScreen() {
             {post.photos?.length ? (
               <View className="mt-3 gap-2">
                 {post.photos.map((url, i) => (
-                  <Image key={i} source={{ uri: url }} style={{ width: '100%', height: 240, borderRadius: 16 }} contentFit="cover" />
+                  <View key={i} className="w-full overflow-hidden rounded-2xl bg-inset" style={{ height: 260 }}>
+                    <Image source={{ uri: url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+                  </View>
                 ))}
               </View>
             ) : null}

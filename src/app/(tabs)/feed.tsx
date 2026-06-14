@@ -18,6 +18,7 @@ import {
   POST_CATEGORY_LABELS, PostCategory, PostRow,
   createPost, fetchPosts, subscribeToFeed,
 } from '../../lib/posts';
+import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { layout, useThemeColors } from '../../theme';
 
@@ -264,19 +265,16 @@ const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userI
         ) : null}
         <T source="post" id={post.id} field="body" text={post.body} showToggle={false} className="text-[13px] leading-5 text-muted" numberOfLines={post.title ? 2 : 3} />
 
-        {/* Photos */}
+        {/* Photo (first one, full-width; badge shows the total count) */}
         {post.photos?.length ? (
-          <View className="mt-2.5 flex-row gap-1.5">
-            {post.photos.slice(0, 3).map((url, i) => (
-              <View key={i} className="overflow-hidden rounded-xl" style={{ flex: 1, height: 96 }}>
-                <Image source={{ uri: url }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-                {i === 2 && post.photos.length > 3 ? (
-                  <View className="absolute inset-0 items-center justify-center bg-black/45">
-                    <Text className="font-sans-bold text-[14px] text-white">+{post.photos.length - 3}</Text>
-                  </View>
-                ) : null}
+          <View className="mt-2.5 w-full overflow-hidden rounded-xl bg-inset" style={{ height: 180 }}>
+            <Image source={{ uri: post.photos[0] }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+            {post.photos.length > 1 ? (
+              <View className="absolute bottom-2 right-2 flex-row items-center gap-1 rounded-full bg-black/55 px-2 py-0.5">
+                <Ionicons name="images-outline" size={12} color="#fff" />
+                <Text className="text-[11px] font-sans-sb text-white">{post.photos.length}</Text>
               </View>
-            ))}
+            ) : null}
           </View>
         ) : null}
 
