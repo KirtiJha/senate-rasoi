@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -17,10 +18,11 @@ interface TiffinCardProps {
   plan: TiffinPlanWithChef;
   subscribed: boolean;
   onPress: (plan: TiffinPlanWithChef) => void;
+  onEdit?: () => void; // shown as a pencil for the owner / an admin
   width?: number;
 }
 
-function TiffinCardBase({ plan, subscribed, onPress, width }: TiffinCardProps) {
+function TiffinCardBase({ plan, subscribed, onPress, onEdit, width }: TiffinCardProps) {
   return (
     <Pressable
       onPress={() => onPress(plan)}
@@ -35,6 +37,11 @@ function TiffinCardBase({ plan, subscribed, onPress, width }: TiffinCardProps) {
             <Text style={{ fontSize: 34 }}>🍱</Text>
           </View>
         )}
+        {onEdit ? (
+          <Pressable onPress={onEdit} hitSlop={8} className="absolute right-2.5 top-2.5 h-8 w-8 items-center justify-center rounded-full bg-black/55">
+            <Ionicons name="create-outline" size={16} color="#fff" />
+          </Pressable>
+        ) : null}
         <View className="absolute left-2.5 top-2.5 flex-row items-center gap-1.5">
           <View className="rounded-md bg-white/95 p-0.5">
             <VegMark type={plan.veg_type} size={13} />

@@ -41,7 +41,7 @@ export default function PropertyDetailScreen() {
   const confirm = useConfirm();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { userId, profile } = useAuth();
+  const { userId, profile, isAdmin } = useAuth();
   const { width } = useWindowDimensions();
 
   const [p, setP] = useState<PropertyRow | null>(null);
@@ -201,8 +201,8 @@ export default function PropertyDetailScreen() {
             </View>
           </View>
 
-          {/* Owner controls */}
-          {isOwner ? (
+          {/* Owner / admin controls */}
+          {(isOwner || isAdmin) ? (
             <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
               <Text className="mb-2 text-[12px] font-sans-sb uppercase tracking-wider text-muted">Manage listing</Text>
               <View className="flex-row gap-2">

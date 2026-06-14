@@ -238,7 +238,7 @@ export default function RecoDetailScreen() {
                     <Text className="text-[11px] text-faint">{a.author?.name ?? 'A neighbour'}{a.author?.flat ? ` · ${a.author.flat}` : ''}</Text>
                     {(a.author_id === userId || isAdmin) && editAnsId !== a.id ? (
                       <View className="ml-auto flex-row items-center gap-2.5">
-                        {a.author_id === userId ? (
+                        {(a.author_id === userId || isAdmin) ? (
                           <Pressable onPress={() => startEditAns(a)} hitSlop={8}><Ionicons name="create-outline" size={13} color={c.faint} /></Pressable>
                         ) : null}
                         <Pressable onPress={() => removeAnswer(a)} hitSlop={8}><Ionicons name="trash-outline" size={13} color={c.faint} /></Pressable>

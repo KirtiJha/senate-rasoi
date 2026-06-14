@@ -28,7 +28,7 @@ export default function ListingDetailScreen() {
   const confirm = useConfirm();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { userId, profile } = useAuth();
+  const { userId, profile, isAdmin } = useAuth();
   const c = useThemeColors();
 
   const [listing, setListing] = useState<ListingRow | null>(null);
@@ -287,8 +287,8 @@ export default function ListingDetailScreen() {
               </View>
             )}
 
-            {/* Owner actions */}
-            {isOwner && (
+            {/* Owner / admin actions */}
+            {(isOwner || isAdmin) && (
               <View className="mb-4 flex-row flex-wrap gap-2">
                 <Button
                   label="Edit"

@@ -285,7 +285,7 @@ function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, c }: {
       </View>
       {!editing ? (
         <View className="mt-0.5 flex-row gap-2.5">
-          {isOwn ? (
+          {isOwn || isAdmin ? (
             <Pressable onPress={() => { setDraft(comment.body); setEditing(true); }} hitSlop={8}>
               <Ionicons name="create-outline" size={14} color={c.faint} />
             </Pressable>

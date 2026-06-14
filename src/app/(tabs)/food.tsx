@@ -21,6 +21,7 @@ import { OrdersSection } from '../../components/OrdersSection';
 import { SetupBanner } from '../../components/SetupBanner';
 import { SubscribeModal } from '../../components/SubscribeModal';
 import { TiffinCard } from '../../components/TiffinCard';
+import { TiffinEditSheet } from '../../components/TiffinEditSheet';
 import PostScreen from './post';
 import { Container, DishCardSkeleton, LiveDot, ScreenHeader, useResponsive } from '../../components/ui';
 import { useThemeColors } from '../../theme';
@@ -57,7 +58,7 @@ export default function FoodScreen() {
   const confirm = useConfirm();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { userId, communityId } = useAuth();
+  const { userId, communityId, isAdmin } = useAuth();
   const { columns, isDesktop } = useResponsive();
   const c = useThemeColors();
   const [tab, setTab] = useState<FoodTab>('discover');
@@ -72,6 +73,7 @@ export default function FoodScreen() {
   const [plans, setPlans] = useState<TiffinPlanWithChef[]>([]);
   const [subIds, setSubIds] = useState<Set<string>>(new Set());
   const [subPlan, setSubPlan] = useState<TiffinPlanWithChef | null>(null);
+  const [editTiffin, setEditTiffin] = useState<TiffinPlanWithChef | null>(null);
 
   const load = useCallback(async () => {
     if (!isSupabaseConfigured) {
@@ -327,7 +329,7 @@ export default function FoodScreen() {
               <Text className="mb-2 font-display text-[16px] text-ink">🍱 Daily tiffin services</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 8 }} className="-mx-1 px-1">
                 {plans.map((p) => (
-                  <TiffinCard key={p.id} plan={p} subscribed={subIds.has(p.id)} onPress={setSubPlan} width={250} />
+                  <TiffinCard key={p.id} plan={p} subscribed={subIds.has(p.id)} onPress={setSubPlan} onEdit={isAdmin || (!!userId && p.chef_user_id === userId) ? () => setEditTiffin(p) : undefined} width={250} />
                 ))}
               </ScrollView>
             </View>
@@ -381,6 +383,9 @@ export default function FoodScreen() {
 
       <OrderModal dish={orderDish} onClose={() => setOrderDish(null)} onConfirm={handleConfirmOrder} />
       <SubscribeModal plan={subPlan} onClose={() => setSubPlan(null)} onConfirm={handleSubscribe} />
+      {editTiffin ? (
+        <TiffinEditSheet plan={editTiffin} visible={!!editTiffin} onClose={() => setEditTiffin(null)} onSaved={() => { setEditTiffin(null); load(); }} />
+      ) : null}
     </View>
   );
 }
