@@ -298,7 +298,7 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
     setPosting(true);
     try {
       await createPost({ communityId, authorId, category, title: title.trim() || undefined, body });
-      setTitle(''); setBody(''); setCategory('general');
+      setTitle(''); setBody(''); setCategory('general'); setBodyHeight(160);
       onPosted();
     } catch { toast.show('Could not post — try again'); }
     finally { setPosting(false); }
@@ -367,9 +367,16 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
             placeholderTextColor={c.faint}
             multiline
             scrollEnabled={false}
-            onContentSizeChange={(e) => setBodyHeight(Math.max(160, e.nativeEvent.contentSize.height + 8))}
+            onContentSizeChange={(e) => {
+              // Grow-only + no padding: with scrollEnabled=false the reported
+              // size tracks the element height, so adding padding here would make
+              // it inflate forever (React #185 update loop). Only grow toward the
+              // measured content height and stop once they match.
+              const next = Math.max(160, Math.ceil(e.nativeEvent.contentSize.height));
+              setBodyHeight((prev) => (next > prev ? next : prev));
+            }}
             className="text-[15px] leading-6 text-ink"
-            style={{ height: bodyHeight, outline: 'none', textAlignVertical: 'top' } as any}
+            style={{ minHeight: bodyHeight, outline: 'none', textAlignVertical: 'top' } as any}
             autoFocus
           />
         </ScrollView>
