@@ -3,27 +3,30 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const COMMUNITY_ID = 'd836e935-4622-4289-8136-11ca73b54a39';
-const CENTER = { lat: 12.8739, lon: 77.6258 };
+const CENTER = { lat: 12.8687464, lon: 77.6345485 }; // DS-MAX Senate, Begur
 
-// OSM amenity/shop/leisure tag → our place_type key.
+// OSM amenity/shop/leisure/healthcare tag → our place_type key.
 const MAP = {
   hospital: 'hospital',
-  clinic: 'clinic', doctors: 'clinic',
+  clinic: 'clinic', doctors: 'clinic', dentist: 'clinic', laboratory: 'clinic', doctor: 'clinic', centre: 'clinic',
   pharmacy: 'pharmacy', chemist: 'pharmacy',
-  school: 'school', kindergarten: 'daycare',
-  supermarket: 'grocery', convenience: 'grocery',
+  school: 'school', college: 'school', university: 'school',
+  kindergarten: 'daycare', childcare: 'daycare',
+  supermarket: 'grocery', convenience: 'grocery', marketplace: 'grocery', greengrocer: 'grocery', butcher: 'grocery', department_store: 'grocery',
   hairdresser: 'salon', beauty: 'salon',
-  restaurant: 'restaurant', cafe: 'restaurant',
-  fitness_centre: 'gym',
+  restaurant: 'restaurant', cafe: 'restaurant', fast_food: 'restaurant', bakery: 'restaurant', confectionery: 'restaurant',
+  fitness_centre: 'gym', sports_centre: 'gym',
   bank: 'bank', atm: 'bank',
   fuel: 'petrol', veterinary: 'vet', place_of_worship: 'worship',
+  optician: 'other', hardware: 'other', mobile_phone: 'other', electronics: 'other',
+  clothes: 'other', laundry: 'other', library: 'other', post_office: 'other',
 };
 
-// Max rows kept per our type (health kept generously; noisy types capped).
+// Max rows kept per our type (health kept generously; noisier types capped).
 const CAP = {
-  hospital: 10, clinic: 10, pharmacy: 10, school: 14, daycare: 6,
-  grocery: 12, salon: 8, restaurant: 14, gym: 6, bank: 12,
-  petrol: 6, vet: 6, worship: 8,
+  hospital: 16, clinic: 22, pharmacy: 16, school: 22, daycare: 10,
+  grocery: 24, salon: 16, restaurant: 26, gym: 8, bank: 18,
+  petrol: 8, vet: 6, worship: 14, other: 24,
 };
 
 const haversine = (a, b) => {
@@ -39,7 +42,7 @@ const rows = [];
 const seen = new Set();
 for (const e of raw) {
   const t = e.tags || {};
-  const osmKey = t.amenity || t.shop || t.leisure;
+  const osmKey = t.amenity || t.shop || t.leisure || t.healthcare;
   const place_type = MAP[osmKey];
   if (!place_type || !t.name) continue;
   const name = t.name.trim();
@@ -72,7 +75,7 @@ for (const [type, list] of Object.entries(byType)) {
   kept.push(...list.slice(0, CAP[type] ?? 8));
 }
 // Stable display order: by type (as in PLACE_TYPES), then name.
-const TYPE_ORDER = ['hospital', 'clinic', 'pharmacy', 'school', 'daycare', 'grocery', 'salon', 'restaurant', 'gym', 'bank', 'petrol', 'vet', 'worship'];
+const TYPE_ORDER = ['hospital', 'clinic', 'pharmacy', 'school', 'daycare', 'grocery', 'salon', 'restaurant', 'gym', 'bank', 'petrol', 'vet', 'worship', 'other'];
 kept.sort((a, b) => TYPE_ORDER.indexOf(a.place_type) - TYPE_ORDER.indexOf(b.place_type) || a.name.localeCompare(b.name));
 
 const q = (v) => (v == null ? 'null' : `'${String(v).replace(/'/g, "''")}'`);
