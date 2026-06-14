@@ -7,7 +7,7 @@ import { Avatar, Container, ScreenHeader, Sheet, useResponsive } from '../compon
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
-import { PollRow, closePoll, createPoll, deletePoll, fetchPolls, subscribeToPolls, votePoll } from '../lib/polls';
+import { PollRow, closePoll, createPoll, deletePoll, fetchPolls, subscribeToPolls, updatePoll, votePoll } from '../lib/polls';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { useThemeColors } from '../theme';
 
@@ -115,6 +115,7 @@ export default function PollsScreen() {
                   onVote={(optionId: string) => handleVote(poll, optionId)}
                   onDelete={() => handleDelete(poll)}
                   onClose={() => handleClose(poll)}
+                  onChanged={load}
                   c={c}
                 />
               ))}
@@ -136,7 +137,7 @@ export default function PollsScreen() {
 }
 
 function PollCard({
-  poll, userId, isAdmin, onVote, onDelete, onClose, c,
+  poll, userId, isAdmin, onVote, onDelete, onClose, onChanged, c,
 }: {
   poll: PollRow;
   userId: string | null;
@@ -144,11 +145,23 @@ function PollCard({
   onVote: (optionId: string) => void;
   onDelete: () => void;
   onClose: () => void;
+  onChanged: () => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
+  const toast = useToast();
   const hasVoted = !!poll.my_vote;
   const showResults = hasVoted || poll.is_closed;
   const isAuthor = poll.author_id === userId;
+  const [showEdit, setShowEdit] = useState(false);
+  const [editQ, setEditQ] = useState(poll.question);
+  const [saving, setSaving] = useState(false);
+
+  const saveEdit = async () => {
+    if (!editQ.trim()) return toast.show('Question can’t be empty');
+    setSaving(true);
+    try { await updatePoll(poll.id, { question: editQ }); setShowEdit(false); onChanged(); toast.show('Poll updated ✓'); }
+    catch { toast.show('Could not save'); } finally { setSaving(false); }
+  };
 
   return (
     <View className="rounded-3xl border border-line bg-surface overflow-hidden">
@@ -168,7 +181,10 @@ function PollCard({
           ) : null}
           {(isAuthor || isAdmin) ? (
             <View className="flex-row gap-1">
-              {!poll.is_closed && (isAuthor || isAdmin) ? (
+              <Pressable onPress={() => { setEditQ(poll.question); setShowEdit(true); }} hitSlop={8} className="h-7 w-7 items-center justify-center rounded-full active:bg-inset">
+                <Ionicons name="create-outline" size={14} color={c.faint} />
+              </Pressable>
+              {!poll.is_closed ? (
                 <Pressable onPress={onClose} hitSlop={8} className="h-7 w-7 items-center justify-center rounded-full active:bg-inset">
                   <Ionicons name="lock-closed-outline" size={14} color={c.faint} />
                 </Pressable>
@@ -178,6 +194,15 @@ function PollCard({
               </Pressable>
             </View>
           ) : null}
+
+          <Sheet visible={showEdit} onClose={() => setShowEdit(false)} title="Edit poll question">
+            <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Question</Text>
+            <TextInput value={editQ} onChangeText={setEditQ} multiline className="mb-2 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ minHeight: 60, outline: 'none' } as any} />
+            <Text className="mb-4 text-[12px] text-faint">Options stay the same so existing votes are preserved.</Text>
+            <Pressable onPress={saveEdit} disabled={saving} className="items-center rounded-2xl bg-accent py-3 active:opacity-80" style={{ opacity: saving ? 0.6 : 1 }}>
+              <Text className="font-sans-sb text-[15px]" style={{ color: c.onAccent }}>{saving ? 'Saving…' : 'Save changes'}</Text>
+            </Pressable>
+          </Sheet>
         </View>
 
         <Text className="font-sans-sb text-[15px] text-ink mb-3">{poll.question}</Text>

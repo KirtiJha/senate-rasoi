@@ -1,20 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { daysLabel } from './TiffinCard';
 import { PayButton } from './PayButton';
-import { Avatar, Badge, Button, Container, VegMark } from './ui';
+import { Avatar, Badge, Button, Container, Sheet, VegMark } from './ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
 import { waLink } from '../lib/dishes';
 import {
   cancelSubscription, chefTiffinForDate, deleteTiffinPlan, listMySubscriptions,
-  listMyTiffinPlans, setPlanActive, setSubscriptionPaused, todayStr,
+  listMyTiffinPlans, setPlanActive, setSubscriptionPaused, todayStr, updateTiffinPlan,
 } from '../lib/tiffin';
-import { SLOT_EMOJI, SubscriptionWithPlan, TiffinDayRow, TiffinPlan } from '../lib/types';
+import { SLOT_EMOJI, SLOTS, Slot, SubscriptionWithPlan, TiffinDayRow, TiffinPlan, VEG_TYPES, VegType } from '../lib/types';
 import { useThemeColors } from '../theme';
 
 function openUrl(url: string) {
@@ -119,6 +119,7 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
                   if (!(await confirm({ title: 'Remove tiffin', message: `Remove "${p.title}"?`, confirmLabel: 'Remove', destructive: true }))) return;
                   await deleteTiffinPlan(p.id); toast.show('Tiffin removed'); await load();
                 }}
+                onChanged={load}
               />
             ))}
             <Pressable
@@ -193,17 +194,102 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
   );
 }
 
+const DAY_INITIALS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']; // 0 = Sunday … 6 = Saturday
+
+function TiffinEditSheet({ plan, visible, onClose, onSaved }: { plan: TiffinPlan; visible: boolean; onClose: () => void; onSaved: () => void }) {
+  const c = useThemeColors();
+  const toast = useToast();
+  const [title, setTitle] = useState(plan.title);
+  const [desc, setDesc] = useState(plan.description ?? '');
+  const [veg, setVeg] = useState<VegType>(plan.veg_type);
+  const [slot, setSlot] = useState<Slot>(plan.slot);
+  const [price, setPrice] = useState(String(plan.price));
+  const [maxPerDay, setMaxPerDay] = useState(String(plan.max_per_day));
+  const [days, setDays] = useState<number[]>(plan.days_of_week);
+  const [cutoff, setCutoff] = useState(plan.cutoff_time ?? '');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!visible) return;
+    setTitle(plan.title); setDesc(plan.description ?? ''); setVeg(plan.veg_type); setSlot(plan.slot);
+    setPrice(String(plan.price)); setMaxPerDay(String(plan.max_per_day)); setDays(plan.days_of_week); setCutoff(plan.cutoff_time ?? '');
+  }, [visible, plan.id]);
+
+  const toggleDay = (d: number) => setDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort()));
+
+  const save = async () => {
+    if (!title.trim()) return toast.show('Add a title');
+    if (!days.length) return toast.show('Pick at least one day');
+    const p = parseInt(price.replace(/\D/g, ''), 10);
+    const m = parseInt(maxPerDay.replace(/\D/g, ''), 10);
+    setSaving(true);
+    try {
+      await updateTiffinPlan(plan.id, {
+        title, description: desc || null, vegType: veg, slot,
+        price: Number.isFinite(p) ? p : plan.price,
+        maxPerDay: Number.isFinite(m) ? m : plan.max_per_day,
+        daysOfWeek: days, cutoffTime: cutoff.trim() || null,
+      });
+      toast.show('Tiffin updated ✓'); onSaved();
+    } catch { toast.show('Could not save'); } finally { setSaving(false); }
+  };
+
+  const input = 'rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink';
+  const label = 'mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted';
+
+  return (
+    <Sheet visible={visible} onClose={onClose} title="Edit tiffin">
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
+        <Text className={label}>Title</Text>
+        <TextInput value={title} onChangeText={setTitle} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />
+        <Text className={label}>Description</Text>
+        <TextInput value={desc} onChangeText={setDesc} multiline className={`mb-3 ${input}`} style={{ minHeight: 56, outline: 'none' } as any} />
+        <View className="mb-3 flex-row gap-3">
+          <View className="flex-1"><Text className={label}>Price ₹/day</Text><TextInput value={price} onChangeText={setPrice} keyboardType="number-pad" className={input} style={{ outline: 'none' } as any} /></View>
+          <View className="flex-1"><Text className={label}>Max / day</Text><TextInput value={maxPerDay} onChangeText={setMaxPerDay} keyboardType="number-pad" className={input} style={{ outline: 'none' } as any} /></View>
+        </View>
+        <Text className={label}>Meal</Text>
+        <View className="mb-3 flex-row flex-wrap gap-2">
+          {SLOTS.map((s) => { const on = slot === s; return (
+            <Pressable key={s} onPress={() => setSlot(s)} className="rounded-full border px-3 py-1.5" style={{ borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : c.surface }}>
+              <Text className="text-[12px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{SLOT_EMOJI[s]} {s}</Text>
+            </Pressable>); })}
+        </View>
+        <Text className={label}>Type</Text>
+        <View className="mb-3 flex-row flex-wrap gap-2">
+          {VEG_TYPES.map((v) => { const on = veg === v; return (
+            <Pressable key={v} onPress={() => setVeg(v)} className="rounded-full border px-3 py-1.5" style={{ borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : c.surface }}>
+              <Text className="text-[12px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{v}</Text>
+            </Pressable>); })}
+        </View>
+        <Text className={label}>Days served</Text>
+        <View className="mb-3 flex-row gap-1.5">
+          {DAY_INITIALS.map((d, i) => { const on = days.includes(i); return (
+            <Pressable key={i} onPress={() => toggleDay(i)} className="h-9 w-9 items-center justify-center rounded-full border" style={{ borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : c.surface }}>
+              <Text className="text-[12px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{d}</Text>
+            </Pressable>); })}
+        </View>
+        <Text className={label}>Order cutoff (optional, e.g. 21:00)</Text>
+        <TextInput value={cutoff} onChangeText={setCutoff} placeholder="HH:MM" placeholderTextColor={c.faint} className={`mb-4 ${input}`} style={{ outline: 'none' } as any} />
+        <Button label="Save changes" icon="checkmark" fullWidth loading={saving} onPress={save} />
+      </ScrollView>
+    </Sheet>
+  );
+}
+
 function TiffinPlanCard({
-  plan, rows, onToggle, onDelete,
+  plan, rows, onToggle, onDelete, onChanged,
 }: {
   plan: TiffinPlan;
   rows: TiffinDayRow[];
   onToggle: () => void;
   onDelete: () => void;
+  onChanged: () => void;
 }) {
   const c = useThemeColors();
   const plates = rows.reduce((s, r) => s + r.qty, 0);
   const servesToday = plan.days_of_week.includes(new Date().getDay());
+  const [showEdit, setShowEdit] = useState(false);
 
   return (
     <View className={`mb-4 rounded-3xl border border-line bg-surface p-4 ${plan.active ? '' : 'opacity-60'}`}>
@@ -214,10 +300,15 @@ function TiffinPlanCard({
         <Pressable onPress={onToggle} hitSlop={6} className="rounded-full bg-inset px-3 py-1.5">
           <Text className="font-sans-sb text-[12px] text-ink">{plan.active ? 'Pause' : 'Resume'}</Text>
         </Pressable>
+        <Pressable onPress={() => setShowEdit(true)} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full border border-line">
+          <Ionicons name="create-outline" size={15} color={c.muted} />
+        </Pressable>
         <Pressable onPress={onDelete} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full border border-line">
           <Ionicons name="trash-outline" size={15} color={c.nonveg} />
         </Pressable>
       </View>
+
+      <TiffinEditSheet plan={plan} visible={showEdit} onClose={() => setShowEdit(false)} onSaved={() => { setShowEdit(false); onChanged(); }} />
       <Text className="mt-0.5 text-[12px] text-faint">{daysLabel(plan.days_of_week)} · ₹{plan.price}/day · max {plan.max_per_day}</Text>
 
       <View className="mt-3 rounded-2xl bg-inset px-3 py-2.5">

@@ -113,6 +113,12 @@ export async function closePoll(pollId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Edit a poll's question (options are left intact to preserve existing votes). */
+export async function updatePoll(pollId: string, patch: { question: string }): Promise<void> {
+  const { error } = await supabase.from('polls').update({ question: patch.question.trim() }).eq('id', pollId);
+  if (error) throw error;
+}
+
 export function subscribeToPolls(communityId: string, onChange: () => void): () => void {
   if (!isSupabaseConfigured) return () => {};
   const ch = supabase

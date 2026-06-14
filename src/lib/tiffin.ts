@@ -67,6 +67,31 @@ export async function setPlanActive(planId: string, active: boolean): Promise<vo
   if (error) throw error;
 }
 
+export interface UpdateTiffinPlan {
+  title?: string;
+  description?: string | null;
+  vegType?: VegType;
+  slot?: Slot;
+  price?: number;
+  daysOfWeek?: number[];
+  maxPerDay?: number;
+  cutoffTime?: string | null;
+}
+
+export async function updateTiffinPlan(planId: string, patch: UpdateTiffinPlan): Promise<void> {
+  const row: Record<string, unknown> = {};
+  if (patch.title !== undefined) row.title = patch.title.trim();
+  if (patch.description !== undefined) row.description = patch.description?.trim() || null;
+  if (patch.vegType !== undefined) row.veg_type = patch.vegType;
+  if (patch.slot !== undefined) row.slot = patch.slot;
+  if (patch.price !== undefined) row.price = patch.price;
+  if (patch.daysOfWeek !== undefined) row.days_of_week = patch.daysOfWeek;
+  if (patch.maxPerDay !== undefined) row.max_per_day = patch.maxPerDay;
+  if (patch.cutoffTime !== undefined) row.cutoff_time = patch.cutoffTime;
+  const { error } = await supabase.from('tiffin_plans').update(row).eq('id', planId);
+  if (error) throw error;
+}
+
 export async function deleteTiffinPlan(planId: string): Promise<void> {
   const { error } = await supabase.from('tiffin_plans').delete().eq('id', planId);
   if (error) throw error;
