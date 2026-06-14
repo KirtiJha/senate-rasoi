@@ -38,7 +38,11 @@ realtime:
   ledger both sides confirm), **flats for sale/rent** (owners post their flat
   with photos & specs, price-on-request, a per-flat Q&A thread, and
   buyer/tenant **referrals**), **Ask & Recommend** (local recommendations Q&A
-  with upvotes), **Borrow & Lend** (a community share board), a **blood-donor &
+  with upvotes), **Borrow & Lend** (a community share board), a **Nearby
+  directory** (a shared, community-curated list of local places — hospitals,
+  clinics, schools, shops, salons and more — each with a map pin, one-tap
+  Google/Apple Maps directions and call/WhatsApp, grouped into collapsible
+  sections with search and an A–Z / Nearest / Newest sort), a **blood-donor &
   emergency-helper registry**, **direct messages** between neighbours, and
   **universal fuzzy search** across everything.
 - **AI (Google Gemini)** — **Ask Aangan**, a conversational assistant that
@@ -107,11 +111,11 @@ npx tsc --noEmit                  # type-check
 1. **Create a Supabase project** at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. **Run the migrations in order.** Open **SQL Editor** and run every file in
    [`supabase/migrations/`](./supabase/migrations) from `0001_init.sql` through
-   the latest (`0048_search_full_coverage.sql`). They create all tables (communities,
+   the latest (`0061_seed_places_dsmax.sql`). They create all tables (communities,
    profiles, dishes, orders, tiffin, listings, inquiries, posts, comments, polls,
    emergency contacts, saved listings, per-listing chat, direct messages,
    notifications, resident directory, sports groups, document vault, properties,
-   recommendations, borrow & lend, court bookings, payments), RLS policies, RPCs,
+   recommendations, borrow & lend, court bookings, payments, nearby places), RLS policies, RPCs,
    full-text indexes, realtime publications, the push pipeline, and the **AI layer**
    (`ai_usage` quota, **pgvector** `search_documents` + `match_documents`,
    `translations`, `society_digests`).
@@ -194,6 +198,7 @@ src/
     property/[id] · property/new  # Flat detail (gallery, Q&A, referrals) + post form
     recommend.tsx · recommend/[id]  # Ask & Recommend (local recos Q&A + upvotes)
     borrow.tsx · borrow/new · borrow/[id]  # Borrow & Lend (community share board)
+    places.tsx · place/new · place/[id]    # Nearby directory (map pins + directions)
     helpers.tsx              # Blood donor + emergency-helper registry
     messages/                # DM inbox + thread
     profile/me.tsx · [userId].tsx

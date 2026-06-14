@@ -426,6 +426,7 @@ const COMMUNITY = [
   { icon: 'people', color: '#8B5CF6', title: 'Resident directory', body: 'Owners & tenants by flat, one-tap call / WhatsApp / invite.' },
   { icon: 'football', color: '#16A34A', title: 'Sports groups', body: 'Teams per sport with practice schedules & tournaments.' },
   { icon: 'folder', color: '#0EA5E9', title: 'Documents', body: 'Share society files publicly or privately with revoke.' },
+  { icon: 'location', color: '#0D9488', title: 'Nearby places', body: 'A shared directory of local hospitals, clinics, schools & shops — with map pins & one-tap directions.' },
   { icon: 'call', color: '#EF4444', title: 'Emergency contacts', body: 'Security, plumber, doctor — one tap to dial.' },
   { icon: 'wallet', color: '#16A34A', title: 'Payments', body: 'Track UPI payments and receipts, both sides confirm.' },
 ];
