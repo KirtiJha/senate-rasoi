@@ -1,4 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -15,7 +17,7 @@ import { useConfirm } from '../../context/confirm';
 import {
   ALL_POST_CATEGORIES, CommentRow, POST_CATEGORY_COLORS, POST_CATEGORY_ICONS, POST_CATEGORY_LABELS,
   PostCategory, PostRow, createComment, deleteComment, deletePost,
-  fetchComments, fetchPostById, setPinned, setResolved, subscribeToComments, updatePost,
+  fetchComments, fetchPostById, setPinned, setResolved, subscribeToComments, updatePost, uploadPostPhoto,
 } from '../../lib/posts';
 import { useThemeColors } from '../../theme';
 
@@ -166,6 +168,15 @@ export default function PostThreadScreen() {
             ) : null}
             <T source="post" id={post.id} field="body" text={post.body} className="text-[15px] leading-6 text-ink" />
 
+            {/* Photos */}
+            {post.photos?.length ? (
+              <View className="mt-3 gap-2">
+                {post.photos.map((url, i) => (
+                  <Image key={i} source={{ uri: url }} style={{ width: '100%', height: 240, borderRadius: 16 }} contentFit="cover" />
+                ))}
+              </View>
+            ) : null}
+
             {/* Author */}
             <View className="mt-4 flex-row items-center gap-2.5">
               <Avatar name={post.author?.name ?? '?'} size={32} />
@@ -265,21 +276,39 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
   const [category, setCategory] = useState<PostCategory>(post.category);
   const [title, setTitle] = useState(post.title ?? '');
   const [body, setBody] = useState(post.body);
+  const [photos, setPhotos] = useState<{ uri: string; isNew: boolean }[]>([]);
   const [saving, setSaving] = useState(false);
+  const MAX_PHOTOS = 4;
 
   // Re-sync the fields whenever a different post opens.
   useEffect(() => {
-    if (visible) { setCategory(post.category); setTitle(post.title ?? ''); setBody(post.body); }
+    if (visible) {
+      setCategory(post.category); setTitle(post.title ?? ''); setBody(post.body);
+      setPhotos((post.photos ?? []).map((u) => ({ uri: u, isNew: false })));
+    }
   }, [visible, post.id]);
 
   // Announcements stay admin-only; everyone else keeps the post's other options.
   const cats = ALL_POST_CATEGORIES.filter((k) => k !== 'announcement' || isAdmin || post.category === 'announcement');
 
+  const pickPhotos = async () => {
+    if (photos.length >= MAX_PHOTOS) return toast.show(`Up to ${MAX_PHOTOS} photos`);
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: MAX_PHOTOS - photos.length, quality: 0.9 });
+    if (!res.canceled) setPhotos((prev) => [...prev, ...res.assets.map((a) => ({ uri: a.uri, isNew: true }))].slice(0, MAX_PHOTOS));
+  };
+
   const save = async () => {
     if (!body.trim()) return toast.show('Write something first');
     setSaving(true);
     try {
-      await updatePost(post.id, { category, title: title.trim() || null, body });
+      // Keep existing URLs; upload freshly-picked photos (unique key avoids path clashes).
+      const finalUrls: string[] = [];
+      let key = Date.now();
+      for (const p of photos) {
+        if (!p.isNew) { finalUrls.push(p.uri); continue; }
+        try { finalUrls.push(await uploadPostPhoto(p.uri, post.id, key++)); } catch { /* skip */ }
+      }
+      await updatePost(post.id, { category, title: title.trim() || null, body, photos: finalUrls });
       toast.show('Post updated ✓');
       onSaved();
     } catch { toast.show('Could not save — try again'); } finally { setSaving(false); }
@@ -311,7 +340,25 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
             </ScrollView>
 
             <TextInput value={title} onChangeText={setTitle} placeholder="Title (optional)" placeholderTextColor={c.faint} className="mb-2 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
-            <TextInput value={body} onChangeText={setBody} placeholder="What's on your mind?" placeholderTextColor={c.faint} multiline className="mb-4 rounded-2xl border border-line bg-inset px-3.5 py-3 text-[15px] text-ink" style={{ minHeight: 120, outline: 'none' } as any} />
+            <TextInput value={body} onChangeText={setBody} placeholder="What's on your mind?" placeholderTextColor={c.faint} multiline className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-3 text-[15px] text-ink" style={{ minHeight: 120, outline: 'none' } as any} />
+
+            {/* Photos */}
+            <View className="mb-4 flex-row flex-wrap gap-2">
+              {photos.map((p, i) => (
+                <View key={`${p.uri}-${i}`} className="overflow-hidden rounded-xl" style={{ width: 76, height: 76 }}>
+                  <Image source={{ uri: p.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+                  <Pressable onPress={() => setPhotos((prev) => prev.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 h-5 w-5 items-center justify-center rounded-full bg-black/60">
+                    <Ionicons name="close" size={12} color="#fff" />
+                  </Pressable>
+                </View>
+              ))}
+              {photos.length < MAX_PHOTOS ? (
+                <Pressable onPress={pickPhotos} className="items-center justify-center rounded-xl border border-dashed border-line bg-inset active:opacity-70" style={{ width: 76, height: 76 }}>
+                  <Ionicons name="image-outline" size={20} color={c.muted} />
+                  <Text className="mt-0.5 text-[10px] text-muted">Add</Text>
+                </Pressable>
+              ) : null}
+            </View>
 
             <Pressable onPress={save} disabled={saving} className="items-center rounded-2xl bg-accent py-3 active:opacity-80" style={{ opacity: saving ? 0.6 : 1 }}>
               <Text className="font-sans-sb text-[15px]" style={{ color: c.onAccent }}>{saving ? 'Saving…' : 'Save changes'}</Text>

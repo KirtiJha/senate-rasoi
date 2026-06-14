@@ -1,5 +1,7 @@
 import { FlashList } from '@shopify/flash-list';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -262,6 +264,22 @@ const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userI
         ) : null}
         <T source="post" id={post.id} field="body" text={post.body} showToggle={false} className="text-[13px] leading-5 text-muted" numberOfLines={post.title ? 2 : 3} />
 
+        {/* Photos */}
+        {post.photos?.length ? (
+          <View className="mt-2.5 flex-row gap-1.5">
+            {post.photos.slice(0, 3).map((url, i) => (
+              <View key={i} className="overflow-hidden rounded-xl" style={{ flex: 1, height: 96 }}>
+                <Image source={{ uri: url }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+                {i === 2 && post.photos.length > 3 ? (
+                  <View className="absolute inset-0 items-center justify-center bg-black/45">
+                    <Text className="font-sans-bold text-[14px] text-white">+{post.photos.length - 3}</Text>
+                  </View>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        ) : null}
+
         {/* Author row */}
         <View className="mt-3 flex-row items-center gap-2">
           <Avatar name={post.author?.name ?? '?'} size={22} />
@@ -288,17 +306,25 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
   const [category, setCategory] = useState<PostCategory>('general');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
   const [bodyHeight, setBodyHeight] = useState(160);
   const [posting, setPosting] = useState(false);
   const bodyRef = useRef<TextInput>(null);
+  const MAX_PHOTOS = 4;
+
+  const pickPhotos = async () => {
+    if (photos.length >= MAX_PHOTOS) return toast.show(`Up to ${MAX_PHOTOS} photos`);
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: MAX_PHOTOS - photos.length, quality: 0.9 });
+    if (!res.canceled) setPhotos((prev) => [...prev, ...res.assets.map((a) => a.uri)].slice(0, MAX_PHOTOS));
+  };
 
   const handlePost = async () => {
     if (!body.trim()) return toast.show('Please write something');
     if (!authorId || !communityId) return toast.show('Not signed in');
     setPosting(true);
     try {
-      await createPost({ communityId, authorId, category, title: title.trim() || undefined, body });
-      setTitle(''); setBody(''); setCategory('general'); setBodyHeight(160);
+      await createPost({ communityId, authorId, category, title: title.trim() || undefined, body, photoUris: photos });
+      setTitle(''); setBody(''); setCategory('general'); setBodyHeight(160); setPhotos([]);
       onPosted();
     } catch { toast.show('Could not post — try again'); }
     finally { setPosting(false); }
@@ -379,19 +405,44 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
             style={{ minHeight: bodyHeight, outline: 'none', textAlignVertical: 'top' } as any}
             autoFocus
           />
+
+          {/* Photos */}
+          {photos.length > 0 ? (
+            <View className="mt-3 flex-row flex-wrap gap-2">
+              {photos.map((uri, i) => (
+                <View key={`${uri}-${i}`} className="overflow-hidden rounded-xl" style={{ width: 88, height: 88 }}>
+                  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+                  <Pressable onPress={() => setPhotos((p) => p.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 h-6 w-6 items-center justify-center rounded-full bg-black/60">
+                    <Ionicons name="close" size={13} color="#fff" />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          ) : null}
         </ScrollView>
 
-        {/* Sticky footer — Post button lives here, just above the keyboard */}
-        <View className="border-t border-line px-4 py-3">
-          <Button
-            label={posting ? 'Posting…' : 'Post to feed'}
-            icon="send"
-            size="lg"
-            fullWidth
-            loading={posting}
-            disabled={!body.trim()}
-            onPress={handlePost}
-          />
+        {/* Sticky footer — add-photo + Post button, just above the keyboard */}
+        <View className="flex-row items-center gap-2 border-t border-line px-4 py-3">
+          <Pressable
+            onPress={pickPhotos}
+            disabled={photos.length >= MAX_PHOTOS}
+            className="h-12 w-12 items-center justify-center rounded-2xl border border-line active:bg-inset"
+            style={{ opacity: photos.length >= MAX_PHOTOS ? 0.4 : 1 }}
+            accessibilityLabel="Add photos"
+          >
+            <Ionicons name="image-outline" size={22} color={c.muted} />
+          </Pressable>
+          <View className="flex-1">
+            <Button
+              label={posting ? 'Posting…' : 'Post to feed'}
+              icon="send"
+              size="lg"
+              fullWidth
+              loading={posting}
+              disabled={!body.trim()}
+              onPress={handlePost}
+            />
+          </View>
         </View>
       </KeyboardAvoidingView>
     </Modal>

@@ -1,4 +1,5 @@
-import { isSupabaseConfigured, supabase } from './supabase';
+import * as ImageManipulator from 'expo-image-manipulator';
+import { LISTING_PHOTOS_BUCKET, isSupabaseConfigured, supabase } from './supabase';
 
 export type PostCategory =
   | 'general'
@@ -157,12 +158,26 @@ export async function fetchPostById(id: string): Promise<PostRow | null> {
   return data as PostRow | null;
 }
 
+/** Compress + upload one post photo to `post/<id>/<index>.jpg`; returns its URL. */
+export async function uploadPostPhoto(localUri: string, postId: string, index: number | string): Promise<string> {
+  const m = await ImageManipulator.manipulateAsync(localUri, [{ resize: { width: 1200 } }], {
+    compress: 0.7, format: ImageManipulator.SaveFormat.JPEG,
+  });
+  const res = await fetch(m.uri);
+  const buf = await res.arrayBuffer();
+  const path = `post/${postId}/${index}.jpg`;
+  const { error } = await supabase.storage.from(LISTING_PHOTOS_BUCKET).upload(path, buf, { contentType: 'image/jpeg', upsert: true });
+  if (error) throw error;
+  return supabase.storage.from(LISTING_PHOTOS_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
 export interface NewPostInput {
   communityId: string;
   authorId: string;
   category: PostCategory;
   title?: string;
   body: string;
+  photoUris?: string[]; // local URIs to upload
 }
 
 export async function createPost(input: NewPostInput): Promise<PostRow> {
@@ -178,17 +193,29 @@ export async function createPost(input: NewPostInput): Promise<PostRow> {
     .select('*, author:profiles!posts_author_id_fkey(name, flat)')
     .single();
   if (error) throw error;
-  return data as PostRow;
+  const post = data as PostRow;
+  if (input.photoUris?.length) {
+    const urls: string[] = [];
+    for (let i = 0; i < input.photoUris.length; i++) {
+      try { urls.push(await uploadPostPhoto(input.photoUris[i], post.id, i)); } catch { /* skip bad photo */ }
+    }
+    if (urls.length) {
+      await supabase.from('posts').update({ photos: urls }).eq('id', post.id);
+      post.photos = urls;
+    }
+  }
+  return post;
 }
 
 export async function updatePost(
   id: string,
-  patch: { category?: PostCategory; title?: string | null; body?: string },
+  patch: { category?: PostCategory; title?: string | null; body?: string; photos?: string[] },
 ): Promise<void> {
   const { error } = await supabase.from('posts').update({
     ...(patch.category !== undefined ? { category: patch.category } : {}),
     ...(patch.title !== undefined ? { title: patch.title?.trim() || null } : {}),
     ...(patch.body !== undefined ? { body: patch.body.trim() } : {}),
+    ...(patch.photos !== undefined ? { photos: patch.photos } : {}),
     updated_at: new Date().toISOString(),
   }).eq('id', id);
   if (error) throw error;
