@@ -89,8 +89,24 @@ export async function postAnswer(input: { questionId: string; authorId: string; 
   return data as RecoAnswer;
 }
 
+export async function updateAnswer(id: string, patch: { body: string; providerName?: string | null; providerPhone?: string | null }): Promise<void> {
+  const { error } = await supabase.from('reco_answers').update({
+    body: patch.body.trim(),
+    ...(patch.providerName !== undefined ? { provider_name: patch.providerName?.trim() || null } : {}),
+    ...(patch.providerPhone !== undefined ? { provider_phone: patch.providerPhone?.replace(/\D/g, '') || null } : {}),
+  }).eq('id', id);
+  if (error) throw error;
+}
+
 export async function deleteAnswer(id: string): Promise<void> {
   const { error } = await supabase.from('reco_answers').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function updateQuestion(id: string, patch: { title: string; detail: string | null }): Promise<void> {
+  const { error } = await supabase.from('reco_questions').update({
+    title: patch.title.trim(), detail: patch.detail?.trim() || null,
+  }).eq('id', id);
   if (error) throw error;
 }
 

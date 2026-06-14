@@ -3,7 +3,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../../components/T';
-import { Avatar, Container, ScreenHeader } from '../../components/ui';
+import { Avatar, Container, ScreenHeader, Sheet } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
@@ -19,6 +19,8 @@ import {
   recoCategory,
   subscribeAnswers,
   toggleVote,
+  updateAnswer,
+  updateQuestion,
 } from '../../lib/recommend';
 import { useThemeColors } from '../../theme';
 
@@ -40,6 +42,16 @@ export default function RecoDetailScreen() {
   const [provider, setProvider] = useState('');
   const [providerPhone, setProviderPhone] = useState('');
   const [posting, setPosting] = useState(false);
+  // Edit state — question (sheet) + per-answer inline edit.
+  const [showEditQ, setShowEditQ] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDetail, setEditDetail] = useState('');
+  const [savingQ, setSavingQ] = useState(false);
+  const [editAnsId, setEditAnsId] = useState<string | null>(null);
+  const [aBody, setABody] = useState('');
+  const [aName, setAName] = useState('');
+  const [aPhone, setAPhone] = useState('');
+  const [savingA, setSavingA] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -82,6 +94,22 @@ export default function RecoDetailScreen() {
     if (await confirm({ title: 'Delete question', message: 'Delete this question and its answers?', confirmLabel: 'Delete', destructive: true })) go();
   };
 
+  const openEditQ = () => { if (!q) return; setEditTitle(q.title); setEditDetail(q.detail ?? ''); setShowEditQ(true); };
+  const saveEditQ = async () => {
+    if (!q || !editTitle.trim()) return toast.show('Add a question');
+    setSavingQ(true);
+    try { await updateQuestion(q.id, { title: editTitle, detail: editDetail || null }); setShowEditQ(false); await load(); toast.show('Updated ✓'); }
+    catch { toast.show('Could not save'); } finally { setSavingQ(false); }
+  };
+
+  const startEditAns = (a: RecoAnswer) => { setEditAnsId(a.id); setABody(a.body); setAName(a.provider_name ?? ''); setAPhone(a.provider_phone ?? ''); };
+  const saveEditAns = async () => {
+    if (!editAnsId || !aBody.trim()) return toast.show('Write something');
+    setSavingA(true);
+    try { await updateAnswer(editAnsId, { body: aBody, providerName: aName || null, providerPhone: aPhone || null }); setEditAnsId(null); await load(); toast.show('Updated ✓'); }
+    catch { toast.show('Could not save'); } finally { setSavingA(false); }
+  };
+
   if (loading) return <View className="flex-1 bg-bg"><ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Question" showBack hideSociety /><View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View></View>;
   if (!q) return <View className="flex-1 bg-bg"><ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Question" showBack hideSociety /><View className="flex-1 items-center justify-center px-8"><Text className="text-center text-[14px] text-muted">This question was removed.</Text></View></View>;
 
@@ -100,7 +128,10 @@ export default function RecoDetailScreen() {
               <Text className="text-[10px] font-sans-sb" style={{ color: meta.color }}>{meta.label}</Text>
             </View>
             {canDeleteQ ? (
-              <Pressable onPress={removeQuestion} hitSlop={8} className="ml-auto"><Ionicons name="trash-outline" size={15} color={c.faint} /></Pressable>
+              <View className="ml-auto flex-row items-center gap-2.5">
+                <Pressable onPress={openEditQ} hitSlop={8}><Ionicons name="create-outline" size={15} color={c.faint} /></Pressable>
+                <Pressable onPress={removeQuestion} hitSlop={8}><Ionicons name="trash-outline" size={15} color={c.faint} /></Pressable>
+              </View>
             ) : null}
           </View>
           <T source="recommend" id={q.id} field="title" text={q.title} className="mt-2 font-display-x text-[21px] leading-[27px] text-ink" />
@@ -137,28 +168,49 @@ export default function RecoDetailScreen() {
                   <Text className="text-[12px] font-sans-bold" style={{ color: a.voted ? ACCENT : c.muted }}>{a.vote_count}</Text>
                 </Pressable>
                 <View className="flex-1">
-                  <T source="reco_answer" id={a.id} field="body" text={a.body} className="text-[14px] leading-[20px] text-ink" />
-                  {a.provider_name || a.provider_phone ? (
-                    <View className="mt-2 flex-row flex-wrap items-center gap-2">
-                      {a.provider_name ? (
-                        <View className="flex-row items-center gap-1 rounded-full bg-inset px-2.5 py-1">
-                          <Ionicons name="pricetag" size={11} color={c.muted} />
-                          <Text className="text-[12px] font-sans-sb text-ink">{a.provider_name}</Text>
+                  {editAnsId === a.id ? (
+                    <View>
+                      <TextInput value={aBody} onChangeText={setABody} multiline autoFocus className="rounded-xl border border-line bg-inset px-3 py-2 text-[14px] text-ink" style={{ minHeight: 54, outline: 'none' } as any} />
+                      <View className="mt-2 flex-row gap-2">
+                        <TextInput value={aName} onChangeText={setAName} placeholder="Name (optional)" placeholderTextColor={c.faint} className="flex-1 rounded-xl border border-line bg-inset px-3 py-2 text-[13px] text-ink" style={{ outline: 'none' } as any} />
+                        <TextInput value={aPhone} onChangeText={setAPhone} placeholder="Phone (optional)" keyboardType="phone-pad" placeholderTextColor={c.faint} className="flex-1 rounded-xl border border-line bg-inset px-3 py-2 text-[13px] text-ink" style={{ outline: 'none' } as any} />
+                      </View>
+                      <View className="mt-2 flex-row gap-2">
+                        <Pressable onPress={saveEditAns} disabled={savingA} className="rounded-full px-3 py-1.5" style={{ backgroundColor: ACCENT }}><Text className="text-[12px] font-sans-sb text-white">{savingA ? 'Saving…' : 'Save'}</Text></Pressable>
+                        <Pressable onPress={() => setEditAnsId(null)} className="rounded-full px-3 py-1.5" style={{ backgroundColor: c.inset }}><Text className="text-[12px] font-sans-sb text-muted">Cancel</Text></Pressable>
+                      </View>
+                    </View>
+                  ) : (
+                    <>
+                      <T source="reco_answer" id={a.id} field="body" text={a.body} className="text-[14px] leading-[20px] text-ink" />
+                      {a.provider_name || a.provider_phone ? (
+                        <View className="mt-2 flex-row flex-wrap items-center gap-2">
+                          {a.provider_name ? (
+                            <View className="flex-row items-center gap-1 rounded-full bg-inset px-2.5 py-1">
+                              <Ionicons name="pricetag" size={11} color={c.muted} />
+                              <Text className="text-[12px] font-sans-sb text-ink">{a.provider_name}</Text>
+                            </View>
+                          ) : null}
+                          {a.provider_phone ? (
+                            <Pressable onPress={() => openUrl(waLink(a.provider_phone, `Hi, a neighbour recommended you on Aangan.`))} className="flex-row items-center gap-1 rounded-full px-2.5 py-1" style={{ backgroundColor: '#25D36618' }}>
+                              <Ionicons name="logo-whatsapp" size={12} color="#25D366" />
+                              <Text className="text-[12px] font-sans-sb" style={{ color: '#25D366' }}>{a.provider_phone}</Text>
+                            </Pressable>
+                          ) : null}
                         </View>
                       ) : null}
-                      {a.provider_phone ? (
-                        <Pressable onPress={() => openUrl(waLink(a.provider_phone, `Hi, a neighbour recommended you on Aangan.`))} className="flex-row items-center gap-1 rounded-full px-2.5 py-1" style={{ backgroundColor: '#25D36618' }}>
-                          <Ionicons name="logo-whatsapp" size={12} color="#25D366" />
-                          <Text className="text-[12px] font-sans-sb" style={{ color: '#25D366' }}>{a.provider_phone}</Text>
-                        </Pressable>
-                      ) : null}
-                    </View>
-                  ) : null}
+                    </>
+                  )}
                   <View className="mt-2 flex-row items-center gap-1.5">
                     <Avatar name={a.author?.name ?? '?'} size={18} />
                     <Text className="text-[11px] text-faint">{a.author?.name ?? 'A neighbour'}{a.author?.flat ? ` · ${a.author.flat}` : ''}</Text>
-                    {(a.author_id === userId || isAdmin) ? (
-                      <Pressable onPress={() => removeAnswer(a)} hitSlop={8} className="ml-auto"><Ionicons name="trash-outline" size={13} color={c.faint} /></Pressable>
+                    {(a.author_id === userId || isAdmin) && editAnsId !== a.id ? (
+                      <View className="ml-auto flex-row items-center gap-2.5">
+                        {a.author_id === userId ? (
+                          <Pressable onPress={() => startEditAns(a)} hitSlop={8}><Ionicons name="create-outline" size={13} color={c.faint} /></Pressable>
+                        ) : null}
+                        <Pressable onPress={() => removeAnswer(a)} hitSlop={8}><Ionicons name="trash-outline" size={13} color={c.faint} /></Pressable>
+                      </View>
                     ) : null}
                   </View>
                 </View>
@@ -168,6 +220,16 @@ export default function RecoDetailScreen() {
           </View>
         </Container>
       </ScrollView>
+
+      <Sheet visible={showEditQ} onClose={() => setShowEditQ(false)} title="Edit question">
+        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Question</Text>
+        <TextInput value={editTitle} onChangeText={setEditTitle} className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
+        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Details (optional)</Text>
+        <TextInput value={editDetail} onChangeText={setEditDetail} multiline className="mb-4 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ minHeight: 70, outline: 'none' } as any} />
+        <Pressable onPress={saveEditQ} disabled={savingQ} className="items-center rounded-2xl py-3 active:opacity-80" style={{ backgroundColor: ACCENT, opacity: savingQ ? 0.6 : 1 }}>
+          <Text className="font-sans-sb text-[15px] text-white">{savingQ ? 'Saving…' : 'Save changes'}</Text>
+        </Pressable>
+      </Sheet>
     </View>
   );
 }
