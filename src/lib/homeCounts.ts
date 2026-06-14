@@ -22,7 +22,7 @@ export async function fetchHomeTileCounts(
     } catch { return 0; }
   };
 
-  const [feed, sports, documents, properties, recommend, helpers, polls, emergency, payments, directory] =
+  const [feed, sports, documents, properties, recommend, helpers, polls, emergency, places, payments, directory] =
     await Promise.all([
       head('posts'),
       head('sport_groups'),
@@ -32,6 +32,7 @@ export async function fetchHomeTileCounts(
       head('profiles', (q) => q.eq('donor_available', true)),
       head('polls', (q) => q.eq('is_closed', false)),
       head('emergency_contacts'),
+      head('places'),
       // Payments are scoped by participant, not community: count the ones still
       // pending (initiated) where I'm the payer or payee.
       userId
@@ -54,5 +55,5 @@ export async function fetchHomeTileCounts(
       })(),
     ]);
 
-  return { feed, sports, documents, properties, recommend, helpers, polls, emergency, payments, directory };
+  return { feed, sports, documents, properties, recommend, helpers, polls, emergency, places, payments, directory };
 }

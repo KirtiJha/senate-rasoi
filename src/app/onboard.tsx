@@ -1,48 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Button, Container, ScreenHeader } from '../components/ui';
+import { MapPreview } from '../components/MapPreview';
 import { useToast } from '../context/toast';
 import { Community, findCommunityByOsm, searchCommunities } from '../lib/communities';
-import { Place, TILE, osmMapLink, searchSocieties, tileMath, tileUrl } from '../lib/geo';
+import { Place, osmMapLink, searchSocieties } from '../lib/geo';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { useThemeColors } from '../theme';
 
 function openUrl(url: string) {
   if (Platform.OS === 'web') window.open(url, '_blank');
   else Linking.openURL(url);
-}
-
-/** A small OpenStreetMap tile mosaic centred on the location with a pin. */
-function MapPreview({ lat, lon, height }: { lat: number; lon: number; height: number }) {
-  const [w, setW] = useState(0);
-  const { zoom, fx, fy, cx, cy } = tileMath(lat, lon, 16);
-  const originX = w / 2 - fx * TILE;
-  const originY = height / 2 - fy * TILE;
-  return (
-    <View onLayout={(e) => setW(e.nativeEvent.layout.width)} style={{ height, overflow: 'hidden', backgroundColor: '#E7E0D8' }}>
-      {w > 0
-        ? [-1, 0, 1].flatMap((j) =>
-            [-1, 0, 1].map((i) => {
-              const tx = cx + i;
-              const ty = cy + j;
-              return (
-                <Image
-                  key={`${i},${j}`}
-                  source={{ uri: tileUrl(zoom, tx, ty) }}
-                  style={{ position: 'absolute', width: TILE, height: TILE, left: originX + tx * TILE, top: originY + ty * TILE }}
-                />
-              );
-            }),
-          )
-        : null}
-      <View style={{ position: 'absolute', left: w / 2 - 13, top: height / 2 - 26 }}>
-        <Ionicons name="location" size={26} color="#E8650A" />
-      </View>
-    </View>
-  );
 }
 
 export default function OnboardScreen() {

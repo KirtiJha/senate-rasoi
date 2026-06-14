@@ -34,6 +34,7 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   borrow: { icon: 'swap-horizontal', color: '#0891B2' },
   court: { icon: 'tennisball', color: '#16A34A' },
   order: { icon: 'fast-food', color: '#E8650A' },
+  place: { icon: 'location', color: '#0D9488' },
 };
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {

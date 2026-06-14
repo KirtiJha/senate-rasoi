@@ -60,3 +60,52 @@ export const tileUrl = (z: number, x: number, y: number) => `https://tile.openst
 export function osmMapLink(lat: number, lon: number): string {
   return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`;
 }
+
+// ── Open-in-Maps deep links (no API key needed) ─────────────────────
+
+/** Google Maps — drops a pin at the coords (or searches the label if given). */
+export function googleMapsLink(lat: number | null, lon: number | null, label?: string | null): string {
+  if (lat != null && lon != null) {
+    const q = `${lat},${lon}`;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(label ?? '')}`;
+}
+
+/** Apple Maps — drops a pin at the coords (or searches the label if given). */
+export function appleMapsLink(lat: number | null, lon: number | null, label?: string | null): string {
+  const name = label ? `&q=${encodeURIComponent(label)}` : '';
+  if (lat != null && lon != null) return `https://maps.apple.com/?ll=${lat},${lon}${name || `&q=${lat},${lon}`}`;
+  return `https://maps.apple.com/?q=${encodeURIComponent(label ?? '')}`;
+}
+
+/**
+ * Forward-geocode a free-form place query (shops, hospitals, schools …) within
+ * the Bengaluru viewbox. Like searchSocieties but not limited to residential
+ * results, so it suits nearby-place lookups.
+ */
+export async function searchPlaces(query: string, signal?: AbortSignal): Promise<Place[]> {
+  const q = query.trim();
+  if (q.length < 3) return [];
+  const url =
+    'https://nominatim.openstreetmap.org/search?' +
+    new URLSearchParams({
+      q, format: 'jsonv2', addressdetails: '1', limit: '8',
+      countrycodes: 'in', viewbox: BLR_VIEWBOX, bounded: '1',
+    }).toString();
+  try {
+    const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'Aangan/1.0' }, signal });
+    if (!res.ok) return [];
+    const data = (await res.json()) as any[];
+    return data.map((r) => ({
+      osmId: `${r.osm_type ?? 'n'}:${r.osm_id}`,
+      name: r.name || (typeof r.display_name === 'string' ? r.display_name.split(',')[0] : 'Place'),
+      address: r.display_name ?? '',
+      lat: parseFloat(r.lat),
+      lon: parseFloat(r.lon),
+      city: r.address?.city ?? r.address?.town ?? r.address?.suburb ?? 'Bengaluru',
+    }));
+  } catch {
+    return [];
+  }
+}

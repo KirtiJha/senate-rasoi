@@ -15,6 +15,7 @@ import { isSupabaseConfigured } from '../../lib/supabase';
 import { listTiffinPlans } from '../../lib/tiffin';
 import { DishRow, ListingRow, TiffinPlanWithChef } from '../../lib/types';
 import { LendItem, fetchItems as fetchBorrowItems } from '../../lib/borrow';
+import { PlaceRow, fetchPlaces, placeTypeMeta } from '../../lib/places';
 import { layout, useThemeColors } from '../../theme';
 
 const LIST_MAX = layout.maxContent; // same content width as every other tab
@@ -27,7 +28,10 @@ type AllItem =
   | { kind: 'listing'; id: string; raw: ListingRow }
   | { kind: 'dish'; id: string; raw: DishRow }
   | { kind: 'tiffin'; id: string; raw: TiffinPlanWithChef }
-  | { kind: 'borrow'; id: string; raw: LendItem };
+  | { kind: 'borrow'; id: string; raw: LendItem }
+  | { kind: 'place'; id: string; raw: PlaceRow };
+
+const PLACES_COLOR = '#0D9488';
 
 interface ItemDisplay {
   title: string;
@@ -56,6 +60,19 @@ function display(item: AllItem): ItemDisplay {
       icon: 'swap-horizontal',
       priceText: 'Free',
       location: b.owner?.flat ? `Flat ${b.owner.flat}` : null,
+    };
+  }
+  if (item.kind === 'place') {
+    const p = item.raw;
+    const m = placeTypeMeta(p.place_type);
+    return {
+      title: p.name,
+      catKey: 'places',
+      catLabel: `📍 ${m.label}`,
+      color: PLACES_COLOR,
+      icon: m.icon,
+      priceText: '—',
+      location: p.address ?? null,
     };
   }
   const l = item.raw;
@@ -89,22 +106,25 @@ export default function AllListingsScreen() {
     { key: 'tiffin', label: 'Tiffin', color: TIFFIN_COLOR, icon: 'repeat' },
     { key: 'borrow-offer', label: '🤝 Lending', color: BORROW_COLOR, icon: 'swap-horizontal' },
     { key: 'borrow-request', label: '🙏 Needs', color: BORROW_COLOR, icon: 'hand-left-outline' },
+    { key: 'places', label: '📍 Nearby', color: PLACES_COLOR, icon: 'location' },
     ...SERVICES.filter((s) => s.kind === 'listing').map((s) => ({ key: s.key, label: s.label, color: s.color, icon: s.icon })),
   ], []);
 
   const load = useCallback(async () => {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
     try {
-      const [listings, dishes, tiffins, borrows] = await Promise.all([
+      const [listings, dishes, tiffins, borrows, places] = await Promise.all([
         fetchAllListings(communityId, 0, 200),
         fetchDishes(communityId).catch(() => [] as DishRow[]),
         listTiffinPlans(communityId).catch(() => [] as TiffinPlanWithChef[]),
         fetchBorrowItems({}, communityId).catch(() => [] as LendItem[]),
+        fetchPlaces({}, communityId).catch(() => [] as PlaceRow[]),
       ]);
       setItems([
         ...dishes.map((d): AllItem => ({ kind: 'dish', id: d.id, raw: d })),
         ...tiffins.map((t): AllItem => ({ kind: 'tiffin', id: t.id, raw: t })),
         ...borrows.map((b): AllItem => ({ kind: 'borrow', id: b.id, raw: b })),
+        ...places.map((p): AllItem => ({ kind: 'place', id: p.id, raw: p })),
         ...listings.map((l): AllItem => ({ kind: 'listing', id: l.id, raw: l })),
       ]);
     } catch { toast.show('Could not load listings'); }
@@ -127,10 +147,13 @@ export default function AllListingsScreen() {
   const openItem = (i: AllItem) => {
     if (i.kind === 'listing') router.push(`/listing/${i.raw.id}` as any);
     else if (i.kind === 'borrow') router.push(`/borrow/${i.raw.id}` as any);
+    else if (i.kind === 'place') router.push(`/place/${i.raw.id}` as any);
     else router.push('/food' as any);
   };
 
   const contactItem = (i: AllItem) => {
+    // Places carry call/WhatsApp/map on their detail page — send there.
+    if (i.kind === 'place') { router.push(`/place/${i.raw.id}` as any); return; }
     let url: string;
     if (i.kind === 'listing') {
       url = buildInquiryWhatsAppLink(i.raw, profile?.name ?? 'A neighbour', '');
@@ -279,7 +302,7 @@ function ItemRow({
           <Text style={{ width: 130 }} className="text-[13px] font-sans-md text-muted" numberOfLines={1}>{d.catLabel}</Text>
           <Text style={{ width: 100 }} className="text-[13px] font-sans-sb text-accent" numberOfLines={1}>{d.priceText}</Text>
           <View className="flex-row justify-end gap-2" style={{ width: 186 }}>
-            <RowBtn icon="open-outline" label={item.kind === 'listing' || item.kind === 'borrow' ? 'View' : 'Order'} onPress={onOpen} c={c} />
+            <RowBtn icon="open-outline" label={item.kind === 'dish' || item.kind === 'tiffin' ? 'Order' : 'View'} onPress={onOpen} c={c} />
             <RowBtn icon="logo-whatsapp" label="Contact" onPress={onContact} c={c} whatsapp />
           </View>
         </>

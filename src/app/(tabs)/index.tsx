@@ -19,6 +19,7 @@ import { fetchDishes } from '../../lib/dishes';
 import { fetchAllListings, fetchCategoryCounts } from '../../lib/listings';
 import { fetchHomeTileCounts } from '../../lib/homeCounts';
 import { PropertyRow, fetchProperties, propertySubtitle } from '../../lib/properties';
+import { PlaceRow, fetchPlaces, placeTypeMeta } from '../../lib/places';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { SERVICES, ServiceCategory, getService } from '../../lib/services';
 import { fetchBorrowCounts, fetchItems as fetchBorrowItems, LendItem, BORROW_CATEGORIES } from '../../lib/borrow';
@@ -121,6 +122,14 @@ const COMMUNITY_TILES: CommunityTile[] = [
     href: '/helpers',
   },
   {
+    key: 'places',
+    label: 'Nearby',
+    blurb: 'Hospitals, schools, shops & more',
+    icon: 'location',
+    color: '#0D9488',
+    href: '/places',
+  },
+  {
     key: 'polls',
     label: 'Polls',
     blurb: 'Vote on community decisions',
@@ -153,6 +162,7 @@ export default function HomeScreen() {
   const [tileCounts, setTileCounts] = useState<Record<string, number>>({});
   const [recent, setRecent] = useState<ListingRow[]>([]);
   const [recentProps, setRecentProps] = useState<PropertyRow[]>([]);
+  const [recentPlaces, setRecentPlaces] = useState<PlaceRow[]>([]);
   const [dishes, setDishes] = useState<DishRow[]>([]);
   const [recentBorrow, setRecentBorrow] = useState<LendItem[]>([]);
   const [borrowCount, setBorrowCount] = useState(0);
@@ -164,6 +174,7 @@ export default function HomeScreen() {
     fetchHomeTileCounts(communityId, userId).then(setTileCounts).catch(() => {});
     fetchAllListings(communityId, 0, 12, 'created_at').then(setRecent).catch(() => {});
     fetchProperties({ availableOnly: true }, communityId).then((r) => setRecentProps(r.slice(0, 12))).catch(() => {});
+    fetchPlaces({}, communityId).then((r) => setRecentPlaces(r.slice(0, 12))).catch(() => {});
     fetchDishes(communityId).then(setDishes).catch(() => {});
     fetchBorrowItems({ availableOnly: false }, communityId).then((rows) =>
       setRecentBorrow(rows.slice(0, 10))
@@ -356,7 +367,7 @@ export default function HomeScreen() {
         <FreshFoodStrip items={dishes} isDesktop={isDesktop} />
 
         {/* Just listed — newest listings + borrow items */}
-        <JustListedStrip listings={recent} borrows={recentBorrow} properties={recentProps} isDesktop={isDesktop} />
+        <JustListedStrip listings={recent} borrows={recentBorrow} properties={recentProps} places={recentPlaces} isDesktop={isDesktop} />
 
         {/* Service grid */}
         <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
@@ -450,10 +461,11 @@ function ServiceTile({ cat, count = 0, onPress }: { cat: ServiceCategory; count?
 type StripItem =
   | { kind: 'listing'; id: string; ts: string; raw: ListingRow }
   | { kind: 'borrow'; id: string; ts: string; raw: LendItem }
-  | { kind: 'property'; id: string; ts: string; raw: PropertyRow };
+  | { kind: 'property'; id: string; ts: string; raw: PropertyRow }
+  | { kind: 'place'; id: string; ts: string; raw: PlaceRow };
 
 /** Horizontal carousel (mobile) / wrapped row (desktop) of the newest listings + borrow items. */
-function JustListedStrip({ listings, borrows, properties, isDesktop }: { listings: ListingRow[]; borrows: LendItem[]; properties: PropertyRow[]; isDesktop: boolean }) {
+function JustListedStrip({ listings, borrows, properties, places, isDesktop }: { listings: ListingRow[]; borrows: LendItem[]; properties: PropertyRow[]; places: PlaceRow[]; isDesktop: boolean }) {
   const router = useRouter();
   const c = useThemeColors();
   const BORROW_COLOR = '#0891B2';
@@ -463,6 +475,7 @@ function JustListedStrip({ listings, borrows, properties, isDesktop }: { listing
     ...listings.map((l): StripItem => ({ kind: 'listing', id: l.id, ts: l.created_at, raw: l })),
     ...borrows.map((b): StripItem => ({ kind: 'borrow', id: b.id, ts: b.created_at, raw: b })),
     ...properties.map((p): StripItem => ({ kind: 'property', id: p.id, ts: p.created_at, raw: p })),
+    ...places.map((p): StripItem => ({ kind: 'place', id: p.id, ts: p.created_at, raw: p })),
   ].sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 12);
 
   if (!items.length) return null;
@@ -546,10 +559,36 @@ function JustListedStrip({ listings, borrows, properties, isDesktop }: { listing
     );
   };
 
+  const PlaceCard = ({ p }: { p: PlaceRow }) => {
+    const m = placeTypeMeta(p.place_type);
+    const photo = p.photos?.[0];
+    return (
+      <Pressable
+        onPress={() => router.push(`/place/${p.id}` as any)}
+        className="overflow-hidden rounded-2xl bg-surface active:opacity-90"
+        style={{ width: 152, borderWidth: 1, borderColor: c.line }}
+      >
+        <View style={{ height: 96 }} className="w-full">
+          {photo
+            ? <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+            : <View style={{ flex: 1, backgroundColor: m.color + '20', alignItems: 'center', justifyContent: 'center' }}><Ionicons name={m.icon as any} size={28} color={m.color} /></View>}
+        </View>
+        <View className="p-2.5">
+          <View className="mb-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: m.color + '20' }}>
+            <Text className="text-[10px] font-sans-sb" style={{ color: m.color }} numberOfLines={1}>📍 {m.label}</Text>
+          </View>
+          <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{p.name}</Text>
+          {p.address ? <Text className="text-[11px] text-faint" numberOfLines={1}>{p.address}</Text> : <Text className="text-[11px] text-faint">Nearby</Text>}
+        </View>
+      </Pressable>
+    );
+  };
+
   const renderCard = (i: StripItem) =>
     i.kind === 'listing' ? <ListingCard key={i.id} l={i.raw} />
     : i.kind === 'borrow' ? <BorrowCard key={i.id} b={i.raw} />
-    : <PropertyCard key={i.id} p={i.raw} />;
+    : i.kind === 'property' ? <PropertyCard key={i.id} p={i.raw} />
+    : <PlaceCard key={i.id} p={i.raw} />;
 
   return (
     <View className="mb-6">

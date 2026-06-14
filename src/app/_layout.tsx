@@ -149,6 +149,9 @@ function DesktopShell() {
           <Stack.Screen name="borrow" />
           <Stack.Screen name="borrow/new" />
           <Stack.Screen name="borrow/[id]" />
+          <Stack.Screen name="places" />
+          <Stack.Screen name="place/new" />
+          <Stack.Screen name="place/[id]" />
           <Stack.Screen name="helpers" />
           <Stack.Screen name="ask" />
           <Stack.Screen name="messages/index" />
