@@ -266,6 +266,7 @@ export default function PostScreen({
         daysOfWeek: tDays,
         maxPerDay: tMax,
         cutoffTime: tCutoff.trim() || null,
+        photoUri,
       });
       setTTitle('');
       setTDesc('');

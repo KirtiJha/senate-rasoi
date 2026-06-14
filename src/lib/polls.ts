@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, supabase } from './supabase';
+import { resolvePhoto, uploadContentPhoto } from './photoUpload';
 
 export interface PollOption {
   id: string;
@@ -13,6 +14,7 @@ export interface PollRow {
   community_id: string;
   author_id: string;
   question: string;
+  image_url: string | null;
   expires_at: string | null;
   is_closed: boolean;
   created_at: string;
@@ -76,6 +78,7 @@ export async function createPoll(input: {
   question: string;
   options: string[];
   expiresAt?: Date;
+  imageUri?: string | null;
 }): Promise<void> {
   const { data: poll, error } = await supabase
     .from('polls')
@@ -94,6 +97,13 @@ export async function createPoll(input: {
     .filter((o: { poll_id: string; text: string; position: number }) => o.text);
   const { error: optErr } = await supabase.from('poll_options').insert(optionRows);
   if (optErr) throw optErr;
+
+  if (input.imageUri) {
+    try {
+      const url = await uploadContentPhoto(input.imageUri, `poll/${poll.id}/0.jpg`);
+      await supabase.from('polls').update({ image_url: url }).eq('id', poll.id);
+    } catch { /* skip bad image */ }
+  }
 }
 
 export async function votePoll(pollId: string, optionId: string, userId: string): Promise<void> {
@@ -113,9 +123,12 @@ export async function closePoll(pollId: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Edit a poll's question (options are left intact to preserve existing votes). */
-export async function updatePoll(pollId: string, patch: { question: string }): Promise<void> {
-  const { error } = await supabase.from('polls').update({ question: patch.question.trim() }).eq('id', pollId);
+/** Edit a poll's question + image (options are left intact to preserve votes). */
+export async function updatePoll(pollId: string, patch: { question?: string; imageUri?: string | null }): Promise<void> {
+  const row: Record<string, unknown> = {};
+  if (patch.question !== undefined) row.question = patch.question.trim();
+  if (patch.imageUri !== undefined) row.image_url = await resolvePhoto(patch.imageUri, `poll/${pollId}/0.jpg`);
+  const { error } = await supabase.from('polls').update(row).eq('id', pollId);
   if (error) throw error;
 }
 

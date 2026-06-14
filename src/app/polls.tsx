@@ -1,4 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
@@ -154,12 +156,19 @@ function PollCard({
   const isAuthor = poll.author_id === userId;
   const [showEdit, setShowEdit] = useState(false);
   const [editQ, setEditQ] = useState(poll.question);
+  const [editImg, setEditImg] = useState<{ uri: string; isNew: boolean } | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const openEdit = () => { setEditQ(poll.question); setEditImg(poll.image_url ? { uri: poll.image_url, isNew: false } : null); setShowEdit(true); };
+  const pickImg = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
+    if (!res.canceled) setEditImg({ uri: res.assets[0].uri, isNew: true });
+  };
 
   const saveEdit = async () => {
     if (!editQ.trim()) return toast.show('Question can’t be empty');
     setSaving(true);
-    try { await updatePoll(poll.id, { question: editQ }); setShowEdit(false); onChanged(); toast.show('Poll updated ✓'); }
+    try { await updatePoll(poll.id, { question: editQ, imageUri: editImg === null ? null : editImg.uri }); setShowEdit(false); onChanged(); toast.show('Poll updated ✓'); }
     catch { toast.show('Could not save'); } finally { setSaving(false); }
   };
 
@@ -181,7 +190,7 @@ function PollCard({
           ) : null}
           {(isAuthor || isAdmin) ? (
             <View className="flex-row gap-1">
-              <Pressable onPress={() => { setEditQ(poll.question); setShowEdit(true); }} hitSlop={8} className="h-7 w-7 items-center justify-center rounded-full active:bg-inset">
+              <Pressable onPress={openEdit} hitSlop={8} className="h-7 w-7 items-center justify-center rounded-full active:bg-inset">
                 <Ionicons name="create-outline" size={14} color={c.faint} />
               </Pressable>
               {!poll.is_closed ? (
@@ -197,7 +206,14 @@ function PollCard({
 
           <Sheet visible={showEdit} onClose={() => setShowEdit(false)} title="Edit poll question">
             <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Question</Text>
-            <TextInput value={editQ} onChangeText={setEditQ} multiline className="mb-2 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ minHeight: 60, outline: 'none' } as any} />
+            <TextInput value={editQ} onChangeText={setEditQ} multiline className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ minHeight: 60, outline: 'none' } as any} />
+            <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Image (optional)</Text>
+            <View className="mb-3 flex-row items-center gap-3">
+              <Pressable onPress={pickImg} className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface active:opacity-70">
+                {editImg ? <Image source={{ uri: editImg.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : <Ionicons name="image-outline" size={22} color={c.faint} />}
+              </Pressable>
+              {editImg ? <Pressable onPress={() => setEditImg(null)} hitSlop={6}><Text className="text-[13px] font-sans-sb text-nonveg">Remove</Text></Pressable> : null}
+            </View>
             <Text className="mb-4 text-[12px] text-faint">Options stay the same so existing votes are preserved.</Text>
             <Pressable onPress={saveEdit} disabled={saving} className="items-center rounded-2xl bg-accent py-3 active:opacity-80" style={{ opacity: saving ? 0.6 : 1 }}>
               <Text className="font-sans-sb text-[15px]" style={{ color: c.onAccent }}>{saving ? 'Saving…' : 'Save changes'}</Text>
@@ -206,6 +222,12 @@ function PollCard({
         </View>
 
         <Text className="font-sans-sb text-[15px] text-ink mb-3">{poll.question}</Text>
+
+        {poll.image_url ? (
+          <View className="mb-3 w-full overflow-hidden rounded-2xl bg-inset" style={{ height: 200 }}>
+            <Image source={{ uri: poll.image_url }} style={{ width: '100%', height: '100%' }} contentFit="contain" />
+          </View>
+        ) : null}
 
         {/* Options */}
         <View className="gap-2">
@@ -264,7 +286,13 @@ function CreatePollModal({
 }) {
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
+  const [image, setImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const pickImage = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
+    if (!res.canceled) setImage(res.assets[0].uri);
+  };
 
   const addOption = () => {
     if (options.length < 6) setOptions((prev) => [...prev, '']);
@@ -285,8 +313,8 @@ function CreatePollModal({
     if (!canSubmit) return;
     setSaving(true);
     try {
-      await createPoll({ communityId, authorId: userId, question, options: options.filter((o) => o.trim()) });
-      setQuestion(''); setOptions(['', '']);
+      await createPoll({ communityId, authorId: userId, question, options: options.filter((o) => o.trim()), imageUri: image });
+      setQuestion(''); setOptions(['', '']); setImage(null);
       onCreated();
     } catch {
       // parent handles toast
@@ -321,6 +349,16 @@ function CreatePollModal({
           className="rounded-2xl border border-line bg-inset px-3.5 py-3 text-[15px] text-ink"
           style={{ minHeight: 72, outline: 'none' } as any}
         />
+      </View>
+
+      <View className="mb-4">
+        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Image (optional)</Text>
+        <View className="flex-row items-center gap-3">
+          <Pressable onPress={pickImage} className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface active:opacity-70">
+            {image ? <Image source={{ uri: image }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : <Ionicons name="image-outline" size={22} color={c.faint} />}
+          </Pressable>
+          {image ? <Pressable onPress={() => setImage(null)} hitSlop={6}><Text className="text-[13px] font-sans-sb text-nonveg">Remove</Text></Pressable> : null}
+        </View>
       </View>
 
       <View className="mb-1">

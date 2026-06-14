@@ -1,4 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -103,7 +105,7 @@ export default function RecommendScreen() {
         onSubmit={async (vals) => {
           if (!userId) return;
           try {
-            const q = await askQuestion({ communityId, authorId: userId, category: vals.category, title: vals.title, detail: vals.detail });
+            const q = await askQuestion({ communityId, authorId: userId, category: vals.category, title: vals.title, detail: vals.detail, photoUri: vals.photoUri });
             setShowAsk(false);
             router.push(`/recommend/${q.id}` as any);
           } catch { toast.show('Could not post — try again'); }
@@ -115,15 +117,20 @@ export default function RecommendScreen() {
 
 function AskSheet({ visible, onClose, onSubmit, c }: {
   visible: boolean; onClose: () => void;
-  onSubmit: (v: { category: string; title: string; detail: string | null }) => void;
+  onSubmit: (v: { category: string; title: string; detail: string | null; photoUri: string | null }) => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
   const [category, setCategory] = useState<string>('health');
   const [title, setTitle] = useState('');
   const [detail, setDetail] = useState('');
+  const [photo, setPhoto] = useState<string | null>(null);
   const input = 'rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink';
+  const pickPhoto = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
+    if (!res.canceled) setPhoto(res.assets[0].uri);
+  };
   return (
-    <Sheet visible={visible} onClose={() => { setTitle(''); setDetail(''); onClose(); }} title="Ask your neighbours">
+    <Sheet visible={visible} onClose={() => { setTitle(''); setDetail(''); setPhoto(null); onClose(); }} title="Ask your neighbours">
       <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Category</Text>
       <View className="mb-3 flex-row flex-wrap gap-2">
         {RECO_CATEGORIES.map((r) => {
@@ -139,8 +146,15 @@ function AskSheet({ visible, onClose, onSubmit, c }: {
       <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Your question</Text>
       <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Reliable pediatrician near our society?" placeholderTextColor={c.faint} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />
       <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Details (optional)</Text>
-      <TextInput value={detail} onChangeText={setDetail} placeholder="Any specifics — budget, area, timing…" placeholderTextColor={c.faint} multiline className={`mb-4 ${input}`} style={{ minHeight: 64, outline: 'none' } as any} />
-      <Button label="Post question" icon="send" fullWidth disabled={!title.trim()} onPress={() => onSubmit({ category, title, detail: detail || null })} />
+      <TextInput value={detail} onChangeText={setDetail} placeholder="Any specifics — budget, area, timing…" placeholderTextColor={c.faint} multiline className={`mb-3 ${input}`} style={{ minHeight: 64, outline: 'none' } as any} />
+      <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Photo (optional)</Text>
+      <View className="mb-4 flex-row items-center gap-3">
+        <Pressable onPress={pickPhoto} className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface active:opacity-70">
+          {photo ? <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : <Ionicons name="image-outline" size={22} color={c.faint} />}
+        </Pressable>
+        {photo ? <Pressable onPress={() => setPhoto(null)} hitSlop={6}><Text className="text-[13px] font-sans-sb text-nonveg">Remove</Text></Pressable> : null}
+      </View>
+      <Button label="Post question" icon="send" fullWidth disabled={!title.trim()} onPress={() => onSubmit({ category, title, detail: detail || null, photoUri: photo })} />
     </Sheet>
   );
 }

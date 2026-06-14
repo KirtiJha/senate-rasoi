@@ -1,4 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -42,16 +44,24 @@ export default function RecoDetailScreen() {
   const [provider, setProvider] = useState('');
   const [providerPhone, setProviderPhone] = useState('');
   const [posting, setPosting] = useState(false);
+  const [ansPhoto, setAnsPhoto] = useState<string | null>(null); // new-answer composer photo
   // Edit state — question (sheet) + per-answer inline edit.
   const [showEditQ, setShowEditQ] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editDetail, setEditDetail] = useState('');
+  const [editQPhoto, setEditQPhoto] = useState<{ uri: string; isNew: boolean } | null>(null);
   const [savingQ, setSavingQ] = useState(false);
   const [editAnsId, setEditAnsId] = useState<string | null>(null);
   const [aBody, setABody] = useState('');
   const [aName, setAName] = useState('');
   const [aPhone, setAPhone] = useState('');
+  const [aEditPhoto, setAEditPhoto] = useState<{ uri: string; isNew: boolean } | null>(null);
   const [savingA, setSavingA] = useState(false);
+
+  const pickImg = async (set: (uri: string) => void) => {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
+    if (!res.canceled) set(res.assets[0].uri);
+  };
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -77,9 +87,9 @@ export default function RecoDetailScreen() {
     if (!userId || !body.trim() || posting) return;
     setPosting(true);
     try {
-      const ans = await postAnswer({ questionId: id!, authorId: userId, body, providerName: provider || null, providerPhone: providerPhone || null });
+      const ans = await postAnswer({ questionId: id!, authorId: userId, body, providerName: provider || null, providerPhone: providerPhone || null, photoUri: ansPhoto });
       setAnswers((prev) => [...prev, { ...ans, voted: false }]);
-      setBody(''); setProvider(''); setProviderPhone('');
+      setBody(''); setProvider(''); setProviderPhone(''); setAnsPhoto(null);
     } catch { toast.show('Could not post answer'); } finally { setPosting(false); }
   };
 
@@ -94,19 +104,19 @@ export default function RecoDetailScreen() {
     if (await confirm({ title: 'Delete question', message: 'Delete this question and its answers?', confirmLabel: 'Delete', destructive: true })) go();
   };
 
-  const openEditQ = () => { if (!q) return; setEditTitle(q.title); setEditDetail(q.detail ?? ''); setShowEditQ(true); };
+  const openEditQ = () => { if (!q) return; setEditTitle(q.title); setEditDetail(q.detail ?? ''); setEditQPhoto(q.photo_url ? { uri: q.photo_url, isNew: false } : null); setShowEditQ(true); };
   const saveEditQ = async () => {
     if (!q || !editTitle.trim()) return toast.show('Add a question');
     setSavingQ(true);
-    try { await updateQuestion(q.id, { title: editTitle, detail: editDetail || null }); setShowEditQ(false); await load(); toast.show('Updated ✓'); }
+    try { await updateQuestion(q.id, { title: editTitle, detail: editDetail || null, photoUri: editQPhoto === null ? null : editQPhoto.uri }); setShowEditQ(false); await load(); toast.show('Updated ✓'); }
     catch { toast.show('Could not save'); } finally { setSavingQ(false); }
   };
 
-  const startEditAns = (a: RecoAnswer) => { setEditAnsId(a.id); setABody(a.body); setAName(a.provider_name ?? ''); setAPhone(a.provider_phone ?? ''); };
+  const startEditAns = (a: RecoAnswer) => { setEditAnsId(a.id); setABody(a.body); setAName(a.provider_name ?? ''); setAPhone(a.provider_phone ?? ''); setAEditPhoto(a.photo_url ? { uri: a.photo_url, isNew: false } : null); };
   const saveEditAns = async () => {
     if (!editAnsId || !aBody.trim()) return toast.show('Write something');
     setSavingA(true);
-    try { await updateAnswer(editAnsId, { body: aBody, providerName: aName || null, providerPhone: aPhone || null }); setEditAnsId(null); await load(); toast.show('Updated ✓'); }
+    try { await updateAnswer(editAnsId, { body: aBody, providerName: aName || null, providerPhone: aPhone || null, photoUri: aEditPhoto === null ? null : aEditPhoto.uri }); setEditAnsId(null); await load(); toast.show('Updated ✓'); }
     catch { toast.show('Could not save'); } finally { setSavingA(false); }
   };
 
@@ -136,6 +146,11 @@ export default function RecoDetailScreen() {
           </View>
           <T source="recommend" id={q.id} field="title" text={q.title} className="mt-2 font-display-x text-[21px] leading-[27px] text-ink" />
           {q.detail ? <T source="recommend" id={q.id} field="detail" text={q.detail} className="mt-1.5 text-[14px] leading-[21px] text-muted" /> : null}
+          {q.photo_url ? (
+            <View className="mt-2.5 w-full overflow-hidden rounded-2xl bg-inset" style={{ height: 200 }}>
+              <Image source={{ uri: q.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="contain" />
+            </View>
+          ) : null}
           <View className="mt-2 flex-row items-center gap-2">
             <Avatar name={q.author?.name ?? '?'} size={22} />
             <Text className="text-[12px] text-faint">Asked by {q.author?.name ?? 'a neighbour'}{q.author?.flat ? ` · Flat ${q.author.flat}` : ''}</Text>
@@ -148,6 +163,12 @@ export default function RecoDetailScreen() {
             <View className="flex-row gap-2">
               <TextInput value={provider} onChangeText={setProvider} placeholder="Name (optional)" placeholderTextColor={c.faint} className="flex-1 rounded-xl border border-line bg-inset px-3 py-2 text-[13px] text-ink" style={{ outline: 'none' } as any} />
               <TextInput value={providerPhone} onChangeText={setProviderPhone} placeholder="Phone (optional)" keyboardType="phone-pad" placeholderTextColor={c.faint} className="flex-1 rounded-xl border border-line bg-inset px-3 py-2 text-[13px] text-ink" style={{ outline: 'none' } as any} />
+            </View>
+            <View className="mt-2 flex-row items-center gap-2">
+              <Pressable onPress={() => pickImg(setAnsPhoto)} className="h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-dashed border-line bg-inset active:opacity-70">
+                {ansPhoto ? <Image source={{ uri: ansPhoto }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : <Ionicons name="image-outline" size={18} color={c.faint} />}
+              </Pressable>
+              {ansPhoto ? <Pressable onPress={() => setAnsPhoto(null)} hitSlop={6}><Text className="text-[12px] font-sans-sb text-nonveg">Remove photo</Text></Pressable> : <Text className="text-[12px] text-faint">Add a photo (optional)</Text>}
             </View>
             <Pressable onPress={submit} disabled={!body.trim() || posting} className="mt-2 flex-row items-center justify-center gap-1.5 rounded-xl py-2.5" style={{ backgroundColor: body.trim() ? ACCENT : c.inset }}>
               {posting ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="send" size={15} color={body.trim() ? '#fff' : c.faint} />}
@@ -175,6 +196,12 @@ export default function RecoDetailScreen() {
                         <TextInput value={aName} onChangeText={setAName} placeholder="Name (optional)" placeholderTextColor={c.faint} className="flex-1 rounded-xl border border-line bg-inset px-3 py-2 text-[13px] text-ink" style={{ outline: 'none' } as any} />
                         <TextInput value={aPhone} onChangeText={setAPhone} placeholder="Phone (optional)" keyboardType="phone-pad" placeholderTextColor={c.faint} className="flex-1 rounded-xl border border-line bg-inset px-3 py-2 text-[13px] text-ink" style={{ outline: 'none' } as any} />
                       </View>
+                      <View className="mt-2 flex-row items-center gap-2">
+                        <Pressable onPress={() => pickImg((uri) => setAEditPhoto({ uri, isNew: true }))} className="h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-dashed border-line bg-inset active:opacity-70">
+                          {aEditPhoto ? <Image source={{ uri: aEditPhoto.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : <Ionicons name="image-outline" size={16} color={c.faint} />}
+                        </Pressable>
+                        {aEditPhoto ? <Pressable onPress={() => setAEditPhoto(null)} hitSlop={6}><Text className="text-[12px] font-sans-sb text-nonveg">Remove</Text></Pressable> : <Text className="text-[12px] text-faint">Photo</Text>}
+                      </View>
                       <View className="mt-2 flex-row gap-2">
                         <Pressable onPress={saveEditAns} disabled={savingA} className="rounded-full px-3 py-1.5" style={{ backgroundColor: ACCENT }}><Text className="text-[12px] font-sans-sb text-white">{savingA ? 'Saving…' : 'Save'}</Text></Pressable>
                         <Pressable onPress={() => setEditAnsId(null)} className="rounded-full px-3 py-1.5" style={{ backgroundColor: c.inset }}><Text className="text-[12px] font-sans-sb text-muted">Cancel</Text></Pressable>
@@ -197,6 +224,11 @@ export default function RecoDetailScreen() {
                               <Text className="text-[12px] font-sans-sb" style={{ color: '#25D366' }}>{a.provider_phone}</Text>
                             </Pressable>
                           ) : null}
+                        </View>
+                      ) : null}
+                      {a.photo_url ? (
+                        <View className="mt-2 w-full overflow-hidden rounded-xl bg-inset" style={{ height: 160 }}>
+                          <Image source={{ uri: a.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="contain" />
                         </View>
                       ) : null}
                     </>
@@ -225,7 +257,14 @@ export default function RecoDetailScreen() {
         <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Question</Text>
         <TextInput value={editTitle} onChangeText={setEditTitle} className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
         <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Details (optional)</Text>
-        <TextInput value={editDetail} onChangeText={setEditDetail} multiline className="mb-4 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ minHeight: 70, outline: 'none' } as any} />
+        <TextInput value={editDetail} onChangeText={setEditDetail} multiline className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ minHeight: 70, outline: 'none' } as any} />
+        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Photo (optional)</Text>
+        <View className="mb-4 flex-row items-center gap-3">
+          <Pressable onPress={() => pickImg((uri) => setEditQPhoto({ uri, isNew: true }))} className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface active:opacity-70">
+            {editQPhoto ? <Image source={{ uri: editQPhoto.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : <Ionicons name="image-outline" size={22} color={c.faint} />}
+          </Pressable>
+          {editQPhoto ? <Pressable onPress={() => setEditQPhoto(null)} hitSlop={6}><Text className="text-[13px] font-sans-sb text-nonveg">Remove</Text></Pressable> : null}
+        </View>
         <Pressable onPress={saveEditQ} disabled={savingQ} className="items-center rounded-2xl py-3 active:opacity-80" style={{ backgroundColor: ACCENT, opacity: savingQ ? 0.6 : 1 }}>
           <Text className="font-sans-sb text-[15px] text-white">{savingQ ? 'Saving…' : 'Save changes'}</Text>
         </Pressable>

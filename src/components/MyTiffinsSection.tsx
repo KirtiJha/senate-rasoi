@@ -1,4 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
@@ -207,13 +209,20 @@ function TiffinEditSheet({ plan, visible, onClose, onSaved }: { plan: TiffinPlan
   const [maxPerDay, setMaxPerDay] = useState(String(plan.max_per_day));
   const [days, setDays] = useState<number[]>(plan.days_of_week);
   const [cutoff, setCutoff] = useState(plan.cutoff_time ?? '');
+  const [photo, setPhoto] = useState<{ uri: string; isNew: boolean } | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
     setTitle(plan.title); setDesc(plan.description ?? ''); setVeg(plan.veg_type); setSlot(plan.slot);
     setPrice(String(plan.price)); setMaxPerDay(String(plan.max_per_day)); setDays(plan.days_of_week); setCutoff(plan.cutoff_time ?? '');
+    setPhoto(plan.photo_url ? { uri: plan.photo_url, isNew: false } : null);
   }, [visible, plan.id]);
+
+  const pickPhoto = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true, aspect: [4, 3] });
+    if (!res.canceled) setPhoto({ uri: res.assets[0].uri, isNew: true });
+  };
 
   const toggleDay = (d: number) => setDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort()));
 
@@ -229,6 +238,7 @@ function TiffinEditSheet({ plan, visible, onClose, onSaved }: { plan: TiffinPlan
         price: Number.isFinite(p) ? p : plan.price,
         maxPerDay: Number.isFinite(m) ? m : plan.max_per_day,
         daysOfWeek: days, cutoffTime: cutoff.trim() || null,
+        photoUri: photo === null ? null : photo.uri,
       });
       toast.show('Tiffin updated ✓'); onSaved();
     } catch { toast.show('Could not save'); } finally { setSaving(false); }
@@ -240,6 +250,16 @@ function TiffinEditSheet({ plan, visible, onClose, onSaved }: { plan: TiffinPlan
   return (
     <Sheet visible={visible} onClose={onClose} title="Edit tiffin">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
+        <Text className={label}>Photo</Text>
+        <View className="mb-3 flex-row items-center gap-3">
+          <Pressable onPress={pickPhoto} className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface active:opacity-70">
+            {photo ? <Image source={{ uri: photo.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : <Ionicons name="camera-outline" size={22} color={c.accent} />}
+          </Pressable>
+          <View className="flex-1 gap-1.5">
+            <Pressable onPress={pickPhoto} hitSlop={6} className="self-start"><Text className="text-[13px] font-sans-sb text-accent">{photo ? 'Change photo' : 'Add a photo'}</Text></Pressable>
+            {photo ? <Pressable onPress={() => setPhoto(null)} hitSlop={6} className="self-start"><Text className="text-[13px] font-sans-sb text-nonveg">Remove</Text></Pressable> : null}
+          </View>
+        </View>
         <Text className={label}>Title</Text>
         <TextInput value={title} onChangeText={setTitle} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />
         <Text className={label}>Description</Text>

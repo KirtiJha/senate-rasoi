@@ -1,4 +1,5 @@
 import { COMMUNITY_ID, supabase } from './supabase';
+import { resolvePhoto, uploadContentPhoto } from './photoUpload';
 import type {
   Slot,
   Subscription,
@@ -21,6 +22,7 @@ export interface NewTiffinPlan {
   daysOfWeek: number[];
   maxPerDay: number;
   cutoffTime: string | null;
+  photoUri?: string | null;
 }
 
 export async function listTiffinPlans(communityId: string = COMMUNITY_ID): Promise<TiffinPlanWithChef[]> {
@@ -59,7 +61,15 @@ export async function createTiffinPlan(input: NewTiffinPlan): Promise<TiffinPlan
   };
   const { data, error } = await supabase.from('tiffin_plans').insert(row).select().single();
   if (error) throw error;
-  return data as TiffinPlan;
+  const plan = data as TiffinPlan;
+  if (input.photoUri) {
+    try {
+      const url = await uploadContentPhoto(input.photoUri, `tiffin/${plan.id}/0.jpg`);
+      await supabase.from('tiffin_plans').update({ photo_url: url }).eq('id', plan.id);
+      plan.photo_url = url;
+    } catch { /* skip bad photo */ }
+  }
+  return plan;
 }
 
 export async function setPlanActive(planId: string, active: boolean): Promise<void> {
@@ -76,6 +86,7 @@ export interface UpdateTiffinPlan {
   daysOfWeek?: number[];
   maxPerDay?: number;
   cutoffTime?: string | null;
+  photoUri?: string | null; // existing URL (kept), new local URI (uploaded), or null (removed)
 }
 
 export async function updateTiffinPlan(planId: string, patch: UpdateTiffinPlan): Promise<void> {
@@ -88,6 +99,7 @@ export async function updateTiffinPlan(planId: string, patch: UpdateTiffinPlan):
   if (patch.daysOfWeek !== undefined) row.days_of_week = patch.daysOfWeek;
   if (patch.maxPerDay !== undefined) row.max_per_day = patch.maxPerDay;
   if (patch.cutoffTime !== undefined) row.cutoff_time = patch.cutoffTime;
+  if (patch.photoUri !== undefined) row.photo_url = await resolvePhoto(patch.photoUri, `tiffin/${planId}/0.jpg`);
   const { error } = await supabase.from('tiffin_plans').update(row).eq('id', planId);
   if (error) throw error;
 }

@@ -1,4 +1,5 @@
 import { COMMUNITY_ID, isSupabaseConfigured, supabase } from './supabase';
+import { resolvePhoto, uploadContentPhoto } from './photoUpload';
 
 export const RECO_CATEGORIES = [
   { key: 'health', label: 'Health & doctors', icon: 'medkit', color: '#EF4444' },
@@ -21,6 +22,7 @@ export interface RecoQuestion {
   category: string;
   title: string;
   detail: string | null;
+  photo_url: string | null;
   answer_count: number;
   created_at: string;
   bump_at: string;
@@ -34,6 +36,7 @@ export interface RecoAnswer {
   body: string;
   provider_name: string | null;
   provider_phone: string | null;
+  photo_url: string | null;
   vote_count: number;
   created_at: string;
   author?: { name: string; flat: string | null };
@@ -71,30 +74,38 @@ export async function fetchAnswers(questionId: string, userId?: string): Promise
   return answers;
 }
 
-export async function askQuestion(input: { communityId?: string; authorId: string; category: string; title: string; detail: string | null }): Promise<RecoQuestion> {
+export async function askQuestion(input: { communityId?: string; authorId: string; category: string; title: string; detail: string | null; photoUri?: string | null }): Promise<RecoQuestion> {
   const { data, error } = await supabase
     .from('reco_questions')
     .insert({ community_id: input.communityId ?? COMMUNITY_ID, author_id: input.authorId, category: input.category, title: input.title.trim(), detail: input.detail?.trim() || null })
     .select(Q_SELECT).single();
   if (error) throw error;
-  return data as RecoQuestion;
+  const q = data as RecoQuestion;
+  if (input.photoUri) {
+    try { const url = await uploadContentPhoto(input.photoUri, `reco-q/${q.id}/0.jpg`); await supabase.from('reco_questions').update({ photo_url: url }).eq('id', q.id); q.photo_url = url; } catch { /* skip */ }
+  }
+  return q;
 }
 
-export async function postAnswer(input: { questionId: string; authorId: string; body: string; providerName: string | null; providerPhone: string | null }): Promise<RecoAnswer> {
+export async function postAnswer(input: { questionId: string; authorId: string; body: string; providerName: string | null; providerPhone: string | null; photoUri?: string | null }): Promise<RecoAnswer> {
   const { data, error } = await supabase
     .from('reco_answers')
     .insert({ question_id: input.questionId, author_id: input.authorId, body: input.body.trim(), provider_name: input.providerName?.trim() || null, provider_phone: input.providerPhone?.replace(/\D/g, '') || null })
     .select(A_SELECT).single();
   if (error) throw error;
-  return data as RecoAnswer;
+  const a = data as RecoAnswer;
+  if (input.photoUri) {
+    try { const url = await uploadContentPhoto(input.photoUri, `reco-a/${a.id}/0.jpg`); await supabase.from('reco_answers').update({ photo_url: url }).eq('id', a.id); a.photo_url = url; } catch { /* skip */ }
+  }
+  return a;
 }
 
-export async function updateAnswer(id: string, patch: { body: string; providerName?: string | null; providerPhone?: string | null }): Promise<void> {
-  const { error } = await supabase.from('reco_answers').update({
-    body: patch.body.trim(),
-    ...(patch.providerName !== undefined ? { provider_name: patch.providerName?.trim() || null } : {}),
-    ...(patch.providerPhone !== undefined ? { provider_phone: patch.providerPhone?.replace(/\D/g, '') || null } : {}),
-  }).eq('id', id);
+export async function updateAnswer(id: string, patch: { body: string; providerName?: string | null; providerPhone?: string | null; photoUri?: string | null }): Promise<void> {
+  const row: Record<string, unknown> = { body: patch.body.trim() };
+  if (patch.providerName !== undefined) row.provider_name = patch.providerName?.trim() || null;
+  if (patch.providerPhone !== undefined) row.provider_phone = patch.providerPhone?.replace(/\D/g, '') || null;
+  if (patch.photoUri !== undefined) row.photo_url = await resolvePhoto(patch.photoUri, `reco-a/${id}/0.jpg`);
+  const { error } = await supabase.from('reco_answers').update(row).eq('id', id);
   if (error) throw error;
 }
 
@@ -103,10 +114,10 @@ export async function deleteAnswer(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function updateQuestion(id: string, patch: { title: string; detail: string | null }): Promise<void> {
-  const { error } = await supabase.from('reco_questions').update({
-    title: patch.title.trim(), detail: patch.detail?.trim() || null,
-  }).eq('id', id);
+export async function updateQuestion(id: string, patch: { title: string; detail: string | null; photoUri?: string | null }): Promise<void> {
+  const row: Record<string, unknown> = { title: patch.title.trim(), detail: patch.detail?.trim() || null };
+  if (patch.photoUri !== undefined) row.photo_url = await resolvePhoto(patch.photoUri, `reco-q/${id}/0.jpg`);
+  const { error } = await supabase.from('reco_questions').update(row).eq('id', id);
   if (error) throw error;
 }
 

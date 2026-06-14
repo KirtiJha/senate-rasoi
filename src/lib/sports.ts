@@ -1,5 +1,6 @@
 import * as ImageManipulator from 'expo-image-manipulator';
 import { COMMUNITY_ID, SPORT_LOGOS_BUCKET, supabase } from './supabase';
+import { resolvePhoto, uploadContentPhoto } from './photoUpload';
 
 // ── Sport catalogue ──────────────────────────────────────────────────
 // Adding a new sport = add one entry here. The screens read from this list.
@@ -64,6 +65,7 @@ export interface Tournament {
   event_date: string | null;
   location: string | null;
   notes: string | null;
+  photo_url: string | null;
   created_at: string;
 }
 
@@ -201,22 +203,29 @@ export async function fetchTournaments(groupId: string): Promise<Tournament[]> {
   if (error) throw error;
   return (data ?? []) as Tournament[];
 }
-export async function addTournament(input: { groupId: string; title: string; eventDate?: string | null; location?: string | null; notes?: string | null }): Promise<void> {
-  const { error } = await supabase.from('sport_tournaments').insert({
+export async function addTournament(input: { groupId: string; title: string; eventDate?: string | null; location?: string | null; notes?: string | null; photoUri?: string | null }): Promise<void> {
+  const { data, error } = await supabase.from('sport_tournaments').insert({
     group_id: input.groupId,
     title: input.title.trim(),
     event_date: input.eventDate || null,
     location: input.location?.trim() || null,
     notes: input.notes?.trim() || null,
-  });
+  }).select('id').single();
   if (error) throw error;
+  if (input.photoUri) {
+    try {
+      const url = await uploadContentPhoto(input.photoUri, `tournament/${data.id}/0.jpg`);
+      await supabase.from('sport_tournaments').update({ photo_url: url }).eq('id', data.id);
+    } catch { /* skip */ }
+  }
 }
-export async function updateTournament(id: string, patch: { title?: string; eventDate?: string | null; location?: string | null; notes?: string | null }): Promise<void> {
+export async function updateTournament(id: string, patch: { title?: string; eventDate?: string | null; location?: string | null; notes?: string | null; photoUri?: string | null }): Promise<void> {
   const row: Record<string, unknown> = {};
   if (patch.title !== undefined) row.title = patch.title.trim();
   if (patch.eventDate !== undefined) row.event_date = patch.eventDate || null;
   if (patch.location !== undefined) row.location = patch.location?.trim() || null;
   if (patch.notes !== undefined) row.notes = patch.notes?.trim() || null;
+  if (patch.photoUri !== undefined) row.photo_url = await resolvePhoto(patch.photoUri, `tournament/${id}/0.jpg`);
   const { error } = await supabase.from('sport_tournaments').update(row).eq('id', id);
   if (error) throw error;
 }

@@ -262,9 +262,13 @@ export function SportGroupBody({
           <View className="gap-2.5">
             {tournaments.map((t) => (
               <View key={t.id} className="flex-row items-start gap-3 rounded-xl bg-inset p-3">
-                <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: color + '22' }}>
-                  <Ionicons name="trophy-outline" size={17} color={color} />
-                </View>
+                {t.photo_url ? (
+                  <Image source={{ uri: t.photo_url }} style={{ width: 36, height: 36, borderRadius: 12 }} contentFit="cover" />
+                ) : (
+                  <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: color + '22' }}>
+                    <Ionicons name="trophy-outline" size={17} color={color} />
+                  </View>
+                )}
                 <View className="flex-1">
                   <Text className="font-sans-sb text-[14px] text-ink">{t.title}</Text>
                   <Text className="text-[12px] text-muted">{[t.event_date, t.location].filter(Boolean).join(' · ') || 'Date TBA'}</Text>
@@ -504,7 +508,7 @@ function AddTournamentSheet({
   visible, onClose, onAdd, initial, c,
 }: {
   visible: boolean; onClose: () => void;
-  onAdd: (form: { title: string; eventDate: string | null; location: string | null; notes: string | null }) => void;
+  onAdd: (form: { title: string; eventDate: string | null; location: string | null; notes: string | null; photoUri: string | null }) => void;
   initial?: Tournament | null;
   c: ReturnType<typeof useThemeColors>;
 }) {
@@ -513,15 +517,28 @@ function AddTournamentSheet({
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
+  const [photo, setPhoto] = useState<{ uri: string; isNew: boolean } | null>(null);
   useEffect(() => {
     if (!visible) return;
     setTitle(initial?.title ?? ''); setDate(initial?.event_date ?? ''); setLocation(initial?.location ?? ''); setNotes(initial?.notes ?? '');
+    setPhoto(initial?.photo_url ? { uri: initial.photo_url, isNew: false } : null);
   }, [visible, initial?.id]);
+  const pickPhoto = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
+    if (!res.canceled) setPhoto({ uri: res.assets[0].uri, isNew: true });
+  };
   const input = 'rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink';
-  const submit = () => { if (title.trim()) onAdd({ title, eventDate: date.trim() || null, location: location.trim() || null, notes: notes.trim() || null }); };
+  const submit = () => { if (title.trim()) onAdd({ title, eventDate: date.trim() || null, location: location.trim() || null, notes: notes.trim() || null, photoUri: photo === null ? null : photo.uri }); };
 
   return (
     <Sheet visible={visible} onClose={onClose} title={isEdit ? 'Edit tournament' : 'Add tournament'} footer={<Button label={isEdit ? 'Save changes' : 'Add tournament'} fullWidth disabled={!title.trim()} onPress={submit} />}>
+      <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Photo (optional)</Text>
+      <View className="mb-3 flex-row items-center gap-3">
+        <Pressable onPress={pickPhoto} className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-inset active:opacity-70">
+          {photo ? <Image source={{ uri: photo.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : <Ionicons name="image-outline" size={22} color={c.faint} />}
+        </Pressable>
+        {photo ? <Pressable onPress={() => setPhoto(null)} hitSlop={6}><Text className="text-[13px] font-sans-sb text-nonveg">Remove</Text></Pressable> : null}
+      </View>
       <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Title</Text>
       <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Society Summer Cup" placeholderTextColor={c.faint} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />
       <View className="mb-3 flex-row gap-2">
