@@ -41,7 +41,7 @@ export default function LendItemDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { userId } = useAuth();
+  const { userId, isAdmin } = useAuth();
 
   const [item, setItem] = useState<LendItem | null>(null);
   const [requests, setRequests] = useState<BorrowRequest[]>([]);
@@ -56,6 +56,7 @@ export default function LendItemDetailScreen() {
   const [saving, setSaving] = useState(false);
 
   const isOwner = !!item && item.owner_user_id === userId;
+  const canManage = isOwner || isAdmin;
   const isOffer = !item || item.kind === 'offer';
   const myRequest = requests.find((r) => r.requester_id === userId);
 
@@ -189,7 +190,7 @@ export default function LendItemDetailScreen() {
               <Text className="font-sans-bold text-[14px] text-ink">{ownerName}</Text>
               <Text className="text-[12px] text-muted">{item.owner?.flat ? `Flat ${item.owner.flat}` : 'Neighbour'}</Text>
             </View>
-            {isOwner ? (
+            {canManage ? (
               <Pressable onPress={openEdit} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: c.inset }}>
                 <Ionicons name="pencil-outline" size={16} color={c.muted} />
               </Pressable>

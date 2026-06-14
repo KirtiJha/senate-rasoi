@@ -409,7 +409,7 @@ function PostMenu({ post, isOwner, isAdmin, onEdit, onDelete, onPinToggle, onRes
             className="absolute overflow-hidden rounded-2xl border border-line bg-surface"
             style={{ top: insets.top + 52, right: 14, minWidth: 200, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 12 }}
           >
-            {isOwner ? (
+            {isOwner || isAdmin ? (
               <MenuItem icon="create-outline" label="Edit post" onPress={() => { setOpen(false); onEdit(); }} c={c} />
             ) : null}
             {isAdmin ? (

@@ -50,7 +50,7 @@ export default function DishDetailScreen() {
   const confirm = useConfirm();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { userId } = useAuth();
+  const { userId, isAdmin } = useAuth();
   const c = useThemeColors();
 
   const [dish, setDish] = useState<DishRow | null>(null);
@@ -199,6 +199,7 @@ export default function DishDetailScreen() {
   const [g1, g2] = SLOT_PLACEHOLDER[dish.slot] ?? ['#CDEBC5', '#A6D89B'];
   const future = serveLabel(dish.serve_date);
   const isOwner = !!userId && dish.chef_user_id === userId;
+  const canManage = isOwner || isAdmin;
 
   return (
     <View className="flex-1 bg-bg">
@@ -288,8 +289,8 @@ export default function DishDetailScreen() {
               </View>
             </View>
 
-            {/* Owner actions */}
-            {isOwner ? (
+            {/* Owner / admin actions */}
+            {canManage ? (
               <View className="mb-4 flex-row gap-2">
                 <Button label="Edit" variant="outline" size="sm" icon="create-outline" onPress={openEdit} />
                 <Button label="Remove dish" variant="danger" size="sm" onPress={handleRemove} />

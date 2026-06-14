@@ -6,6 +6,7 @@ import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-nati
 import { Container, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { useConfirm } from '../../context/confirm';
 import {
   CollectionPlayer, DueItem, bookerSettle, cancelMyPayment, fetchBookerCollections, fetchMyDues,
   markPaymentReceived, payDues, revertPayment, subscribeCourtPayments,
@@ -30,6 +31,7 @@ const STATUS_META: Record<string, { label: string; color: string }> = {
 export default function DuesScreen() {
   const c = useThemeColors();
   const toast = useToast();
+  const confirm = useConfirm();
   const { userId, communityId } = useAuth();
   const [tab, setTab] = useState<'owe' | 'collect'>('owe');
   const [dues, setDues] = useState<DueItem[]>([]);
@@ -78,7 +80,10 @@ export default function DuesScreen() {
     } catch { toast.show('Could not record payment'); }
   };
 
-  const undo = async (id: string) => { try { await cancelMyPayment(id); await load(); } catch { toast.show('Could not undo'); } };
+  const undo = async (id: string) => {
+    if (!(await confirm({ title: 'Undo payment', message: 'Mark this as unpaid (owed again)?', confirmLabel: 'Undo', destructive: true }))) return;
+    try { await cancelMyPayment(id); await load(); } catch { toast.show('Could not undo'); }
+  };
   const confirmReceived = async (id: string) => {
     try { const ok = await markPaymentReceived(id); if (ok) { toast.show('Marked received ✓'); await load(); } }
     catch { toast.show('Could not confirm'); }
@@ -88,7 +93,10 @@ export default function DuesScreen() {
     try { await bookerSettle(p.session_id, p.user_id, p.amount); toast.show('Marked as received ✓'); await load(); }
     catch { toast.show('Could not update'); }
   };
-  const revert = async (id: string) => { try { await revertPayment(id); toast.show('Reverted — owed again'); await load(); } catch { toast.show('Could not revert'); } };
+  const revert = async (id: string) => {
+    if (!(await confirm({ title: 'Revert payment', message: 'Move this payment back to owed?', confirmLabel: 'Revert', destructive: true }))) return;
+    try { await revertPayment(id); toast.show('Reverted — owed again'); await load(); } catch { toast.show('Could not revert'); }
+  };
 
   // ── Owed to me: grouped by member ──
   const byMember = new Map<string, CollectionPlayer[]>();
