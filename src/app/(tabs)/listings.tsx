@@ -15,6 +15,7 @@ import { isSupabaseConfigured } from '../../lib/supabase';
 import { listTiffinPlans } from '../../lib/tiffin';
 import { DishRow, ListingRow, TiffinPlanWithChef } from '../../lib/types';
 import { LendItem, fetchItems as fetchBorrowItems } from '../../lib/borrow';
+import { LostFoundItem, fetchLostFoundItems, LOST_FOUND_CATEGORIES } from '../../lib/lostFound';
 import { PlaceRow, fetchPlaces, placeTypeMeta } from '../../lib/places';
 import { layout, useThemeColors } from '../../theme';
 
@@ -23,15 +24,17 @@ const FOOD_COLOR = '#E8650A';
 const TIFFIN_COLOR = '#F59E0B';
 const BORROW_COLOR = '#0891B2';
 
-// Listings, food dishes, tiffins and borrow items — unified into one browsable list.
+// Listings, food dishes, tiffins, borrow and lost-found items — unified into one browsable list.
 type AllItem =
   | { kind: 'listing'; id: string; raw: ListingRow }
   | { kind: 'dish'; id: string; raw: DishRow }
   | { kind: 'tiffin'; id: string; raw: TiffinPlanWithChef }
   | { kind: 'borrow'; id: string; raw: LendItem }
-  | { kind: 'place'; id: string; raw: PlaceRow };
+  | { kind: 'place'; id: string; raw: PlaceRow }
+  | { kind: 'lost_found'; id: string; raw: LostFoundItem };
 
 const PLACES_COLOR = '#0D9488';
+const LOST_FOUND_COLOR = '#D97706';
 
 interface ItemDisplay {
   title: string;
@@ -75,6 +78,19 @@ function display(item: AllItem): ItemDisplay {
       location: p.address ?? null,
     };
   }
+  if (item.kind === 'lost_found') {
+    const lf = item.raw;
+    const lfCat = LOST_FOUND_CATEGORIES.find((c) => c.key === lf.category) ?? LOST_FOUND_CATEGORIES[LOST_FOUND_CATEGORIES.length - 1];
+    return {
+      title: lf.title,
+      catKey: lf.kind === 'lost' ? 'lost_found-lost' : 'lost_found-found',
+      catLabel: lf.kind === 'lost' ? '🔍 Lost' : '📦 Found',
+      color: LOST_FOUND_COLOR,
+      icon: lfCat.icon,
+      priceText: '—',
+      location: lf.owner?.flat ? `Flat ${lf.owner.flat}` : null,
+    };
+  }
   const l = item.raw;
   const cat = getService(l.category);
   return {
@@ -106,6 +122,8 @@ export default function AllListingsScreen() {
     { key: 'tiffin', label: 'Tiffin', color: TIFFIN_COLOR, icon: 'repeat' },
     { key: 'borrow-offer', label: '🤝 Lending', color: BORROW_COLOR, icon: 'swap-horizontal' },
     { key: 'borrow-request', label: '🙏 Needs', color: BORROW_COLOR, icon: 'hand-left-outline' },
+    { key: 'lost_found-lost', label: '🔍 Lost', color: LOST_FOUND_COLOR, icon: 'search' },
+    { key: 'lost_found-found', label: '📦 Found', color: LOST_FOUND_COLOR, icon: 'search' },
     { key: 'places', label: '📍 Nearby', color: PLACES_COLOR, icon: 'location' },
     ...SERVICES.filter((s) => s.kind === 'listing').map((s) => ({ key: s.key, label: s.label, color: s.color, icon: s.icon })),
   ], []);
@@ -113,18 +131,20 @@ export default function AllListingsScreen() {
   const load = useCallback(async () => {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
     try {
-      const [listings, dishes, tiffins, borrows, places] = await Promise.all([
+      const [listings, dishes, tiffins, borrows, places, lostFounds] = await Promise.all([
         fetchAllListings(communityId, 0, 200),
         fetchDishes(communityId).catch(() => [] as DishRow[]),
         listTiffinPlans(communityId).catch(() => [] as TiffinPlanWithChef[]),
         fetchBorrowItems({}, communityId).catch(() => [] as LendItem[]),
         fetchPlaces({}, communityId).catch(() => [] as PlaceRow[]),
+        fetchLostFoundItems({ openOnly: true }, communityId).catch(() => [] as LostFoundItem[]),
       ]);
       setItems([
         ...dishes.map((d): AllItem => ({ kind: 'dish', id: d.id, raw: d })),
         ...tiffins.map((t): AllItem => ({ kind: 'tiffin', id: t.id, raw: t })),
         ...borrows.map((b): AllItem => ({ kind: 'borrow', id: b.id, raw: b })),
         ...places.map((p): AllItem => ({ kind: 'place', id: p.id, raw: p })),
+        ...lostFounds.map((lf): AllItem => ({ kind: 'lost_found', id: lf.id, raw: lf })),
         ...listings.map((l): AllItem => ({ kind: 'listing', id: l.id, raw: l })),
       ]);
     } catch { toast.show('Could not load listings'); }
@@ -148,12 +168,14 @@ export default function AllListingsScreen() {
     if (i.kind === 'listing') router.push(`/listing/${i.raw.id}` as any);
     else if (i.kind === 'borrow') router.push(`/borrow/${i.raw.id}` as any);
     else if (i.kind === 'place') router.push(`/place/${i.raw.id}` as any);
+    else if (i.kind === 'lost_found') router.push(`/lost-found/${i.raw.id}` as any);
     else router.push('/food' as any);
   };
 
   const contactItem = (i: AllItem) => {
-    // Places carry call/WhatsApp/map on their detail page — send there.
+    // Places and lost-found carry contact on their detail page — send there.
     if (i.kind === 'place') { router.push(`/place/${i.raw.id}` as any); return; }
+    if (i.kind === 'lost_found') { router.push(`/lost-found/${i.raw.id}` as any); return; }
     let url: string;
     if (i.kind === 'listing') {
       url = buildInquiryWhatsAppLink(i.raw, profile?.name ?? 'A neighbour', '');
@@ -167,6 +189,9 @@ export default function AllListingsScreen() {
         ? `Hi ${ownerName}, I saw your request for "${i.raw.title}" on Aangan — I have one you can borrow! 🤝`
         : `Hi ${ownerName}, I'd like to borrow your "${i.raw.title}" on Aangan 🤝`;
       url = waLink(wa, msg);
+    } else if (i.kind === 'lost_found') {
+      router.push(`/lost-found/${i.raw.id}` as any);
+      return;
     } else {
       url = waLink(i.raw.chef?.whatsapp, `Hi ${i.raw.chef?.name ?? ''}! About your *${i.raw.title}* tiffin on Aangan 🍱`);
     }

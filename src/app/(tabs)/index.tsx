@@ -23,6 +23,7 @@ import { PlaceRow, fetchPlaces, placeTypeMeta } from '../../lib/places';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { SERVICES, ServiceCategory, getService } from '../../lib/services';
 import { fetchBorrowCounts, fetchItems as fetchBorrowItems, LendItem, BORROW_CATEGORIES } from '../../lib/borrow';
+import { fetchLostFoundItems, LostFoundItem, fetchLostFoundCounts, LOST_FOUND_CATEGORIES } from '../../lib/lostFound';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { AppVersion, fetchLatestVersion, isNewer } from '../../lib/appVersion';
 import { useThemeColors } from '../../theme';
@@ -114,6 +115,14 @@ const COMMUNITY_TILES: CommunityTile[] = [
     href: '/borrow',
   },
   {
+    key: 'lost_found',
+    label: 'Lost & Found',
+    blurb: 'Report or find missing items in the society',
+    icon: 'search',
+    color: '#D97706',
+    href: '/lost-found',
+  },
+  {
     key: 'helpers',
     label: 'Blood & SOS',
     blurb: 'Donors & emergency helpers nearby',
@@ -166,6 +175,8 @@ export default function HomeScreen() {
   const [dishes, setDishes] = useState<DishRow[]>([]);
   const [recentBorrow, setRecentBorrow] = useState<LendItem[]>([]);
   const [borrowCount, setBorrowCount] = useState(0);
+  const [recentLostFound, setRecentLostFound] = useState<LostFoundItem[]>([]);
+  const [lostFoundCount, setLostFoundCount] = useState(0);
 
   // Per-category counts + newest listings, dishes, borrow items — refreshed on focus.
   useFocusEffect(useCallback(() => {
@@ -180,6 +191,10 @@ export default function HomeScreen() {
       setRecentBorrow(rows.slice(0, 10))
     ).catch(() => {});
     fetchBorrowCounts(communityId).then((c) => setBorrowCount(c.offers + c.requests)).catch(() => {});
+    fetchLostFoundItems({ openOnly: true }, communityId).then((rows) =>
+      setRecentLostFound(rows.slice(0, 10))
+    ).catch(() => {});
+    fetchLostFoundCounts(communityId).then(setLostFoundCount).catch(() => {});
   }, [communityId, userId]));
 
   useEffect(() => {
@@ -366,8 +381,8 @@ export default function HomeScreen() {
         {/* Fresh from kitchens — today's & upcoming home-cooked dishes */}
         <FreshFoodStrip items={dishes} isDesktop={isDesktop} />
 
-        {/* Just listed — newest listings + borrow items */}
-        <JustListedStrip listings={recent} borrows={recentBorrow} properties={recentProps} places={recentPlaces} isDesktop={isDesktop} />
+        {/* Just listed — newest listings + borrow + lost-found items */}
+        <JustListedStrip listings={recent} borrows={recentBorrow} properties={recentProps} places={recentPlaces} lostFound={recentLostFound} isDesktop={isDesktop} />
 
         {/* Service grid */}
         <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
@@ -384,6 +399,7 @@ export default function HomeScreen() {
               const badge =
                 tile.key === 'messages' ? (unread > 0 ? unread : 0)
                 : tile.key === 'borrow' ? borrowCount
+                : tile.key === 'lost_found' ? lostFoundCount
                 : (tileCounts[tile.key] ?? 0);
               return (
                 <View key={tile.key} style={{ width: '50%', padding: 6 }}>
@@ -462,10 +478,11 @@ type StripItem =
   | { kind: 'listing'; id: string; ts: string; raw: ListingRow }
   | { kind: 'borrow'; id: string; ts: string; raw: LendItem }
   | { kind: 'property'; id: string; ts: string; raw: PropertyRow }
-  | { kind: 'place'; id: string; ts: string; raw: PlaceRow };
+  | { kind: 'place'; id: string; ts: string; raw: PlaceRow }
+  | { kind: 'lost_found'; id: string; ts: string; raw: LostFoundItem };
 
 /** Horizontal carousel (mobile) / wrapped row (desktop) of the newest listings + borrow items. */
-function JustListedStrip({ listings, borrows, properties, places, isDesktop }: { listings: ListingRow[]; borrows: LendItem[]; properties: PropertyRow[]; places: PlaceRow[]; isDesktop: boolean }) {
+function JustListedStrip({ listings, borrows, properties, places, lostFound, isDesktop }: { listings: ListingRow[]; borrows: LendItem[]; properties: PropertyRow[]; places: PlaceRow[]; lostFound: LostFoundItem[]; isDesktop: boolean }) {
   const router = useRouter();
   const c = useThemeColors();
   const BORROW_COLOR = '#0891B2';
@@ -476,6 +493,7 @@ function JustListedStrip({ listings, borrows, properties, places, isDesktop }: {
     ...borrows.map((b): StripItem => ({ kind: 'borrow', id: b.id, ts: b.created_at, raw: b })),
     ...properties.map((p): StripItem => ({ kind: 'property', id: p.id, ts: p.created_at, raw: p })),
     ...places.map((p): StripItem => ({ kind: 'place', id: p.id, ts: p.created_at, raw: p })),
+    ...lostFound.map((lf): StripItem => ({ kind: 'lost_found', id: lf.id, ts: lf.created_at, raw: lf })),
   ].sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 12);
 
   if (!items.length) return null;
@@ -584,10 +602,37 @@ function JustListedStrip({ listings, borrows, properties, places, isDesktop }: {
     );
   };
 
+  const LF_COLOR = '#D97706';
+  const LostFoundCard = ({ lf }: { lf: LostFoundItem }) => {
+    const lfCat = LOST_FOUND_CATEGORIES.find((lc) => lc.key === lf.category) ?? LOST_FOUND_CATEGORIES[LOST_FOUND_CATEGORIES.length - 1];
+    const label = lf.kind === 'lost' ? '🔍 Lost' : '📦 Found';
+    return (
+      <Pressable
+        onPress={() => router.push(`/lost-found/${lf.id}` as any)}
+        className="overflow-hidden rounded-2xl bg-surface active:opacity-90"
+        style={{ width: 152, borderWidth: 1, borderColor: c.line }}
+      >
+        <View style={{ height: 96, backgroundColor: LF_COLOR + '18' }} className="w-full items-center justify-center">
+          {lf.photo_url
+            ? <Image source={{ uri: lf.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+            : <Ionicons name={lfCat.icon as any} size={32} color={LF_COLOR} />}
+        </View>
+        <View className="p-2.5">
+          <View className="mb-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: LF_COLOR + '20' }}>
+            <Text className="text-[10px] font-sans-sb" style={{ color: LF_COLOR }} numberOfLines={1}>{label} · {lfCat.label}</Text>
+          </View>
+          <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{lf.title}</Text>
+          <Text className="text-[11px] text-faint">{lf.owner?.name ?? 'A neighbour'}</Text>
+        </View>
+      </Pressable>
+    );
+  };
+
   const renderCard = (i: StripItem) =>
     i.kind === 'listing' ? <ListingCard key={i.id} l={i.raw} />
     : i.kind === 'borrow' ? <BorrowCard key={i.id} b={i.raw} />
     : i.kind === 'property' ? <PropertyCard key={i.id} p={i.raw} />
+    : i.kind === 'lost_found' ? <LostFoundCard key={i.id} lf={i.raw} />
     : <PlaceCard key={i.id} p={i.raw} />;
 
   return (
