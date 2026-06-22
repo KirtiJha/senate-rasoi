@@ -189,9 +189,6 @@ export default function AllListingsScreen() {
         ? `Hi ${ownerName}, I saw your request for "${i.raw.title}" on Aangan — I have one you can borrow! 🤝`
         : `Hi ${ownerName}, I'd like to borrow your "${i.raw.title}" on Aangan 🤝`;
       url = waLink(wa, msg);
-    } else if (i.kind === 'lost_found') {
-      router.push(`/lost-found/${i.raw.id}` as any);
-      return;
     } else {
       url = waLink(i.raw.chef?.whatsapp, `Hi ${i.raw.chef?.name ?? ''}! About your *${i.raw.title}* tiffin on Aangan 🍱`);
     }
