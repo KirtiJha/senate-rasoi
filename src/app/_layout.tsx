@@ -13,7 +13,7 @@ import {
 } from '@expo-google-fonts/hanken-grotesk';
 import { useFonts } from 'expo-font';
 import * as Notifications from 'expo-notifications';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -103,10 +103,29 @@ function AppShell() {
  * On mobile: renders a persistent bottom bar below the Stack so it stays
  * visible across every screen (tabs and community pages alike).
  */
+// Tapping a push notification routes to the relevant screen (data.route is set
+// by the server-side push payload). Covers both background taps and cold starts.
+function usePushTapNavigation() {
+  const router = useRouter();
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    Notifications.getLastNotificationResponseAsync().then((resp) => {
+      const route = resp?.notification.request.content.data?.route;
+      if (typeof route === 'string') router.push(route as never);
+    });
+    const sub = Notifications.addNotificationResponseReceivedListener((resp) => {
+      const route = resp.notification.request.content.data?.route;
+      if (typeof route === 'string') router.push(route as never);
+    });
+    return () => sub.remove();
+  }, [router]);
+}
+
 function DesktopShell() {
   const c = useThemeColors();
   const { isDesktop } = useResponsive();
   const { ready, session } = useAuth();
+  usePushTapNavigation();
   const showRail = isDesktop && ready && !!session;
   const showBottomBar = !isDesktop && ready && !!session;
 
