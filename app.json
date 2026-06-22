@@ -27,6 +27,7 @@
     },
     "android": {
       "package": "com.aangan.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#1A1A1A",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
