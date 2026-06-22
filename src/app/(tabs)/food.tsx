@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DishCard } from '../../components/DishCard';
 import { Empty } from '../../components/Empty';
+import { FoodDisclaimer } from '../../components/FoodDisclaimer';
 import { KitchenSection } from '../../components/KitchenSection';
 import { MyTiffinsSection } from '../../components/MyTiffinsSection';
 import { OrderModal } from '../../components/OrderModal';
@@ -377,6 +378,8 @@ export default function FoodScreen() {
               ))}
             </>
           )}
+
+          <FoodDisclaimer />
         </Container>
       </ScrollView>
       )}
