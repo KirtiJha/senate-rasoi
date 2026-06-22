@@ -76,6 +76,10 @@ export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
             Ordering as {profile.chefName || 'you'}. Reserves your plates; the chef confirms next.
             {dish.upi ? ` Pay via UPI ${dish.upi}.` : ''}
           </Text>
+          <Text className="mt-2 text-center text-[11px] leading-4 text-faint">
+            This dish is cooked by a resident. Aangan only lists it and isn&apos;t responsible for the food,
+            payment, or delivery — your order is directly with the cook.
+          </Text>
         </Pressable>
       </Pressable>
     </Modal>

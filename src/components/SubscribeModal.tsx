@@ -72,6 +72,10 @@ export function SubscribeModal({ plan, onClose, onConfirm }: SubscribeModalProps
           <Text className="mt-2.5 text-center text-[11px] leading-4 text-faint">
             You'll get this tiffin on {daysLabel(plan.days_of_week).toLowerCase()}. Pause or cancel anytime in You → Tiffins.
           </Text>
+          <Text className="mt-2 text-center text-[11px] leading-4 text-faint">
+            This tiffin is cooked by a resident. Aangan only lists it and isn&apos;t responsible for the food,
+            payment, or delivery — your subscription is directly with the cook.
+          </Text>
         </Pressable>
       </Pressable>
     </Modal>
