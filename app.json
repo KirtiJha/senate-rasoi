@@ -12,7 +12,7 @@
     "updates": {
       "enabled": true,
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/aangan"
+      "url": "https://u.expo.dev/7cdeee0d-1509-4ece-863e-710d649f3fc5"
     },
     "runtimeVersion": {
       "policy": "appVersion"
@@ -39,8 +39,7 @@
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.CAMERA",
         "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.VIBRATE",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.VIBRATE"
       ]
     },
     "web": {
