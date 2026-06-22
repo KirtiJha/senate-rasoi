@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "268768125633",
+    "project_id": "aangan-fabba",
+    "storage_bucket": "aangan-fabba.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:268768125633:android:e8890d6891088b338aea40",
+        "android_client_info": {
+          "package_name": "com.aangan.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVGjnc3FKDekwwgPU6KlDNorFw5Dv48Rc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -2,6 +2,7 @@
   "expo": {
     "name": "Aangan",
     "slug": "aangan",
+    "owner": "aangan",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -34,11 +35,12 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "CAMERA",
-        "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE"
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -67,6 +69,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7cdeee0d-1509-4ece-863e-710d649f3fc5"
+      }
     }
   }
 }
