@@ -2,6 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { Container, ScreenHeader } from '../components/ui';
+import { SUPPORT_EMAIL } from '../lib/support';
 import { useThemeColors } from '../theme';
 
 type Tab = 'terms' | 'privacy';
@@ -126,7 +127,7 @@ const TERMS: { h: string; p: string[] }[] = [
   {
     h: 'Changes & contact',
     p: [
-      'We may update these terms; continued use means you accept the changes. For questions, reach your society admin through the app.',
+      'We may update these terms; continued use means you accept the changes. For questions about the app itself, or to report abuse that your society admin cannot resolve, email us at ' + SUPPORT_EMAIL + '. We aim to respond within 3 working days.',
     ],
   },
 ];
@@ -178,7 +179,7 @@ const PRIVACY: { h: string; p: string[] }[] = [
   {
     h: 'Changes & contact',
     p: [
-      'We may update this policy; we\'ll revise the date above. For privacy questions, contact your society admin through the app.',
+      'We may update this policy; we\'ll revise the date above. For privacy questions, or to request deletion of your data, email us at ' + SUPPORT_EMAIL + ' — or delete your account yourself from Profile → Delete account.',
     ],
   },
 ];

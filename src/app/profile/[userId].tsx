@@ -4,7 +4,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, Container, useResponsive } from '../../components/ui';
+import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
+import { useBlocks } from '../../context/blocks';
 import { useToast } from '../../context/toast';
 import { getProfile } from '../../lib/auth';
 import { getOrCreateThread } from '../../lib/dm';
@@ -21,6 +23,8 @@ export default function PublicProfileScreen() {
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
   const { userId: meId } = useAuth();
+  const { isBlocked } = useBlocks();
+  const blocked = isBlocked(userId);
 
   const [profile, setProfile] = useState<DbProfile | null>(null);
   const [listings, setListings] = useState<ListingRow[]>([]);
@@ -79,6 +83,14 @@ export default function PublicProfileScreen() {
             <Ionicons name="chevron-back" size={22} color={c.ink} />
           </Pressable>
           <Text className="font-display-x text-[20px] text-ink flex-1">{displayName}</Text>
+          {userId ? (
+            <ModerationMenu
+              targetType="profile"
+              targetId={userId}
+              targetOwnerId={userId}
+              targetOwnerName={displayName}
+            />
+          ) : null}
         </View>
       </View>
 
@@ -107,22 +119,32 @@ export default function PublicProfileScreen() {
               </View>
             </View>
 
-            {/* Message this neighbour (not shown on your own profile) */}
+            {/* Message this neighbour (not on your own profile, not if blocked) */}
             {meId && meId !== userId ? (
-              <View className="mt-4 w-full">
-                <Button
-                  label={starting ? 'Opening…' : 'Message'}
-                  icon="chatbubble-outline"
-                  fullWidth
-                  disabled={starting}
-                  onPress={startChat}
-                />
-              </View>
+              blocked ? (
+                <View className="mt-4 w-full items-center rounded-2xl border border-line bg-inset px-4 py-3">
+                  <Ionicons name="ban-outline" size={20} color={c.faint} />
+                  <Text className="mt-1 font-sans-sb text-[13px] text-muted">Blocked</Text>
+                  <Text className="mt-0.5 text-center text-[12px] text-faint">
+                    Unblock from Profile → Blocked members to see their content again.
+                  </Text>
+                </View>
+              ) : (
+                <View className="mt-4 w-full">
+                  <Button
+                    label={starting ? 'Opening…' : 'Message'}
+                    icon="chatbubble-outline"
+                    fullWidth
+                    disabled={starting}
+                    onPress={startChat}
+                  />
+                </View>
+              )
             ) : null}
           </View>
 
-          {/* Active listings */}
-          {listings.length > 0 ? (
+          {/* Active listings — hidden entirely while blocked */}
+          {blocked ? null : listings.length > 0 ? (
             <View className="mx-4 mt-5">
               <Text className="mb-3 font-sans-sb text-[13px] uppercase tracking-wider text-muted">
                 Active Listings ({listings.length})

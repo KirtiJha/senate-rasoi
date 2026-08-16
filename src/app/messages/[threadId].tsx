@@ -7,7 +7,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '../../components/ui';
+import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
+import { useBlocks } from '../../context/blocks';
 import { useToast } from '../../context/toast';
 import { useDraft } from '../../lib/draft';
 import { haptics } from '../../lib/haptics';
@@ -24,6 +26,7 @@ export default function DmThreadScreen() {
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { userId } = useAuth();
+  const { isBlocked } = useBlocks();
 
   const [thread, setThread] = useState<InboxThread | null>(null);
   const [messages, setMessages] = useState<DmMessageRow[]>([]);
@@ -31,6 +34,7 @@ export default function DmThreadScreen() {
   const [body, setBody] = useDraft('dm:' + (threadId ?? ''), '');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+  const blocked = isBlocked(thread?.other.id);
 
   const load = useCallback(async () => {
     if (!threadId || !userId) return;
@@ -97,6 +101,14 @@ export default function DmThreadScreen() {
               {thread?.other.flat ? <Text className="text-[11px] text-faint">Flat {thread.other.flat}</Text> : null}
             </View>
           </Pressable>
+          {thread?.other.id ? (
+            <ModerationMenu
+              targetType="message"
+              targetId={threadId!}
+              targetOwnerId={thread.other.id}
+              targetOwnerName={thread.other.name}
+            />
+          ) : null}
         </View>
       </View>
 
@@ -119,7 +131,18 @@ export default function DmThreadScreen() {
         )}
       </ScrollView>
 
-      {/* Composer */}
+      {/* Composer — replaced by a notice when either side has blocked */}
+      {blocked ? (
+        <View style={{ paddingBottom: insets.bottom + 8 }} className="border-t border-line bg-bg px-4 pt-3">
+          <View className="items-center rounded-2xl bg-inset px-4 py-3">
+            <Ionicons name="ban-outline" size={20} color={c.faint} />
+            <Text className="mt-1 font-sans-sb text-[13px] text-muted">This conversation is unavailable</Text>
+            <Text className="mt-0.5 text-center text-[12px] text-faint">
+              You can manage this in Profile → Blocked members.
+            </Text>
+          </View>
+        </View>
+      ) : (
       <View style={{ paddingBottom: insets.bottom + 8 }} className="border-t border-line bg-bg px-4 pt-3">
         <View className="flex-row items-end gap-2">
           <View className="flex-1 rounded-2xl border border-line bg-inset px-3 py-2">
@@ -147,6 +170,7 @@ export default function DmThreadScreen() {
           </Pressable>
         </View>
       </View>
+      )}
     </KeyboardAvoidingView>
   );
 }

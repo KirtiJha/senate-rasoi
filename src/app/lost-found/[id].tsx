@@ -7,6 +7,7 @@ import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, Text
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
 import { Avatar, Button, Container, ScreenHeader, Sheet } from '../../components/ui';
+import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
@@ -198,6 +199,12 @@ export default function LostFoundDetailScreen() {
                 <Ionicons name="pencil-outline" size={16} color={c.muted} />
               </Pressable>
             ) : null}
+            <ModerationMenu
+              targetType="lost_found"
+              targetId={item.id}
+              targetOwnerId={item.owner_user_id}
+              targetOwnerName={item.owner?.name}
+            />
           </View>
 
           {/* Owner controls */}

@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator, Animated, KeyboardAvoidingView, Modal, Platform, Pressable,
   RefreshControl, ScrollView, Text, TextInput, View,
@@ -11,7 +11,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
 import { Avatar, Button, ScreenHeader, useResponsive } from '../../components/ui';
+import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
+import { useBlocks } from '../../context/blocks';
 import { useToast } from '../../context/toast';
 import {
   ALL_POST_CATEGORIES, POST_CATEGORY_COLORS, POST_CATEGORY_ICONS,
@@ -42,6 +44,7 @@ export default function FeedScreen() {
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
   const { userId, communityId, profile, isAdmin } = useAuth();
+  const { filterBlocked } = useBlocks();
 
   const PAGE = 20;
 
@@ -53,6 +56,12 @@ export default function FeedScreen() {
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(0);
   const [showCompose, setShowCompose] = useState(false);
+
+  // Posts by blocked members never reach the list.
+  const visiblePosts = useMemo(
+    () => filterBlocked(posts, (p) => p.author_id),
+    [posts, filterBlocked],
+  );
 
   const load = useCallback(async () => {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
@@ -123,7 +132,7 @@ export default function FeedScreen() {
 
       <View style={{ flex: 1, width: '100%', maxWidth: FEED_MAX, alignSelf: 'center' }}>
       <FlashList
-        data={loading ? [] : posts}
+        data={loading ? [] : visiblePosts}
         keyExtractor={(item: PostRow) => item.id}
         renderItem={({ item }: { item: PostRow }) => <PostCard post={item} userId={userId} />}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
@@ -285,6 +294,13 @@ const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userI
             {isOwn ? 'You' : post.author?.name ?? 'Someone'}
             {post.author?.flat ? ` · Flat ${post.author.flat}` : ''}
           </Text>
+          <ModerationMenu
+            targetType="post"
+            targetId={post.id}
+            targetOwnerId={post.author_id}
+            targetOwnerName={post.author?.name}
+            size={16}
+          />
           <Ionicons name="chevron-forward" size={14} color={c.faint} />
         </View>
       </View>

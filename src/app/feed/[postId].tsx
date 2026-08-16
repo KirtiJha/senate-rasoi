@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView, Modal, Platform, Pressable,
   ScrollView, Text, TextInput, View,
@@ -10,7 +10,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
 import { Avatar, Container } from '../../components/ui';
+import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
+import { useBlocks } from '../../context/blocks';
 import { useDraft } from '../../lib/draft';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { useToast } from '../../context/toast';
@@ -33,6 +35,11 @@ export default function PostThreadScreen() {
 
   const [post, setPost] = useState<PostRow | null>(null);
   const [comments, setComments] = useState<CommentRow[]>([]);
+  const { filterBlocked } = useBlocks();
+  const visibleComments = useMemo(
+    () => filterBlocked(comments, (cm) => cm.author_id),
+    [comments, filterBlocked],
+  );
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
 
@@ -179,7 +186,7 @@ export default function PostThreadScreen() {
             {/* Author */}
             <View className="mt-4 flex-row items-center gap-2.5">
               <Avatar name={post.author?.name ?? '?'} size={32} />
-              <View>
+              <View className="flex-1">
                 <Text className="font-sans-sb text-[13px] text-ink">
                   {post.author_id === userId ? 'You' : post.author?.name ?? 'Someone'}
                 </Text>
@@ -187,16 +194,23 @@ export default function PostThreadScreen() {
                   {post.author?.flat ? `Flat ${post.author.flat} · ` : ''}{formatTimeAgo(post.created_at)}
                 </Text>
               </View>
+              <ModerationMenu
+                targetType="post"
+                targetId={post.id}
+                targetOwnerId={post.author_id}
+                targetOwnerName={post.author?.name}
+                size={16}
+              />
             </View>
           </View>
 
           {/* Comments */}
           <View className="mb-4">
             <Text className="mb-3 text-[13px] font-sans-sb text-muted">
-              {comments.length === 0 ? 'No comments yet' : `${comments.length} comment${comments.length === 1 ? '' : 's'}`}
+              {visibleComments.length === 0 ? 'No comments yet' : `${visibleComments.length} comment${visibleComments.length === 1 ? '' : 's'}`}
             </Text>
             <View className="gap-3">
-              {comments.map((comment) => (
+              {visibleComments.map((comment) => (
                 <CommentBubble key={comment.id} comment={comment} userId={userId} isAdmin={!!isAdmin} onDelete={() => handleDeleteComment(comment.id)} onChanged={loadPost} c={c} />
               ))}
             </View>
@@ -284,7 +298,14 @@ function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, c }: {
         )}
       </View>
       {!editing ? (
-        <View className="mt-0.5 flex-row gap-2.5">
+        <View className="mt-0.5 flex-row items-center gap-2.5">
+          <ModerationMenu
+            targetType="comment"
+            targetId={comment.id}
+            targetOwnerId={comment.author_id}
+            targetOwnerName={comment.author?.name}
+            size={14}
+          />
           {isOwn || isAdmin ? (
             <Pressable onPress={() => { setDraft(comment.body); setEditing(true); }} hitSlop={8}>
               <Ionicons name="create-outline" size={14} color={c.faint} />

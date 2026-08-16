@@ -4,7 +4,7 @@
 > Status legend: 🔴 Open · 🟡 In Progress · 🟢 Implemented · ⚪️ Won't Do / Deferred
 > Type legend: 🐞 Bug · ✨ Enhancement · 💡 Idea/Feature
 
-_Last updated: 16 Aug 2026 — app-store readiness audit (Android + iOS)_
+_Last updated: 16 Aug 2026 — store-readiness build-out (moderation, contact, native config)_
 
 ---
 
@@ -12,10 +12,10 @@ _Last updated: 16 Aug 2026 — app-store readiness audit (Android + iOS)_
 
 | Open | In Progress | Implemented | Deferred | Total |
 |---|---|---|---|---|
-| 3 | 0 | 24 | 0 | 27 |
+| 1 | 0 | 27 | 0 | 28 |
 
-> Open: **#18** (PIN-reset-by-phone — product/security decision), **#26** (UGC report/block — **blocks iOS submission**), **#27** (developer support contact — **blocks iOS submission**).
-> Pending migrations: run through **0066**.
+> Open: **#18** (PIN-reset-by-phone — product/security decision, deferred by owner).
+> Pending migrations: run through **0068**.
 
 ### 🚦 App Store / Play readiness at a glance
 
@@ -25,9 +25,29 @@ _Last updated: 16 Aug 2026 — app-store readiness audit (Android + iOS)_
 | Push notifications end-to-end | ✅ | ✅ (#24 — `aps-environment` now set) |
 | Account deletion (Apple 5.1.1(v)) | ✅ | ✅ — Profile → Delete account (RPC in `0015`) |
 | Privacy policy + Terms | ✅ | ✅ — `/legal` |
-| UGC report & block (Apple 1.2) | ⚠️ policy risk | ❌ **#26 — hard blocker** |
-| Published developer contact (Apple 1.2) | ⚠️ | ❌ **#27 — hard blocker** |
+| UGC report & block (Apple 1.2) | ✅ | ✅ (#26 — migration `0068`) |
+| Published developer contact (Apple 1.2) | ✅ | ✅ (#27 — ⚠️ set a real mailbox, see below) |
 | Store listing assets (screenshots, copy) | ⬜ not started | ⬜ not started |
+| Paid developer account | ⬜ Play $25 one-time | ⬜ Apple $99/yr |
+
+### ▶️ Before you submit — the human steps left
+
+These can't be done from the codebase and are the remaining gate:
+
+1. **Point `SUPPORT_EMAIL` at a real mailbox.** `src/lib/support.ts` ships
+   `support@aangan.app` as a placeholder. It appears in the Terms, the Privacy
+   Policy and on `/about`, and must match the **Support URL / contact** in App
+   Store Connect. Abuse reports are expected to get a timely reply.
+2. **Fill the iOS submit block** in `eas.json` — `appleId`, `ascAppId`,
+   `appleTeamId` — once the App Store Connect record exists.
+3. **Create the paid accounts** (Apple $99/yr, Google Play $25 one-time) and
+   upload an **APNs key** to EAS so iOS push is signed.
+4. **Verify the app icon has no alpha channel.** `assets/images/icon.png` is
+   1024×1024 RGBA; Apple rejects icons with transparency. Expo's prebuild
+   normally flattens it, so confirm on the first build rather than assuming.
+5. **Store listing assets** — screenshots per device class, description, age
+   rating, and Play's **Data Safety** form (declare: name, phone, flat, photos,
+   UPI ID; all society-scoped; account deletion available in-app).
 
 ---
 
@@ -258,19 +278,35 @@ _Last updated: 16 Aug 2026 — app-store readiness audit (Android + iOS)_
 ---
 
 ### #26 — No way for a member to report or block another member 🐞
-- **Status:** 🔴 Open · **blocks iOS submission**
+- **Status:** 🟢 Implemented · **▶️ run migration `0068`**
 - **Area:** Safety / moderation (app-wide)
-- **Risk:** **Apple App Store Guideline 1.2 (Safety — User-Generated Content)** requires apps with UGC to ship *all four* of: a content filter, a mechanism to **report** offensive content, the ability to **block abusive users**, and published developer contact info (see #27). Aangan is full of UGC — feed posts and comments, listings, dishes, recommendations, borrow, Lost & Found, and 1:1 DMs — but there is **no report and no block affordance anywhere**. The Terms already forbid abusive content and say admins may moderate, but a policy sentence is not a mechanism; App Review tests for the buttons. Google Play's UGC policy expects the same, though it's enforced less strictly at review time.
-- **Scope (proposed):** a `content_reports` table (reporter, target type + id, reason, status) and a `user_blocks` table; a "Report" and "Block" action on posts/comments/listings/DMs/profiles; filtering blocked users' content out of the feeds; and an admin review queue on `/admin`.
-- **⚠️ Needs a product decision first:** how far a block reaches — hide their feed posts and comments only, or also their listings, dishes and directory row? Mutual (neither sees the other) or one-way? That choice changes the query shape in most list screens, so it should be settled before implementation.
+- **Risk:** **Apple App Store Guideline 1.2 (Safety — UGC)** requires apps with user-generated content to ship *all four* of: a content filter, a mechanism to **report** offensive content, the ability to **block** abusive users, and published developer contact (see #27). Aangan is dense with UGC — feed posts and comments, listings, dishes, recommendations, borrow, Lost & Found and 1:1 DMs — and shipped **none** of the report/block half. The Terms forbade abusive content and said admins may moderate, but App Review tests for the buttons, not the policy text.
+- **Product decision taken** (owner delegated: "whatever is required as per best and recommended practice"): blocking is **mutual** — neither party sees the other — and covers **all UGC plus DMs**, which is the behaviour App Review expects and the norm across social apps. An admin ban (`profiles.blocked`, migration 0025) is a *separate* concept and was deliberately left untouched.
+- **Implemented:**
+  1. **`content_reports`** — reporter, target type + id, target owner, one of 8 reasons, free-text detail, and an `open → reviewing → actioned/dismissed` lifecycle. Unique per (reporter, target) so re-reporting updates rather than duplicates. Reporters see their own; admins see their society's.
+  2. **`user_blocks`** + `is_peer_blocked()` — a user manages their own list, and can also read rows where they are the blocked party, which is what makes mutual enforcement possible client-side.
+  3. **`ModerationMenu`** — one drop-in "⋯" control giving Report + Block to any content. Renders nothing on your own content. Wired into feed posts, feed comments, post detail, listing detail, Lost & Found detail, public profiles and DM threads.
+  4. **`BlocksProvider`** — one app-wide subscription supplying the blocked-id set; `filterBlocked()` strips blocked authors from the feed, the unified All-listings view and post comments.
+  5. **Blocking actually stops contact** — hiding content client-side isn't enough for messaging, so a `before insert` trigger on `dm_messages` **refuses the write** when either party has blocked the other, and the composer is replaced by an explanatory notice.
+  6. **Undo** — a Blocked-members screen at `/profile/blocked` (Profile → Blocked members), required because Apple expects a block to be reversible by the person who made it.
+  7. **Admin queue** — a Reports tab on `/admin` to view, open the reported item, and mark in-review / actioned / dismissed. Filing a report notifies every admin in the society (new `report` notification type), which rides the 0066 push fan-out automatically.
 
 ---
 
 ### #27 — No published developer contact 🐞
-- **Status:** 🔴 Open · **blocks iOS submission**
+- **Status:** 🟢 Implemented · ⚠️ **needs a real mailbox before submission**
 - **Area:** Legal / support
-- **Risk:** the same Guideline 1.2 requires **published developer contact info** so users can reach a human about abuse, and App Store Connect separately requires a **Support URL** on the listing. Right now there is no support email anywhere in `src/` — the Privacy Policy's only escalation path is "contact your society admin through the app", which is not a route to the developer.
-- **Fix (small):** add a support email to the Terms/Privacy "Changes & contact" sections and surface it on `/about`, then use the same address as the App Store Connect Support URL / contact.
+- **Risk:** the same Guideline 1.2 requires **published developer contact** so users can reach a human about abuse, and App Store Connect separately requires a **Support URL**. There was no support address anywhere in `src/` — the Privacy Policy's only escalation was "contact your society admin through the app", which is not a route to the developer.
+- **Fix:** a single `SUPPORT_EMAIL` constant in `src/lib/support.ts`, surfaced in the Terms and Privacy "Changes & contact" sections and as a tappable `mailto:` row in a new **Support** card on `/about`, with a stated 3-working-day response target.
+- **⚠️ Action:** it currently ships the placeholder `support@aangan.app`. Point it at a mailbox you actually monitor, and use the same address for the App Store Connect Support URL.
+
+---
+
+### #28 — Lost & Found was broken on arrival: `community_id` typed as text 🐞
+- **Status:** 🟢 Implemented · **▶️ run migration `0067`**
+- **Area:** Lost & Found · _found during the store-readiness audit_
+- **Root cause:** migration 0065 declared `lost_found_items.community_id` as **`text`**, while every other table — including `notifications`, which the insert trigger writes to — uses **`uuid references communities(id)`**. Postgres has no assignment cast from text to uuid, so the trigger's insert failed the type check and **every Lost & Found post errored out**. The same migration also shipped `using (true)` for reads, exposing one society's items to members of another, against the 0038 scoping convention. Both were my own errors in the 0065 authoring pass, missed because the migration was never run against a live database.
+- **Fix:** 0065 corrected in place (uuid + FK, `is_my_community()` read scoping, insert scoped to your own society, feed/owner indexes) so a fresh database is right. **`0067`** repairs a database where the broken 0065 was already applied: it converts the column only if it is still text, adds the missing FK, and replaces the permissive policies. Every step is guarded, so it is a no-op on a correct schema and safe to run either way.
 
 ---
 
@@ -283,6 +319,7 @@ _Last updated: 16 Aug 2026 — app-store readiness audit (Android + iOS)_
 ---
 
 ## Changelog
+- **16 Aug 2026 (later)** — Store-readiness build-out. Shipped **#26** (report + block: `content_reports`, `user_blocks`, `ModerationMenu` across 7 surfaces, mutual block enforced on DMs by trigger, `/profile/blocked`, admin Reports queue — migration `0068`) and **#27** (`SUPPORT_EMAIL` in Terms/Privacy/About). Found and fixed **#28** — 0065 typed `lost_found_items.community_id` as text, which made every Lost & Found post fail in the notification trigger and leaked reads across societies; 0065 corrected and `0067` added as an idempotent repair.
 - **16 Aug 2026** — App-store readiness audit for Android + iOS. Logged #19–#23 (the Jun 17–22 work: Lost & Found, push-for-everything, Android release path, food disclaimers, tsc fix). Fixed #24 (native config: notifications plugin + `aps-environment`, Play-hostile storage perms, phantom `RECORD_AUDIO`, unused contacts perm, export-compliance flag, iOS submit block) and #25 (force-update dead end on native). Logged **#26** (UGC report/block) and **#27** (developer contact) as **hard iOS submission blockers**.
 - **12 Jun 2026 (late)** — #12 DM realtime crash fixed (unique channel topic); #13 message icon on directory rows; #11 court payments now actionable on the Payments screen too.
 - **12 Jun 2026 (night)** — #9 desktop back control; #10 court overhaul — attendance-driven dues, RSVP lock, booker manage-players + edit-booking, manual settlement (migration 0051).

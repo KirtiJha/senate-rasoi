@@ -11,11 +11,12 @@ import { useToast } from '../context/toast';
 import { adminResetUserPin } from '../lib/auth';
 import { deleteMember, listCommunityMembers, setMemberBlocked, setUserRoles } from '../lib/admin';
 import { getOrCreateThread } from '../lib/dm';
+import { ContentReport, ReportStatus, fetchReports, setReportStatus } from '../lib/moderation';
 import { supabase } from '../lib/supabase';
 import { DbProfile } from '../lib/types';
 import { useThemeColors } from '../theme';
 
-type AdminTab = 'members' | 'requests';
+type AdminTab = 'members' | 'requests' | 'reports';
 
 interface JoinRequest {
   id: string;
@@ -244,6 +245,15 @@ export default function AdminScreen() {
                 Requests{pendingCount > 0 ? ` (${pendingCount})` : ''}
               </Text>
             </Pressable>
+            <Pressable
+              onPress={() => setActiveTab('reports')}
+              className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2 ${activeTab === 'reports' ? 'bg-surface' : ''}`}
+            >
+              <Ionicons name="flag-outline" size={15} color={activeTab === 'reports' ? c.accent : c.muted} />
+              <Text className={`text-[13px] ${activeTab === 'reports' ? 'font-sans-sb text-ink' : 'font-sans-md text-muted'}`}>
+                Reports
+              </Text>
+            </Pressable>
           </View>
         </Container>
       </View>
@@ -330,7 +340,7 @@ export default function AdminScreen() {
             })}
           </Container>
         </ScrollView>
-      ) : (
+      ) : activeTab === 'requests' ? (
         <ScrollView
           contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
           refreshControl={<RefreshControl refreshing={requestsLoading} onRefresh={onRefresh} />}
@@ -349,6 +359,8 @@ export default function AdminScreen() {
             ))}
           </Container>
         </ScrollView>
+      ) : (
+        <ReportsTab communityId={communityId} reviewerId={userId} c={c} />
       )}
 
       {/* Reset PIN modal */}
@@ -391,6 +403,144 @@ export default function AdminScreen() {
         </View>
       </Modal>
     </View>
+  );
+}
+
+const REPORT_STATUS_COLOR: Record<ReportStatus, string> = {
+  open: '#EF4444',
+  reviewing: '#F59E0B',
+  actioned: '#16A34A',
+  dismissed: '#6B7280',
+};
+
+/**
+ * The moderation queue. App Store Guideline 1.2 expects reported content to be
+ * acted on, so admins need somewhere to see and triage what members flag.
+ */
+function ReportsTab({
+  communityId, reviewerId, c,
+}: {
+  communityId: string;
+  reviewerId: string | null;
+  c: ReturnType<typeof useThemeColors>;
+}) {
+  const toast = useToast();
+  const router = useRouter();
+  const [rows, setRows] = useState<ContentReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showResolved, setShowResolved] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!communityId) { setLoading(false); return; }
+    try { setRows(await fetchReports(communityId)); }
+    catch { toast.show('Could not load reports'); }
+    finally { setLoading(false); }
+  }, [communityId, toast]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const visible = useMemo(
+    () => rows.filter((r) => (showResolved ? true : r.status === 'open' || r.status === 'reviewing')),
+    [rows, showResolved],
+  );
+
+  const triage = async (r: ContentReport, status: ReportStatus) => {
+    if (!reviewerId) return;
+    try {
+      await setReportStatus(r.id, status, reviewerId);
+      setRows((prev) => prev.map((x) => (x.id === r.id ? { ...x, status } : x)));
+      toast.show(status === 'actioned' ? 'Marked as actioned ✓' : status === 'dismissed' ? 'Dismissed' : 'Marked in review');
+    } catch { toast.show('Could not update'); }
+  };
+
+  // Where a report points, so an admin can go look at the thing itself.
+  const routeFor = (r: ContentReport): string | null => {
+    switch (r.target_type) {
+      case 'post': return `/feed/${r.target_id}`;
+      case 'listing': return `/listing/${r.target_id}`;
+      case 'borrow': return `/borrow/${r.target_id}`;
+      case 'lost_found': return `/lost-found/${r.target_id}`;
+      case 'property': return `/property/${r.target_id}`;
+      case 'place': return `/place/${r.target_id}`;
+      case 'dish': return `/dish/${r.target_id}`;
+      case 'recommend': return `/recommend/${r.target_id}`;
+      case 'profile': return `/profile/${r.target_id}`;
+      default: return null; // comments and DMs have no standalone route
+    }
+  };
+
+  return (
+    <ScrollView
+      contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />}
+      showsVerticalScrollIndicator={false}
+    >
+      <Container>
+        <Pressable
+          onPress={() => setShowResolved((v) => !v)}
+          className="mb-3 flex-row items-center gap-2 self-start rounded-full bg-inset px-3 py-1.5 active:opacity-70"
+        >
+          <Ionicons name={showResolved ? 'eye-outline' : 'eye-off-outline'} size={13} color={c.muted} />
+          <Text className="text-[12px] font-sans-sb text-muted">
+            {showResolved ? 'Showing all reports' : 'Hiding resolved'}
+          </Text>
+        </Pressable>
+
+        {visible.length === 0 ? (
+          <View className="items-center py-16">
+            <Ionicons name="shield-checkmark-outline" size={40} color={c.faint} />
+            <Text className="mt-3 font-sans-sb text-[15px] text-ink">Nothing to review</Text>
+            <Text className="mt-1 text-[13px] text-muted">Content your members report appears here</Text>
+          </View>
+        ) : null}
+
+        <View className="gap-3">
+          {visible.map((r) => {
+            const route = routeFor(r);
+            const color = REPORT_STATUS_COLOR[r.status];
+            return (
+              <View key={r.id} className="rounded-2xl border border-line bg-surface p-3.5">
+                <View className="mb-1.5 flex-row flex-wrap items-center gap-1.5">
+                  <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: color + '20' }}>
+                    <Text className="text-[10px] font-sans-sb uppercase" style={{ color }}>{r.status}</Text>
+                  </View>
+                  <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.inset }}>
+                    <Text className="text-[10px] font-sans-sb text-muted">{r.target_type}</Text>
+                  </View>
+                  <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#EF444418' }}>
+                    <Text className="text-[10px] font-sans-sb text-nonveg">{r.reason}</Text>
+                  </View>
+                </View>
+
+                <Text className="text-[13px] text-ink">
+                  <Text className="font-sans-sb">{r.reporter?.name ?? 'A member'}</Text>
+                  {' reported '}
+                  <Text className="font-sans-sb">{r.target_owner?.name ?? 'this content'}</Text>
+                </Text>
+                {r.details ? (
+                  <Text className="mt-1 text-[13px] leading-[19px] text-muted">"{r.details}"</Text>
+                ) : null}
+
+                <View className="mt-2.5 flex-row flex-wrap gap-2">
+                  {route ? (
+                    <ActionBtn icon="open-outline" label="View" onPress={() => router.push(route as any)} c={c} />
+                  ) : null}
+                  {r.status !== 'reviewing' && r.status === 'open' ? (
+                    <ActionBtn icon="time-outline" label="In review" onPress={() => triage(r, 'reviewing')} c={c} />
+                  ) : null}
+                  {r.status !== 'actioned' ? (
+                    <ActionBtn icon="checkmark" label="Actioned" onPress={() => triage(r, 'actioned')} c={c} active />
+                  ) : null}
+                  {r.status !== 'dismissed' ? (
+                    <ActionBtn icon="close" label="Dismiss" onPress={() => triage(r, 'dismissed')} c={c} />
+                  ) : null}
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      </Container>
+    </ScrollView>
   );
 }
 

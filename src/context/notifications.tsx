@@ -36,6 +36,7 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   order: { icon: 'fast-food', color: '#E8650A' },
   place: { icon: 'location', color: '#0D9488' },
   lost_found: { icon: 'search', color: '#D97706' },
+  report: { icon: 'flag', color: '#EF4444' },
 };
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {

@@ -6,6 +6,7 @@ import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenHeader, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
+import { useBlocks } from '../../context/blocks';
 import { useToast } from '../../context/toast';
 import { fetchDishes, waLink } from '../../lib/dishes';
 import { sendInquiry } from '../../lib/inquiries';
@@ -111,6 +112,7 @@ export default function AllListingsScreen() {
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
   const { userId, communityId, profile } = useAuth();
+  const { filterBlocked } = useBlocks();
 
   const [items, setItems] = useState<AllItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -159,10 +161,16 @@ export default function AllListingsScreen() {
     setRefreshing(false);
   }, [load]);
 
-  const filtered = useMemo(
-    () => (category ? items.filter((i) => display(i).catKey === category) : items),
-    [items, category],
-  );
+  const filtered = useMemo(() => {
+    const byCategory = category ? items.filter((i) => display(i).catKey === category) : items;
+    // Content from blocked members never appears in the unified feed.
+    return filterBlocked(byCategory, (i) =>
+      i.kind === 'listing' ? i.raw.owner_user_id
+      : i.kind === 'borrow' ? i.raw.owner_user_id
+      : i.kind === 'lost_found' ? i.raw.owner_user_id
+      : i.kind === 'dish' ? i.raw.chef_user_id
+      : null);
+  }, [items, category, filterBlocked]);
 
   const openItem = (i: AllItem) => {
     if (i.kind === 'listing') router.push(`/listing/${i.raw.id}` as any);

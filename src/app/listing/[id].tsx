@@ -9,6 +9,7 @@ import { ListingChat } from '../../components/listings/ListingChat';
 import { PayButton } from '../../components/PayButton';
 import { T } from '../../components/T';
 import { Avatar, Badge, Button, Container, useResponsive } from '../../components/ui';
+import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
@@ -256,6 +257,12 @@ export default function ListingDetailScreen() {
                   <Text className="text-[12px] text-muted">📍 {listing.location}</Text>
                 )}
               </View>
+              <ModerationMenu
+                targetType="listing"
+                targetId={listing.id}
+                targetOwnerId={listing.owner_user_id}
+                targetOwnerName={listing.owner?.name}
+              />
             </View>
 
             {/* Category-specific attributes */}

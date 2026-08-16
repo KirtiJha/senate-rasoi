@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Container, ScreenHeader, useResponsive } from '../components/ui';
+import { SUPPORT_EMAIL, supportMailto } from '../lib/support';
 import { useThemeColors } from '../theme';
 
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
@@ -81,6 +82,20 @@ export default function AboutScreen() {
             <LinkRow label="Privacy Policy" icon="shield-outline" c={c} onPress={() => router.push('/legal?tab=privacy' as any)} />
             <LinkRow label="Terms of Service" icon="document-text-outline" c={c} onPress={() => router.push('/legal' as any)} />
           </View>
+        </View>
+
+        {/* Developer contact — required for App Store UGC apps (Guideline 1.2) */}
+        <View className="mt-4 rounded-3xl border border-line bg-surface p-5">
+          <Text className="mb-1 font-sans-sb text-[13px] text-muted">SUPPORT</Text>
+          <Text className="mb-3 text-[13px] leading-[19px] text-muted">
+            Report abuse, ask a question, or tell us something's broken. We aim to reply within 3 working days.
+          </Text>
+          <LinkRow
+            label={SUPPORT_EMAIL}
+            icon="mail-outline"
+            c={c}
+            onPress={() => Linking.openURL(supportMailto())}
+          />
         </View>
 
         <Text className="mt-6 text-center text-[12px] text-faint">

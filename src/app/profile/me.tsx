@@ -272,6 +272,13 @@ export default function ProfileScreen() {
           {/* Actions */}
           <View className="mb-4 gap-3">
             <Button
+              label="Blocked members"
+              variant="outline"
+              icon="ban-outline"
+              fullWidth
+              onPress={() => router.push('/profile/blocked' as any)}
+            />
+            <Button
               label="Sign Out"
               variant="outline"
               icon="log-out-outline"

@@ -1,11 +1,19 @@
--- ══════════════════════════════════════════════════════════
--- 0065 – Lost & Found
--- ══════════════════════════════════════════════════════════
+-- ════════════════════════════════════════════════════════════════════
+-- Aangan — migration 0065: Lost & Found
+-- Run AFTER 0001–0064.
+--
+-- Residents report something they've lost, or something they've found in a
+-- common area, so it finds its way back to its owner.
+--
+-- NOTE: `community_id` is uuid + FK, matching every other table (and the
+-- `notifications` insert in the trigger below, whose column is also uuid).
+-- Reads are scoped to your own society via is_my_community(), per the 0038
+-- hardening — never `using (true)`.
+-- ════════════════════════════════════════════════════════════════════
 
--- ─── Table ────────────────────────────────────────────────
 create table if not exists public.lost_found_items (
   id               uuid        primary key default gen_random_uuid(),
-  community_id     text        not null,
+  community_id     uuid        not null references public.communities(id) on delete cascade,
   owner_user_id    uuid        not null references public.profiles(id) on delete cascade,
   kind             text        not null default 'lost' check (kind in ('lost', 'found')),
   title            text        not null,
@@ -18,34 +26,31 @@ create table if not exists public.lost_found_items (
   bump_at          timestamptz not null default now()
 );
 
+create index if not exists lost_found_feed_idx  on public.lost_found_items (community_id, bump_at desc);
+create index if not exists lost_found_owner_idx on public.lost_found_items (owner_user_id);
+
 alter table public.lost_found_items enable row level security;
 
--- Everyone may read (open read policy)
-create policy "lost_found read"
-  on public.lost_found_items for select using (true);
+-- Read: members of the same society (or an admin).
+drop policy if exists "lost_found read" on public.lost_found_items;
+create policy lf_read on public.lost_found_items for select
+  using (public.is_my_community(community_id) or public.is_admin(auth.uid()));
 
--- Authenticated users insert their own rows
-create policy "lost_found insert"
-  on public.lost_found_items for insert to authenticated
-  with check (owner_user_id = auth.uid());
+-- Insert: your own row, in your own society.
+drop policy if exists "lost_found insert" on public.lost_found_items;
+create policy lf_insert on public.lost_found_items for insert to authenticated
+  with check (owner_user_id = auth.uid() and public.is_my_community(community_id));
 
--- Owner or admin may update
-create policy "lost_found update"
-  on public.lost_found_items for update to authenticated
-  using (
-    owner_user_id = auth.uid()
-    or exists (select 1 from public.profiles where id = auth.uid() and is_admin)
-  );
+-- Update / delete: owner or admin.
+drop policy if exists "lost_found update" on public.lost_found_items;
+create policy lf_update on public.lost_found_items for update to authenticated
+  using (owner_user_id = auth.uid() or public.is_admin(auth.uid()));
 
--- Owner or admin may delete
-create policy "lost_found delete"
-  on public.lost_found_items for delete to authenticated
-  using (
-    owner_user_id = auth.uid()
-    or exists (select 1 from public.profiles where id = auth.uid() and is_admin)
-  );
+drop policy if exists "lost_found delete" on public.lost_found_items;
+create policy lf_delete on public.lost_found_items for delete to authenticated
+  using (owner_user_id = auth.uid() or public.is_admin(auth.uid()));
 
--- ─── Notification trigger ─────────────────────────────────
+-- ─── Notification trigger (community broadcast) ───────────────────────
 create or replace function public.on_lost_found_insert()
 returns trigger
 language plpgsql
@@ -81,6 +86,7 @@ begin
 end;
 $$;
 
+drop trigger if exists lost_found_notify on public.lost_found_items;
 create trigger lost_found_notify
   after insert on public.lost_found_items
   for each row execute function public.on_lost_found_insert();

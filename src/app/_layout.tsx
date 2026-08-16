@@ -31,6 +31,7 @@ import { NotificationsProvider } from '../context/notifications';
 import { ThemeProvider } from '../context/theme';
 import { ToastProvider } from '../context/toast';
 import { UnreadDmsProvider } from '../context/unread';
+import { BlocksProvider } from '../context/blocks';
 import { useAuth } from '../context/auth';
 import { useIsDark, useThemeColors } from '../theme';
 
@@ -81,14 +82,16 @@ function AppShell() {
         <AuthProvider>
           <TranslationProvider>
             <UnreadDmsProvider>
-              <NotificationsProvider>
-                <ToastProvider>
-                  <ConfirmProvider>
-                    <StatusBar style={isDark ? 'light' : 'dark'} />
-                    <DesktopShell />
-                  </ConfirmProvider>
-                </ToastProvider>
-              </NotificationsProvider>
+              <BlocksProvider>
+                <NotificationsProvider>
+                  <ToastProvider>
+                    <ConfirmProvider>
+                      <StatusBar style={isDark ? 'light' : 'dark'} />
+                      <DesktopShell />
+                    </ConfirmProvider>
+                  </ToastProvider>
+                </NotificationsProvider>
+              </BlocksProvider>
             </UnreadDmsProvider>
           </TranslationProvider>
         </AuthProvider>
