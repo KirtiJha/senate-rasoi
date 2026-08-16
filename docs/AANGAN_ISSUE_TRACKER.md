@@ -4,7 +4,7 @@
 > Status legend: 🔴 Open · 🟡 In Progress · 🟢 Implemented · ⚪️ Won't Do / Deferred
 > Type legend: 🐞 Bug · ✨ Enhancement · 💡 Idea/Feature
 
-_Last updated: 12 Jun 2026 — final end-to-end audit (Auth + Home Food + Badminton)_
+_Last updated: 16 Aug 2026 — app-store readiness audit (Android + iOS)_
 
 ---
 
@@ -12,9 +12,22 @@ _Last updated: 12 Jun 2026 — final end-to-end audit (Auth + Home Food + Badmin
 
 | Open | In Progress | Implemented | Deferred | Total |
 |---|---|---|---|---|
-| 1 | 0 | 17 | 0 | 18 |
+| 3 | 0 | 24 | 0 | 27 |
 
-> Open: **#18** (PIN-reset-by-phone — needs a product/security decision). Pending migrations: run through **0057**.
+> Open: **#18** (PIN-reset-by-phone — product/security decision), **#26** (UGC report/block — **blocks iOS submission**), **#27** (developer support contact — **blocks iOS submission**).
+> Pending migrations: run through **0066**.
+
+### 🚦 App Store / Play readiness at a glance
+
+| Area | Android | iOS |
+|---|---|---|
+| Build config (`app.json`, `eas.json`) | ✅ | ✅ (#24) |
+| Push notifications end-to-end | ✅ | ✅ (#24 — `aps-environment` now set) |
+| Account deletion (Apple 5.1.1(v)) | ✅ | ✅ — Profile → Delete account (RPC in `0015`) |
+| Privacy policy + Terms | ✅ | ✅ — `/legal` |
+| UGC report & block (Apple 1.2) | ⚠️ policy risk | ❌ **#26 — hard blocker** |
+| Published developer contact (Apple 1.2) | ⚠️ | ❌ **#27 — hard blocker** |
+| Store listing assets (screenshots, copy) | ⬜ not started | ⬜ not started |
 
 ---
 
@@ -185,6 +198,82 @@ _Last updated: 12 Jun 2026 — final end-to-end audit (Auth + Home Food + Badmin
 
 ---
 
+### #19 — Lost & Found 💡
+- **Status:** 🟢 Implemented · **▶️ run migration `0065`**
+- **Area:** Lost & Found (new feature)
+- **Ask:** a way for residents to report something they've lost, or something they've found in a common area, so it gets back to its owner.
+- **Implemented:** new `lost_found_items` table (kind `lost`/`found`, status `open`/`resolved`, photo, category, WhatsApp) with owner-or-admin RLS. Three screens — list `/lost-found` (Lost/Found tabs, "My posts" filter, realtime), form `/lost-found/new?kind=…`, detail `/lost-found/[id]` (owner edit sheet, status toggle, "I think I saw it!" / "Is this mine?" WhatsApp CTA, graceful removed-screen). Surfaced on the Home tile grid with an open-item count badge, in the **Just listed** strip, in **All listings** behind 🔍 Lost / 📦 Found chips, and in the notification bell via a community-broadcast trigger.
+
+---
+
+### #20 — Most notifications never reached a closed app ✨
+- **Status:** 🟢 Implemented · **▶️ run migration `0066`**
+- **Area:** Notifications (app-wide)
+- **Root cause:** only orders (0057), DMs (0023) and listing inquiries (0011/0021) fired a real Expo push. Every other event type wrote an in-app `notifications` row for the bell but sent **no push**, so with the app closed the user learned nothing.
+- **Fix:** one trigger on `notifications` fans a push for **every** row — targeted rows (`target_user_id` set) push that user; broadcast rows push all community members except the actor. Batched ≤100/request per Expo's limit via the `pg_net` pipeline from 0005. Skips `order`/`message` (already pushed by their own triggers) and broadcast `post` (routine feed chatter) to avoid double-push. Because it keys off the table and not the type, **all future event types are covered automatically** — Lost & Found included.
+
+---
+
+### #21 — Android build & release path ✨
+- **Status:** 🟢 Implemented
+- **Area:** Release engineering
+- **Implemented:** EAS project linked (`extra.eas.projectId`), Firebase `google-services.json` for FCM, `apk` profile for free link/QR distribution plus a `production` AAB profile for Play, `expo-updates` + EAS Update URL for OTA JS updates, and a full runbook at `docs/ANDROID_RELEASE.md`.
+
+---
+
+### #22 — Home Food liability disclaimers ✨
+- **Status:** 🟢 Implemented
+- **Area:** Food
+- **Implemented:** a `FoodDisclaimer` component on the Home Food board, plus a liability note at order and subscribe confirmation — home kitchens aren't licensed food businesses and buyers should know that.
+
+---
+
+### #23 — Dead `lost_found` branch broke the typecheck 🐞
+- **Status:** 🟢 Implemented
+- **Area:** All listings
+- **Root cause:** `contactItem` already handled `lost_found` with an early return, so a later `else if (i.kind === 'lost_found')` was unreachable and narrowed `i.raw` to `never` — 2 `tsc` errors. Introduced when the guard and the branch were added in separate edits without re-reading the whole function.
+- **Fix:** removed the dead branch. `tsc --noEmit` is clean.
+
+---
+
+### #24 — Store readiness: native config gaps 🐞✨
+- **Status:** 🟢 Implemented
+- **Area:** `app.json` / `eas.json` · _found during the app-store readiness audit_
+- **Findings & fixes** (each verified against the installed package source for the pinned SDK 56 versions, not from memory):
+  1. **`expo-notifications` was missing from `plugins`** — the package was installed and used, but its config plugin never ran. On iOS that plugin is what writes the **`aps-environment` entitlement**; without it a store build has no push entitlement. Added with `mode: "production"` (the plugin defaults to `development`, which would break push on TestFlight/App Store builds), plus brand `color` and `defaultChannel`. _Android `POST_NOTIFICATIONS` was already fine — expo-notifications autolinks it in its own manifest._
+  2. **Play-hostile storage permissions** — `app.json` redeclared `READ_/WRITE_EXTERNAL_STORAGE` **unscoped**, broadening the properly-scoped `maxSdkVersion="32"` versions that `expo-image-picker` already ships. Unscoped `WRITE_EXTERNAL_STORAGE` triggers Play Console's sensitive-permission review. Removed ours; the library's correctly-scoped ones survive the manifest merge.
+  3. **Phantom microphone permission** — `expo-image-picker` injects `RECORD_AUDIO` (and `NSMicrophoneUsageDescription`) for video capture, but every `launchImageLibraryAsync` call in the app passes `mediaTypes: ['images']`; we never record. Set `microphonePermission: false`, which strips both. Verified gone from the resolved config.
+  4. **Unused contacts permission** — `NSContactsUsageDescription` was declared but `expo-contacts` isn't a dependency and nothing reads device contacts (the "contacts" in the app are DB rows: emergency contacts, service directory). Removed, so App Review has one less thing to query.
+  5. **Export-compliance prompt** — added `ITSAppUsesNonExemptEncryption: false`, which otherwise has to be answered by hand on **every** TestFlight/App Store upload.
+  6. **No iOS submit config** — `eas.json` had `submit.production.android` only. Added an `ios` block (`appleId` / `ascAppId` / `appleTeamId` placeholders to fill once the App Store Connect record exists).
+
+---
+
+### #25 — Force-update banner was a dead end on mobile 🐞
+- **Status:** 🟢 Implemented
+- **Area:** Home / update banner
+- **Root cause:** the banner's only action, "Refresh now", was wrapped in `Platform.OS === 'web'`, and the "Dismiss" button is deliberately hidden when `force_update` is set. On a native build a forced update therefore rendered a red **"Update required"** card with **no button at all** — an unresolvable dead end.
+- **Fix:** native now shows **"Update now"**, which calls `Updates.fetchUpdateAsync()` and reloads into the new bundle. A version that also changed native code can't ship over the air, so `isNew === false` (and `Updates.isEnabled === false` in dev) falls back to "Please update Aangan from the app store".
+
+---
+
+### #26 — No way for a member to report or block another member 🐞
+- **Status:** 🔴 Open · **blocks iOS submission**
+- **Area:** Safety / moderation (app-wide)
+- **Risk:** **Apple App Store Guideline 1.2 (Safety — User-Generated Content)** requires apps with UGC to ship *all four* of: a content filter, a mechanism to **report** offensive content, the ability to **block abusive users**, and published developer contact info (see #27). Aangan is full of UGC — feed posts and comments, listings, dishes, recommendations, borrow, Lost & Found, and 1:1 DMs — but there is **no report and no block affordance anywhere**. The Terms already forbid abusive content and say admins may moderate, but a policy sentence is not a mechanism; App Review tests for the buttons. Google Play's UGC policy expects the same, though it's enforced less strictly at review time.
+- **Scope (proposed):** a `content_reports` table (reporter, target type + id, reason, status) and a `user_blocks` table; a "Report" and "Block" action on posts/comments/listings/DMs/profiles; filtering blocked users' content out of the feeds; and an admin review queue on `/admin`.
+- **⚠️ Needs a product decision first:** how far a block reaches — hide their feed posts and comments only, or also their listings, dishes and directory row? Mutual (neither sees the other) or one-way? That choice changes the query shape in most list screens, so it should be settled before implementation.
+
+---
+
+### #27 — No published developer contact 🐞
+- **Status:** 🔴 Open · **blocks iOS submission**
+- **Area:** Legal / support
+- **Risk:** the same Guideline 1.2 requires **published developer contact info** so users can reach a human about abuse, and App Store Connect separately requires a **Support URL** on the listing. Right now there is no support email anywhere in `src/` — the Privacy Policy's only escalation path is "contact your society admin through the app", which is not a route to the developer.
+- **Fix (small):** add a support email to the Terms/Privacy "Changes & contact" sections and surface it on `/about`, then use the same address as the App Store Connect Support URL / contact.
+
+---
+
 ## End-to-end review notes (Home Food + Badminton)
 
 **Verified working in code:** dish posting (now resilient to photo failures); order placement → **chef push on new order** + **buyer push on status change** (0005, title fixed in #3); Kitchen & Orders screens have **realtime**; badminton group create / booking → **member push** (0043) → RSVP (fixed in #2) → session-end **client-side cost split** → **UPI dues** (pay → initiated → booker confirms → paid) with the dues screen now **live** (#4).
@@ -194,6 +283,7 @@ _Last updated: 12 Jun 2026 — final end-to-end audit (Auth + Home Food + Badmin
 ---
 
 ## Changelog
+- **16 Aug 2026** — App-store readiness audit for Android + iOS. Logged #19–#23 (the Jun 17–22 work: Lost & Found, push-for-everything, Android release path, food disclaimers, tsc fix). Fixed #24 (native config: notifications plugin + `aps-environment`, Play-hostile storage perms, phantom `RECORD_AUDIO`, unused contacts perm, export-compliance flag, iOS submit block) and #25 (force-update dead end on native). Logged **#26** (UGC report/block) and **#27** (developer contact) as **hard iOS submission blockers**.
 - **12 Jun 2026 (late)** — #12 DM realtime crash fixed (unique channel topic); #13 message icon on directory rows; #11 court payments now actionable on the Payments screen too.
 - **12 Jun 2026 (night)** — #9 desktop back control; #10 court overhaul — attendance-driven dues, RSVP lock, booker manage-players + edit-booking, manual settlement (migration 0051).
 - **12 Jun 2026 (later)** — #1 root cause confirmed (no Storage RLS policies → 403); fixed via migration 0050 (photo bucket policies + public). Now 🟢.

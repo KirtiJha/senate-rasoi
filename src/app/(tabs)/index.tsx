@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import * as Updates from 'expo-updates';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +12,7 @@ import { BrandMark } from '../../components/BrandMark';
 import { T } from '../../components/T';
 import { Container, useResponsive, VegMark } from '../../components/ui';
 import { useAuth } from '../../context/auth';
+import { useToast } from '../../context/toast';
 import { useUnreadDms } from '../../context/unread';
 import { fetchSocietyDigest, SocietyDigest } from '../../lib/ai';
 import { PostRow, fetchLatestAnnouncement } from '../../lib/posts';
@@ -162,9 +164,11 @@ export default function HomeScreen() {
   const { isDesktop } = useResponsive();
   const { profile, communityId, userId } = useAuth();
   const c = useThemeColors();
+  const toast = useToast();
   const unread = useUnreadDms();
   const [updateBanner, setUpdateBanner] = useState<AppVersion | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [announcement, setAnnouncement] = useState<PostRow | null>(null);
   const [digest, setDigest] = useState<SocietyDigest | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -227,6 +231,25 @@ export default function HomeScreen() {
   const dismissAnnouncement = () => {
     if (announcement) AsyncStorage.setItem(DISMISSED_ANNOUNCEMENT_KEY, announcement.id).catch(() => {});
     setAnnouncement(null);
+  };
+
+  // Native: pull the newest OTA bundle and restart into it. A version that also
+  // changed native code can't ship over the air — point those at the store.
+  const applyUpdate = async () => {
+    setUpdating(true);
+    try {
+      if (!Updates.isEnabled) {
+        toast.show('Please update Aangan from the app store');
+        return;
+      }
+      const res = await Updates.fetchUpdateAsync();
+      if (res.isNew) await Updates.reloadAsync();
+      else toast.show('Please update Aangan from the app store');
+    } catch {
+      toast.show('Could not update — try again');
+    } finally {
+      setUpdating(false);
+    }
   };
 
   useEffect(() => {
@@ -363,7 +386,18 @@ export default function HomeScreen() {
                     >
                       <Text className="font-sans-sb text-[12px] text-on-accent">Refresh now</Text>
                     </Pressable>
-                  ) : null}
+                  ) : (
+                    <Pressable
+                      onPress={applyUpdate}
+                      disabled={updating}
+                      className="rounded-xl bg-accent px-3.5 py-2 active:opacity-80"
+                      style={{ opacity: updating ? 0.6 : 1 }}
+                    >
+                      <Text className="font-sans-sb text-[12px] text-on-accent">
+                        {updating ? 'Updating…' : 'Update now'}
+                      </Text>
+                    </Pressable>
+                  )}
                   {!updateBanner.force_update ? (
                     <Pressable
                       onPress={() => setBannerDismissed(true)}

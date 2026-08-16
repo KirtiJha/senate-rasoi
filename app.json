@@ -23,7 +23,7 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Aangan needs photo access so you can add a picture to your listing.",
         "NSCameraUsageDescription": "Aangan needs camera access to take photos for your listing.",
-        "NSContactsUsageDescription": "Aangan needs contacts access to help you connect with neighbours."
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -35,9 +35,8 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.CAMERA",
+        "android.permission.POST_NOTIFICATIONS",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE"
       ]
@@ -60,7 +59,17 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Aangan needs photo access so you can add a picture of your listing."
+          "photosPermission": "Aangan needs photo access so you can add a picture of your listing.",
+          "cameraPermission": "Aangan needs camera access to take photos for your listing.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "mode": "production",
+          "color": "#0F6E56",
+          "defaultChannel": "default"
         }
       ],
       "expo-font"
