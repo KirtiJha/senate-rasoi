@@ -169,6 +169,16 @@ See [`PLATFORM_PLAN.md` §12](./PLATFORM_PLAN.md) for a full end-to-end testing 
 
 ---
 
+## Publish to the app stores
+
+Follow [`docs/PUBLISHING_GUIDE.md`](./docs/PUBLISHING_GUIDE.md) — a step-by-step
+walkthrough for both Google Play and the Apple App Store, including the
+pre-flight items (migrations, support email, public privacy-policy URL) that
+both stores check. [`docs/ANDROID_RELEASE.md`](./docs/ANDROID_RELEASE.md) has
+the deeper Firebase/APK detail.
+
+---
+
 ## Project structure
 
 ```

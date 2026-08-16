@@ -32,6 +32,9 @@ _Last updated: 16 Aug 2026 — store-readiness build-out (moderation, contact, n
 
 ### ▶️ Before you submit — the human steps left
 
+> 📗 **Step-by-step walkthrough: [`PUBLISHING_GUIDE.md`](./PUBLISHING_GUIDE.md)** —
+> follow that to actually ship. The list below is the summary of what it covers.
+
 These can't be done from the codebase and are the remaining gate:
 
 1. **Point `SUPPORT_EMAIL` at a real mailbox.** `src/lib/support.ts` ships
