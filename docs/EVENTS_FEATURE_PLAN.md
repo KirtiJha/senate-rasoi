@@ -4,7 +4,11 @@ Covers the full lifecycle you described: meeting announcement → core team →
 plan → budget → per-flat contributions → expenses and bills → a transparent
 final report with receipts attached.
 
-Status: **proposal, not built.** Decisions at the bottom need your call first.
+> **Status: Phase 1 is built and pushed** (migration `0069`). The decisions in
+> §9 were settled with the recommended defaults: admins create a function and
+> appoint a lead; a suggested per-flat amount the treasurer can override; the
+> roster auto-generates from the resident directory; Phase 1 only.
+> Phase 2 and 3 remain unbuilt.
 
 ---
 

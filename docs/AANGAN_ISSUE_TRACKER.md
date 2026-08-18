@@ -4,7 +4,7 @@
 > Status legend: 🔴 Open · 🟡 In Progress · 🟢 Implemented · ⚪️ Won't Do / Deferred
 > Type legend: 🐞 Bug · ✨ Enhancement · 💡 Idea/Feature
 
-_Last updated: 16 Aug 2026 — store-readiness build-out (moderation, contact, native config)_
+_Last updated: 16 Aug 2026 — society functions & events (Phase 1)_
 
 ---
 
@@ -12,10 +12,10 @@ _Last updated: 16 Aug 2026 — store-readiness build-out (moderation, contact, n
 
 | Open | In Progress | Implemented | Deferred | Total |
 |---|---|---|---|---|
-| 1 | 0 | 27 | 0 | 28 |
+| 1 | 0 | 28 | 0 | 29 |
 
 > Open: **#18** (PIN-reset-by-phone — product/security decision, deferred by owner).
-> Pending migrations: run through **0068**.
+> Pending migrations: run through **0069**.
 
 ### 🚦 App Store / Play readiness at a glance
 
@@ -313,6 +313,24 @@ These can't be done from the codebase and are the remaining gate:
 
 ---
 
+### #29 — Society functions: plan, collect, spend, publish the accounts 💡
+- **Status:** 🟢 Implemented (Phase 1) · **▶️ run migration `0069`**
+- **Area:** Functions / Events (new feature)
+- **Ask:** societies run functions (Diwali, Ganesh Chaturthi) that need a meeting announcement, a core team, a plan and budget, a contribution from each flat, expense and bill tracking, and finally a transparent expense report shared with everyone with receipts attached.
+- **Design:** see [`EVENTS_FEATURE_PLAN.md`](./EVENTS_FEATURE_PLAN.md). The central choice is that **the report is generated, never authored** — it is a live view over the contribution and expense ledgers, so it cannot drift from what actually happened and exists from day one rather than only at the end.
+- **Implemented (Phase 1):**
+  1. **`society_events`** — title, plan, date, venue, budget, suggested per-flat contribution, and a `draft → collecting → ongoing → completed` lifecycle. Admins create; the creator is auto-added as **lead** so the event is never orphaned.
+  2. **`event_team`** — per-function `lead` / `treasurer` / `member`, added from the resident directory. This is an ad-hoc team that disbands after the function, **not** the standing committee that was previously ruled out.
+  3. **`event_contributions`** — one row per **flat**, seeded from the resident directory so "who hasn't paid" works on day one. `contributor_user_id` is nullable so a flat with no Aangan account can still be recorded, and `waived` exists so non-contributing flats leave the expected total instead of showing unpaid forever. `unique (event_id, flat)` stops a flat being collected twice when two residents share it.
+  4. **`event_expenses`** — amount, category, vendor, who paid, and a photographed bill. The list flags entries with no bill attached, since those are what residents question later.
+  5. **The report** — collected / spent / balance, spend by category, every expense with its receipt one tap away, and every contributing flat. Open to **every resident**, not just the team.
+  6. **Closing the books** — a trigger blocks inserts, updates and deletes on both ledgers once the event is `completed`, so a published report cannot be quietly rewritten. Admins keep an escape hatch by re-opening the event.
+  7. **Notifications** — broadcast when a function is announced, when contributions open, and when the accounts are published; plus a targeted receipt to a contributor when their money is confirmed. All ride the 0066 push fan-out.
+- **Deliberate constraint:** Aangan never holds money. UPI goes resident → treasurer directly and these tables only record it, same as `court_payments`. The report names the treasurer explicitly so it is clear who is holding the funds.
+- **Not built (Phase 2+):** linking meeting announcements and polls to a function, reminders to unpaid flats, archiving the finished report into Documents, and carrying a leftover balance to the next function.
+
+---
+
 ## End-to-end review notes (Home Food + Badminton)
 
 **Verified working in code:** dish posting (now resilient to photo failures); order placement → **chef push on new order** + **buyer push on status change** (0005, title fixed in #3); Kitchen & Orders screens have **realtime**; badminton group create / booking → **member push** (0043) → RSVP (fixed in #2) → session-end **client-side cost split** → **UPI dues** (pay → initiated → booker confirms → paid) with the dues screen now **live** (#4).
@@ -322,6 +340,7 @@ These can't be done from the codebase and are the remaining gate:
 ---
 
 ## Changelog
+- **16 Aug 2026 (evening)** — Shipped **#29**, society functions Phase 1 (migration `0069`): events with a lifecycle, per-function core team, per-flat contribution roster seeded from the directory, expense ledger with photographed bills, and a generated accounts report open to every resident. Books close automatically when a function completes.
 - **16 Aug 2026 (later)** — Store-readiness build-out. Shipped **#26** (report + block: `content_reports`, `user_blocks`, `ModerationMenu` across 7 surfaces, mutual block enforced on DMs by trigger, `/profile/blocked`, admin Reports queue — migration `0068`) and **#27** (`SUPPORT_EMAIL` in Terms/Privacy/About). Found and fixed **#28** — 0065 typed `lost_found_items.community_id` as text, which made every Lost & Found post fail in the notification trigger and leaked reads across societies; 0065 corrected and `0067` added as an idempotent repair.
 - **16 Aug 2026** — App-store readiness audit for Android + iOS. Logged #19–#23 (the Jun 17–22 work: Lost & Found, push-for-everything, Android release path, food disclaimers, tsc fix). Fixed #24 (native config: notifications plugin + `aps-environment`, Play-hostile storage perms, phantom `RECORD_AUDIO`, unused contacts perm, export-compliance flag, iOS submit block) and #25 (force-update dead end on native). Logged **#26** (UGC report/block) and **#27** (developer contact) as **hard iOS submission blockers**.
 - **12 Jun 2026 (late)** — #12 DM realtime crash fixed (unique channel topic); #13 message icon on directory rows; #11 court payments now actionable on the Payments screen too.

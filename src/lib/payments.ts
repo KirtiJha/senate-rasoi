@@ -33,7 +33,7 @@ export interface NewPayment {
   payeeId: string;
   amount: number;
   note?: string | null;
-  contextType?: 'dish' | 'tiffin' | 'listing' | 'other' | null;
+  contextType?: 'dish' | 'tiffin' | 'listing' | 'event' | 'other' | null;
   contextId?: string | null;
   upiId?: string | null;
 }

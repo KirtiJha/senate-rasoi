@@ -13,7 +13,7 @@ export interface Payee {
   name: string;
   upi: string | null;
 }
-type Ctx = { type: 'dish' | 'tiffin' | 'listing' | 'other'; id?: string | null };
+type Ctx = { type: 'dish' | 'tiffin' | 'listing' | 'event' | 'other'; id?: string | null };
 
 /** A "Pay ₹X via UPI" button that opens a payment sheet. Records the payment so
  *  both parties can track it; the receiver confirms receipt separately. */

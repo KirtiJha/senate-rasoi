@@ -125,6 +125,14 @@ const COMMUNITY_TILES: CommunityTile[] = [
     href: '/lost-found',
   },
   {
+    key: 'events',
+    label: 'Functions',
+    blurb: 'Plan festivals, collect & track every rupee',
+    icon: 'sparkles',
+    color: '#7C3AED',
+    href: '/events',
+  },
+  {
     key: 'helpers',
     label: 'Blood & SOS',
     blurb: 'Donors & emergency helpers nearby',
