@@ -32,8 +32,16 @@ These are quick, and everything later depends on them.
 
 ### 0.1 Run the database migrations ⚠️ important
 
-Open your Supabase project → **SQL Editor**. Run these files from
-`supabase/migrations/`, **in this exact order**, one at a time:
+**The easy way:** open `supabase/run/RUN_IN_SUPABASE.sql`, copy the whole
+file, paste it into your Supabase **SQL Editor**, and press Run. It contains
+all of the below in the right order and is safe to run even if you've already
+applied some of them.
+
+Not sure what you've already run? Run `supabase/run/CHECK_WHAT_I_NEED.sql`
+first — it tells you, and changes nothing.
+
+The individual files, if you'd rather do them one at a time from
+`supabase/migrations/`, **in this exact order**:
 
 | Order | File | What it does |
 |---|---|---|
@@ -41,6 +49,7 @@ Open your Supabase project → **SQL Editor**. Run these files from
 | 2 | `0066_push_all.sql` | Sends phone notifications for every event |
 | 3 | `0067_fix_lost_found_schema.sql` | Repairs a bug in Lost & Found |
 | 4 | `0068_reports_and_blocks.sql` | Report + block (**required by Apple**) |
+| 5 | `0069_society_events.sql` | Society functions, contributions & accounts |
 
 To run one: open the file, copy **all** of its text, paste into the SQL Editor,
 press **Run**. You should see "Success".
