@@ -22,6 +22,7 @@ expo-env.d.ts
 # (google-services.json IS committed on purpose: it's client config, not a secret.)
 play-service-account.json
 *service-account*.json
+*firebase-adminsdk*.json
 !google-services.json
 AuthKey_*.p8
 

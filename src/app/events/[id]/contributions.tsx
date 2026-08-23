@@ -38,6 +38,7 @@ export default function ContributionsScreen() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>('all');
   const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const [editing, setEditing] = useState<Contribution | null>(null);
   const [editAmount, setEditAmount] = useState('');
@@ -108,7 +109,8 @@ export default function ContributionsScreen() {
   };
 
   const saveEdit = async (status: ContributionStatus) => {
-    if (!editing || !userId || !event) return;
+    if (!editing || !userId || !event || saving) return;
+    setSaving(true);
     try {
       await upsertContribution({
         eventId: event.id,
@@ -126,16 +128,17 @@ export default function ContributionsScreen() {
       toast.show(status === 'received' ? 'Recorded ✓' : 'Updated');
     } catch (e) {
       toast.show(e instanceof Error && /closed/i.test(e.message) ? 'Accounts are closed' : 'Could not save');
-    }
+    } finally { setSaving(false); }
   };
 
   const quickReceive = async (row: Contribution) => {
-    if (!userId) return;
+    if (!userId || saving) return;
+    setSaving(true);
     try {
       await setContributionStatus(row.id, 'received', userId, row.method ?? 'cash');
       await load();
       toast.show(`${row.flat} marked received ✓`);
-    } catch { toast.show('Could not update'); }
+    } catch { toast.show('Could not update'); } finally { setSaving(false); }
   };
 
   if (loading) {
@@ -255,8 +258,8 @@ export default function ContributionsScreen() {
                       <View className="items-end">
                         <Text className="font-sans-bold text-[14px] text-ink">{rupees(Number(row.amount))}</Text>
                         {canManage && !locked && row.status !== 'received' && row.status !== 'waived' ? (
-                          <Pressable onPress={() => quickReceive(row)} hitSlop={6} className="mt-1">
-                            <Text className="text-[11px] font-sans-sb" style={{ color: ACCENT }}>Mark paid</Text>
+                          <Pressable onPress={() => quickReceive(row)} disabled={saving} hitSlop={6} className="mt-1">
+                            <Text className="text-[11px] font-sans-sb" style={{ color: ACCENT, opacity: saving ? 0.5 : 1 }}>Mark paid</Text>
                           </Pressable>
                         ) : null}
                       </View>
@@ -276,13 +279,13 @@ export default function ContributionsScreen() {
         title={editing ? `Flat ${editing.flat}` : 'Contribution'}
         footer={
           <View className="gap-2">
-            <Button label="Mark received" icon="checkmark" fullWidth onPress={() => saveEdit('received')} />
+            <Button label="Mark received" icon="checkmark" fullWidth loading={saving} onPress={() => saveEdit('received')} />
             <View className="flex-row gap-2">
               <View className="flex-1">
-                <Button label="Still pending" variant="outline" fullWidth onPress={() => saveEdit('pending')} />
+                <Button label="Still pending" variant="outline" fullWidth disabled={saving} onPress={() => saveEdit('pending')} />
               </View>
               <View className="flex-1">
-                <Button label="Waive" variant="outline" fullWidth onPress={() => saveEdit('waived')} />
+                <Button label="Waive" variant="outline" fullWidth disabled={saving} onPress={() => saveEdit('waived')} />
               </View>
             </View>
           </View>

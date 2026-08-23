@@ -22,7 +22,6 @@
       "bundleIdentifier": "com.aangan.app",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Aangan needs photo access so you can add a picture to your listing.",
-        "NSCameraUsageDescription": "Aangan needs camera access to take photos for your listing.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -35,7 +34,6 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.CAMERA",
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE"
@@ -60,7 +58,7 @@
         "expo-image-picker",
         {
           "photosPermission": "Aangan needs photo access so you can add a picture of your listing.",
-          "cameraPermission": "Aangan needs camera access to take photos for your listing.",
+          "cameraPermission": false,
           "microphonePermission": false
         }
       ],

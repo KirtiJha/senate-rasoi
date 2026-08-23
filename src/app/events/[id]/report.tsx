@@ -11,6 +11,10 @@ import {
 import { useThemeColors } from '../../../theme';
 
 const ACCENT = '#7C3AED';
+// Never assume a stored category still exists in the client list — an unknown
+// category must fall back, not crash the whole accounts report.
+const catMeta = (k: string) =>
+  EXPENSE_CATEGORIES.find((x) => x.key === k) ?? EXPENSE_CATEGORIES[EXPENSE_CATEGORIES.length - 1];
 function openUrl(u: string) { if (Platform.OS === 'web') window.open(u, '_blank'); else Linking.openURL(u); }
 
 /**
@@ -143,7 +147,7 @@ export default function EventReportScreen() {
               </Text>
               <View className="rounded-2xl border border-line bg-surface p-4">
                 {t.byCategory.map((row) => {
-                  const meta = EXPENSE_CATEGORIES.find((x) => x.key === row.category)!;
+                  const meta = catMeta(row.category);
                   const pct = Math.round((row.amount / maxCat) * 100);
                   return (
                     <View key={row.category} className="mb-3 last:mb-0">
@@ -172,7 +176,7 @@ export default function EventReportScreen() {
             ) : (
               <View className="gap-2">
                 {expenses.map((e) => {
-                  const meta = EXPENSE_CATEGORIES.find((x) => x.key === e.category)!;
+                  const meta = catMeta(e.category);
                   return (
                     <View key={e.id} className="rounded-2xl border border-line bg-surface p-3.5">
                       <View className="flex-row items-center gap-2.5">
