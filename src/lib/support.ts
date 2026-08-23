@@ -8,7 +8,7 @@
  * ⚠️ Set this to a mailbox you actually monitor before submitting to either
  * store — reports of abuse are expected to get a timely response.
  */
-export const SUPPORT_EMAIL = 'support@aangan.app';
+export const SUPPORT_EMAIL = 'powerju2012@gmail.com';
 
 /** Prefilled mailto: link, so "Contact support" opens a ready-to-send mail. */
 export function supportMailto(subject = 'Aangan support'): string {
