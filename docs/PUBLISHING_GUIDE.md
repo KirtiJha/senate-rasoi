@@ -93,7 +93,7 @@ live. If you haven't deployed to Vercel yet, follow "Deploy to Vercel" in
 Your link will be:
 
 ```
-https://YOUR-SITE.vercel.app/legal?tab=privacy
+https://my-aangan.vercel.app/legal?tab=privacy
 ```
 
 Open it in a private/incognito window. If it loads without a login, you're done.
@@ -348,7 +348,7 @@ In App Store Connect, on your app's page:
   on your own phone.
 - **Description** — reuse the Play text.
 - **Keywords** — `society,apartment,community,neighbours,residents,tiffin`
-- **Support URL** — your website, e.g. `https://YOUR-SITE.vercel.app`
+- **Support URL** — your website, e.g. `https://my-aangan.vercel.app`
 - **Privacy Policy URL** — the link from step 0.3
 - **Age rating** — answer the questionnaire. Because the app has a feed and
   messaging, expect a **12+** rating.

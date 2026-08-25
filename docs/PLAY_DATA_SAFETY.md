@@ -133,7 +133,7 @@ noted). Mark **Required** unless noted optional.
 | **App icon** | 512×512 PNG |
 | **Feature graphic** | 1024×500 PNG |
 | **Phone screenshots** | 2–8, taken on your phone |
-| **Privacy policy URL** | `https://YOUR-SITE.vercel.app/legal?tab=privacy` — replace with your real host |
+| **Privacy policy URL** | `https://my-aangan.vercel.app/legal?tab=privacy` |
 
 **Full description (paste):**
 ```

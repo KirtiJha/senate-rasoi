@@ -7,7 +7,7 @@ import { useThemeColors } from '../theme';
 
 type Tab = 'terms' | 'privacy';
 
-const UPDATED = '9 June 2026';
+const UPDATED = '25 August 2026';
 
 export default function LegalScreen() {
   const c = useThemeColors();
@@ -47,12 +47,6 @@ export default function LegalScreen() {
               ))}
             </View>
           ))}
-          <View className="mt-2 rounded-2xl border border-line bg-inset p-4">
-            <Text className="text-[12px] leading-[18px] text-muted">
-              This is a plain-language starting template, not legal advice. Have it reviewed by a qualified
-              professional and adapt it to your society and jurisdiction before a public launch.
-            </Text>
-          </View>
         </Container>
       </ScrollView>
     </View>
@@ -134,52 +128,86 @@ const TERMS: { h: string; p: string[] }[] = [
 
 const PRIVACY: { h: string; p: string[] }[] = [
   {
-    h: 'What we collect',
+    h: 'Introduction',
     p: [
-      'Account & profile: your phone number (used as your login), name, flat, and optional details you add — profession, vehicle number, UPI ID, photo.',
-      'Activity you create: posts, comments, polls, listings, dishes, tiffins, orders, messages, documents you upload, payment records you create, and your society membership.',
+      'Aangan (“we”, “us”, “the app”) is a private community platform for residential societies. This Privacy Policy explains what information we collect when you use Aangan, how we use and protect it, and the choices and rights you have. It applies to the Aangan mobile app and website.',
+      'By creating an account or using Aangan, you consent to the practices described in this policy. If you do not agree, please do not use the app.',
     ],
   },
   {
-    h: 'How we use it',
+    h: 'Information we collect',
     p: [
-      'Only to run Aangan for your society — show you the feed, directory, food board, listings, messages and payments, and let neighbours coordinate with each other. We do not sell your data, and we do not show ads.',
+      'Account and profile information: your phone number (used as your login), your name and flat or block within your society, and any optional details you choose to add — profession, vehicle number, blood group, profile photo, and UPI ID.',
+      'Content you create: posts, comments, polls, marketplace and property listings, home-food dishes and tiffins, orders, event contributions and expenses, direct and listing messages, documents you upload, and payment records you create.',
+      'Membership information: which society you belong to and your role (member or admin).',
+      'Technical information needed to run the app: a device notification token so we can deliver push notifications, and basic app-interaction data required for features to work. We do NOT collect your device location, your contacts, your call or SMS logs, or your web browsing history.',
+    ],
+  },
+  {
+    h: 'How we use your information',
+    p: [
+      'We use your information only to operate Aangan for your society: to sign you in, show you the community feed, resident directory, food board, marketplace, events, messages and payment records, and to let neighbours discover and coordinate with each other. Your notification token is used only to send you app notifications.',
+      'We do not sell your personal data, we do not share it with advertisers, and Aangan shows no ads.',
     ],
   },
   {
     h: 'Who can see your information',
     p: [
-      'Aangan is society-scoped: your information is visible to members of your own society, never to other societies or the public internet.',
-      'You control parts of this — for example you can hide your phone number from the directory, opt out of features, and choose whether documents are public or privately shared. Society admins can see member details to moderate the community.',
+      'Aangan is society-scoped. Your profile and the content you post are visible only to verified members of your own society — never to other societies, and never to the public internet. Database-level security enforces this separation so each society can only access its own data.',
+      'You control much of what is shared: you can hide your phone number from the directory, opt out of features, and choose whether each document you upload is public to your society or shared only with specific members. Society administrators can view member details and moderate content in order to run and keep the community safe.',
     ],
   },
   {
-    h: 'Where your data lives',
+    h: 'Service providers we use',
     p: [
-      'Data is stored with our cloud provider (Supabase / Postgres + object storage) and protected by row-level security so each society only sees its own data. We use phone-as-email aliases and a 6-digit PIN for sign-in (no SMS/OTP).',
-      'No system is perfectly secure; please keep your PIN private.',
+      'We rely on a small number of trusted providers who process data on our behalf, under their own security and privacy commitments, and only to make Aangan work:',
+      'Supabase — our cloud database, authentication and file-storage provider, which hosts your account and content with row-level security so each society is isolated.',
+      'Expo and Google Firebase Cloud Messaging — used solely to deliver push notifications to your device.',
+      'If you use Aangan\'s optional AI features (such as filling in a listing from a photo, or asking a question about your society), the relevant content — for example the photo you are already posting — is sent to Google\'s AI service to generate the result. We do not send your phone number, PIN, or private contact details for this purpose.',
+      'These providers act as processors for us; we do not sell or rent your data to anyone.',
     ],
   },
   {
-    h: 'Payments & contact details',
+    h: 'How long we keep your data',
     p: [
-      'Your UPI ID and phone/WhatsApp are shared with neighbours to let them pay or contact you. Payments occur in your own UPI app — Aangan does not receive or store your bank/UPI credentials, only the UPI ID you choose to display.',
+      'We keep your information for as long as your account is active so the app can function. When you delete your account, your profile and associated content are removed from our live systems. Some information may persist briefly in encrypted backups before it is overwritten, and we may retain minimal records where required to comply with law or resolve disputes.',
     ],
   },
   {
-    h: 'Your rights',
+    h: 'How we protect your data',
     p: [
-      'You can edit your profile, change your visibility settings, and delete your account at any time (Profile → Delete account), which removes your account and associated content.',
+      'Data is encrypted in transit (HTTPS/TLS) and stored with our cloud provider under row-level security so each society only sees its own data. Sign-in uses a phone-number alias and a 6-digit PIN that you set yourself (no SMS/OTP). No system is perfectly secure, so please keep your PIN private and do not share your account.',
+    ],
+  },
+  {
+    h: 'Payments and contact details',
+    p: [
+      'Aangan is not a payment system and never processes, holds, or transfers money. If you choose to display a UPI ID, or share your phone or WhatsApp number, they are shown to neighbours so they can pay or contact you directly. Any payment happens entirely within your own UPI or banking app — Aangan never receives or stores your bank or UPI credentials, only the UPI ID you choose to display. In-app payment entries are a personal record-keeping convenience only.',
+    ],
+  },
+  {
+    h: 'Your rights and choices',
+    p: [
+      'You can view and edit your profile at any time, change your directory and visibility settings, and control the audience of documents you share. You can delete your account and its associated content at any time from Profile → Delete account.',
+      'To exercise any privacy right, or to ask how your data is handled, contact us at ' + SUPPORT_EMAIL + '.',
     ],
   },
   {
     h: 'Children',
-    p: ['Aangan is intended for adults (18+). It is not directed at children.'],
+    p: [
+      'Aangan is intended for adults aged 18 and over and is not directed at children. We do not knowingly collect information from anyone under 18.',
+    ],
   },
   {
-    h: 'Changes & contact',
+    h: 'Changes to this policy',
     p: [
-      'We may update this policy; we\'ll revise the date above. For privacy questions, or to request deletion of your data, email us at ' + SUPPORT_EMAIL + ' — or delete your account yourself from Profile → Delete account.',
+      'We may update this Privacy Policy from time to time. When we do, we will revise the “Last updated” date shown above, and significant changes may be highlighted in the app. Your continued use of Aangan after an update means you accept the revised policy.',
+    ],
+  },
+  {
+    h: 'Contact us',
+    p: [
+      'For any privacy question, grievance, or request to access or delete your data, email us at ' + SUPPORT_EMAIL + '. We aim to respond within a reasonable time, and in any case within the period required by applicable law.',
     ],
   },
 ];
