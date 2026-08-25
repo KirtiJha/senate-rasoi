@@ -115,6 +115,22 @@ Use your Expo account (free — sign up at https://expo.dev/signup if needed).
 Start with Android. It's cheaper, more forgiving, and gets you familiar with the
 process before you spend $99 on Apple.
 
+> ### ⚠️ Read this first — Google's rule for new personal accounts
+> If your developer account is a **personal** account (created after late 2023),
+> Google now requires, *before you can even apply for Production*:
+> - a **closed test** with **at least 12 testers opted-in**, running for
+>   **at least 14 consecutive days**.
+>
+> This is separate from, and on top of, identity verification. The **14-day
+> clock is the long pole** in your whole launch — start the closed test as early
+> as you can (steps 1.6–1.7). Your realistic Android timeline is now closer to
+> **3–4 weeks**, not a few days. (This requirement did not exist when the rest of
+> this guide was first written.)
+>
+> Your dashboard shows three stages: **Internal testing** (instant, your own
+> device, no 12-tester rule) → **Closed testing** (the 12×14 gate) →
+> **Production** (apply after the closed test qualifies).
+
 ### 1.1 Set up Firebase (makes notifications work)
 
 Follow **Step 2** in [`ANDROID_RELEASE.md`](./ANDROID_RELEASE.md). Briefly:
@@ -163,35 +179,73 @@ eas build -p android --profile production
 
 Download the `.aab` when it finishes.
 
-### 1.5 Create the listing and upload
+### 1.5 Create the app and finish setup
 
 In the Play Console: **Create app** → name **Aangan**, English, App, Free.
 
-Then work through the left-hand checklist. The parts that need your input:
+Then work through **"Finish setting up your app"**. Every field you need — App
+access (demo login), Ads, Content rating, Target audience, Data safety, and the
+store listing — has **paste-ready answers** in
+[`PLAY_DATA_SAFETY.md`](./PLAY_DATA_SAFETY.md). Fill each until it shows a green
+check. Highlights:
 
 **Store listing**
 - Short description (max 80 chars):
   `Your apartment community in one app — notices, marketplace, food & more.`
-- Full description: there's a draft in
-  [`ANDROID_RELEASE.md`](./ANDROID_RELEASE.md#store-listing-draft)
-- App icon: 512×512 PNG
-- Feature graphic: 1024×500 PNG
-- Screenshots: 2–8 phone screenshots (just take them on your phone)
+- Full description: use the **generalized** draft (so the app doesn't look
+  restricted to one building) — in
+  [`PLAY_DATA_SAFETY.md`](./PLAY_DATA_SAFETY.md#6-store-listing--grow--store-presence--main-store-listing)
+- App icon 512×512 PNG · Feature graphic 1024×500 PNG · 2–8 phone screenshots
 - Privacy policy: the URL from step 0.3
 
-**Content rating** — fill the questionnaire. Answer **yes** to "users can
-interact / share content", since your app has a feed and messaging.
+**App access** — Aangan needs a login, so give the reviewer a **demo phone
+number + PIN** (details in `PLAY_DATA_SAFETY.md` §1). Skipping this = rejection.
 
-**Data safety** — declare that you collect: name, phone number, flat/address,
-photos, and UPI ID. For each: used for **app functionality**, **not sold**, and
-**yes, users can request deletion** (Profile → Delete account).
+**Content rating** / **Data safety** — full answers in `PLAY_DATA_SAFETY.md`
+§3 and §5.
 
-**Release** → Production → upload the `.aab` → submit for review.
+### 1.6 Test on your own phone (Internal testing)
 
-First review on a new account often takes **several days**. Later updates are
+You do **not** need Production — or even a cleared identity check — to install
+the real store build on your phone. Use the **Internal testing** track:
+
+1. **Release → Testing → Internal testing → Create new release**
+2. Upload the `.aab` from step 1.4 (build 7+, the one **without** the CAMERA
+   permission)
+3. **Testers** tab → create an email list → add your own Google account → save
+4. Copy the **join link**, open it on your phone, install, and run the step-1.2
+   checklist against the real store build
+
+Two harmless warnings you'll see and can ignore: "no testers specified" (until
+you add yourself in step 3) and "no deobfuscation file" (not applicable to this
+app — it shows on every upload).
+
+### 1.7 Run the closed test (the gate to Production)
+
+This is the **14-day, 12-tester** requirement from the callout at the top of
+Part 1. Start it as early as possible — the clock is what gates your launch.
+
+1. **Release → Testing → Closed testing → Create a new track** (or use the
+   default "Alpha") → **Create new release** → upload the same `.aab`
+2. **Testers** → add an email list of **at least 12 people** who each have a
+   Google account (family, friends, neighbours). Each must **open the join link
+   and opt in** — 12 *opted-in* testers, not just 12 invited.
+3. Keep the test live for **at least 14 continuous days**. Ask testers to
+   actually open the app a few times; genuine usage is what Google looks for.
+4. After 14 days with 12+ opted-in testers, the **Production → Apply for access**
+   button unlocks. You'll answer a few questions about how the closed test went.
+
+> Tip: recruit your 12 testers **now**, while identity verification is still
+> pending — both clocks then run in parallel.
+
+### 1.8 Production
+
+Once identity verification has cleared **and** the closed test qualifies:
+**Production → Create new release** → upload the `.aab` → submit for review.
+First review on a new account often takes **several days**; later updates are
 usually hours.
 
-### 1.6 Future Android updates
+### 1.9 Future Android updates
 
 - **Design/text change only:** `eas update --channel production` — reaches
   everyone in minutes, no store review.
@@ -350,7 +404,7 @@ resolves it without a new build.
 # Master checklist
 
 **Before you start**
-- [ ] Migrations `0065` → `0068` run in Supabase
+- [ ] Migrations `0065` → `0071` run in Supabase
 - [ ] Lost & Found tested and saving
 - [ ] Real support email set in `src/lib/support.ts`
 - [ ] Website live, privacy policy opens without login
@@ -360,9 +414,13 @@ resolves it without a new build.
 - [ ] Firebase set up, `google-services.json` committed
 - [ ] Test APK installed and checked on a real phone
 - [ ] $25 paid, identity verification cleared
-- [ ] `.aab` built and uploaded
-- [ ] Listing, content rating, Data safety complete
-- [ ] Submitted
+- [ ] `.aab` built (build 7+, **no CAMERA permission**)
+- [ ] App setup complete — App access/demo login, Ads, Content rating, Target
+      audience, Data safety, Store listing (see `PLAY_DATA_SAFETY.md`)
+- [ ] Build tested on your phone via **Internal testing**
+- [ ] **Closed test: 12+ testers opted-in, running ≥14 days** ⏳ (the long pole)
+- [ ] Applied for Production access after the closed test qualified
+- [ ] Production release submitted
 
 **iPhone**
 - [ ] $99 paid, enrolment cleared
