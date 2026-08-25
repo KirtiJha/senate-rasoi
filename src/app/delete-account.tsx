@@ -48,6 +48,16 @@ const SECTIONS: { h: string; p: string[] }[] = [
     ],
   },
   {
+    h: 'Delete specific data without deleting your account',
+    p: [
+      'You do not have to delete your whole account to remove data. Within the app you can:',
+      '• Delete any item you posted — open the post, comment, listing, dish, tiffin, document or message, tap the “⋯” (more) menu or the delete icon, and confirm. It is removed permanently.',
+      '• Remove optional profile details — go to the “You” tab → “My Profile”, clear fields such as profession, vehicle number, blood group, UPI ID or profile photo, and save.',
+      '• Hide your phone number from the resident directory using the toggle in “My Profile”.',
+      'To request removal of any other data, email us at ' + SUPPORT_EMAIL + ' and we will action it.',
+    ],
+  },
+  {
     h: 'If you cannot open the app',
     p: [
       'If you are unable to sign in, email us at ' + SUPPORT_EMAIL + ' from the phone number or name registered on your account, with the subject “Delete my account”. We will verify and process your request, and confirm once it is done.',
