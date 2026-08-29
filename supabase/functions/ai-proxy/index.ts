@@ -17,6 +17,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY') ?? '';
+
+// How long a single Ask may spend backfilling embeddings before it must get on
+// with answering. Deliberately well inside the Edge Function execution limit.
+const EMBED_BACKFILL_BUDGET_MS = 8_000;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
@@ -679,9 +683,18 @@ Deno.serve(async (req) => {
 
     // Semantic (pgvector) path — best-effort; falls back to the recent catalog.
     try {
-      // 1. Lazily embed any rows the triggers marked dirty. Loop in batches so the
-      //    index is fully embedded after the first ask (not just the first 60 rows).
+      // 1. Lazily embed rows the triggers marked dirty — but only for as long as
+      //    we can spare. This runs INSIDE the user's request, and an unbounded
+      //    backfill (previously up to 8 x 80 = 640 embeddings plus 640 row
+      //    updates) can outlive the Edge Function's execution limit. When that
+      //    happens the worker is killed mid-request and the caller gets no
+      //    response at all — the client just hangs forever.
+      //    Progress is durable, so whatever this pass embeds is done for good and
+      //    the next ask continues where it left off. Answering the question the
+      //    user actually asked always takes priority over finishing the index.
+      const backfillStart = Date.now();
       for (let round = 0; round < 8; round++) {
+        if (Date.now() - backfillStart > EMBED_BACKFILL_BUDGET_MS) break;
         const { data: dirty } = await admin.from('search_documents')
           .select('source,source_id,content').eq('community_id', communityId).is('embedding', null).limit(80);
         if (!dirty?.length) break;
