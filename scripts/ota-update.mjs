@@ -54,12 +54,27 @@ if (!message) {
 
 console.log(`→ Publishing to channel "${channel}" with ${REQUIRED.length} env vars from eas.json (${PROFILE}).`);
 
-const res = spawnSync('eas', ['update', '--channel', channel, '--message', message], {
-  cwd: root,
-  stdio: 'inherit',
-  shell: process.platform === 'win32', // `eas` is a .cmd shim on Windows
-  env: { ...process.env, ...env },
-});
+// `eas` is a .cmd shim on Windows, so it has to go through a shell — and
+// cmd.exe re-joins the argv array into a single string with no quoting, which
+// splits a multi-word message into stray positional args. Quote it ourselves.
+const useShell = process.platform === 'win32';
+const arg = (v) => (useShell ? `"${String(v).replace(/"/g, "'")}"` : v);
+
+// `eas update` refuses to run non-interactively without --environment, and it
+// only accepts development | preview | production.
+const ENVIRONMENTS = ['development', 'preview', 'production'];
+const environment = ENVIRONMENTS.includes(channel) ? channel : 'production';
+
+const res = spawnSync(
+  'eas',
+  ['update', '--channel', arg(channel), '--environment', environment, '--message', arg(message)],
+  {
+    cwd: root,
+    stdio: 'inherit',
+    shell: useShell,
+    env: { ...process.env, ...env },
+  },
+);
 
 if (res.error) {
   console.error('✗ Could not run `eas` — is eas-cli installed and are you logged in?');
