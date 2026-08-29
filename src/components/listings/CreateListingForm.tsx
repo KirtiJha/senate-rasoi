@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { openPhotoPicker } from '../../lib/photo';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -64,7 +65,7 @@ export function CreateListingForm({ cat, onBack, existing }: Props) {
   };
 
   const pickPhoto = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
+    const result = await openPhotoPicker({
       mediaTypes: ['images'],
       quality: 0.9,
       allowsEditing: true,

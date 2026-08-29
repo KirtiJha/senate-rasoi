@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { openPhotoPicker } from '../lib/photo';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -126,7 +127,7 @@ function AskSheet({ visible, onClose, onSubmit, c }: {
   const [photo, setPhoto] = useState<string | null>(null);
   const input = 'rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink';
   const pickPhoto = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
+    const res = await openPhotoPicker({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
     if (!res.canceled) setPhoto(res.assets[0].uri);
   };
   return (

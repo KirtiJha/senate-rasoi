@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { openPhotoPicker } from '../../lib/photo';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -131,7 +132,7 @@ export default function PostScreen({
   const showIdentityForm = editingIdentity || !hasSavedIdentity;
 
   const pickPhoto = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
+    const result = await openPhotoPicker({
       mediaTypes: ['images'],
       quality: 0.9,
       allowsEditing: true,

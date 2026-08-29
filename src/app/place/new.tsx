@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { openPhotoPicker } from '../../lib/photo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -108,7 +109,7 @@ export default function PlaceFormScreen() {
 
   const pickPhoto = async () => {
     if (photos.length >= MAX_PHOTOS) return toast.show(`Up to ${MAX_PHOTOS} photos`);
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
+    const res = await openPhotoPicker({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
     if (!res.canceled) setPhotos((prev) => [...prev, { uri: res.assets[0].uri, isNew: true }]);
   };
   const removePhoto = (i: number) => setPhotos((prev) => prev.filter((_, idx) => idx !== i));

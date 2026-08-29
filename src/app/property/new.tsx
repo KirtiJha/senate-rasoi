@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { openPhotoPicker } from '../../lib/photo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -84,7 +85,7 @@ export default function NewPropertyScreen() {
   }, [id]);
 
   const pickPhotos = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: 8, quality: 0.9 });
+    const res = await openPhotoPicker({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: 8, quality: 0.9 });
     if (!res.canceled) setPhotos((prev) => [...prev, ...res.assets.map((a) => a.uri)].slice(0, 8));
   };
 

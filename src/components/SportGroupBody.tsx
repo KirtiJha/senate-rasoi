@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { openPhotoPicker } from '../lib/photo';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
@@ -97,7 +98,7 @@ export function SportGroupBody({
 
   const pickLogo = async () => {
     if (!group) return;
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true, aspect: [1, 1] });
+    const result = await openPhotoPicker({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true, aspect: [1, 1] });
     if (result.canceled) return;
     try {
       await updateGroup(group.id, { logo_url: await uploadGroupLogo(result.assets[0].uri, group.id) });
@@ -524,7 +525,7 @@ function AddTournamentSheet({
     setPhoto(initial?.photo_url ? { uri: initial.photo_url, isNew: false } : null);
   }, [visible, initial?.id]);
   const pickPhoto = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
+    const res = await openPhotoPicker({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
     if (!res.canceled) setPhoto({ uri: res.assets[0].uri, isNew: true });
   };
   const input = 'rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink';

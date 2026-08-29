@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ReactNode } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '../../theme';
 import { useResponsive } from './Container';
@@ -52,11 +52,27 @@ export function Sheet({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View className="flex-1 bg-bg">
+      {/*
+        Two fixes live here.
+
+        1. `presentationStyle="pageSheet"` is ignored on Android, so this modal
+           is full-screen there. With no top inset the title and close button
+           rendered under the status bar / camera cutout.
+
+        2. The sheet pins a `footer` action — "Add resident", "Send report" —
+           directly above the keyboard with nothing lifting it, so the button
+           you needed to press was the one covered. Per Expo's keyboard guide,
+           iOS wants `padding` and Android needs only the view present.
+      */}
+      <KeyboardAvoidingView
+        style={{ flex: 1, paddingTop: insets.top }}
+        className="bg-bg"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         {header}
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }} keyboardShouldPersistTaps="handled">{children}</ScrollView>
         {footer ? <View className="border-t border-line px-4 pt-3" style={{ paddingBottom: insets.bottom + 8 }}>{footer}</View> : null}
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

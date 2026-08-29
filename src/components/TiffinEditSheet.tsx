@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { openPhotoPicker } from '../lib/photo';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useToast } from '../context/toast';
@@ -34,7 +35,7 @@ export function TiffinEditSheet({ plan, visible, onClose, onSaved }: { plan: Tif
   }, [visible, plan.id]);
 
   const pickPhoto = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true, aspect: [4, 3] });
+    const res = await openPhotoPicker({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true, aspect: [4, 3] });
     if (!res.canceled) setPhoto({ uri: res.assets[0].uri, isNew: true });
   };
 

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { openPhotoPicker } from '../../lib/photo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -400,7 +401,7 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
 
   const pickPhotos = async () => {
     if (photos.length >= MAX_PHOTOS) return toast.show(`Up to ${MAX_PHOTOS} photos`);
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: MAX_PHOTOS - photos.length, quality: 0.9 });
+    const res = await openPhotoPicker({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: MAX_PHOTOS - photos.length, quality: 0.9 });
     if (!res.canceled) setPhotos((prev) => [...prev, ...res.assets.map((a) => ({ uri: a.uri, isNew: true }))].slice(0, MAX_PHOTOS));
   };
 

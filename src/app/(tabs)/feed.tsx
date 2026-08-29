@@ -2,6 +2,7 @@ import { FlashList } from '@shopify/flash-list';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { openPhotoPicker } from '../../lib/photo';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -335,11 +336,12 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
   const [bodyHeight, setBodyHeight] = useState(160);
   const [posting, setPosting] = useState(false);
   const bodyRef = useRef<TextInput>(null);
+  const modalInsets = useSafeAreaInsets();
   const MAX_PHOTOS = 4;
 
   const pickPhotos = async () => {
     if (photos.length >= MAX_PHOTOS) return toast.show(`Up to ${MAX_PHOTOS} photos`);
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: MAX_PHOTOS - photos.length, quality: 0.9 });
+    const res = await openPhotoPicker({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: MAX_PHOTOS - photos.length, quality: 0.9 });
     if (!res.canceled) setPhotos((prev) => [...prev, ...res.assets.map((a) => a.uri)].slice(0, MAX_PHOTOS));
   };
 
@@ -357,7 +359,7 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView className="flex-1 bg-bg" style={{ paddingTop: modalInsets.top }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* Header — close + title only, no post button here */}
         <View className="flex-row items-center justify-between border-b border-line px-4 py-4">
           <Pressable onPress={onClose} hitSlop={10}>

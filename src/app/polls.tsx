@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { openPhotoPicker } from '../lib/photo';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
@@ -171,7 +172,7 @@ function PollCard({
 
   const openEdit = () => { setEditQ(poll.question); setEditImg(poll.image_url ? { uri: poll.image_url, isNew: false } : null); setShowEdit(true); };
   const pickImg = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
+    const res = await openPhotoPicker({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
     if (!res.canceled) setEditImg({ uri: res.assets[0].uri, isNew: true });
   };
 
@@ -300,7 +301,7 @@ function CreatePollModal({
   const [saving, setSaving] = useState(false);
 
   const pickImage = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
+    const res = await openPhotoPicker({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
     if (!res.canceled) setImage(res.assets[0].uri);
   };
 

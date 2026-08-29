@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { openPhotoPicker } from '../../../lib/photo';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -64,7 +65,7 @@ export default function ExpensesScreen() {
   const withoutBill = rows.filter((e) => !e.receipt_url).length;
 
   const pickReceipt = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9 });
+    const res = await openPhotoPicker({ mediaTypes: ['images'], quality: 0.9 });
     if (!res.canceled) setReceipt(res.assets[0].uri);
   };
 

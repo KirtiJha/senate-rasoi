@@ -29,7 +29,8 @@ import { ConfirmProvider } from '../context/confirm';
 import { TranslationProvider } from '../context/translations';
 import { NotificationsProvider } from '../context/notifications';
 import { ThemeProvider } from '../context/theme';
-import { ToastProvider } from '../context/toast';
+import { ToastProvider, useToast } from '../context/toast';
+import { setPhotoErrorHandler } from '../lib/photo';
 import { UnreadDmsProvider } from '../context/unread';
 import { BlocksProvider } from '../context/blocks';
 import { useAuth } from '../context/auth';
@@ -126,6 +127,13 @@ function usePushTapNavigation() {
 
 function DesktopShell() {
   const c = useThemeColors();
+  const toast = useToast();
+
+  // The photo picker is called from plain event handlers all over the app, so
+  // it reports failures through a module-level handler rather than a hook.
+  // Point that at the toast once, here, inside ToastProvider.
+  useEffect(() => { setPhotoErrorHandler(toast.show); }, [toast.show]);
+
   const { isDesktop } = useResponsive();
   const { ready, session } = useAuth();
   usePushTapNavigation();

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { openPhotoPicker } from '../lib/photo';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -173,7 +174,7 @@ function CreateGroupSheet({
   const lbl = 'mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted';
 
   const pickLogo = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true, aspect: [1, 1] });
+    const result = await openPhotoPicker({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true, aspect: [1, 1] });
     if (!result.canceled) setLogoUri(result.assets[0].uri);
   };
 
