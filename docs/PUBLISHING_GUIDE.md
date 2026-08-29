@@ -325,8 +325,20 @@ usually hours.
 
 ### 1.9 Future Android updates
 
-- **Design/text change only:** `eas update --channel production` — reaches
+- **Design/text change only:** `npm run ota -- "what changed"` — reaches
   everyone in minutes, no store review.
+
+  ⚠️ **Do not run `eas update` directly.** The Supabase keys live in
+  `eas.json` under each *build* profile's `env`, which EAS applies when it
+  builds a binary — **not** when `eas update` bundles JS. Running it directly
+  publishes a bundle where `EXPO_PUBLIC_SUPABASE_URL` is undefined, so
+  `isSupabaseConfigured` is false and every tester's app shows *"Supabase is
+  not configured"* and cannot reach the backend. This has happened once.
+  `npm run ota` reads the values out of `eas.json`, refuses to publish if any
+  are missing, and passes them to the bundler.
+
+  If you ever do ship a broken bundle: `eas update:rollback` returns everyone
+  to the last good version (or to the built-in bundle if there wasn't one).
 - **New permission or SDK bump:** `eas build -p android --profile production`,
   then upload again.
 
