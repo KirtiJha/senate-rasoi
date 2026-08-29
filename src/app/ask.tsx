@@ -48,10 +48,14 @@ export default function AskScreen() {
     scrollDown();
     try {
       const r = await askAangan(q, history);
-      persist([...withUser, { role: 'assistant', text: r.answer || "I couldn't find anything on that.", results: r.results }]);
+      // Trim before the fallback: a whitespace-only answer is truthy, and
+      // would render as an empty bubble.
+      const answer = r.answer?.trim();
+      persist([...withUser, { role: 'assistant', text: answer || "I couldn't find anything on that.", results: r.results }]);
       haptics.success();
     } catch (e) {
-      persist([...withUser, { role: 'assistant', text: e instanceof AIError ? e.message : 'Ask Aangan is unavailable right now.' }]);
+      const why = (e instanceof AIError ? e.message : '').trim();
+      persist([...withUser, { role: 'assistant', text: why || 'Ask Aangan is unavailable right now.' }]);
     } finally {
       setLoading(false);
       scrollDown();
@@ -102,10 +106,15 @@ export default function AskScreen() {
               <Text className="text-[14px] leading-5 text-white">{m.text}</Text>
             </View>
           ) : (
-            <View key={i} className="mb-4 max-w-[92%] self-start">
+            // A definite width, not `self-start`. Sized to content, Yoga
+            // measures a `flex-1` child as flex-basis 0 — it contributes
+            // nothing, then has nothing to grow into — so the bubble and the
+            // result cards below collapsed to their padding on native. CSS
+            // sizes the same tree from the text, which is why web looked fine.
+            <View key={i} className="mb-4 w-[92%]">
               <View className="flex-row items-end gap-2">
                 <BrandMark size={24} />
-                <View className="flex-1 rounded-2xl rounded-bl-md border border-line bg-surface px-3.5 py-2.5">
+                <View className="flex-shrink rounded-2xl rounded-bl-md border border-line bg-surface px-3.5 py-2.5">
                   <Text className="text-[14px] leading-5 text-ink">{m.text}</Text>
                 </View>
               </View>
