@@ -249,6 +249,39 @@ Part 1. Start it as early as possible — the clock is what gates your launch.
 > Tip: recruit your 12 testers **now**, while identity verification is still
 > pending — both clocks then run in parallel.
 
+**Feedback URL or email address** (a field on the Testers tab) — fill this in;
+it is what testers see when Play offers them "Send feedback". Put
+`powerju2012@gmail.com`. It is optional to Google but the only in-Play route a
+tester has to reach you.
+
+**How testers join** — enable **both** "Join on Android" and "Join on the web".
+The web link (`https://play.google.com/apps/testing/com.aangan.app`) is the one
+to paste into WhatsApp; it works from any phone.
+
+⚠️ **Adding an email to the list is not enough.** Each tester must open the
+link and tap **"Become a tester"**. Google counts *opted-in* testers, and this
+is the single most common reason a closed test fails to qualify after 14 days.
+Two related traps:
+
+- The email must be the **Google account signed into that person's Play Store**.
+  A work address on a phone signed in with a personal Gmail will never see the app.
+- Your track is limited to **1 country**. A tester outside it cannot install.
+
+### 1.7a Watching the test
+
+Three places tell you how it is going, none of which need the testers to say
+anything:
+
+| Where | What it tells you |
+|---|---|
+| **Release → Testing → Pre-launch report** | Google installs the build on real devices and reports crashes, and accessibility and performance issues — automatically, before any human tests it. Check this first. |
+| **Quality → Android vitals** | Real crashes and ANRs from your testers' phones, with stack traces. |
+| **Test track → Testers tab** | How many have actually opted in — the number that gates Production. |
+
+For qualitative feedback, a **WhatsApp group with your testers** will get you
+far more than the Play feedback address ever will — in a residential society
+they are all reachable there already.
+
 ### 1.8 Production
 
 Once identity verification has cleared **and** the closed test qualifies:
