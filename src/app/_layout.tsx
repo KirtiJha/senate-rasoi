@@ -160,6 +160,7 @@ function DesktopShell() {
           <Stack.Screen name="onboard" />
           <Stack.Screen name="admin" />
           <Stack.Screen name="about" />
+          <Stack.Screen name="settings" />
           <Stack.Screen name="directory" />
           <Stack.Screen name="profile/me" />
           <Stack.Screen name="profile/[userId]" />

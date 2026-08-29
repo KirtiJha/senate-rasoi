@@ -38,8 +38,14 @@ export default function YouScreen() {
               </Text>
               <Text className="text-[12px] text-muted">{profile?.phone ?? ''}</Text>
             </View>
-            <Pressable onPress={() => router.push('/profile/me' as any)} hitSlop={8} className="h-10 w-10 items-center justify-center rounded-full bg-inset active:opacity-70">
-              <Ionicons name="person-outline" size={20} color={c.muted} />
+            <Pressable
+              onPress={() => router.push('/settings' as any)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
+              className="h-10 w-10 items-center justify-center rounded-full bg-inset active:opacity-70"
+            >
+              <Ionicons name="settings-outline" size={20} color={c.muted} />
             </Pressable>
           </View>
 

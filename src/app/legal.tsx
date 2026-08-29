@@ -146,7 +146,7 @@ const PRIVACY: { h: string; p: string[] }[] = [
   {
     h: 'Information we collect',
     p: [
-      'Account and profile information: your phone number (used as your login), your name and flat or block within your society, and any optional details you choose to add — profession, vehicle number, blood group, profile photo, and UPI ID.',
+      'Account and profile information: your phone number (used as your login), your name and flat or block within your society, and any optional details you choose to add — profession, vehicle number, blood group, and UPI ID.',
       'Content you create: posts, comments, polls, marketplace and property listings, home-food dishes and tiffins, orders, event contributions and expenses, direct and listing messages, documents you upload, and payment records you create.',
       'Membership information: which society you belong to and your role (member or admin).',
       'Technical information needed to run the app: a device notification token so we can deliver push notifications, and basic app-interaction data required for features to work. We do NOT collect your device location, your contacts, your call or SMS logs, or your web browsing history.',

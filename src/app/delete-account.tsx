@@ -52,7 +52,8 @@ const SECTIONS: { h: string; p: string[] }[] = [
     p: [
       'You do not have to delete your whole account to remove data. Within the app you can:',
       '• Delete any item you posted — open the post, comment, listing, dish, tiffin, document or message, tap the “⋯” (more) menu or the delete icon, and confirm. It is removed permanently.',
-      '• Remove optional profile details — go to the “You” tab → “My Profile”, clear fields such as profession, vehicle number, blood group, UPI ID or profile photo, and save.',
+      '• Remove optional profile details — go to the “You” tab → “My Profile”, clear fields such as profession, vehicle number or UPI ID, and save.',
+      '• Remove your blood group and helper skills — open “Blood & SOS” from the home screen and clear them there.',
       '• Hide your phone number from the resident directory using the toggle in “My Profile”.',
       'To request removal of any other data, email us at ' + SUPPORT_EMAIL + ' and we will action it.',
     ],
@@ -66,7 +67,7 @@ const SECTIONS: { h: string; p: string[] }[] = [
   {
     h: 'What data is deleted',
     p: [
-      'Deleting your account permanently removes: your profile (name, phone number, flat/block, and any optional details such as profession, vehicle number, blood group, profile photo and UPI ID); the content you created (posts, comments, polls, marketplace and property listings, home-food dishes and tiffins, orders, event contributions and expenses, direct and listing messages, and documents you uploaded); your in-app payment records; and your society membership and sign-in.',
+      'Deleting your account permanently removes: your profile (name, phone number, flat/block, and any optional details such as profession, vehicle number, blood group and UPI ID); the content you created (posts, comments, polls, marketplace and property listings, home-food dishes and tiffins, orders, event contributions and expenses, direct and listing messages, and documents you uploaded); your in-app payment records; and your society membership and sign-in.',
     ],
   },
   {

@@ -504,6 +504,7 @@ function AccountMenu({
           </View>
           <View style={{ height: 1, backgroundColor: colors.line, marginVertical: 4 }} />
           <AccountMenuRow icon="person-outline" label="Profile" colors={colors} onPress={() => { onClose(); onNavigate('/profile/me'); }} />
+          <AccountMenuRow icon="settings-outline" label="Settings" colors={colors} onPress={() => { onClose(); onNavigate('/settings'); }} />
           <AccountMenuRow icon="information-circle-outline" label="About" colors={colors} onPress={() => { onClose(); onNavigate('/about'); }} />
           <AccountMenuRow icon={isDark ? 'sunny-outline' : 'moon-outline'} label={isDark ? 'Light mode' : 'Dark mode'} colors={colors} onPress={onToggleTheme} />
           <View style={{ height: 1, backgroundColor: colors.line, marginVertical: 4 }} />
