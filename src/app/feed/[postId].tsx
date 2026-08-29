@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
-import { Avatar, Container } from '../../components/ui';
+import { Avatar, Container, ErrorState } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useBlocks } from '../../context/blocks';
@@ -34,6 +34,8 @@ export default function PostThreadScreen() {
   const { userId, isAdmin } = useAuth();
 
   const [post, setPost] = useState<PostRow | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const { filterBlocked } = useBlocks();
   const visibleComments = useMemo(
@@ -59,9 +61,22 @@ export default function PostThreadScreen() {
       const [p, cmts] = await Promise.all([fetchPostById(postId), fetchComments(postId)]);
       setPost(p);
       setComments(cmts);
-    } catch { toast.show('Could not load post'); }
-    finally { setLoading(false); }
-  }, [postId, toast]);
+      setLoadFailed(false);
+    } catch (e) {
+      // A failed request is not a deleted post. Saying "removed by the author
+      // or an admin" when the network dropped accuses someone of something
+      // they did not do.
+      console.error('post: load failed', e);
+      setLoadFailed(true);
+    } finally { setLoading(false); }
+  }, [postId]);
+
+  const retry = useCallback(async () => {
+    setRetrying(true);
+    setLoading(true);
+    await loadPost();
+    setRetrying(false);
+  }, [loadPost]);
 
   useEffect(() => { loadPost(); }, [loadPost]);
 
@@ -106,6 +121,26 @@ export default function PostThreadScreen() {
     return (
       <View className="flex-1 items-center justify-center bg-bg">
         <Text className="text-muted">Loading…</Text>
+      </View>
+    );
+  }
+
+  if (loadFailed) {
+    return (
+      <View className="flex-1 bg-bg">
+        <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
+          <Pressable onPress={goBack} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset" accessibilityRole="button" accessibilityLabel="Go back">
+            <Ionicons name="chevron-back" size={22} color={c.ink} />
+          </Pressable>
+        </View>
+        <View className="flex-1 justify-center">
+          <ErrorState
+            title="Couldn't load this post"
+            message="Nothing has been removed — we just couldn't reach it. Check your connection and try again."
+            onRetry={retry}
+            retrying={retrying}
+          />
+        </View>
       </View>
     );
   }

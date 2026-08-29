@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
-import { Avatar, Button, Container, ScreenHeader } from '../components/ui';
+import { Avatar, Button, Container, ErrorState, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { BLOOD_GROUPS, HELPER_SKILLS, RegistryPerson, fetchRegistry, updateHelperProfile } from '../lib/donors';
@@ -18,6 +18,8 @@ export default function HelpersScreen() {
   const { userId, profile, communityId, refreshProfile } = useAuth();
 
   const [people, setPeople] = useState<RegistryPerson[]>([]);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [reloading, setReloading] = useState(false);
   const [bloodFilter, setBloodFilter] = useState<string>('all');
 
   // opt-in form
@@ -27,8 +29,20 @@ export default function HelpersScreen() {
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    try { setPeople(await fetchRegistry(communityId)); } catch { /* keep */ }
+    try {
+      setPeople(await fetchRegistry(communityId));
+      setLoadFailed(false);
+    } catch (e) {
+      console.error('helpers: registry load failed', e);
+      setLoadFailed(true);
+    }
   }, [communityId]);
+
+  const retry = useCallback(async () => {
+    setReloading(true);
+    await load();
+    setReloading(false);
+  }, [load]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
@@ -94,7 +108,15 @@ export default function HelpersScreen() {
               </Pressable>
             ))}
           </ScrollView>
-          {donors.length === 0 ? (
+          {loadFailed ? (
+            <ErrorState
+              compact
+              title="Couldn't load the registry"
+              message="This list needs a connection. Nobody has been removed — try again."
+              onRetry={retry}
+              retrying={reloading}
+            />
+          ) : donors.length === 0 ? (
             <Text className="px-1 py-3 text-[13px] text-muted">{bloodFilter === 'all' ? 'No donors have opted in yet — be the first.' : `No ${bloodFilter} donors listed yet.`}</Text>
           ) : (
             <View className="gap-2">
@@ -103,7 +125,7 @@ export default function HelpersScreen() {
           )}
 
           {/* Emergency helpers */}
-          {helpers.length > 0 ? (
+          {!loadFailed && helpers.length > 0 ? (
             <>
               <View className="mt-6 flex-row items-center gap-2">
                 <Ionicons name="medkit" size={16} color={ACCENT} />

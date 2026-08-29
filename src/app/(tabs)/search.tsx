@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '../../components/BrandMark';
-import { Avatar, RowSkeleton, ScreenHeader, useResponsive } from '../../components/ui';
+import { Avatar, ErrorState, RowSkeleton, ScreenHeader, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { fetchDirectory } from '../../lib/directory';
 import { fetchDishes } from '../../lib/dishes';
@@ -72,6 +72,8 @@ export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const [items, setItems] = useState<SearchItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const [recents, setRecents] = useState<string[]>([]);
   const inputRef = useRef<TextInput>(null);
 
@@ -150,8 +152,14 @@ export default function SearchScreen() {
         });
       }
       setItems(next);
-    } catch { /* defensive */ }
-    finally { setLoading(false); }
+      setLoadFailed(false);
+    } catch (e) {
+      // The index is built client-side, so a failed build left `items` empty
+      // and every query answered "No results — try a different word." The
+      // resident concludes their neighbour never posted it.
+      console.error('search: index build failed', e);
+      setLoadFailed(true);
+    } finally { setLoading(false); }
   }, [communityId, userId, isAdmin, router, c.muted]);
 
   useFocusEffect(useCallback(() => { load(); getRecentSearches().then(setRecents); }, [load]));
@@ -228,6 +236,13 @@ export default function SearchScreen() {
               </Pressable>
               <RecentsOrHint loading={loading} recents={recents} onPick={(q) => setQuery(q)} onClear={() => { clearRecentSearches(); setRecents([]); }} c={c} />
             </>
+          ) : loadFailed ? (
+            <ErrorState
+              title="Search isn't ready"
+              message="We couldn't load what's in your society, so there's nothing to search yet."
+              onRetry={async () => { setRetrying(true); await load(); setRetrying(false); }}
+              retrying={retrying}
+            />
           ) : total === 0 ? (
             <View className="items-center py-16">
               <Ionicons name="search-outline" size={40} color={c.faint} />

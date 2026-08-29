@@ -6,7 +6,7 @@ import {
   ScrollView, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar } from '../../components/ui';
+import { Avatar, ErrorState } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useBlocks } from '../../context/blocks';
@@ -31,6 +31,8 @@ export default function DmThreadScreen() {
   const [thread, setThread] = useState<InboxThread | null>(null);
   const [messages, setMessages] = useState<DmMessageRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const [body, setBody] = useDraft('dm:' + (threadId ?? ''), '');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
@@ -43,9 +45,20 @@ export default function DmThreadScreen() {
       setThread(t);
       setMessages(msgs);
       markThreadRead(threadId, userId).catch(() => {});
-    } catch { toast.show('Could not load conversation'); }
-    finally { setLoading(false); }
-  }, [threadId, userId, toast]);
+      setLoadFailed(false);
+    } catch (e) {
+      // Without this, a failed fetch rendered "No messages yet. Say hello" —
+      // so a resident could believe their neighbour never replied.
+      console.error('dm: load failed', e);
+      setLoadFailed(true);
+    } finally { setLoading(false); }
+  }, [threadId, userId]);
+
+  const retry = useCallback(async () => {
+    setRetrying(true);
+    await load();
+    setRetrying(false);
+  }, [load]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -118,7 +131,14 @@ export default function DmThreadScreen() {
         showsVerticalScrollIndicator={false}
         onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
       >
-        {messages.length === 0 ? (
+        {loadFailed ? (
+          <ErrorState
+            title="Couldn't load this conversation"
+            message="Your messages are safe — we just couldn't reach them. Try again."
+            onRetry={retry}
+            retrying={retrying}
+          />
+        ) : messages.length === 0 ? (
           <Text className="py-10 text-center text-[13px] text-muted">
             No messages yet. Say hello to {thread?.other.name ?? 'your neighbour'} 👋
           </Text>

@@ -8,3 +8,4 @@ export { Sheet } from './Sheet';
 export { Skeleton, DishCardSkeleton, ListingCardSkeleton, RowSkeleton } from './Skeleton';
 export { Stepper } from './Stepper';
 export { VegMark } from './VegMark';
+export { ErrorState, ErrorRow } from './ErrorState';

@@ -8,7 +8,7 @@ import { InquiryModal } from '../../components/listings/InquiryModal';
 import { ListingChat } from '../../components/listings/ListingChat';
 import { PayButton } from '../../components/PayButton';
 import { T } from '../../components/T';
-import { Avatar, Badge, Button, Container, useResponsive } from '../../components/ui';
+import { Avatar, Badge, Button, Container, ErrorState, useResponsive } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -33,6 +33,8 @@ export default function ListingDetailScreen() {
   const c = useThemeColors();
 
   const [listing, setListing] = useState<ListingRow | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const [loading, setLoading] = useState(true);
   const [inquiryListing, setInquiryListing] = useState<ListingRow | null>(null);
   const [saved, setSaved] = useState(false);
@@ -48,13 +50,24 @@ export default function ListingDetailScreen() {
     if (!id) return;
     try {
       setListing(await fetchListingById(id));
+      setLoadFailed(false);
     } catch (e) {
-      console.error(e);
-      toast.show('Could not load this listing');
+      // A thrown error means we never heard back — NOT that the listing was
+      // deleted. Telling a resident it was "removed by the owner" because
+      // their signal dropped starts arguments between neighbours.
+      console.error('listing: load failed', e);
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
-  }, [id, toast]);
+  }, [id]);
+
+  const retry = useCallback(async () => {
+    setRetrying(true);
+    setLoading(true);
+    await load();
+    setRetrying(false);
+  }, [load]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -115,6 +128,26 @@ export default function ListingDetailScreen() {
     return (
       <View className="flex-1 items-center justify-center bg-bg">
         <Text className="text-muted">Loading…</Text>
+      </View>
+    );
+  }
+
+  if (loadFailed) {
+    return (
+      <View className="flex-1 bg-bg">
+        <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
+          <Pressable onPress={goBack} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset" accessibilityRole="button" accessibilityLabel="Go back">
+            <Ionicons name="chevron-back" size={22} color={c.ink} />
+          </Pressable>
+        </View>
+        <View className="flex-1 justify-center">
+          <ErrorState
+            title="Couldn't load this listing"
+            message="It's still there — we just couldn't reach it. Check your connection and try again."
+            onRetry={retry}
+            retrying={retrying}
+          />
+        </View>
       </View>
     );
   }
