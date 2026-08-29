@@ -150,7 +150,7 @@ release without it.
 | Field | Answer |
 |---|---|
 | Does your app fall into Social or Dating? | **Social** |
-| **Safety standards URL** | `https://YOUR-SITE.vercel.app/child-safety` |
+| **Safety standards URL** | `https://my-aangan.vercel.app/child-safety` |
 | **Child safety contact email** | `powerju2012@gmail.com` |
 
 Google requires the URL to be live, reachable **worldwide without signing in**,

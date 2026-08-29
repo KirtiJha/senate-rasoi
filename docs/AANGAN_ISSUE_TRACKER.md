@@ -340,7 +340,7 @@ These can't be done from the codebase and are the remaining gate:
   2. **An explicit CSAE report reason** — the page tells users to pick "Child safety (CSAE)" in the report menu, so that option now exists rather than being implied by the generic `adult`/`illegal` reasons. `0072` widens the `reason` check constraint and gives admins a distinct **"🚨 URGENT: child-safety report"** notification for these, so they don't blend into the normal queue. It is listed first in the picker.
   3. **Linked in-app** — a Child Safety Standards row on `/about`, and a Child safety section in the Terms that points at the page.
   4. **Play Console answers** — `PLAY_DATA_SAFETY.md` §8 has the two paste-ready fields; `PUBLISHING_GUIDE.md` step 1.5 and the master checklist now cover it.
-- **▶️ Action:** the URL is `https://YOUR-SITE.vercel.app/child-safety`. **Open it in an incognito window before pasting it into Play** — if the Vercel site isn't deployed the link won't resolve and the declaration is rejected.
+- **▶️ Action:** the URL is `https://my-aangan.vercel.app/child-safety`. **Open it in an incognito window before pasting it into Play** — if the Vercel site isn't deployed the link won't resolve and the declaration is rejected.
 
 ---
 

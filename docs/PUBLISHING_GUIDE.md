@@ -207,7 +207,7 @@ number + PIN** (details in `PLAY_DATA_SAFETY.md` §1). Skipping this = rejection
 **Child safety standards** ⚠️ required for the **Social** category — Play blocks
 your release without it. Two fields:
 
-- **Safety standards URL:** `https://YOUR-SITE.vercel.app/child-safety`
+- **Safety standards URL:** `https://my-aangan.vercel.app/child-safety`
 - **Child safety contact email:** `powerju2012@gmail.com`
 
 The link must be live, reachable worldwide without signing in, not a PDF, and
