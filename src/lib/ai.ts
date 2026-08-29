@@ -1,4 +1,5 @@
 import * as ImageManipulator from 'expo-image-manipulator';
+import { Platform } from 'react-native';
 
 import { isSupabaseConfigured, supabase } from './supabase';
 
@@ -55,6 +56,21 @@ const DIGEST_TIMEOUT_MS = 20_000;
  * a phone it is not, and it presented as Ask Aangan spinning forever with
  * nothing to report. Abort instead, and say which of the two happened.
  */
+/**
+ * Android's networking stack (OkHttp, via React Native) advertises
+ * `Accept-Encoding: gzip, br` but cannot decode Brotli. When Cloudflare honours
+ * the `br` and returns a Brotli-encoded body, the response arrives — status 200,
+ * correct Content-Type — but reading it as JSON never completes, so the invoke
+ * promise never settles and the UI spins forever.
+ *
+ * Asking for `identity` opts out of compression on native. Bodies here are small
+ * (a chat answer, a handful of result cards), so the extra bytes are irrelevant
+ * next to a request that never returns. Browsers decode Brotli natively, so web
+ * keeps compression.
+ */
+const NO_COMPRESSION_HEADERS: Record<string, string> | undefined =
+  Platform.OS === 'web' ? undefined : { 'Accept-Encoding': 'identity' };
+
 async function invokeAi(
   body: Record<string, unknown>,
   timeoutMs: number,
@@ -75,7 +91,11 @@ async function invokeAi(
 
   try {
     return await Promise.race([
-      supabase.functions.invoke('ai-proxy', { body, signal: controller.signal }),
+      supabase.functions.invoke('ai-proxy', {
+        body,
+        signal: controller.signal,
+        headers: NO_COMPRESSION_HEADERS,
+      }),
       timeout,
     ]);
   } catch (e) {
