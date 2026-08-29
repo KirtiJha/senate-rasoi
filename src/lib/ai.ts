@@ -35,7 +35,11 @@ type AutofillResult<K> = K extends 'dish'
 /** Thrown for an expected, user-facing failure (over quota, unreadable photo). */
 export class AIError extends Error {
   constructor(message: string, readonly code?: string) {
-    super(message);
+    // The chat renders `e.message` straight into a bubble, and `??` at the
+    // call sites keeps an empty string ('' is not nullish) — so a blank field
+    // from the server reached the UI as a card with nothing in it and no clue
+    // what went wrong. Blank in, useful sentence out.
+    super(message?.trim() || 'AI is unavailable right now — try again shortly.');
     this.name = 'AIError';
   }
 }
@@ -57,16 +61,17 @@ const DIGEST_TIMEOUT_MS = 20_000;
  * nothing to report. Abort instead, and say which of the two happened.
  */
 /**
- * Android's networking stack (OkHttp, via React Native) advertises
- * `Accept-Encoding: gzip, br` but cannot decode Brotli. When Cloudflare honours
- * the `br` and returns a Brotli-encoded body, the response arrives — status 200,
- * correct Content-Type — but reading it as JSON never completes, so the invoke
- * promise never settles and the UI spins forever.
+ * Ask for an uncompressed body on native.
  *
- * Asking for `identity` opts out of compression on native. Bodies here are small
- * (a chat answer, a handful of result cards), so the extra bytes are irrelevant
- * next to a request that never returns. Browsers decode Brotli natively, so web
- * keeps compression.
+ * This was added on the theory that Cloudflare returned Brotli that Android's
+ * OkHttp could not decode. Probing the deployed function directly disproves
+ * that: offered `gzip, deflate, br` it answers `Content-Encoding: gzip`, never
+ * `br`. So this is not the cure for Ask Aangan failing on a phone.
+ *
+ * It is kept because it is harmless — the bodies here are a chat answer and a
+ * handful of result cards — and it takes decompression off the list of things
+ * that can differ between a browser and a phone while that is still being
+ * diagnosed. Web keeps compression; browsers decode both.
  */
 const NO_COMPRESSION_HEADERS: Record<string, string> | undefined =
   Platform.OS === 'web' ? undefined : { 'Accept-Encoding': 'identity' };
@@ -141,7 +146,7 @@ export async function visionAutofill<K extends AutofillKind>(
   // Read an application-level error returned either in the body or via a non-2xx.
   const bodyErr = (data as { error?: string; message?: string } | null)?.error;
   if (bodyErr) {
-    throw new AIError((data as any).message ?? friendly(bodyErr), bodyErr);
+    throw new AIError((data as any).message?.trim() || friendly(bodyErr), bodyErr);
   }
   if (error) {
     const parsed = await readInvokeError(error);
@@ -182,7 +187,7 @@ export async function askAangan(question: string, history: ChatTurn[] = []): Pro
   );
 
   const bodyErr = (data as { error?: string; message?: string } | null)?.error;
-  if (bodyErr) throw new AIError((data as any).message ?? friendly(bodyErr), bodyErr);
+  if (bodyErr) throw new AIError((data as any).message?.trim() || friendly(bodyErr), bodyErr);
   if (error) {
     const parsed = await readInvokeError(error);
     throw new AIError(parsed.message, parsed.code);
@@ -281,18 +286,47 @@ function friendly(code: string): string {
   }
 }
 
-/** supabase-js wraps non-2xx responses in a FunctionsHttpError; dig out the JSON. */
+/**
+ * Turn a supabase-js invoke error into something a user — and whoever has to
+ * fix it — can act on.
+ *
+ * `functions.invoke` never rejects. It catches everything and returns an error
+ * whose `.context` is a `Response` for a non-2xx (FunctionsHttpError,
+ * FunctionsRelayError) but the raw fetch failure for a transport error
+ * (FunctionsFetchError). Reading `.context` as a Response in all three cases
+ * made every failure that wasn't a parseable JSON body — every native network
+ * failure included — report "the AI service may not be deployed", which is
+ * usually false and sends debugging in the wrong direction.
+ */
 async function readInvokeError(error: unknown): Promise<{ message: string; code?: string }> {
-  try {
-    const ctx = (error as { context?: Response }).context;
-    if (ctx && typeof ctx.json === 'function') {
-      const j = await ctx.json();
-      return { message: j.message ?? friendly(j.error), code: j.error };
+  const name = (error as { name?: string } | null)?.name;
+  const context = (error as { context?: unknown } | null)?.context;
+  const res =
+    context && typeof (context as Response).json === 'function' ? (context as Response) : undefined;
+
+  if (res) {
+    try {
+      const j = await res.json();
+      if (j?.error || j?.message) return { message: j.message?.trim() || friendly(j.error), code: j.error };
+    } catch {
+      /* body wasn't the JSON shape we expect — fall through to the status */
     }
-  } catch {
-    /* fall through */
+    if (res.status === 404) {
+      return { message: 'AI is unavailable — the ai-proxy function is not deployed.', code: 'http_404' };
+    }
+    return { message: `AI is unavailable — the AI service returned ${res.status}.`, code: `http_${res.status}` };
   }
-  // Nothing parseable came back — most often the `ai-proxy` function is not
-  // deployed at all, so the 404 body isn't the JSON shape we expect.
-  return { message: 'AI is unavailable right now — the AI service may not be deployed.' };
+
+  if (name === 'FunctionsFetchError') {
+    // The request never completed. Carry the platform's own words — "Network
+    // request failed", a TLS error — because that is the only clue to why the
+    // same call succeeds in a browser and not on a phone.
+    const why = (context as { message?: string } | null)?.message;
+    return {
+      message: `Could not reach the AI service${why ? ` (${why})` : ''}. Check your connection and try again.`,
+      code: 'network',
+    };
+  }
+
+  return { message: 'AI is unavailable right now — try again shortly.', code: name };
 }
