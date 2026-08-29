@@ -39,6 +39,56 @@ export class AIError extends Error {
   }
 }
 
+// How long to wait before giving up on the Edge Function. Ask can legitimately
+// take a while (semantic search, plus a lazy embedding backfill on the first
+// question after new items are posted), so these are deliberately generous.
+const ASK_TIMEOUT_MS = 60_000;
+const AUTOFILL_TIMEOUT_MS = 45_000;
+const DIGEST_TIMEOUT_MS = 20_000;
+
+/**
+ * Call `ai-proxy` with a hard timeout.
+ *
+ * `functions.invoke` returns `{ data, error }` for HTTP-level failures, but a
+ * transport failure — no route to the host, a stalled connection — rejects, and
+ * a request that simply never settles does neither. On the web that is rare; on
+ * a phone it is not, and it presented as Ask Aangan spinning forever with
+ * nothing to report. Abort instead, and say which of the two happened.
+ */
+async function invokeAi(
+  body: Record<string, unknown>,
+  timeoutMs: number,
+): Promise<{ data: unknown; error: unknown }> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  // Race the abort as well as honouring it. Aborting is the clean path, but it
+  // only helps if the platform's fetch propagates the signal — and the bug this
+  // guards against is precisely a request that never settles. The race
+  // guarantees the promise resolves either way, so the UI can never hang.
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(new AIError('AI took too long to respond. Check your connection and try again.', 'timeout'));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([
+      supabase.functions.invoke('ai-proxy', { body, signal: controller.signal }),
+      timeout,
+    ]);
+  } catch (e) {
+    if (e instanceof AIError) throw e;
+    if (controller.signal.aborted) {
+      throw new AIError('AI took too long to respond. Check your connection and try again.', 'timeout');
+    }
+    throw new AIError('Could not reach the AI service. Check your connection and try again.', 'network');
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 /** Shrink a photo to a small JPEG and return its base64 (no data: prefix). */
 async function toBase64(localUri: string): Promise<string> {
   const out = await ImageManipulator.manipulateAsync(
@@ -63,9 +113,10 @@ export async function visionAutofill<K extends AutofillKind>(
   if (!isSupabaseConfigured) throw new AIError('Connect Supabase to use AI.');
 
   const image = await toBase64(photoUri);
-  const { data, error } = await supabase.functions.invoke('ai-proxy', {
-    body: { action: 'autofill', kind, note: note?.trim() || undefined, image },
-  });
+  const { data, error } = await invokeAi(
+    { action: 'autofill', kind, note: note?.trim() || undefined, image },
+    AUTOFILL_TIMEOUT_MS,
+  );
 
   // Read an application-level error returned either in the body or via a non-2xx.
   const bodyErr = (data as { error?: string; message?: string } | null)?.error;
@@ -105,9 +156,10 @@ export async function askAangan(question: string, history: ChatTurn[] = []): Pro
   const q = question.trim();
   if (!q) throw new AIError('Type a question first.');
 
-  const { data, error } = await supabase.functions.invoke('ai-proxy', {
-    body: { action: 'ask', question: q, history: history.slice(-8) },
-  });
+  const { data, error } = await invokeAi(
+    { action: 'ask', question: q, history: history.slice(-8) },
+    ASK_TIMEOUT_MS,
+  );
 
   const bodyErr = (data as { error?: string; message?: string } | null)?.error;
   if (bodyErr) throw new AIError((data as any).message ?? friendly(bodyErr), bodyErr);
@@ -175,7 +227,7 @@ export async function fetchSocietyDigest(): Promise<SocietyDigest> {
   const empty: SocietyDigest = { summary: '', highlights: [] };
   if (!isSupabaseConfigured) return empty;
   try {
-    const { data, error } = await supabase.functions.invoke('ai-proxy', { body: { action: 'digest' } });
+    const { data, error } = await invokeAi({ action: 'digest' }, DIGEST_TIMEOUT_MS);
     if (error) return empty;
     return (data as { digest?: SocietyDigest } | null)?.digest ?? empty;
   } catch {
