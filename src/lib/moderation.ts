@@ -11,12 +11,16 @@ export type ReportTargetType =
   | 'lost_found' | 'recommend' | 'property' | 'place' | 'message' | 'profile';
 
 export type ReportReason =
+  | 'csae'
   | 'spam' | 'harassment' | 'hate' | 'scam'
   | 'adult' | 'violence' | 'illegal' | 'other';
 
 export type ReportStatus = 'open' | 'reviewing' | 'actioned' | 'dismissed';
 
 export const REPORT_REASONS: { key: ReportReason; label: string; blurb: string }[] = [
+  // First on purpose: Google Play's Child Safety Standards policy expects an
+  // obvious in-app CSAE reporting path, and /child-safety points users here.
+  { key: 'csae', label: 'Child safety (CSAE)', blurb: 'Sexualises, endangers or exploits a child' },
   { key: 'spam', label: 'Spam or misleading', blurb: 'Repetitive, fake or misleading content' },
   { key: 'harassment', label: 'Harassment or bullying', blurb: 'Targeting or intimidating someone' },
   { key: 'hate', label: 'Hate speech', blurb: 'Attacks a group or identity' },

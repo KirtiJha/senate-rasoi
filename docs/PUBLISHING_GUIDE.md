@@ -204,6 +204,17 @@ number + PIN** (details in `PLAY_DATA_SAFETY.md` §1). Skipping this = rejection
 **Content rating** / **Data safety** — full answers in `PLAY_DATA_SAFETY.md`
 §3 and §5.
 
+**Child safety standards** ⚠️ required for the **Social** category — Play blocks
+your release without it. Two fields:
+
+- **Safety standards URL:** `https://YOUR-SITE.vercel.app/child-safety`
+- **Child safety contact email:** `powerju2012@gmail.com`
+
+The link must be live, reachable worldwide without signing in, not a PDF, and
+not publicly editable — ours is a normal page in the web build, so it qualifies.
+**Check it in an incognito window first**; if your site isn't deployed yet
+(step 0.3) the URL won't resolve. Details in `PLAY_DATA_SAFETY.md` §8.
+
 ### 1.6 Test on your own phone (Internal testing)
 
 You do **not** need Production — or even a cleared identity check — to install
@@ -404,7 +415,7 @@ resolves it without a new build.
 # Master checklist
 
 **Before you start**
-- [ ] Migrations `0065` → `0071` run in Supabase
+- [ ] Migrations `0065` → `0072` run in Supabase
 - [ ] Lost & Found tested and saving
 - [ ] Real support email set in `src/lib/support.ts`
 - [ ] Website live, privacy policy opens without login
@@ -417,6 +428,7 @@ resolves it without a new build.
 - [ ] `.aab` built (build 7+, **no CAMERA permission**)
 - [ ] App setup complete — App access/demo login, Ads, Content rating, Target
       audience, Data safety, Store listing (see `PLAY_DATA_SAFETY.md`)
+- [ ] **Child safety standards** URL + contact email entered (Social category)
 - [ ] Build tested on your phone via **Internal testing**
 - [ ] **Closed test: 12+ testers opted-in, running ≥14 days** ⏳ (the long pole)
 - [ ] Applied for Production access after the closed test qualified

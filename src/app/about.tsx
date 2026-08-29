@@ -81,6 +81,8 @@ export default function AboutScreen() {
           <View className="gap-2">
             <LinkRow label="Privacy Policy" icon="shield-outline" c={c} onPress={() => router.push('/legal?tab=privacy' as any)} />
             <LinkRow label="Terms of Service" icon="document-text-outline" c={c} onPress={() => router.push('/legal' as any)} />
+            <LinkRow label="Child Safety Standards" icon="shield-checkmark-outline" c={c} onPress={() => router.push('/child-safety' as any)} />
+            <LinkRow label="Delete your account" icon="trash-outline" c={c} onPress={() => router.push('/delete-account' as any)} />
           </View>
         </View>
 

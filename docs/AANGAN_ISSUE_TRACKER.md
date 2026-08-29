@@ -4,7 +4,7 @@
 > Status legend: 🔴 Open · 🟡 In Progress · 🟢 Implemented · ⚪️ Won't Do / Deferred
 > Type legend: 🐞 Bug · ✨ Enhancement · 💡 Idea/Feature
 
-_Last updated: 16 Aug 2026 — society functions & events (Phase 1)_
+_Last updated: 29 Aug 2026 — Play child-safety (CSAE) standards_
 
 ---
 
@@ -12,10 +12,10 @@ _Last updated: 16 Aug 2026 — society functions & events (Phase 1)_
 
 | Open | In Progress | Implemented | Deferred | Total |
 |---|---|---|---|---|
-| 1 | 0 | 28 | 0 | 29 |
+| 1 | 0 | 29 | 0 | 30 |
 
 > Open: **#18** (PIN-reset-by-phone — product/security decision, deferred by owner).
-> Pending migrations: run through **0069**.
+> Pending migrations: run through **0072**.
 
 ### 🚦 App Store / Play readiness at a glance
 
@@ -27,6 +27,7 @@ _Last updated: 16 Aug 2026 — society functions & events (Phase 1)_
 | Privacy policy + Terms | ✅ | ✅ — `/legal` |
 | UGC report & block (Apple 1.2) | ✅ | ✅ (#26 — migration `0068`) |
 | Published developer contact (Apple 1.2) | ✅ | ✅ (#27 — ⚠️ set a real mailbox, see below) |
+| Child safety (CSAE) standards URL | ✅ (#30 — `/child-safety`) | n/a |
 | Store listing assets (screenshots, copy) | ⬜ not started | ⬜ not started |
 | Paid developer account | ⬜ Play $25 one-time | ⬜ Apple $99/yr |
 
@@ -37,10 +38,9 @@ _Last updated: 16 Aug 2026 — society functions & events (Phase 1)_
 
 These can't be done from the codebase and are the remaining gate:
 
-1. **Point `SUPPORT_EMAIL` at a real mailbox.** `src/lib/support.ts` ships
-   `support@aangan.app` as a placeholder. It appears in the Terms, the Privacy
-   Policy and on `/about`, and must match the **Support URL / contact** in App
-   Store Connect. Abuse reports are expected to get a timely reply.
+1. ✅ **Support email set** — `src/lib/support.ts` now uses a real mailbox. It
+   appears in the Terms, the Privacy Policy, `/about`, `/delete-account` and
+   `/child-safety`, and is the address to give App Store Connect and Play.
 2. **Fill the iOS submit block** in `eas.json` — `appleId`, `ascAppId`,
    `appleTeamId` — once the App Store Connect record exists.
 3. **Create the paid accounts** (Apple $99/yr, Google Play $25 one-time) and
@@ -331,6 +331,19 @@ These can't be done from the codebase and are the remaining gate:
 
 ---
 
+### #30 — Play requires published child-safety (CSAE) standards 🐞
+- **Status:** 🟢 Implemented · **▶️ run migration `0072`**
+- **Area:** Compliance / Google Play · _surfaced during closed-testing setup_
+- **Risk:** Google Play's **Child Safety Standards** policy applies to every app in the **Social** or **Dating** category. Play blocks the release until you supply a *Safety standards URL* and a *child-safety contact email*. The URL must be live, reachable worldwide **without signing in**, **not a PDF**, and **not publicly editable** — which rules out a Google Doc or a hosted PDF.
+- **Implemented:**
+  1. **`/child-safety`** — a new public route (`src/app/child-safety.tsx`), registered in `_layout` alongside `/legal` and `/delete-account`. It states the zero-tolerance CSAE position, what is prohibited, how Aangan's closed society-only membership prevents stranger contact with a child, how to report, how we respond, the laws we comply with (POCSO 2012, IT Act 2000, IT Rules 2021, NCMEC where applicable), and the contact address. `vercel.json` already rewrites all paths to `index.html`, so a direct hit on the URL resolves.
+  2. **An explicit CSAE report reason** — the page tells users to pick "Child safety (CSAE)" in the report menu, so that option now exists rather than being implied by the generic `adult`/`illegal` reasons. `0072` widens the `reason` check constraint and gives admins a distinct **"🚨 URGENT: child-safety report"** notification for these, so they don't blend into the normal queue. It is listed first in the picker.
+  3. **Linked in-app** — a Child Safety Standards row on `/about`, and a Child safety section in the Terms that points at the page.
+  4. **Play Console answers** — `PLAY_DATA_SAFETY.md` §8 has the two paste-ready fields; `PUBLISHING_GUIDE.md` step 1.5 and the master checklist now cover it.
+- **▶️ Action:** the URL is `https://YOUR-SITE.vercel.app/child-safety`. **Open it in an incognito window before pasting it into Play** — if the Vercel site isn't deployed the link won't resolve and the declaration is rejected.
+
+---
+
 ## End-to-end review notes (Home Food + Badminton)
 
 **Verified working in code:** dish posting (now resilient to photo failures); order placement → **chef push on new order** + **buyer push on status change** (0005, title fixed in #3); Kitchen & Orders screens have **realtime**; badminton group create / booking → **member push** (0043) → RSVP (fixed in #2) → session-end **client-side cost split** → **UPI dues** (pay → initiated → booker confirms → paid) with the dues screen now **live** (#4).
@@ -340,6 +353,7 @@ These can't be done from the codebase and are the remaining gate:
 ---
 
 ## Changelog
+- **29 Aug 2026** — Shipped **#30**: published child-safety (CSAE) standards at `/child-safety` for Google Play's Social-category requirement, an explicit "Child safety (CSAE)" report reason with an urgent admin notification (migration `0072`), in-app links from About and the Terms, and Play Console answers in `PLAY_DATA_SAFETY.md` §8.
 - **16 Aug 2026 (evening)** — Shipped **#29**, society functions Phase 1 (migration `0069`): events with a lifecycle, per-function core team, per-flat contribution roster seeded from the directory, expense ledger with photographed bills, and a generated accounts report open to every resident. Books close automatically when a function completes.
 - **16 Aug 2026 (later)** — Store-readiness build-out. Shipped **#26** (report + block: `content_reports`, `user_blocks`, `ModerationMenu` across 7 surfaces, mutual block enforced on DMs by trigger, `/profile/blocked`, admin Reports queue — migration `0068`) and **#27** (`SUPPORT_EMAIL` in Terms/Privacy/About). Found and fixed **#28** — 0065 typed `lost_found_items.community_id` as text, which made every Lost & Found post fail in the notification trigger and leaked reads across societies; 0065 corrected and `0067` added as an idempotent repair.
 - **16 Aug 2026** — App-store readiness audit for Android + iOS. Logged #19–#23 (the Jun 17–22 work: Lost & Found, push-for-everything, Android release path, food disclaimers, tsc fix). Fixed #24 (native config: notifications plugin + `aps-environment`, Play-hostile storage perms, phantom `RECORD_AUDIO`, unused contacts perm, export-compliance flag, iOS submit block) and #25 (force-update dead end on native). Logged **#26** (UGC report/block) and **#27** (developer contact) as **hard iOS submission blockers**.

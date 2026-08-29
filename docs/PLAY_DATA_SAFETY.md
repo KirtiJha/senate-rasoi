@@ -142,7 +142,34 @@ Aangan is a private community app for apartment societies. Residents share notic
 
 ---
 
-## 7. Quick completion order
+## 8. Child safety standards  (App content → Child safety standards)
+
+Required because Aangan is in the **Social** category. Play will not let you
+release without it.
+
+| Field | Answer |
+|---|---|
+| Does your app fall into Social or Dating? | **Social** |
+| **Safety standards URL** | `https://YOUR-SITE.vercel.app/child-safety` |
+| **Child safety contact email** | `powerju2012@gmail.com` |
+
+Google requires the URL to be live, reachable **worldwide without signing in**,
+**not a PDF**, and **not publicly editable**. Ours is a normal page in the web
+build, so it meets all four.
+
+⚠️ **Open the URL in an incognito window before you paste it.** If your Vercel
+site isn't deployed (PUBLISHING_GUIDE step 0.3) the link won't resolve and Play
+will reject the declaration.
+
+The page itself is `src/app/child-safety.tsx` — it states the CSAE prohibition,
+how users report it (the "⋯" menu → Report → **Child safety (CSAE)**), how we
+respond, the laws we comply with, and the contact address above. If you change
+that page, keep every claim on it true: reviewers check it against what the app
+actually does.
+
+---
+
+## 9. Quick completion order
 
 1. **App access** (demo login) — unblocks review
 2. **Ads** → No
@@ -150,6 +177,7 @@ Aangan is a private community app for apartment societies. Residents share notic
 4. **Target audience** → 18+
 5. **Data safety** (the table above)
 6. **Main store listing** (text + graphics + privacy URL)
+7. **Child safety standards** (URL + contact email — Social category)
 
 When every item shows a green check, your app is "set up" — you can then push a
 build to Internal testing and start the closed test (see PUBLISHING_GUIDE.md).

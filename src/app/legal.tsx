@@ -98,6 +98,15 @@ const TERMS: { h: string; p: string[] }[] = [
     p: [
       'You are responsible for what you post, sell, offer or share. Do not post anything unlawful, misleading, hateful, harassing, infringing, or that sells prohibited items, and do not spam or misuse others\' contact details.',
       'You grant Aangan a limited licence to store and display your content within your society so the app can function. Society admins may moderate, hide, remove content, or block members who break these rules.',
+      'You can report any content from the “⋯” menu on it, and block any member from that same menu. Blocking is mutual and can be undone at Profile → Blocked members.',
+    ],
+  },
+  {
+    h: 'Child safety',
+    p: [
+      'Aangan has zero tolerance for child sexual abuse and exploitation (CSAE). Aangan is for adults aged 18 and over, and any content that sexualises, endangers or exploits a child is prohibited without exception.',
+      'Accounts responsible for such content are permanently removed and reported to the appropriate authorities. To report a child-safety concern, use the “⋯” menu on the content and choose “Child safety (CSAE)”, or email ' + SUPPORT_EMAIL + ' with the subject “Child safety”.',
+      'Our full published standards, including how we respond and the laws we comply with, are at /child-safety.',
     ],
   },
   {
