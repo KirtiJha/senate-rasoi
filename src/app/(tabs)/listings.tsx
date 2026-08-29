@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ScreenHeader, useResponsive } from '../../components/ui';
+import { ErrorState, ScreenHeader, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useBlocks } from '../../context/blocks';
 import { useToast } from '../../context/toast';
@@ -116,6 +116,7 @@ export default function AllListingsScreen() {
 
   const [items, setItems] = useState<AllItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [category, setCategory] = useState<string | null>(null);
 
@@ -149,8 +150,11 @@ export default function AllListingsScreen() {
         ...lostFounds.map((lf): AllItem => ({ kind: 'lost_found', id: lf.id, raw: lf })),
         ...listings.map((l): AllItem => ({ kind: 'listing', id: l.id, raw: l })),
       ]);
-    } catch { toast.show('Could not load listings'); }
-    finally { setLoading(false); }
+      setLoadFailed(false);
+    } catch (e) {
+      console.error('listings: load failed', e);
+      setLoadFailed(true);
+    } finally { setLoading(false); }
   }, [communityId, toast]);
 
   useEffect(() => { load(); }, [load]);
@@ -283,6 +287,13 @@ export default function AllListingsScreen() {
                   </View>
                 ))}
               </View>
+            ) : loadFailed ? (
+              <ErrorState
+                title="Couldn't load listings"
+                message="Nothing has been taken down — we just couldn't reach them. Try again."
+                onRetry={onRefresh}
+                retrying={refreshing}
+              />
             ) : (
               <View className="items-center py-20">
                 <Text style={{ fontSize: 40 }} className="mb-3">🗂️</Text>

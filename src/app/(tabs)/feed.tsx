@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
-import { Avatar, Button, ScreenHeader, useResponsive } from '../../components/ui';
+import { Avatar, Button, ErrorState, ScreenHeader, useResponsive } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useBlocks } from '../../context/blocks';
@@ -51,6 +51,7 @@ export default function FeedScreen() {
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [activeFilter, setActiveFilter] = useState<PostCategory | 'all'>('all');
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
@@ -71,8 +72,11 @@ export default function FeedScreen() {
       setPosts(rows);
       setPage(0);
       setHasMore(rows.length === PAGE);
-    } catch { toast.show('Could not load posts'); }
-    finally { setLoading(false); }
+      setLoadFailed(false);
+    } catch (e) {
+      console.error('feed: load failed', e);
+      setLoadFailed(true);
+    } finally { setLoading(false); }
   }, [communityId, activeFilter, toast]);
 
   const loadMore = useCallback(async () => {
@@ -144,6 +148,13 @@ export default function FeedScreen() {
             <View style={{ gap: 12 }}>
               {[1, 2, 3].map((i) => <PostCardSkeleton key={i} />)}
             </View>
+          ) : loadFailed ? (
+            <ErrorState
+              title="Couldn't load the feed"
+              message="Your society's posts are still there. Check your connection and try again."
+              onRetry={onRefresh}
+              retrying={refreshing}
+            />
           ) : (
             <View className="items-center py-20">
               <Text style={{ fontSize: 44 }} className="mb-3">💬</Text>

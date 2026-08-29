@@ -3,7 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { ReactNode, useCallback, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Button, RowSkeleton, ScreenHeader, Sheet, useResponsive } from '../components/ui';
+import { Avatar, Button, ErrorState, RowSkeleton, ScreenHeader, Sheet, useResponsive } from '../components/ui';
 import { Field } from '../components/forms';
 import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
@@ -48,6 +48,7 @@ export default function DirectoryScreen() {
 
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [block, setBlock] = useState<string | null>(null);
@@ -77,8 +78,11 @@ export default function DirectoryScreen() {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
     try {
       setResidents(await fetchDirectory(communityId, userId, !!isAdmin));
-    } catch { toast.show('Could not load residents'); }
-    finally { setLoading(false); }
+      setLoadFailed(false);
+    } catch (e) {
+      console.error('directory: load failed', e);
+      setLoadFailed(true);
+    } finally { setLoading(false); }
   }, [communityId, userId, isAdmin, toast]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -248,6 +252,12 @@ export default function DirectoryScreen() {
         <View className="w-full self-center" style={{ maxWidth: DIR_MAX }}>
           {loading ? (
             <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={6} /></View>
+          ) : loadFailed ? (
+            <ErrorState
+              title="Couldn't load the directory"
+              message="Your neighbours are still listed — we just couldn't reach them. Try again."
+              onRetry={load}
+            />
           ) : groups.length === 0 ? (
             <View className="items-center py-16">
               <Ionicons name="people-outline" size={40} color={c.faint} />

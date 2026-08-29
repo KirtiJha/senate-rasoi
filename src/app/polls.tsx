@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Container, ScreenHeader, Sheet, useResponsive } from '../components/ui';
+import { Avatar, Container, ErrorState, ScreenHeader, Sheet, Skeleton, useResponsive } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
@@ -24,6 +24,7 @@ export default function PollsScreen() {
 
   const [polls, setPolls] = useState<PollRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
 
@@ -31,8 +32,11 @@ export default function PollsScreen() {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
     try {
       setPolls(await fetchPolls(communityId));
-    } catch { toast.show('Could not load polls'); }
-    finally { setLoading(false); setRefreshing(false); }
+      setLoadFailed(false);
+    } catch (e) {
+      console.error('polls: load failed', e);
+      setLoadFailed(true);
+    } finally { setLoading(false); setRefreshing(false); }
   }, [communityId, toast]);
 
   useEffect(() => { load(); }, [load]);
@@ -96,8 +100,14 @@ export default function PollsScreen() {
         <Container>
           {loading ? (
             <View className="gap-4">
-              {[1, 2].map((i) => <View key={i} className="h-40 rounded-3xl bg-surface" />)}
+              {[1, 2].map((i) => <Skeleton key={i} style={{ height: 160 }} radius={24} />)}
             </View>
+          ) : loadFailed ? (
+            <ErrorState
+              title="Couldn't load polls"
+              message="No polls have been deleted — we just couldn't reach them. Try again."
+              onRetry={load}
+            />
           ) : polls.length === 0 ? (
             <View className="items-center py-20">
               <Ionicons name="bar-chart-outline" size={44} color={c.faint} />

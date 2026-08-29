@@ -6,11 +6,11 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useState } from 'react';
-import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '../../components/BrandMark';
 import { T } from '../../components/T';
-import { Container, useResponsive, VegMark } from '../../components/ui';
+import { Container, ErrorRow, useResponsive, VegMark } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useUnreadDms } from '../../context/unread';
@@ -189,25 +189,41 @@ export default function HomeScreen() {
   const [borrowCount, setBorrowCount] = useState(0);
   const [recentLostFound, setRecentLostFound] = useState<LostFoundItem[]>([]);
   const [lostFoundCount, setLostFoundCount] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
-  // Per-category counts + newest listings, dishes, borrow items — refreshed on focus.
-  useFocusEffect(useCallback(() => {
+  // Per-category counts + newest listings, dishes, borrow items — refreshed on
+  // focus. Each fetch is independent: one failing must not blank the others,
+  // so failures are counted rather than thrown. If every one fails we say so
+  // and offer a retry, instead of rendering a wall of tiles over silence.
+  const loadHome = useCallback(async () => {
     if (!communityId || !isSupabaseConfigured) return;
-    fetchCategoryCounts(communityId).then(setCounts).catch(() => {});
-    fetchHomeTileCounts(communityId, userId).then(setTileCounts).catch(() => {});
-    fetchAllListings(communityId, 0, 12, 'created_at').then(setRecent).catch(() => {});
-    fetchProperties({ availableOnly: true }, communityId).then((r) => setRecentProps(r.slice(0, 12))).catch(() => {});
-    fetchPlaces({}, communityId).then((r) => setRecentPlaces(r.slice(0, 12))).catch(() => {});
-    fetchDishes(communityId).then(setDishes).catch(() => {});
-    fetchBorrowItems({ availableOnly: false }, communityId).then((rows) =>
-      setRecentBorrow(rows.slice(0, 10))
-    ).catch(() => {});
-    fetchBorrowCounts(communityId).then((c) => setBorrowCount(c.offers + c.requests)).catch(() => {});
-    fetchLostFoundItems({ openOnly: true }, communityId).then((rows) =>
-      setRecentLostFound(rows.slice(0, 10))
-    ).catch(() => {});
-    fetchLostFoundCounts(communityId).then(setLostFoundCount).catch(() => {});
-  }, [communityId, userId]));
+
+    const results = await Promise.allSettled([
+      fetchCategoryCounts(communityId).then(setCounts),
+      fetchHomeTileCounts(communityId, userId).then(setTileCounts),
+      fetchAllListings(communityId, 0, 12, 'created_at').then(setRecent),
+      fetchProperties({ availableOnly: true }, communityId).then((r) => setRecentProps(r.slice(0, 12))),
+      fetchPlaces({}, communityId).then((r) => setRecentPlaces(r.slice(0, 12))),
+      fetchDishes(communityId).then(setDishes),
+      fetchBorrowItems({ availableOnly: false }, communityId).then((rows) => setRecentBorrow(rows.slice(0, 10))),
+      fetchBorrowCounts(communityId).then((c) => setBorrowCount(c.offers + c.requests)),
+      fetchLostFoundItems({ openOnly: true }, communityId).then((rows) => setRecentLostFound(rows.slice(0, 10))),
+      fetchLostFoundCounts(communityId).then(setLostFoundCount),
+    ]);
+
+    const failed = results.filter((r) => r.status === 'rejected');
+    if (failed.length) console.error('home: ' + failed.length + ' section(s) failed to load', failed);
+    setLoadFailed(failed.length === results.length);
+  }, [communityId, userId]);
+
+  useFocusEffect(useCallback(() => { loadHome(); }, [loadHome]));
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadHome();
+    setRefreshing(false);
+  }, [loadHome]);
 
   useEffect(() => {
     if (communityId && isSupabaseConfigured) {
@@ -285,8 +301,12 @@ export default function HomeScreen() {
       className="flex-1 bg-bg"
       contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 24, paddingBottom: 40, paddingHorizontal: 16 }}
       showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={c.muted} colors={[c.accent]} />}
     >
       <Container>
+        {loadFailed ? (
+          <ErrorRow message="Couldn't refresh your society just now." onRetry={refresh} />
+        ) : null}
         {/* Header */}
         <View className="mb-6">
           <Text className="text-[13px] font-sans-md text-accent">{greeting}</Text>
