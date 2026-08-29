@@ -267,16 +267,25 @@ Two related traps:
   A work address on a phone signed in with a personal Gmail will never see the app.
 - Your track is limited to **1 country**. A tester outside it cannot install.
 
-**Paste-ready invite for your testers.** Get the exact opt-in link from the
-**Testers** tab (do not assume the URL — copy what the console shows), then
-send this on WhatsApp:
+**The two links, and why order matters.**
+
+| Link | What it is |
+|---|---|
+| `https://play.google.com/apps/testing/com.aangan.app` | **The opt-in link.** Must be opened *first* — this is where a tester taps "Become a tester". |
+| `https://play.google.com/store/apps/details?id=com.aangan.app` | The normal store page. Works **only after** opting in — before that it shows *"item not found"*. |
+
+Nearly every "the link is broken" report is someone who opened the store link
+first. Always lead with the opt-in link.
+
+**Paste-ready invite for your testers** (WhatsApp formatting):
 
 > Hi! I've built *Aangan*, an app for our society — home food, marketplace,
 > notices, lost & found, sports, and accounts for society functions.
 >
 > I need 12 people to test it before Google will let it go live. Takes 2 minutes:
 >
-> 1. Open this link on your Android phone: **[PASTE LINK]**
+> 1. Open this link on your Android phone:
+>    https://play.google.com/apps/testing/com.aangan.app
 > 2. Tap **"Become a tester"**
 > 3. Tap **"Download it on Google Play"** and install
 >
