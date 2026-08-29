@@ -267,6 +267,31 @@ Two related traps:
   A work address on a phone signed in with a personal Gmail will never see the app.
 - Your track is limited to **1 country**. A tester outside it cannot install.
 
+**Paste-ready invite for your testers.** Get the exact opt-in link from the
+**Testers** tab (do not assume the URL — copy what the console shows), then
+send this on WhatsApp:
+
+> Hi! I've built *Aangan*, an app for our society — home food, marketplace,
+> notices, lost & found, sports, and accounts for society functions.
+>
+> I need 12 people to test it before Google will let it go live. Takes 2 minutes:
+>
+> 1. Open this link on your Android phone: **[PASTE LINK]**
+> 2. Tap **"Become a tester"**
+> 3. Tap **"Download it on Google Play"** and install
+>
+> ⚠️ Use the same Google account that's signed into your Play Store, otherwise
+> you won't see it.
+>
+> It'll show as "com.aangan.app (unreviewed)" until Google finishes reviewing —
+> that's normal, not a problem.
+>
+> Then just open it now and again over the next two weeks, and tell me anything
+> that looks broken or confusing. Thank you!
+
+Chase people until the **Testers** tab shows 12+ opted in. Until it does, the
+14 days are not counting for those people.
+
 ### 1.7a Watching the test
 
 Three places tell you how it is going, none of which need the testers to say
