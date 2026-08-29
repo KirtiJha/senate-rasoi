@@ -183,9 +183,30 @@ export async function fetchSocietyDigest(): Promise<SocietyDigest> {
   }
 }
 
+/**
+ * Turn an `ai-proxy` error string into something a user can act on.
+ *
+ * The server's own strings are matched verbatim — without these, a
+ * "not configured" 503 surfaced as the autofill-specific "fill the form
+ * manually", which is nonsense in Ask Aangan and hides the real cause from
+ * whoever has to fix it.
+ */
 function friendly(code: string): string {
-  if (code === 'over_quota') return "You've used today's AI helper limit. Try again tomorrow.";
-  return 'AI could not help with this — fill the form manually.';
+  switch (code) {
+    case 'over_quota':
+      return "You've used today's AI helper limit. Try again tomorrow.";
+    case 'AI is not configured':
+      // GEMINI_API_KEY secret missing on the Edge Function — see docs/AI_SETUP.md.
+      return 'AI is not set up on the server yet.';
+    case 'Not signed in':
+      return 'Please sign out and sign in again, then retry.';
+    case 'Quota check failed':
+      return 'AI is unavailable right now — try again shortly.';
+    case 'not_relevant':
+      return "That photo doesn't match — pick another, or fill the form in.";
+    default:
+      return 'AI could not help with this — try again shortly.';
+  }
 }
 
 /** supabase-js wraps non-2xx responses in a FunctionsHttpError; dig out the JSON. */
@@ -199,5 +220,7 @@ async function readInvokeError(error: unknown): Promise<{ message: string; code?
   } catch {
     /* fall through */
   }
-  return { message: 'AI is unavailable right now.' };
+  // Nothing parseable came back — most often the `ai-proxy` function is not
+  // deployed at all, so the 404 body isn't the JSON shape we expect.
+  return { message: 'AI is unavailable right now — the AI service may not be deployed.' };
 }
