@@ -33,3 +33,28 @@ export function countdown(iso: string | null): { closed: boolean; label: string 
   const label = h > 0 ? `Order in ${h}h ${m}m` : `Order in ${m}m`;
   return { closed: false, label };
 }
+
+/**
+ * Compact relative time — "2h", "yesterday", "12 Aug".
+ *
+ * Short by design: it sits at the end of a list row where it must not compete
+ * with the title, so it is a glance, not a sentence.
+ */
+export function timeAgo(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return '';
+  const mins = Math.floor((Date.now() - then) / 60000);
+  if (mins < 1) return 'now';
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  if (hours < 48) return 'yesterday';
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  try {
+    return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  } catch {
+    return '';
+  }
+}

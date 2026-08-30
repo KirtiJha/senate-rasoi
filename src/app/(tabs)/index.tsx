@@ -7,14 +7,19 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import Animated, {
+  Extrapolation, interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '../../components/BrandMark';
 import { T } from '../../components/T';
-import { Container, ErrorRow, ListRow, Touchable, useResponsive, VegMark } from '../../components/ui';
+import { Container, ErrorRow, Rise, Touchable, useResponsive, VegMark } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useUnreadDms } from '../../context/unread';
 import { fetchSocietyDigest, SocietyDigest } from '../../lib/ai';
+import { AScrollView, dur, ease } from '../../lib/motion';
+import { timeAgo } from '../../lib/time';
 import { PostRow, fetchLatestAnnouncement } from '../../lib/posts';
 import { DishRow, ListingRow, SLOT_EMOJI } from '../../lib/types';
 import { fetchDishes } from '../../lib/dishes';
@@ -300,11 +305,11 @@ export default function HomeScreen() {
   // "Around the aangan" needs no new query: loadHome already fetches all five
   // sources. This is a client-side merge of what is on screen anyway.
   const around = [
-    ...recent.map((r) => ({ id: 'l' + r.id, at: r.created_at, icon: 'pricetag-outline' as const, title: r.title, where: 'Marketplace', href: `/listing/${r.id}` })),
-    ...recentProps.map((r) => ({ id: 'p' + r.id, at: r.created_at, icon: 'key-outline' as const, title: r.title, where: 'Flats', href: `/property/${r.id}` })),
-    ...recentBorrow.map((r) => ({ id: 'b' + r.id, at: r.created_at, icon: 'swap-horizontal-outline' as const, title: r.title, where: 'Borrow', href: `/borrow/${r.id}` })),
-    ...recentPlaces.map((r) => ({ id: 'pl' + r.id, at: r.created_at, icon: 'location-outline' as const, title: r.name, where: 'Places', href: `/place/${r.id}` })),
-    ...recentLostFound.map((r) => ({ id: 'lf' + r.id, at: r.created_at, icon: 'help-circle-outline' as const, title: r.title, where: 'Lost & found', href: `/lost-found/${r.id}` })),
+    ...recent.map((r) => ({ id: 'l' + r.id, at: r.created_at, icon: 'pricetag-outline' as const, title: r.title, where: 'Marketplace', photo: r.photos?.[0] ?? null, href: `/listing/${r.id}` })),
+    ...recentProps.map((r) => ({ id: 'p' + r.id, at: r.created_at, icon: 'key-outline' as const, title: r.title, where: 'Flats', photo: r.photos?.[0] ?? null, href: `/property/${r.id}` })),
+    ...recentBorrow.map((r) => ({ id: 'b' + r.id, at: r.created_at, icon: 'swap-horizontal-outline' as const, title: r.title, where: 'Borrow', photo: r.photo_url ?? null, href: `/borrow/${r.id}` })),
+    ...recentPlaces.map((r) => ({ id: 'pl' + r.id, at: r.created_at, icon: 'location-outline' as const, title: r.name, where: 'Places', photo: null, href: `/place/${r.id}` })),
+    ...recentLostFound.map((r) => ({ id: 'lf' + r.id, at: r.created_at, icon: 'help-circle-outline' as const, title: r.title, where: 'Lost & found', photo: null, href: `/lost-found/${r.id}` })),
   ]
     .filter((x) => x.title)
     .sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''))
@@ -349,12 +354,61 @@ export default function HomeScreen() {
     });
   }
 
+  // Scroll-linked hero. The greeting is the largest thing on the screen at
+  // rest and gives that size up as you move: it lifts, shrinks and fades over
+  // the first 90px while a compact bar takes its place. Two states of one
+  // header rather than a title that just scrolls away.
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.set(e.contentOffset.y);
+  });
+
+  const heroStyle = useAnimatedStyle(() => {
+    const y = scrollY.get();
+    return {
+      opacity: interpolate(y, [0, 70], [1, 0], Extrapolation.CLAMP),
+      transform: [
+        { translateY: interpolate(y, [0, 110], [0, -18], Extrapolation.CLAMP) },
+        { scale: interpolate(y, [0, 110], [1, 0.94], Extrapolation.CLAMP) },
+      ],
+    };
+  });
+
+  const compactStyle = useAnimatedStyle(() => {
+    const y = scrollY.get();
+    return {
+      opacity: interpolate(y, [60, 110], [0, 1], Extrapolation.CLAMP),
+      transform: [{ translateY: interpolate(y, [60, 110], [-8, 0], Extrapolation.CLAMP) }],
+    };
+  });
+
   const todayLabel = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
 
   return (
-    <ScrollView
+    <View className="flex-1 bg-bg">
+      {/* Compact header — fades in as the hero leaves, so the screen always
+          says whose society you are in without a permanent bar. */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          compactStyle,
+          {
+            position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
+            paddingTop: insets.top + 8, paddingBottom: 10, paddingHorizontal: 20,
+            backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.line,
+          },
+        ]}
+      >
+        <Text className="font-display text-[17px] text-ink" numberOfLines={1}>
+          {profile?.name ? `${greeting}, ${profile.name.split(' ')[0]}` : greeting}
+        </Text>
+      </Animated.View>
+
+    <AScrollView
       className="flex-1 bg-bg"
-      contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 20, paddingBottom: 40, paddingHorizontal: 20 }}
+      onScroll={onScroll}
+      scrollEventThrottle={16}
+      contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : insets.top + 16, paddingBottom: 40, paddingHorizontal: 20 }}
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={c.muted} colors={[c.accent]} />}
     >
@@ -366,17 +420,25 @@ export default function HomeScreen() {
         {/* ── 1. Hero ──────────────────────────────────────────────────
             Society identity appears here, once, rather than in a pill
             hardcoded above twenty screens. */}
-        <Text className="text-[11px] font-sans-sb uppercase tracking-[0.06em] text-subtle" numberOfLines={1}>
-          {todayLabel}
-        </Text>
-        <Text className="mt-1 font-display-x text-[34px] leading-[38px] text-ink">
-          {profile?.name ? `${greeting}, ${profile.name.split(' ')[0]}` : greeting}
-        </Text>
+        <Animated.View style={heroStyle}>
+          <Text className="text-[11px] font-sans-sb uppercase tracking-[0.06em] text-subtle" numberOfLines={1}>
+            {todayLabel}
+          </Text>
+          {/* 40px, not 34: this is the one piece of display type on the screen
+              and it should be unmistakably the largest thing on it. */}
+          <Text className="mt-1.5 font-display-x text-[40px] leading-[44px] text-ink">
+            {greeting},
+          </Text>
+          <Text className="font-display-x text-[40px] leading-[44px]" style={{ color: c.accent }}>
+            {profile?.name ? profile.name.split(' ')[0] : 'neighbour'}
+          </Text>
+        </Animated.View>
 
         {/* The ask-or-search bar takes hero position because it answers the
             most common intent. A resident who needs a plumber is asking a
             question, not scanning thirty labels for the right one. */}
-        <Touchable haptic={null} onPress={() => router.push('/ask' as any)} className="mt-4">
+        <Rise index={0}>
+        <Touchable haptic={null} onPress={() => router.push('/ask' as any)} className="mt-5">
           <View
             className="flex-row items-center gap-3 rounded-full px-4"
             style={{ height: 52, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, boxShadow: c.shadowCard } as any}
@@ -388,10 +450,11 @@ export default function HomeScreen() {
             <Ionicons name="arrow-forward" size={17} color={c.accent} />
           </View>
         </Touchable>
+        </Rise>
 
         {/* ── 2. Needs you ────────────────────────────────────────────── */}
         {needsYou.length ? (
-          <View className="mt-6" style={{ marginHorizontal: -20 }}>
+          <Rise index={1} className="mt-6" style={{ marginHorizontal: -20 }}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingHorizontal: 20 }}>
               {needsYou.map((n) => (
                 <Touchable key={n.key} haptic={null} onPress={n.onPress}>
@@ -418,16 +481,18 @@ export default function HomeScreen() {
                 </Touchable>
               ))}
             </ScrollView>
-          </View>
+          </Rise>
         ) : null}
 
         {/* ── 3. Cooking today ────────────────────────────────────────── */}
-        <FreshFoodStrip items={dishes} isDesktop={isDesktop} />
+        <Rise index={2}>
+          <FreshFoodStrip items={dishes} isDesktop={isDesktop} />
+        </Rise>
 
         {/* ── 4. Around the aangan ─────────────────────────────────────
             What IS happening, rather than a menu of what could. */}
         {around.length ? (
-          <View className="mb-8">
+          <Rise index={3} className="mb-8">
             <SectionHead label="Around the aangan" actionLabel="See all" onAction={() => router.push('/listings' as any)} c={c} />
             <View
               className="overflow-hidden"
@@ -441,17 +506,16 @@ export default function HomeScreen() {
               } as any}
             >
               {around.map((a, i) => (
-                <ListRow
+                <AroundRow
                   key={a.id}
-                  icon={a.icon}
-                  title={a.title}
-                  subtitle={a.where}
+                  item={a}
                   last={i === around.length - 1}
                   onPress={() => router.push(a.href as any)}
+                  c={c}
                 />
               ))}
             </View>
-          </View>
+          </Rise>
         ) : null}
 
         {/* ── 5. All of Aangan ────────────────────────────────────────── */}
@@ -484,7 +548,67 @@ export default function HomeScreen() {
           ))}
         </View>
       </Container>
-    </ScrollView>
+    </AScrollView>
+    </View>
+  );
+}
+
+/**
+ * A row in "Around the aangan".
+ *
+ * The generic list row was too quiet for the most interesting section on the
+ * screen. This one leads with the actual photo when there is one — a thing
+ * your neighbour posted, not an icon standing in for a category — falling back
+ * to a glyph plate. The category and the time share one line beneath the
+ * title, so the row reads title-first, and the time sits at the end where it
+ * is a glance rather than a competing headline.
+ */
+function AroundRow({
+  item, last, onPress, c,
+}: {
+  item: { icon: any; title: string; where: string; at: string | null; photo: string | null };
+  last: boolean;
+  onPress: () => void;
+  c: ReturnType<typeof useThemeColors>;
+}) {
+  return (
+    <Touchable haptic={null} onPress={onPress} accessibilityRole="button" accessibilityLabel={item.title}>
+      <View>
+        <View className="flex-row items-center gap-3 px-4" style={{ minHeight: 68, paddingVertical: 12 }}>
+          {item.photo ? (
+            <Image
+              source={{ uri: item.photo }}
+              style={{ width: 44, height: 44, borderRadius: 14 }}
+              contentFit="cover"
+              {...IMAGE_CACHE_PROPS}
+            />
+          ) : (
+            <View
+              className="items-center justify-center"
+              style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: c.inset }}
+            >
+              <Ionicons name={item.icon} size={20} color={c.muted} />
+            </View>
+          )}
+
+          <View className="min-w-0 flex-1">
+            <Text className="font-sans-sb text-[15px] text-ink" numberOfLines={1}>{item.title}</Text>
+            <View className="mt-0.5 flex-row items-center gap-1.5">
+              <Text className="text-[12px] font-sans-sb" style={{ color: c.accent }} numberOfLines={1}>
+                {item.where}
+              </Text>
+              <Text className="text-[12px] text-subtle">·</Text>
+              <Text className="text-[12px] font-sans-md text-subtle" numberOfLines={1}>
+                {timeAgo(item.at)}
+              </Text>
+            </View>
+          </View>
+
+          <Ionicons name="chevron-forward" size={16} color={c.subtle} />
+        </View>
+        {!last ? <View style={{ height: 1, marginLeft: 71, backgroundColor: c.line }} /> : null}
+      </View>
+    </Touchable>
   );
 }
 

@@ -14,3 +14,4 @@ export { Txt, type TxtVariant, type TxtTone } from './Txt';
 export { Card } from './Card';
 export { Chip } from './Chip';
 export { ListRow } from './ListRow';
+export { Rise } from './Rise';
