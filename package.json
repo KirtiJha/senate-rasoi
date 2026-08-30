@@ -62,7 +62,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "ota": "node ./scripts/ota-update.mjs"
+    "ota": "node ./scripts/ota-update.mjs",
+    "check:ui": "node ./scripts/check-ui.mjs"
   },
   "private": true
 }

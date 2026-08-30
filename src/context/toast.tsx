@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
-import { Animated, Text } from 'react-native';
+import { Animated, Text, View } from 'react-native';
 
 interface ToastContextValue {
   show: (message: string) => void;
@@ -34,15 +34,16 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ show }}>
       {children}
       {message && (
-        <Animated.View
+        <View
           pointerEvents="none"
-          style={{ opacity, transform: [{ translateX: -0.5 }] }}
-          className="absolute bottom-24 left-0 right-0 items-center"
+          style={{ position: 'absolute', bottom: 96, left: 0, right: 0, alignItems: 'center' }}
         >
-          <Text className="overflow-hidden rounded-full bg-ink px-5 py-2.5 text-center text-[13px] font-sans-sb text-bg shadow-card">
-            {message}
-          </Text>
-        </Animated.View>
+          <Animated.View style={{ opacity }} accessibilityLiveRegion="polite">
+            <Text className="overflow-hidden rounded-full bg-ink px-5 py-2.5 text-center text-[13px] font-sans-sb text-bg shadow-card">
+              {message}
+            </Text>
+          </Animated.View>
+        </View>
       )}
     </ToastContext.Provider>
   );
