@@ -82,6 +82,10 @@ export default function AskScreen() {
 
       <ScrollView
         ref={scrollRef}
+        // Fills the space between header and composer. Without this the
+        // scroller sizes to its content, so a short thread pulls the composer
+        // up into the middle of the screen.
+        style={{ flex: 1 }}
         contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
