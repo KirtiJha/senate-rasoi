@@ -34,6 +34,9 @@ const OPENAI_KEY = Deno.env.get('OPENAI_API_KEY') ?? '';
 // How long a single Ask may spend backfilling embeddings before it must get on
 // with answering. Deliberately well inside the Edge Function execution limit.
 const EMBED_BACKFILL_BUDGET_MS = 8_000;
+// Maintenance is allowed to take much longer than a question: nobody is
+// waiting on an answer, and the caller loops until it reports pending 0.
+const REEMBED_BUDGET_MS = 45_000;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
@@ -687,10 +690,14 @@ async function handleDigest(
  * both callers reach.
  */
 // deno-lint-ignore no-explicit-any
-async function backfillEmbeddings(admin: any, communityId: string): Promise<void> {
+async function backfillEmbeddings(
+  admin: any,
+  communityId: string,
+  budgetMs: number = EMBED_BACKFILL_BUDGET_MS,
+): Promise<void> {
   const started = Date.now();
-  for (let round = 0; round < 8; round++) {
-    if (Date.now() - started > EMBED_BACKFILL_BUDGET_MS) break;
+  for (let round = 0; round < 40; round++) {
+    if (Date.now() - started > budgetMs) break;
     const { data: dirty } = await admin.from('search_documents')
       .select('source,source_id,content').eq('community_id', communityId).is('embedding', null).limit(80);
     if (!dirty?.length) break;
@@ -731,7 +738,7 @@ Deno.serve(async (req) => {
     return json({ error: 'Bad request' }, 400);
   }
   if (body.action !== 'autofill' && body.action !== 'ask' && body.action !== 'agent'
-      && body.action !== 'translate' && body.action !== 'digest') {
+      && body.action !== 'translate' && body.action !== 'digest' && body.action !== 'reembed') {
     return json({ error: 'Unknown action' }, 400);
   }
 
@@ -759,6 +766,53 @@ Deno.serve(async (req) => {
     } catch (e) {
       console.error('ai-proxy digest error:', e);
       return json({ digest: { summary: '', highlights: [] } });
+    }
+  }
+
+  // ── Reindex: embed everything, on demand ──────────────────────────
+  //
+  // The lazy backfill exists so a normal question is never blocked on the
+  // index. That is right for steady state and wrong after a bulk change: when
+  // migration 0077 cleared every vector for the provider swap, semantic search
+  // was dead until enough residents happened to ask enough questions. Waiting
+  // for organic traffic to finish a migration is not a plan.
+  //
+  // Admin-only, and NOT metered against the AI quota: it is maintenance, and
+  // charging one admin's daily allowance to repair the whole society's index
+  // would mean the repair stops halfway.
+  //
+  // Bounded per call and resumable, so the caller loops until pending is 0.
+  // A single unbounded pass over thousands of rows would outlive the worker
+  // and be killed mid-flight, which is how you get a half-embedded index and
+  // no error to explain it.
+  if (body.action === 'reembed') {
+    try {
+      const { data: prof } = await admin.from('profiles')
+        .select('community_id, roles').eq('id', userId).single();
+      const communityId = prof?.community_id as string | undefined;
+      const roles = (prof?.roles ?? []) as string[];
+      if (!communityId) return json({ error: 'Join a society first' }, 400);
+      if (!roles.includes('admin')) return json({ error: 'Admins only' }, 403);
+
+      const before = await admin.from('search_documents')
+        .select('source', { count: 'exact', head: true })
+        .eq('community_id', communityId).is('embedding', null);
+
+      await backfillEmbeddings(admin, communityId, REEMBED_BUDGET_MS);
+
+      const [{ count: embedded }, { count: pending }] = await Promise.all([
+        admin.from('search_documents').select('source', { count: 'exact', head: true })
+          .eq('community_id', communityId).not('embedding', 'is', null),
+        admin.from('search_documents').select('source', { count: 'exact', head: true })
+          .eq('community_id', communityId).is('embedding', null),
+      ]);
+
+      const done = (before.count ?? 0) - (pending ?? 0);
+      console.log(`[saathi] reembed pass: +${done} embedded, ${pending ?? 0} pending`);
+      return json({ result: { embedded: embedded ?? 0, pending: pending ?? 0, done } });
+    } catch (e) {
+      console.error('ai-proxy reembed error:', e);
+      return json({ error: 'Could not rebuild the index — try again.' }, 502);
     }
   }
 

@@ -5,6 +5,7 @@ import { Modal, Platform, Pressable, RefreshControl, ScrollView, Text, TextInput
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar, Button, Container, ScreenHeader, Segmented, type SegmentedItem } from '../components/ui';
+import { ReindexCard } from '../components/saathi/ReindexCard';
 import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
@@ -474,6 +475,12 @@ function ReportsTab({
             {showResolved ? 'Showing all reports' : 'Hiding resolved'}
           </Text>
         </Pressable>
+
+        {/* Index maintenance lives with the other admin tools rather than in
+            Settings: it is a society-wide repair, not a personal preference. */}
+        <View className="mb-4">
+          <ReindexCard />
+        </View>
 
         {visible.length === 0 ? (
           <View className="items-center py-16">

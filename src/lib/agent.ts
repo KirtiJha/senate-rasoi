@@ -205,3 +205,46 @@ export async function executeProposal(
 
   throw new AIError('That action is not supported yet.');
 }
+
+// ── Search index maintenance ────────────────────────────────────────
+
+export type ReembedProgress = { embedded: number; pending: number; done: number };
+
+/**
+ * Embed everything still pending, one bounded pass.
+ *
+ * The Edge Function deliberately caps each pass so it cannot outlive the
+ * worker — a single unbounded run over thousands of rows is killed mid-flight,
+ * leaving a half-built index and no error to explain it. Progress is durable,
+ * so the caller simply keeps going until `pending` reaches zero.
+ */
+export async function reembedPass(): Promise<ReembedProgress> {
+  const { data, error } = await invokeAi({ action: 'reembed' }, 90_000);
+  const bodyErr = (data as { error?: string } | null)?.error;
+  if (bodyErr) throw new AIError(bodyErr);
+  if (error) {
+    const parsed = await readInvokeError(error);
+    throw new AIError(parsed.message, parsed.code);
+  }
+  const result = (data as { result?: ReembedProgress } | null)?.result;
+  if (!result) throw new AIError('Could not rebuild the index.');
+  return result;
+}
+
+/**
+ * Drive the index to completion, reporting after each pass.
+ *
+ * Stops if a pass embeds nothing while work remains — otherwise a row that
+ * cannot be embedded (bad content, a provider rejecting it) would loop
+ * forever, burning the API budget on the same failure.
+ */
+export async function reembedAll(onProgress: (p: ReembedProgress) => void): Promise<ReembedProgress> {
+  let last: ReembedProgress = { embedded: 0, pending: 0, done: 0 };
+  for (let pass = 0; pass < 40; pass++) {
+    last = await reembedPass();
+    onProgress(last);
+    if (last.pending === 0) break;
+    if (last.done === 0) break;
+  }
+  return last;
+}
