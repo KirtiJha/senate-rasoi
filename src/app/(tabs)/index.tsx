@@ -422,14 +422,25 @@ export default function HomeScreen() {
         {/* ── 1. Hero ──────────────────────────────────────────────────
             Society identity appears here, once, rather than in a pill
             hardcoded above twenty screens. */}
-        <Animated.View style={heroStyle} className="flex-row items-center gap-3 pt-3">
+        <Animated.View
+          style={[
+            heroStyle,
+            { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 12, paddingBottom: 4 },
+          ]}
+        >
           <Avatar name={profile?.name ?? 'You'} size={42} />
-          <Text className="min-w-0 flex-1 font-display-x text-[22px] leading-[27px] text-ink" numberOfLines={1}>
-            {greeting},{' '}
-            <Text style={{ color: c.accent }}>
-              {profile?.name ? profile.name.split(' ')[0] : 'neighbour'}
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>
+              {greeting.replace(/[^\p{L}\s]/gu, '').trim()}
             </Text>
-          </Text>
+            <Text
+              className="font-display-x text-[26px] leading-[30px]"
+              style={{ color: c.accent }}
+              numberOfLines={1}
+            >
+              {profile?.name ? profile.name.split(' ')[0] : 'Neighbour'}
+            </Text>
+          </View>
         </Animated.View>
 
         {/* The ask-or-search bar takes hero position because it answers the
