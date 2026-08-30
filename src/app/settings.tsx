@@ -134,7 +134,7 @@ export default function SettingsScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="settings-outline" title="Settings" showBack hideSociety />
+      <ScreenHeader icon="settings-outline" title="Settings" showBack />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container>
@@ -313,7 +313,7 @@ export default function SettingsScreen() {
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <Text className="mb-2 ml-1 text-[11px] font-sans-sb uppercase tracking-wider text-faint">{children}</Text>
+    <Text className="mb-2 ml-1 text-[11px] font-sans-sb uppercase tracking-wider text-muted">{children}</Text>
   );
 }
 
