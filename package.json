@@ -67,7 +67,8 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "ota": "node ./scripts/ota-update.mjs",
     "check:ui": "node ./scripts/check-ui.mjs",
-    "check": "npm run lint && npm run check:ui && tsc --noEmit"
+    "check": "npm run lint && npm run check:ui && tsc --noEmit",
+    "bundle:edge": "node ./scripts/bundle-edge.mjs"
   },
   "private": true
 }
