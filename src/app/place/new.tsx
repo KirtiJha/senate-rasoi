@@ -19,7 +19,6 @@ import {
 } from '../../lib/places';
 import { useThemeColors } from '../../theme';
 
-const ACCENT = '#0D9488';
 const MAX_PHOTOS = 3;
 
 // A photo slot is either an already-uploaded URL (kept on edit) or a new local pick.
@@ -27,6 +26,7 @@ type Slot = { uri: string; isNew: boolean };
 
 export default function PlaceFormScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const toast = useToast();
   const router = useRouter();
   const { userId, communityId } = useAuth();

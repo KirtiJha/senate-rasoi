@@ -12,10 +12,10 @@ import { useToast } from '../context/toast';
 import { RECO_CATEGORIES, RecoQuestion, askQuestion, fetchQuestions, recoCategory, subscribeQuestions } from '../lib/recommend';
 import { useThemeColors } from '../theme';
 
-const ACCENT = '#CA8A04';
 
 export default function RecommendScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const router = useRouter();
   const toast = useToast();
   const { userId, communityId } = useAuth();

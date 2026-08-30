@@ -9,10 +9,10 @@ import {
 } from '../lib/events';
 import { useThemeColors } from '../theme';
 
-const ACCENT = '#7C3AED';
 
 export default function EventsScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const router = useRouter();
   const { communityId, isAdmin } = useAuth();
 
@@ -108,6 +108,7 @@ export default function EventsScreen() {
 
 function EventCard({ e }: { e: SocietyEvent }) {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const router = useRouter();
   const meta = EVENT_STATUS_META[e.status];
 

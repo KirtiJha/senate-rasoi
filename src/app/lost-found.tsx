@@ -15,12 +15,12 @@ import {
 import { IMAGE_CACHE_PROPS } from '../lib/image';
 import { useThemeColors } from '../theme';
 
-const ACCENT = '#D97706';
 const catMeta = (key: string | null) =>
   LOST_FOUND_CATEGORIES.find((c) => c.key === key) ?? LOST_FOUND_CATEGORIES[LOST_FOUND_CATEGORIES.length - 1];
 
 export default function LostFoundScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const router = useRouter();
   const { userId, communityId } = useAuth();
 
@@ -134,6 +134,7 @@ export default function LostFoundScreen() {
 
 function ItemCard({ item }: { item: LostFoundItem }) {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const router = useRouter();
   const cm = catMeta(item.category);
   const isResolved = item.status === 'resolved';

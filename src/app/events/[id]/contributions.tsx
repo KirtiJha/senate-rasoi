@@ -14,7 +14,6 @@ import {
 } from '../../../lib/events';
 import { useThemeColors } from '../../../theme';
 
-const ACCENT = '#16A34A';
 
 const STATUS_META: Record<ContributionStatus, { label: string; color: string }> = {
   pending: { label: 'Pending', color: '#6B7280' },
@@ -27,6 +26,7 @@ type Filter = 'all' | 'pending' | 'received';
 
 export default function ContributionsScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const toast = useToast();
   const confirm = useConfirm();
   const { id } = useLocalSearchParams<{ id: string }>();

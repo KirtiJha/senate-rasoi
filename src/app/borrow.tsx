@@ -10,11 +10,11 @@ import { BORROW_CATEGORIES, LendItem, LendKind, fetchItems, subscribeItems } fro
 import { IMAGE_CACHE_PROPS } from '../lib/image';
 import { useThemeColors } from '../theme';
 
-const ACCENT = '#0891B2';
 const catMeta = (key: string | null) => BORROW_CATEGORIES.find((c) => c.key === key) ?? BORROW_CATEGORIES[BORROW_CATEGORIES.length - 1];
 
 export default function BorrowScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const router = useRouter();
   const { userId, communityId } = useAuth();
 
@@ -122,6 +122,7 @@ export default function BorrowScreen() {
 
 function ItemCard({ item, isOffer }: { item: LendItem; isOffer: boolean }) {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const router = useRouter();
   const m = catMeta(item.category);
   const lent = item.status !== 'available';

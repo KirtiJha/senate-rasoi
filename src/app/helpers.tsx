@@ -8,12 +8,12 @@ import { useToast } from '../context/toast';
 import { BLOOD_GROUPS, HELPER_SKILLS, RegistryPerson, fetchRegistry, updateHelperProfile } from '../lib/donors';
 import { useThemeColors } from '../theme';
 
-const ACCENT = '#DC2626';
 function openUrl(u: string) { if (Platform.OS === 'web') window.open(u, '_blank'); else Linking.openURL(u); }
 function wa(phone: string | null | undefined, msg: string) { const d = (phone ?? '').replace(/\D/g, ''); return `https://wa.me/${d.length === 10 ? '91' + d : d}?text=${encodeURIComponent(msg)}`; }
 
 export default function HelpersScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const toast = useToast();
   const { userId, profile, communityId, refreshProfile } = useAuth();
 
@@ -159,7 +159,7 @@ function PersonRow({ p, badge, c, inline }: { p: RegistryPerson; badge?: string;
       <View className="flex-1">
         <View className="flex-row items-center gap-1.5">
           <Text className="font-sans-bold text-[14px] text-ink">{p.name}</Text>
-          {badge ? <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: ACCENT + '18' }}><Text className="text-[11px] font-sans-bold" style={{ color: ACCENT }}>{badge}</Text></View> : null}
+          {badge ? <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.accent + '18' }}><Text className="text-[11px] font-sans-bold" style={{ color: c.accent }}>{badge}</Text></View> : null}
         </View>
         {p.flat ? <Text className="font-sans text-[12px] text-muted">Flat {p.flat}</Text> : null}
       </View>

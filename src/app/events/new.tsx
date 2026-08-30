@@ -7,10 +7,10 @@ import { useToast } from '../../context/toast';
 import { createEvent } from '../../lib/events';
 import { useThemeColors } from '../../theme';
 
-const ACCENT = '#7C3AED';
 
 export default function NewEventScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const toast = useToast();
   const router = useRouter();
   const { userId, communityId, isAdmin } = useAuth();

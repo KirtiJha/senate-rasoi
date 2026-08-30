@@ -13,7 +13,6 @@ import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { PlaceRow, deletePlace, fetchPlaceById, placeTypeMeta } from '../../lib/places';
 import { useThemeColors } from '../../theme';
 
-const ACCENT = '#0D9488';
 function openUrl(u: string) { if (Platform.OS === 'web') window.open(u, '_blank'); else Linking.openURL(u); }
 const waLink = (phone: string, msg: string) => {
   const digits = phone.replace(/\D/g, '');
@@ -23,6 +22,7 @@ const waLink = (phone: string, msg: string) => {
 
 export default function PlaceDetailScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const toast = useToast();
   const confirm = useConfirm();
   const router = useRouter();

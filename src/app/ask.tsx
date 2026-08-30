@@ -11,7 +11,6 @@ import { AskMessage, clearAskConversation, getAskConversation, setAskConversatio
 import { haptics } from '../lib/haptics';
 import { useThemeColors } from '../theme';
 
-const ACCENT = '#0F6E56';
 
 const EXAMPLES = [
   'Veg tiffin for lunch',
@@ -23,6 +22,7 @@ const EXAMPLES = [
 
 export default function AskScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const toast = useToast();
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);

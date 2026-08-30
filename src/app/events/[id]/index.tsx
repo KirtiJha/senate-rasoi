@@ -14,7 +14,6 @@ import {
 } from '../../../lib/events';
 import { useThemeColors } from '../../../theme';
 
-const ACCENT = '#7C3AED';
 
 const ROLE_LABEL: Record<TeamRole, string> = {
   lead: 'Lead',
@@ -24,6 +23,7 @@ const ROLE_LABEL: Record<TeamRole, string> = {
 
 export default function EventDetailScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const toast = useToast();
   const confirm = useConfirm();
   const router = useRouter();

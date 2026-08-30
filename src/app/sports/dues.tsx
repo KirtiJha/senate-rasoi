@@ -14,7 +14,6 @@ import {
 import { upiUri } from '../../lib/payments';
 import { useThemeColors } from '../../theme';
 
-const ACCENT = '#16A34A';
 
 function fmtDate(iso: string): string {
   try { return new Date(iso + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); }
@@ -30,6 +29,7 @@ const STATUS_META: Record<string, { label: string; color: string }> = {
 
 export default function DuesScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const toast = useToast();
   const confirm = useConfirm();
   const { userId, communityId } = useAuth();

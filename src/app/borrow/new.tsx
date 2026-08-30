@@ -12,10 +12,10 @@ import { AIError, visionAutofill } from '../../lib/ai';
 import { BORROW_CATEGORIES, LendKind, postItem } from '../../lib/borrow';
 import { useThemeColors } from '../../theme';
 
-const ACCENT = '#0891B2';
 
 export default function NewLendItemScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const toast = useToast();
   const router = useRouter();
   const { userId, profile, communityId } = useAuth();

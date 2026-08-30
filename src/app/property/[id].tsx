@@ -25,7 +25,6 @@ import {
 } from '../../lib/properties';
 import { useThemeColors } from '../../theme';
 
-const ACCENT = '#7C3AED';
 
 function openUrl(url: string) {
   if (Platform.OS === 'web') window.open(url, '_blank');
@@ -37,6 +36,7 @@ const PARK: Record<string, string> = { none: 'No parking', open: 'Open', covered
 
 export default function PropertyDetailScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const toast = useToast();
   const confirm = useConfirm();
   const router = useRouter();

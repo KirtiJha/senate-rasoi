@@ -10,7 +10,6 @@ import { IMAGE_CACHE_PROPS } from '../lib/image';
 import { ListingType, PropertyRow, fetchProperties, propertySubtitle, subscribeProperties } from '../lib/properties';
 import { useThemeColors } from '../theme';
 
-const ACCENT = '#7C3AED';
 type Filter = 'all' | ListingType;
 
 const STATUS_META: Record<string, { label: string; bg: string; fg: string }> = {
@@ -21,6 +20,7 @@ const STATUS_META: Record<string, { label: string; bg: string; fg: string }> = {
 
 export default function PropertiesScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const router = useRouter();
   const { userId, communityId } = useAuth();
 
@@ -121,8 +121,8 @@ function PropertyCard({ p, onPress, c }: { p: PropertyRow; onPress: () => void; 
       </View>
       <View className="flex-1 p-3">
         <View className="flex-row items-center gap-1.5">
-          <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: ACCENT + '18' }}>
-            <Text className="text-[10px] font-sans-sb" style={{ color: ACCENT }}>{isRent ? 'For rent' : 'For sale'}</Text>
+          <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.accent + '18' }}>
+            <Text className="text-[10px] font-sans-sb" style={{ color: c.accent }}>{isRent ? 'For rent' : 'For sale'}</Text>
           </View>
           {p.status !== 'available' ? (
             <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: status.bg }}>

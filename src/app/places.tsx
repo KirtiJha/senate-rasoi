@@ -10,7 +10,6 @@ import { PLACE_TYPES, PlaceRow, fetchPlaces, placeTypeMeta, subscribePlaces } fr
 import { isSupabaseConfigured } from '../lib/supabase';
 import { useThemeColors } from '../theme';
 
-const ACCENT = '#0D9488';
 // Society centre fallback (DS-MAX Senate) so "Nearest" works even if the
 // community row has no coordinates yet.
 const FALLBACK_CENTER = { lat: 12.8687464, lon: 77.6345485 };
@@ -26,6 +25,7 @@ function distanceKm(a: { lat: number; lon: number }, b: { lat: number; lon: numb
 
 export default function PlacesScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const router = useRouter();
   const { isDesktop } = useResponsive();
   const { communityId, community } = useAuth();
@@ -209,7 +209,7 @@ function EmptyState({ onAdd, c }: { onAdd: () => void; c: ReturnType<typeof useT
       <Ionicons name="location-outline" size={48} color={c.faint} />
       <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">No places yet</Text>
       <Text className="font-sans mt-1.5 text-center text-[13px] leading-[19px] text-muted">Be the first to add a handy nearby contact — a hospital, clinic, school, supermarket, salon and more.</Text>
-      <Pressable onPress={onAdd} className="mt-5 flex-row items-center gap-1.5 rounded-2xl px-5 py-2.5 active:opacity-80" style={{ backgroundColor: ACCENT }}>
+      <Pressable onPress={onAdd} className="mt-5 flex-row items-center gap-1.5 rounded-2xl px-5 py-2.5 active:opacity-80" style={{ backgroundColor: c.accent }}>
         <Ionicons name="add" size={18} color="#fff" /><Text className="font-sans-sb text-[14px] text-white">Add a place</Text>
       </Pressable>
     </View>
@@ -218,7 +218,7 @@ function EmptyState({ onAdd, c }: { onAdd: () => void; c: ReturnType<typeof useT
 
 function SortChip({ label, active, onPress, c }: { label: string; active: boolean; onPress: () => void; c: ReturnType<typeof useThemeColors> }) {
   return (
-    <Pressable onPress={onPress} className="rounded-full px-2.5 py-1" style={{ backgroundColor: active ? ACCENT : c.inset }}>
+    <Pressable onPress={onPress} className="rounded-full px-2.5 py-1" style={{ backgroundColor: active ? c.accent : c.inset }}>
       <Text className="text-[12px] font-sans-sb" style={{ color: active ? '#fff' : c.muted }}>{label}</Text>
     </Pressable>
   );

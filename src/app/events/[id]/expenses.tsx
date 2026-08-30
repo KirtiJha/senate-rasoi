@@ -17,7 +17,6 @@ import { IMAGE_CACHE_PROPS } from '../../../lib/image';
 import { uploadContentPhoto } from '../../../lib/photoUpload';
 import { useThemeColors } from '../../../theme';
 
-const ACCENT = '#EF4444';
 const catMeta = (k: ExpenseCategory) =>
   EXPENSE_CATEGORIES.find((x) => x.key === k) ?? EXPENSE_CATEGORIES[EXPENSE_CATEGORIES.length - 1];
 
@@ -25,6 +24,7 @@ function openUrl(u: string) { if (Platform.OS === 'web') window.open(u, '_blank'
 
 export default function ExpensesScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const toast = useToast();
   const confirm = useConfirm();
   const { id } = useLocalSearchParams<{ id: string }>();

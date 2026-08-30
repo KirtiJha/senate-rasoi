@@ -11,10 +11,10 @@ import { useToast } from '../../context/toast';
 import { LOST_FOUND_CATEGORIES, LostFoundKind, postLostFoundItem } from '../../lib/lostFound';
 import { useThemeColors } from '../../theme';
 
-const ACCENT = '#D97706';
 
 export default function NewLostFoundScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const toast = useToast();
   const router = useRouter();
   const { userId, profile, communityId } = useAuth();

@@ -24,11 +24,11 @@ import {
 } from '../../lib/properties';
 import { useThemeColors } from '../../theme';
 
-const ACCENT = '#7C3AED';
 const num = (s: string): number | null => { const n = parseInt(s.replace(/\D/g, ''), 10); return Number.isFinite(n) ? n : null; };
 
 export default function NewPropertyScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const toast = useToast();
   const router = useRouter();
   const { userId, profile, communityId } = useAuth();
@@ -244,7 +244,7 @@ function Chips({ options, value, onPick, c, className = '' }: { options: string[
       {options.map((o) => {
         const on = value === o;
         return (
-          <Pressable key={o} onPress={() => onPick(o)} className="rounded-full border px-3.5 py-1.5" style={{ borderColor: on ? ACCENT : c.line, backgroundColor: on ? ACCENT : c.surface }}>
+          <Pressable key={o} onPress={() => onPick(o)} className="rounded-full border px-3.5 py-1.5" style={{ borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : c.surface }}>
             <Text className="text-[12px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{o}</Text>
           </Pressable>
         );

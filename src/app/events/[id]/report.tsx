@@ -10,7 +10,6 @@ import {
 } from '../../../lib/events';
 import { useThemeColors } from '../../../theme';
 
-const ACCENT = '#7C3AED';
 // Never assume a stored category still exists in the client list — an unknown
 // category must fall back, not crash the whole accounts report.
 const catMeta = (k: string) =>
@@ -26,6 +25,7 @@ function openUrl(u: string) { if (Platform.OS === 'web') window.open(u, '_blank'
  */
 export default function EventReportScreen() {
   const c = useThemeColors();
+  const ACCENT = c.accent;
   const { id } = useLocalSearchParams<{ id: string }>();
   const { userId } = useAuth();
 
