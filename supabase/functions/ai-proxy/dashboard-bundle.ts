@@ -1523,8 +1523,18 @@ async function runAgentStream(
       // deno-lint-ignore no-explicit-any
     } as any);
 
+    // Everything the model produced this round, in order. All of it goes back
+    // into `input` — not just the function calls.
+    //
+    // With reasoning on, the Responses API pairs each function_call with a
+    // reasoning item and rejects the call if its partner is missing:
+    //   "Item 'fc_…' of type 'function_call' was provided without its required
+    //    'reasoning' item: 'rs_…'."
+    // Echoing the whole output verbatim keeps those pairs intact and preserves
+    // ordering, which is what the API is really checking. Filtering by type is
+    // how the pairing gets broken.
     // deno-lint-ignore no-explicit-any
-    const calls: any[] = [];
+    const produced: any[] = [];
     let sawText = false;
 
     // deno-lint-ignore no-explicit-any
@@ -1532,21 +1542,18 @@ async function runAgentStream(
       if (event.type === 'response.output_text.delta') {
         if (event.delta) { sawText = true; emit({ t: 'delta', v: String(event.delta) }); }
       } else if (event.type === 'response.output_item.done') {
-        const item = event.item;
-        if (item?.type === 'function_call') calls.push(item);
-        // Assistant prose is echoed back into `input` so the next round has it.
-        if (item?.type === 'message') input.push(item);
+        if (event.item) produced.push(event.item);
       }
     }
+
+    // deno-lint-ignore no-explicit-any
+    const calls = produced.filter((i: any) => i?.type === 'function_call');
 
     // No tool calls means the model has said its piece.
     if (!calls.length) { answered = sawText; break; }
 
-    // Every function_call must go back into input alongside its output, or the
-    // next request rejects the orphan.
-    for (const call of calls) input.push(call);
+    input.push(...produced);
 
-    let terminated = false;
     for (const call of calls) {
       const name = String(call.name);
       let args: Record<string, unknown> = {};
@@ -1576,7 +1583,6 @@ async function runAgentStream(
       emit({ t: 'step', tool: name, summary });
       input.push({ type: 'function_call_output', call_id: call.call_id, output: JSON.stringify(payload) });
     }
-    if (terminated) return;
   }
 
   if (!answered) emit({ t: 'delta', v: 'I could not work that one out — try asking a different way.' });
