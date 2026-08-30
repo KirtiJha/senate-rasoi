@@ -543,28 +543,30 @@ export default function HomeScreen() {
         <SectionHead label="All of Aangan" c={c} />
         <View className="flex-row flex-wrap" style={{ marginHorizontal: -5 }}>
           {SERVICES.map((cat) => (
-            <ModuleTile
-              key={cat.key}
-              icon={cat.icon as any}
-              label={cat.label}
-              blurb={cat.blurb}
-              onPress={() => handleCategoryPress(cat)}
-            />
+            <View key={cat.key} style={{ width: isDesktop ? '33.333%' : '50%', padding: 5 }}>
+              <ModuleTile
+                icon={cat.icon as any}
+                label={cat.label}
+                blurb={cat.blurb}
+                onPress={() => handleCategoryPress(cat)}
+              />
+            </View>
           ))}
           {COMMUNITY_TILES.map((tile) => (
-            <ModuleTile
-              key={tile.key}
-              icon={tile.icon as any}
-              label={tile.label}
-              blurb={tile.blurb}
-              badge={
-                tile.key === 'messages' ? unread
-                  : tile.key === 'borrow' ? borrowCount
-                    : tile.key === 'lost_found' ? lostFoundCount
-                      : (tileCounts[tile.key] ?? 0)
-              }
-              onPress={() => router.push(tile.href as any)}
-            />
+            <View key={tile.key} style={{ width: isDesktop ? '33.333%' : '50%', padding: 5 }}>
+              <ModuleTile
+                icon={tile.icon as any}
+                label={tile.label}
+                blurb={tile.blurb}
+                badge={
+                  tile.key === 'messages' ? unread
+                    : tile.key === 'borrow' ? borrowCount
+                      : tile.key === 'lost_found' ? lostFoundCount
+                        : (tileCounts[tile.key] ?? 0)
+                }
+                onPress={() => router.push(tile.href as any)}
+              />
+            </View>
           ))}
         </View>
       </Container>
