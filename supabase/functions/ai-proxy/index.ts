@@ -14,6 +14,7 @@
 // (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are injected automatically.)
 // ════════════════════════════════════════════════════════════════════
 
+import { runAgent } from './agent.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY') ?? '';
@@ -635,7 +636,8 @@ Deno.serve(async (req) => {
   } catch {
     return json({ error: 'Bad request' }, 400);
   }
-  if (body.action !== 'autofill' && body.action !== 'ask' && body.action !== 'translate' && body.action !== 'digest') {
+  if (body.action !== 'autofill' && body.action !== 'ask' && body.action !== 'agent'
+      && body.action !== 'translate' && body.action !== 'digest') {
     return json({ error: 'Unknown action' }, 400);
   }
 
@@ -717,6 +719,27 @@ Deno.serve(async (req) => {
   // For retrieval, blend the previous user turn so short follow-ups still match.
   const prevUser = [...history].reverse().find((h) => h.role === 'user')?.text;
   const retrievalText = prevUser ? `${prevUser}\n${question}` : question;
+
+  if (body.action === 'agent') {
+    try {
+      const out = await runAgent(
+        {
+          admin,
+          communityId,
+          embedQuery: async (text: string) => (await embedTexts([text], 'RETRIEVAL_QUERY'))[0],
+          toVec,
+          hydrate: (idsBySource) => fetchByIds(admin, idsBySource),
+        },
+        question,
+        history,
+        GEMINI_KEY,
+      );
+      return json({ result: out });
+    } catch (e) {
+      console.error('ai-proxy agent error:', e);
+      return json({ error: 'Aangan could not finish that — try again in a moment.' }, 502);
+    }
+  }
 
   try {
     let catalog: CatalogItem[] = [];

@@ -76,7 +76,7 @@ const DIGEST_TIMEOUT_MS = 20_000;
 const NO_COMPRESSION_HEADERS: Record<string, string> | undefined =
   Platform.OS === 'web' ? undefined : { 'Accept-Encoding': 'identity' };
 
-async function invokeAi(
+export async function invokeAi(
   body: Record<string, unknown>,
   timeoutMs: number,
 ): Promise<{ data: unknown; error: unknown }> {
@@ -324,7 +324,7 @@ function friendly(code: string): string {
  * failure included — report "the AI service may not be deployed", which is
  * usually false and sends debugging in the wrong direction.
  */
-async function readInvokeError(error: unknown): Promise<{ message: string; code?: string }> {
+export async function readInvokeError(error: unknown): Promise<{ message: string; code?: string }> {
   const name = (error as { name?: string } | null)?.name;
   const context = (error as { context?: unknown } | null)?.context;
   const res =
