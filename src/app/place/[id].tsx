@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
-import { Avatar, Button, Container, ScreenHeader } from '../../components/ui';
+import { Avatar, Button, Container, Gallery, ScreenHeader } from '../../components/ui';
 import { MapPreview } from '../../components/MapPreview';
 import { useAuth } from '../../context/auth';
 import { useConfirm } from '../../context/confirm';
@@ -78,13 +78,12 @@ export default function PlaceDetailScreen() {
       <ScreenHeader icon="location-outline" iconColor={ACCENT} title={m.label} showBack hideSociety />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
-          {/* Photos */}
+          {/* Photos. The old strip used fixed 260px cards that cut off
+              mid-photo — which hinted at more content, but by accident. */}
           {place.photos?.length ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} className="mb-4">
-              {place.photos.map((url, i) => (
-                <Image key={i} source={{ uri: url }} style={{ width: place.photos.length > 1 ? 260 : 320, height: 180, borderRadius: 16 }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
-              ))}
-            </ScrollView>
+            <View className="mb-4">
+              <Gallery photos={place.photos} ratio={0.58} fallbackIcon="location-outline" />
+            </View>
           ) : null}
 
           {/* Type badge + name */}

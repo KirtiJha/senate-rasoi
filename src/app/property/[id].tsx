@@ -2,10 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { PropertyChat } from '../../components/PropertyChat';
 import { T } from '../../components/T';
-import { Avatar, Button, Container, ScreenHeader, Sheet } from '../../components/ui';
+import { Avatar, Button, Container, Gallery, ScreenHeader, Sheet } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
@@ -42,7 +42,6 @@ export default function PropertyDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { userId, profile, isAdmin } = useAuth();
-  const { width } = useWindowDimensions();
 
   const [p, setP] = useState<PropertyRow | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,7 +91,6 @@ export default function PropertyDetailScreen() {
   const isRent = p.listing_type === 'rent';
   const contactMsg = `Hi ${ownerName}! I'm interested in your flat "${p.title}". Could you share the price and details?`;
 
-  const galleryW = Math.min(width, 760) - 32;
 
   const specs: [string, string][] = [];
   if (p.config) specs.push(['Configuration', p.config]);
@@ -127,18 +125,12 @@ export default function PropertyDetailScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
-          {/* Gallery */}
-          {p.photos.length > 0 ? (
-            <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} className="mb-4 overflow-hidden rounded-2xl">
-              {p.photos.map((url, i) => (
-                <Image key={i} source={{ uri: url }} style={{ width: galleryW, height: galleryW * 0.62 }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
-              ))}
-            </ScrollView>
-          ) : (
-            <View className="mb-4 items-center justify-center rounded-2xl bg-inset" style={{ height: 160 }}>
-              <Ionicons name="home-outline" size={36} color={c.faint} />
-            </View>
-          )}
+          {/* Gallery — paged, counted, and it says how many there are.
+              Before, a second photo was discoverable only by guessing you
+              could swipe. */}
+          <View className="mb-4">
+            <Gallery photos={p.photos} fallbackIcon="home-outline" />
+          </View>
 
           {/* Badges + title */}
           <View className="flex-row items-center gap-2">

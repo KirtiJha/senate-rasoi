@@ -16,3 +16,4 @@ export { Chip } from './Chip';
 export { ListRow } from './ListRow';
 export { Rise } from './Rise';
 export { ParallaxHero } from './ParallaxHero';
+export { Gallery } from './Gallery';
