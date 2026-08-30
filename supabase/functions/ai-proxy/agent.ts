@@ -37,6 +37,16 @@
 // into the dashboard as one bundle without colliding.
 const AGENT_MODEL = 'gemini-2.5-flash';
 
+/**
+ * Minimum cosine similarity for a search hit to count as a match.
+ *
+ * Set permissively on purpose. Too high and real matches vanish and Saathi
+ * says "none" when there is something — a worse failure than showing a weak
+ * result, because the resident has no way to tell it was wrong. Too low and we
+ * are back to four unrelated documents being called results.
+ */
+const RELEVANCE_FLOOR = 0.45;
+
 /** How many tool round-trips before we force an answer. */
 const MAX_STEPS = 6;
 
@@ -271,17 +281,50 @@ async function runReadTool(
       p_count: wanted ? 60 : Math.max(limit, 24),
     });
 
+    // match_documents returns the k NEAREST rows, always — there is no floor
+    // in the SQL. On a small society index that means every query "finds"
+    // something: ask for plumber recommendations in a society that has none
+    // and you get back the four least-unrelated documents in the building.
+    //
+    // The model handled that correctly and said there were none. The trail did
+    // not, and reported "4 results" underneath an answer that said zero — which
+    // is how this was noticed. Similarity was being returned by the RPC and
+    // thrown away here.
+    const rows = (matches ?? []) as { source: string; source_id: string; similarity: number }[];
+    const simOf = new Map<string, number>();
     const idsBySource: Record<string, string[]> = {};
-    for (const m of (matches ?? []) as { source: string; source_id: string }[]) {
+    for (const m of rows) {
       if (wanted && !wanted.includes(m.source)) continue;
+      simOf.set(`${m.source}:${m.source_id}`, m.similarity ?? 0);
       (idsBySource[m.source] ??= []).push(m.source_id);
     }
-    const items = (await d.hydrate(idsBySource)).slice(0, limit);
+
+    const hydrated = await d.hydrate(idsBySource);
+    const scored = hydrated
+      .map((i) => ({ item: i, sim: simOf.get(`${i.source}:${i.id}`) ?? 0 }))
+      .sort((a, b) => b.sim - a.sim);
+
+    const kept = scored.filter((s) => s.sim >= RELEVANCE_FLOOR).slice(0, limit);
+
+    // Nothing close enough is a real answer, and a better one than four
+    // confident non-answers. Returning them anyway invites the model to
+    // stretch for a connection that is not there.
+    if (!kept.length) {
+      return {
+        payload: { results: [], note: 'Nothing in this society matched closely enough to be worth showing.' },
+        summary: scored.length
+          ? `searched "${query}" — nothing close enough`
+          : `searched "${query}" — nothing found`,
+        cards: [],
+      };
+    }
+
+    const items = kept.map((s) => s.item);
     return {
       payload: {
         results: items.map((i) => ({ ref: d.handle(i.source, i.id), title: i.title, details: i.info })),
       },
-      summary: `searched "${query}" — ${items.length} result${items.length === 1 ? '' : 's'}`,
+      summary: `searched "${query}" — ${items.length} match${items.length === 1 ? '' : 'es'}`,
       cards: items,
     };
   }
