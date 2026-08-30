@@ -1,5 +1,6 @@
 import { AskResultItem, AIError, invokeAi, readInvokeError } from './ai';
 import { supabase } from './supabase';
+import { createWatch } from './watches';
 
 /**
  * The client half of the agent.
@@ -106,6 +107,25 @@ export function describeProposal(p: AgentProposal): ProposalMeta {
           ...(a.price != null ? ([['Price', `₹${str(a.price)}`]] as [string, string][]) : []),
         ],
       };
+    case 'propose_watch': {
+      const keywords = (Array.isArray(a.keywords) ? (a.keywords as string[]) : []).map(str);
+      return {
+        title: 'Keep watching for this',
+        icon: 'notifications-outline',
+        verb: 'Watch for it',
+        // The literal match terms are shown, not just the friendly label. A
+        // watch you cannot reason about is one you cannot trust when it stays
+        // quiet — and staying quiet is how a watch fails.
+        lines: [
+          ['Watching for', str(a.label)],
+          ['Matches when all of these appear', keywords.join(' + ')],
+          ...(Array.isArray(a.sources) && a.sources.length
+            ? ([['Only in', (a.sources as string[]).join(', ')]] as [string, string][])
+            : []),
+          ['Notifies', 'You, once per matching item. Switch it off any time in Settings.'],
+        ],
+      };
+    }
     case 'propose_lost_found':
       return {
         title: str(a.kind) === 'found' ? 'Post a found item' : 'Post a lost item',
@@ -185,6 +205,15 @@ export async function executeProposal(
       .single();
     if (error) throw error;
     return { route: `/listing/${(data as { id: string }).id}` };
+  }
+
+  if (p.type === 'propose_watch') {
+    const keywords = (Array.isArray(a.keywords) ? (a.keywords as string[]) : []).map(str);
+    await createWatch(ctx.userId, ctx.communityId, str(a.label), keywords,
+      Array.isArray(a.sources) ? (a.sources as string[]) : null);
+    // Straight to the list, so the first thing you see after agreeing is the
+    // switch that turns it off.
+    return { route: '/settings' };
   }
 
   if (p.type === 'propose_lost_found') {

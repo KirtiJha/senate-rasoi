@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 import { Container, ScreenHeader } from '../components/ui';
+import { WatchList } from '../components/saathi/WatchList';
 import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
@@ -204,6 +205,14 @@ export default function SettingsScreen() {
             Messages sent to you, orders on your dishes and emergencies always
             come through — these switches only quiet society-wide updates.
           </Text>
+
+          {/* ── Saathi ─────────────────────────────────────────────
+              Above Language because a watch is something you actively set and
+              will come looking for, while a language is set once and forgotten. */}
+          <SectionLabel>Saathi is watching for</SectionLabel>
+          <View className="mb-6">
+            <WatchList />
+          </View>
 
           {/* ── Language ───────────────────────────────────────── */}
           <SectionLabel>Language</SectionLabel>

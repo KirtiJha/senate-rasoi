@@ -880,6 +880,7 @@ Deno.serve(async (req) => {
             {
               admin,
               communityId,
+              userId,
               embedQuery: async (text: string) => (await embedTexts([text], 'RETRIEVAL_QUERY'))[0],
               toVec,
               hydrate: (idsBySource) => fetchByIds(admin, idsBySource),
@@ -924,6 +925,7 @@ Deno.serve(async (req) => {
         {
           admin,
           communityId,
+          userId,
           embedQuery: async (text: string) => (await embedTexts([text], 'RETRIEVAL_QUERY'))[0],
           toVec,
           hydrate: (idsBySource) => fetchByIds(admin, idsBySource),

@@ -1,30 +1,28 @@
-import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
+import Svg, { G, Path, Rect } from 'react-native-svg';
 
 import { useThemeColors } from '../theme';
 
 /**
- * Saathi's mark: the courtyard bloom, speaking.
+ * Saathi's mark: two hands meeting.
  *
- * WHY NOT SHAKING HANDS
- * Two hands is the right idea — साथी means companion — and the wrong shape. At
- * the sizes this actually appears (18px in the nav rail, 24px in a chat
- * header, 26px on a home tile) two interlocking hands collapse into a smudge:
- * too many strokes crossing in too little space, and nothing left that reads
- * as either hands or helper.
+ * साथी means companion, and the handshake is the honest picture of what this
+ * is — a neighbour who does something with you, not a search box.
  *
- * A speech bubble reads instantly at any size — it is one closed shape with a
- * tail, and everyone already knows what it means. Putting the eight-petal
- * bloom inside it does the rest: this is Aangan, and it talks.
+ * CROPPED AT THE WRIST on purpose. A full handshake needs arms, and arms need
+ * room this never has: 18px in the nav rail, 22px in a header, 24px beside
+ * every reply. Cuff, hand, grip — three shapes — is what survives at that size.
+ * Everything above the wrist is detail nobody can see and strokes that close up
+ * the gaps between the fingers.
  *
- * The bloom is reduced to five petals here. Eight is right for the brand mark
- * at 128px and turns to mush at 18px, where the gaps between petals fall below
- * a pixel. Fewer, fatter petals keep the flower legible when it is tiny —
- * the mark stays recognisable rather than technically faithful.
+ * The seam between the two hands is drawn in the background colour rather than
+ * left as a gap in the geometry. On a filled mark a gap would show the page
+ * through it and read as a crack; a seam reads as one hand in front of the
+ * other, which is what a handshake looks like.
  */
 export function SaathiMark({
   size = 24,
   color,
-  /** Solid bubble with the bloom reversed out — for active nav states. */
+  /** Solid rather than outlined — for active nav states. */
   filled = false,
 }: {
   size?: number;
@@ -33,31 +31,53 @@ export function SaathiMark({
 }) {
   const c = useThemeColors();
   const tint = color ?? c.accent;
-
-  // Bloom on the bubble when filled, bubble-coloured when not.
-  const petal = filled ? c.bg : tint;
+  const seam = c.bg;
 
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48" accessibilityLabel="Saathi">
-      {/* Bubble with a tail at the lower left. Drawn as one path so the tail
-          joins the body cleanly instead of overlapping it — an overlap shows
-          as a seam once there is a fill behind it. */}
-      <Path
-        d="M13 5.5h22a9.5 9.5 0 0 1 9.5 9.5v12a9.5 9.5 0 0 1-9.5 9.5H20.5l-8.1 6.6a1.2 1.2 0 0 1-2-.93V36.4A9.5 9.5 0 0 1 3.5 27V15A9.5 9.5 0 0 1 13 5.5Z"
-        fill={filled ? tint : 'none'}
-        stroke={tint}
-        strokeWidth={filled ? 0 : 3}
-        strokeLinejoin="round"
-      />
-      <G transform="translate(24,21)">
-        {[0, 72, 144, 216, 288].map((a) => (
-          <G key={a} transform={`rotate(${a})`}>
-            <Ellipse cx={0} cy={-6.4} rx={3.1} ry={6.4} fill={petal} opacity={0.92} />
-          </G>
-        ))}
-        <Circle cx={0} cy={0} r={2.9} fill={filled ? tint : c.bg} />
-        <Circle cx={0} cy={0} r={2.9} fill={petal} opacity={filled ? 0 : 0.001} />
+      {/* Lower-left hand, reaching up and right. The cuff is squarer than the
+          hand so the two read as different things at a glance. */}
+      <G>
+        <Rect x={1.5} y={30} width={12} height={11} rx={3} transform="rotate(-22 7.5 35.5)" fill={tint} />
+        <Path
+          d="M10.5 33.5 L23 26.5 Q27.5 24 30 28 L31.5 30.5 Q33 33.5 29.5 35.5 L18 42 Q14 44 11.5 40 L9.5 37 Q8 34.5 10.5 33.5 Z"
+          fill={tint}
+        />
       </G>
+
+      {/* Lower-right hand, mirrored. */}
+      <G>
+        <Rect x={34.5} y={30} width={12} height={11} rx={3} transform="rotate(22 40.5 35.5)" fill={tint} />
+        <Path
+          d="M37.5 33.5 L25 26.5 Q20.5 24 18 28 L16.5 30.5 Q15 33.5 18.5 35.5 L30 42 Q34 44 36.5 40 L38.5 37 Q40 34.5 37.5 33.5 Z"
+          fill={tint}
+          opacity={0.92}
+        />
+      </G>
+
+      {/* The grip: the near hand closing over the far one, and the seam that
+          makes the overlap legible instead of a single blob. */}
+      <Path
+        d="M18.5 28.5 Q24 25.5 29.5 28.5 L28 34 Q24 36.5 20 34 Z"
+        fill={tint}
+      />
+      <Path
+        d="M20.5 27 L28.5 31.5"
+        stroke={seam}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        opacity={filled ? 0.9 : 0.75}
+      />
+
+      {/* Thumb over the top of the grip — the detail that tips it from
+          "two shapes touching" to "a handshake". */}
+      <Path
+        d="M19 26.5 Q22.5 22.5 26 24.5"
+        stroke={tint}
+        strokeWidth={4.2}
+        strokeLinecap="round"
+        fill="none"
+      />
     </Svg>
   );
 }

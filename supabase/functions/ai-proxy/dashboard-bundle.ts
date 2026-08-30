@@ -890,6 +890,7 @@ Deno.serve(async (req) => {
             {
               admin,
               communityId,
+              userId,
               embedQuery: async (text: string) => (await embedTexts([text], 'RETRIEVAL_QUERY'))[0],
               toVec,
               hydrate: (idsBySource) => fetchByIds(admin, idsBySource),
@@ -934,6 +935,7 @@ Deno.serve(async (req) => {
         {
           admin,
           communityId,
+          userId,
           embedQuery: async (text: string) => (await embedTexts([text], 'RETRIEVAL_QUERY'))[0],
           toVec,
           hydrate: (idsBySource) => fetchByIds(admin, idsBySource),
@@ -1116,6 +1118,13 @@ const READ_TOOLS = [
     },
   },
   {
+    name: 'list_watches',
+    description:
+      'The standing watches this resident has set, and whether each is on. Use before offering a new watch, ' +
+      'so you do not create a duplicate, and to answer "what am I watching?".',
+    parameters: { type: 'object', properties: {}, required: [] },
+  },
+  {
     name: 'poll_results',
     description: 'Live vote counts for the society\'s polls. Counts are never in the search index, so read them here.',
     parameters: {
@@ -1196,6 +1205,34 @@ const FINISH_TOOLS = [
     },
   },
   {
+    name: 'propose_watch',
+    description:
+      'Offer to keep watching for something and tell the resident when it appears. Use when they say ' +
+      '"let me know when…", "tell me if…", "notify me about…", or when a search finds nothing and they ' +
+      'would plainly want to hear about it later. Only useful for things that get posted: flats, listings, ' +
+      'items to borrow, notices, lost & found.',
+    parameters: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', description: 'One sentence to the resident.' },
+        label: { type: 'string', description: 'What they are watching for, in their words, e.g. "2 BHK flats for rent".' },
+        keywords: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'The words that must ALL appear for a match, lowercase, 1-4 of them. Keep them short and ' +
+            'literal — ["2 bhk"] not ["two bedroom apartment"]. More keywords means a narrower watch.',
+        },
+        sources: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional: limit to kinds, e.g. ["property"] or ["listing","borrow"]. Omit for everything.',
+        },
+      },
+      required: ['message', 'label', 'keywords'],
+    },
+  },
+  {
     name: 'propose_lost_found',
     description: 'Offer to post a lost or found item.',
     parameters: {
@@ -1240,6 +1277,8 @@ type Deps = {
   // deno-lint-ignore no-explicit-any
   admin: any;
   communityId: string;
+  /** The signed-in resident. Only used to read their own watches. */
+  userId: string;
   embedQuery: (text: string) => Promise<number[] | undefined>;
   toVec: (v: number[]) => string;
   // deno-lint-ignore no-explicit-any
@@ -1381,6 +1420,20 @@ async function runReadTool(
       })),
     ].filter((p) => p.name);
     return { payload: { people }, summary: `looked up "${query}" — ${people.length} match${people.length === 1 ? '' : 'es'}`, cards: [] };
+  }
+
+  if (name === 'list_watches') {
+    const { data } = await d.admin
+      .from('saathi_watches')
+      .select('label, keywords, active')
+      .eq('user_id', d.userId)
+      .order('created_at', { ascending: false });
+    const watches = (data ?? []) as { label: string; keywords: string[]; active: boolean }[];
+    return {
+      payload: { watches },
+      summary: `checked watches — ${watches.length}`,
+      cards: [],
+    };
   }
 
   if (name === 'poll_results') {
