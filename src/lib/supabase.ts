@@ -5,8 +5,11 @@ import { Platform } from 'react-native';
 
 // Public env vars are inlined into the bundle at build time. The anon key is
 // safe to ship — security is enforced by RLS + RPCs (see supabase/migrations).
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+// Exported because streaming cannot go through supabase-js: functions.invoke
+// buffers the whole response before returning, which is the one thing a
+// stream must not do. The Saathi stream calls the function URL directly.
+export const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+export const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
 /** True once real credentials are wired in. The UI shows a setup banner otherwise. */
 export const isSupabaseConfigured =
