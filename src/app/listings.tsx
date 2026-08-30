@@ -4,21 +4,21 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ErrorState, ScreenHeader, useResponsive } from '../../components/ui';
-import { useAuth } from '../../context/auth';
-import { useBlocks } from '../../context/blocks';
-import { useToast } from '../../context/toast';
-import { fetchDishes, waLink } from '../../lib/dishes';
-import { sendInquiry } from '../../lib/inquiries';
-import { buildInquiryWhatsAppLink, fetchAllListings } from '../../lib/listings';
-import { SERVICES, getService } from '../../lib/services';
-import { isSupabaseConfigured } from '../../lib/supabase';
-import { listTiffinPlans } from '../../lib/tiffin';
-import { DishRow, ListingRow, TiffinPlanWithChef } from '../../lib/types';
-import { LendItem, fetchItems as fetchBorrowItems } from '../../lib/borrow';
-import { LostFoundItem, fetchLostFoundItems, LOST_FOUND_CATEGORIES } from '../../lib/lostFound';
-import { PlaceRow, fetchPlaces, placeTypeMeta } from '../../lib/places';
-import { layout, useThemeColors } from '../../theme';
+import { ErrorState, ScreenHeader, useResponsive } from '../components/ui';
+import { useAuth } from '../context/auth';
+import { useBlocks } from '../context/blocks';
+import { useToast } from '../context/toast';
+import { fetchDishes, waLink } from '../lib/dishes';
+import { sendInquiry } from '../lib/inquiries';
+import { buildInquiryWhatsAppLink, fetchAllListings } from '../lib/listings';
+import { SERVICES, getService } from '../lib/services';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { listTiffinPlans } from '../lib/tiffin';
+import { DishRow, ListingRow, TiffinPlanWithChef } from '../lib/types';
+import { LendItem, fetchItems as fetchBorrowItems } from '../lib/borrow';
+import { LostFoundItem, fetchLostFoundItems, LOST_FOUND_CATEGORIES } from '../lib/lostFound';
+import { PlaceRow, fetchPlaces, placeTypeMeta } from '../lib/places';
+import { layout, useThemeColors } from '../theme';
 
 const LIST_MAX = layout.maxContent; // same content width as every other tab
 const FOOD_COLOR = '#E8650A';
@@ -234,6 +234,7 @@ export default function AllListingsScreen() {
   return (
     <View className="flex-1 bg-bg">
       <ScreenHeader
+        showBack
         icon="pricetags-outline"
         iconColor={c.accent}
         title="All listings"

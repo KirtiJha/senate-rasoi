@@ -90,7 +90,8 @@ export default function PlacesScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="location-outline" iconColor={ACCENT} title="Nearby" onAdd={() => router.push('/place/new' as any)} addLabel="Add place" />
+      <ScreenHeader
+        showBack icon="location-outline" iconColor={ACCENT} title="Nearby" onAdd={() => router.push('/place/new' as any)} addLabel="Add place" />
 
       {/* Search */}
       <View className="px-4 pt-3">

@@ -3,20 +3,20 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BrandMark } from '../../components/BrandMark';
-import { Avatar, ErrorState, RowSkeleton, ScreenHeader, useResponsive } from '../../components/ui';
-import { useAuth } from '../../context/auth';
-import { fetchDirectory } from '../../lib/directory';
-import { fetchDishes } from '../../lib/dishes';
-import { fetchDocuments, fileGlyph } from '../../lib/documents';
-import { fetchAllListings } from '../../lib/listings';
-import { POST_CATEGORY_ICONS, fetchPosts } from '../../lib/posts';
-import { addRecentSearch, clearRecentSearches, getRecentSearches } from '../../lib/recentSearches';
-import { getService } from '../../lib/services';
-import { fetchGroups, getSport } from '../../lib/sports';
-import { isSupabaseConfigured } from '../../lib/supabase';
-import { listTiffinPlans } from '../../lib/tiffin';
-import { layout, useThemeColors } from '../../theme';
+import { BrandMark } from '../components/BrandMark';
+import { Avatar, ErrorState, RowSkeleton, ScreenHeader, useResponsive } from '../components/ui';
+import { useAuth } from '../context/auth';
+import { fetchDirectory } from '../lib/directory';
+import { fetchDishes } from '../lib/dishes';
+import { fetchDocuments, fileGlyph } from '../lib/documents';
+import { fetchAllListings } from '../lib/listings';
+import { POST_CATEGORY_ICONS, fetchPosts } from '../lib/posts';
+import { addRecentSearch, clearRecentSearches, getRecentSearches } from '../lib/recentSearches';
+import { getService } from '../lib/services';
+import { fetchGroups, getSport } from '../lib/sports';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { listTiffinPlans } from '../lib/tiffin';
+import { layout, useThemeColors } from '../theme';
 
 const SEARCH_MAX = layout.maxContent;
 const FOOD_COLOR = '#E8650A';
@@ -190,6 +190,7 @@ export default function SearchScreen() {
   return (
     <View className="flex-1 overflow-hidden bg-bg">
       <ScreenHeader
+        showBack
         icon="search-outline"
         title="Search"
         hideSociety

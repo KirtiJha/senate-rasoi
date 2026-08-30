@@ -12,23 +12,23 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DishCard } from '../../components/DishCard';
-import { Empty } from '../../components/Empty';
-import { FoodDisclaimer } from '../../components/FoodDisclaimer';
-import { KitchenSection } from '../../components/KitchenSection';
-import { MyTiffinsSection } from '../../components/MyTiffinsSection';
-import { OrderModal } from '../../components/OrderModal';
-import { OrdersSection } from '../../components/OrdersSection';
-import { SetupBanner } from '../../components/SetupBanner';
-import { SubscribeModal } from '../../components/SubscribeModal';
-import { TiffinCard } from '../../components/TiffinCard';
-import { TiffinEditSheet } from '../../components/TiffinEditSheet';
-import PostScreen from './post';
-import { Container, DishCardSkeleton, LiveDot, ScreenHeader, useResponsive } from '../../components/ui';
-import { useThemeColors } from '../../theme';
-import { useAuth } from '../../context/auth';
-import { useToast } from '../../context/toast';
-import { useConfirm } from '../../context/confirm';
+import { DishCard } from '../components/DishCard';
+import { Empty } from '../components/Empty';
+import { FoodDisclaimer } from '../components/FoodDisclaimer';
+import { KitchenSection } from '../components/KitchenSection';
+import { MyTiffinsSection } from '../components/MyTiffinsSection';
+import { OrderModal } from '../components/OrderModal';
+import { OrdersSection } from '../components/OrdersSection';
+import { SetupBanner } from '../components/SetupBanner';
+import { SubscribeModal } from '../components/SubscribeModal';
+import { TiffinCard } from '../components/TiffinCard';
+import { TiffinEditSheet } from '../components/TiffinEditSheet';
+import PostScreen from './(tabs)/post';
+import { Container, DishCardSkeleton, LiveDot, ScreenHeader, useResponsive } from '../components/ui';
+import { useThemeColors } from '../theme';
+import { useAuth } from '../context/auth';
+import { useToast } from '../context/toast';
+import { useConfirm } from '../context/confirm';
 import {
   buildWhatsAppOrderLink,
   deleteDish,
@@ -37,12 +37,12 @@ import {
   placeOrder,
   subscribeToDishes,
   waLink,
-} from '../../lib/dishes';
-import { haptics } from '../../lib/haptics';
-import { shareDish } from '../../lib/share';
-import { isSupabaseConfigured } from '../../lib/supabase';
-import { listTiffinPlans, myActiveSubscriptionIds, subscribe, todayStr as tdy } from '../../lib/tiffin';
-import { DishRow, SLOTS, Slot, SLOT_EMOJI, TiffinPlanWithChef } from '../../lib/types';
+} from '../lib/dishes';
+import { haptics } from '../lib/haptics';
+import { shareDish } from '../lib/share';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { listTiffinPlans, myActiveSubscriptionIds, subscribe, todayStr as tdy } from '../lib/tiffin';
+import { DishRow, SLOTS, Slot, SLOT_EMOJI, TiffinPlanWithChef } from '../lib/types';
 
 const FILTERS: ('All' | Slot)[] = ['All', ...SLOTS];
 

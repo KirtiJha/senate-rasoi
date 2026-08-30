@@ -171,6 +171,10 @@ function DesktopShell() {
           <Stack.Screen name="about" />
           <Stack.Screen name="settings" options={{ animation: 'fade_from_bottom' }} />
           <Stack.Screen name="directory" />
+          <Stack.Screen name="food" />
+          <Stack.Screen name="listings" />
+          <Stack.Screen name="search" />
+          <Stack.Screen name="c/[category]" />
           <Stack.Screen name="profile/me" />
           <Stack.Screen name="profile/[userId]" />
           <Stack.Screen name="feed/[postId]" />

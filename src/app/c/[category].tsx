@@ -4,17 +4,17 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Empty } from '../../../components/Empty';
-import { ServiceDirectory } from '../../../components/ServiceDirectory';
-import { ListingCard } from '../../../components/listings/ListingCard';
-import { ListingCardSkeleton, useResponsive } from '../../../components/ui';
-import { useAuth } from '../../../context/auth';
-import { useToast } from '../../../context/toast';
-import { fetchListings, getCachedListings, subscribeToListings } from '../../../lib/listings';
-import { getService } from '../../../lib/services';
-import { isSupabaseConfigured } from '../../../lib/supabase';
-import { ListingRow } from '../../../lib/types';
-import { layout, useThemeColors } from '../../../theme';
+import { Empty } from '../../components/Empty';
+import { ServiceDirectory } from '../../components/ServiceDirectory';
+import { ListingCard } from '../../components/listings/ListingCard';
+import { ListingCardSkeleton, ScreenHeader, useResponsive } from '../../components/ui';
+import { useAuth } from '../../context/auth';
+import { useToast } from '../../context/toast';
+import { fetchListings, getCachedListings, subscribeToListings } from '../../lib/listings';
+import { getService } from '../../lib/services';
+import { isSupabaseConfigured } from '../../lib/supabase';
+import { ListingRow } from '../../lib/types';
+import { layout, useThemeColors } from '../../theme';
 
 export default function CategoryScreen() {
   const { category } = useLocalSearchParams<{ category: string }>();
@@ -95,28 +95,15 @@ export default function CategoryScreen() {
 
   const cols = isDesktop ? 3 : 2;
 
-  const header = (
-    <View className="mb-5 flex-row items-center gap-3" style={{ paddingHorizontal: 6 }}>
-      <View className="h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft">
-        <Ionicons name={cat.icon as any} size={24} color={c.accent} />
-      </View>
-      <View className="flex-1">
-        <Text className="font-display-x text-[22px] text-ink">{cat.label}</Text>
-        <Text className="text-[13px] font-sans-md text-muted">{cat.blurb}</Text>
-      </View>
-      <Pressable
-        onPress={() => router.push({ pathname: '/post', params: { category: cat.key } } as any)}
-        className="h-11 w-11 items-center justify-center rounded-full active:opacity-80"
-        style={{ backgroundColor: c.accent }}
-        accessibilityLabel={`Post in ${cat.label}`}
-      >
-        <Ionicons name="add" size={24} color="#fff" />
-      </Pressable>
-    </View>
-  );
-
   return (
     <View className="flex-1 bg-bg">
+      <ScreenHeader
+        icon={cat.icon as any}
+        title={cat.label}
+        showBack
+        onAdd={() => router.push({ pathname: '/post', params: { category: cat.key } } as any)}
+        addLabel={`Post in ${cat.label}`}
+      />
       <View style={{ flex: 1, width: '100%', maxWidth: layout.maxContent, alignSelf: 'center' }}>
         <FlashList
           key={cols}
@@ -129,13 +116,17 @@ export default function CategoryScreen() {
             </View>
           )}
           contentContainerStyle={{
-            paddingTop: isDesktop ? insets.top + 24 : 20,
+            paddingTop: 16,
             paddingBottom: 100,
             paddingHorizontal: 10,
           }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           showsVerticalScrollIndicator={false}
-          ListHeaderComponent={header}
+          ListHeaderComponent={
+            cat.blurb ? (
+              <Text className="mb-4 px-1.5 text-[13px] leading-5 font-sans-md text-muted">{cat.blurb}</Text>
+            ) : null
+          }
           ListEmptyComponent={
             loading ? (
               <View className="flex-row flex-wrap">
