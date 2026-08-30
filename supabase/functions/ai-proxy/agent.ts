@@ -33,7 +33,9 @@
 // a human declines. That is the whole point.
 // ════════════════════════════════════════════════════════════════════
 
-const MODEL = 'gemini-2.5-flash';
+// Named distinctly from index.ts MODEL so the two files can also be pasted
+// into the dashboard as one bundle without colliding.
+const AGENT_MODEL = 'gemini-2.5-flash';
 
 /** How many tool round-trips before we force an answer. */
 const MAX_STEPS = 6;
@@ -373,7 +375,7 @@ export async function runAgent(
 
   for (let step = 0; step < MAX_STEPS; step++) {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${AGENT_MODEL}:generateContent?key=${geminiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
