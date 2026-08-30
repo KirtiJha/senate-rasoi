@@ -1,5 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
+import { ZoomIn } from 'react-native-reanimated';
+
+import { AView, dur, ease } from '../../lib/motion';
 
 import { useThemeColors } from '../../theme';
 import { Button } from './Button';
@@ -46,17 +49,28 @@ export function ErrorState({
       className={`items-center px-6 ${compact ? 'py-8' : 'py-16'}`}
       accessibilityRole="alert"
     >
-      <View
-        className={`mb-4 items-center justify-center rounded-full bg-inset ${compact ? 'h-14 w-14' : 'h-20 w-20'}`}
+      <AView
+        entering={ZoomIn.duration(dur.expressive).easing(ease.emphasized)
+          .withInitialValues({ transform: [{ scale: 0.7 }] })}
+        className="mb-4 items-center justify-center"
+        style={{
+          width: compact ? 56 : 72,
+          height: compact ? 56 : 72,
+          backgroundColor: c.dangerSoft,
+          borderTopLeftRadius: compact ? 16 : 22,
+          borderTopRightRadius: compact ? 16 : 22,
+          borderBottomLeftRadius: compact ? 10 : 14,
+          borderBottomRightRadius: compact ? 10 : 14,
+        }}
       >
-        <Ionicons name={icon} size={compact ? 26 : 34} color={c.muted} />
-      </View>
+        <Ionicons name={icon} size={compact ? 24 : 30} color={c.danger} />
+      </AView>
 
-      <Text className={`mb-1.5 text-center font-display text-ink ${compact ? 'text-[17px]' : 'text-xl'}`}>
+      <Text className={`mb-1.5 text-center font-display text-ink ${compact ? 'text-[15px]' : 'text-[17px]'}`}>
         {title}
       </Text>
 
-      <Text className="font-sans mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">{message}</Text>
+      <Text className="font-sans mb-5 max-w-[280px] text-center text-[14px] leading-6 text-muted">{message}</Text>
 
       {onRetry ? (
         <Button

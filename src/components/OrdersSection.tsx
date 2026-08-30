@@ -74,7 +74,7 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
       <Container narrow>
         {orders.length === 0 ? (
           <Empty
-            icon="🧺"
+            icon="basket-outline"
             title="No orders yet"
             action={<Button label="Browse today's menu" icon="compass-outline" onPress={() => (onBrowse ? onBrowse() : router.push('/food' as any))} />}
           >

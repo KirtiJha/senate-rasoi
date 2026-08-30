@@ -347,7 +347,7 @@ export default function FoodScreen() {
             </View>
           ) : filtered.length === 0 ? (
             <Empty
-              icon="🍲"
+              icon="restaurant-outline"
               title={
                 when === 'upcoming'
                   ? 'No upcoming dishes'

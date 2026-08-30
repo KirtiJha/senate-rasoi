@@ -147,7 +147,7 @@ export default function CategoryScreen() {
               </View>
             ) : (
               <Empty
-                icon={cat.icon.includes('construct') ? '🔧' : cat.icon.includes('bag') ? '🛍️' : '📋'}
+                icon={(cat.icon as any) ?? 'grid-outline'}
                 title={`No ${cat.label} yet`}
               >
                 Neighbours can post {cat.listingType === 'product' ? 'items' : 'services'} here and connect directly. Tap + to be first.

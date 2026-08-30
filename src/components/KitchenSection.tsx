@@ -86,7 +86,7 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
       <Container narrow>
         {loading ? null : dishes.length === 0 ? (
           <Empty
-            icon="👨‍🍳"
+            icon="flame-outline"
             title="Your kitchen is empty"
             action={<Button label="Post your first dish" icon="add" onPress={postDish} />}
           >
