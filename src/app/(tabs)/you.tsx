@@ -84,25 +84,31 @@ export default function YouScreen() {
               Equal-weight doors, in the app's tile language. */}
           <Rise index={1} style={{ marginTop: 16 }}>
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <ActionTile
-                icon="person-outline"
-                label="Edit profile"
-                onPress={() => router.push('/profile/me' as any)}
-                c={c}
-              />
-              <ActionTile
-                icon="settings-outline"
-                label="Settings"
-                onPress={() => router.push('/settings' as any)}
-                c={c}
-              />
-              {isAdmin ? (
+              <View style={{ flex: 1 }}>
                 <ActionTile
-                  icon="shield-checkmark-outline"
-                  label="Admin"
-                  onPress={() => router.push('/admin')}
+                  icon="person-outline"
+                  label="Edit profile"
+                  onPress={() => router.push('/profile/me' as any)}
                   c={c}
                 />
+              </View>
+              <View style={{ flex: 1 }}>
+                <ActionTile
+                  icon="settings-outline"
+                  label="Settings"
+                  onPress={() => router.push('/settings' as any)}
+                  c={c}
+                />
+              </View>
+              {isAdmin ? (
+                <View style={{ flex: 1 }}>
+                  <ActionTile
+                    icon="shield-checkmark-outline"
+                    label="Admin"
+                    onPress={() => router.push('/admin')}
+                    c={c}
+                  />
+                </View>
               ) : null}
             </View>
           </Rise>
@@ -111,8 +117,12 @@ export default function YouScreen() {
           <Rise index={2} style={{ marginTop: 22 }}>
             <View onLayout={onTabsLayout}>
               <View style={{ flexDirection: 'row' }}>
-                <TabButton label="My listings" active={tab === 'listings'} onPress={() => pick('listings')} c={c} />
-                <TabButton label="Saved" active={tab === 'saved'} onPress={() => pick('saved')} c={c} />
+                <View style={{ flex: 1 }}>
+                  <TabButton label="My listings" active={tab === 'listings'} onPress={() => pick('listings')} c={c} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <TabButton label="Saved" active={tab === 'saved'} onPress={() => pick('saved')} c={c} />
+                </View>
               </View>
               <View style={{ height: 2, backgroundColor: c.line, borderRadius: 1 }}>
                 <Animated.View
@@ -150,7 +160,6 @@ function ActionTile({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={{ flex: 1 }}
     >
       <View className="items-center card" style={{ paddingVertical: 14, paddingHorizontal: 8 }}>
         <View
@@ -182,7 +191,6 @@ function TabButton({
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
       accessibilityLabel={label}
-      style={{ flex: 1 }}
     >
       <View style={{ alignItems: 'center', paddingVertical: 11 }}>
         <Text

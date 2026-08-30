@@ -36,16 +36,21 @@ const files = [];
 /** Paint and layout that must never ride on a className of an animated node. */
 const PAINT = /\b(bg-|border|rounded|flex-row|flex-1|absolute|items-|justify-|gap-|p-|px-|py-|mt-|mb-|mx-|my-)/;
 
+/**
+ * Blank out comments, keeping length and newlines so reported line numbers
+ * stay true — otherwise every rule flags the examples that explain it,
+ * including the ones in this file's own header.
+ */
+function stripComments(text) {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, (b) => b.replace(/[^\n]/g, ' '))
+    .replace(/^([^\n]*?)\/\/[^\n]*$/gm, (s, keep) => keep + ' '.repeat(s.length - keep.length));
+}
+
 const problems = [];
 
 for (const file of files) {
-  const text = readFileSync(file, 'utf8');
-
-  // Blank out comments first — keeping length and newlines so reported line
-  // numbers stay true — so the rule never flags the examples that explain it.
-  const code = text
-    .replace(/\/\*[\s\S]*?\*\//g, (b) => b.replace(/[^\n]/g, ' '))
-    .replace(/^([^\n]*?)\/\/[^\n]*$/gm, (s, keep) => keep + ' '.repeat(s.length - keep.length));
+  const code = stripComments(readFileSync(file, 'utf8'));
 
   // Match an opening tag across lines so multi-line JSX props are seen.
   const tagRe = /<(Animated\.\w+|Touchable)\b([\s\S]*?)>/g;
@@ -67,6 +72,33 @@ for (const file of files) {
   }
 }
 
+// ── Layout on an animated press target ──────────────────────────────
+//
+// Touchable composes its own animated style, so a `flex`, `width` or
+// `position` handed to it does not reliably reach the layout. It has produced
+// the same symptom four times now: two tab labels jammed together instead of
+// splitting the row, three action tiles stopping short of the edge. Margins
+// are fine — those describe the element's own box, not how its parent sizes
+// it.
+const LAYOUT_KEY = /\b(flex|width|position)\s*:/;
+
+for (const file of files) {
+  const code = stripComments(readFileSync(file, 'utf8'));
+  const re = /<Touchable\b([\s\S]*?)>/g;
+  let t;
+  while ((t = re.exec(code)) !== null) {
+    const style = t[1].match(/style=\{\{([^}]*)\}\}/);
+    if (!style || !LAYOUT_KEY.test(style[1])) continue;
+    problems.push({
+      file: relative(SRC, file).split('\\').join('/'),
+      line: code.slice(0, t.index).split('\n').length,
+      tag: 'Touchable',
+      prop: 'style',
+      value: style[1].trim().slice(0, 60),
+    });
+  }
+}
+
 if (problems.length === 0) {
   console.log(`check-ui: ${files.length} files, no animated components carrying layout or paint in a className.`);
   process.exit(0);
@@ -75,7 +107,11 @@ if (problems.length === 0) {
 console.error(`check-ui: ${problems.length} problem(s) — styles here are dropped silently on native.\n`);
 for (const p of problems) {
   console.error(`  ${p.file}:${p.line}`);
-  console.error(`    <${p.tag} className="${p.value}${p.value.length >= 60 ? '…' : ''}">`);
-  console.error(`    Move layout and paint to \`style\`, or wrap a plain <View> inside.\n`);
+  console.error(`    <${p.tag} ${p.prop ?? 'className'}="${p.value}${p.value.length >= 60 ? '…' : ''}">`);
+  console.error(
+    p.prop === 'style'
+      ? `    Wrap it in a plain <View> that carries the layout.\n`
+      : `    Move layout and paint to \`style\`, or wrap a plain <View> inside.\n`,
+  );
 }
 process.exit(1);
