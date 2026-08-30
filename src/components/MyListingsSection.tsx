@@ -14,6 +14,7 @@ import { deleteTiffinPlan, listMyTiffinPlans } from '../lib/tiffin';
 import { DishRow, ListingRow, TiffinPlan } from '../lib/types';
 import { useThemeColors } from '../theme';
 import { Button, Container, RowSkeleton, Touchable } from './ui';
+import { Empty } from './Empty';
 
 
 type MyItem =
@@ -89,21 +90,18 @@ export function MyListingsSection() {
 
   if (items.length === 0) {
     return (
-      <View className="flex-1 items-center px-6 py-16">
-        <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-inset">
-          <Text style={{ fontSize: 30 }}>📋</Text>
-        </View>
-        <Text className="mb-1.5 font-display text-xl text-ink">Nothing posted yet</Text>
-        <Text className="font-sans mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">
-          Post a dish, tiffin, service or product and it'll show up here.
-        </Text>
-        <Button label="New post" icon="add" onPress={() => router.push('/post')} />
-      </View>
+      <Empty
+        icon="albums-outline"
+        title="Nothing posted yet"
+        action={<Button label="Post something" icon="add" onPress={() => router.push('/post' as any)} />}
+      >
+        Post a dish, tiffin, service or product and it will show up here.
+      </Empty>
     );
   }
 
   return (
-    <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+    <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
       <Container>
         {items.map((it) => (
           <MyItemRow
