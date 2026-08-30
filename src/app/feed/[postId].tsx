@@ -15,6 +15,7 @@ import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useBlocks } from '../../context/blocks';
 import { useDraft } from '../../lib/draft';
+import { haptics } from '../../lib/haptics';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
@@ -32,7 +33,7 @@ export default function PostThreadScreen() {
   const confirm = useConfirm();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
-  const { userId, isAdmin } = useAuth();
+  const { userId, isAdmin, profile } = useAuth();
 
   const [post, setPost] = useState<PostRow | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -52,6 +53,7 @@ export default function PostThreadScreen() {
     if (router.canGoBack()) router.back();
     else router.replace('/feed' as any);
   };
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const [commentBody, setCommentBody] = useDraft('comments:' + (postId ?? ''), '');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
@@ -255,9 +257,31 @@ export default function PostThreadScreen() {
       </ScrollView>
 
       {/* Reply bar */}
-      <View style={{ paddingBottom: insets.bottom + 8 }} className="border-t border-line bg-bg px-4 pt-3">
+      <View style={{ paddingBottom: 10 }} className="border-t border-line bg-bg px-4 pt-2.5">
+        {emojiOpen ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyboardShouldPersistTaps="always"
+            contentContainerStyle={{ gap: 4, paddingBottom: 8, paddingRight: 8 }}
+          >
+            {QUICK_EMOJI.map((e) => (
+              <Pressable
+                key={e}
+                accessibilityRole="button"
+                accessibilityLabel={`Add ${e}`}
+                onPress={() => { haptics.select(); setCommentBody(commentBody + e); }}
+                hitSlop={4}
+                style={{ paddingHorizontal: 7, paddingVertical: 3 }}
+              >
+                <Text style={{ fontSize: 24 }}>{e}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        ) : null}
+
         <View className="flex-row items-end gap-2">
-          <Avatar name={userId ? 'Me' : '?'} size={32} />
+          <Avatar name={profile?.name ?? '?'} size={32} />
           <View className="flex-1 rounded-2xl border border-line bg-inset px-3 py-2">
             <TextInput
               value={commentBody}
@@ -270,6 +294,20 @@ export default function PostThreadScreen() {
               style={{ outline: 'none' } as any}
             />
           </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={emojiOpen ? 'Hide emoji' : 'Add emoji'}
+            accessibilityState={{ expanded: emojiOpen }}
+            onPress={() => { haptics.select(); setEmojiOpen(!emojiOpen); }}
+            hitSlop={6}
+            className="h-10 w-10 items-center justify-center rounded-full"
+          >
+            <Ionicons
+              name={emojiOpen ? 'happy' : 'happy-outline'}
+              size={22}
+              color={emojiOpen ? c.accent : c.muted}
+            />
+          </Pressable>
           <Pressable accessibilityRole="button" accessibilityLabel="Send comment"
             onPress={sendComment}
             disabled={sending || !commentBody.trim()}
@@ -291,6 +329,20 @@ export default function PostThreadScreen() {
     </KeyboardAvoider>
   );
 }
+
+/**
+ * A quick row, not a picker.
+ *
+ * Both system keyboards already contain every emoji there is, so a full picker
+ * would be a worse copy of something the phone does better. What the keyboard
+ * is bad at is the common case: switch layout, hunt, switch back, all to add
+ * one 🙏 to a two-word reply. These sixteen cover most of what gets said in a
+ * society feed and are one tap away.
+ *
+ * Ordered by how often they are likely to be used here rather than
+ * alphabetically, so the first handful cover most taps without scrolling.
+ */
+const QUICK_EMOJI = ['🙏', '👍', '❤️', '😂', '🎉', '👏', '🔥', '💯', '😍', '🤝', '✅', '🙌', '😅', '😢', '🥳', '☺️'];
 
 function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, c }: {
   comment: CommentRow; userId: string | null; isAdmin: boolean; onDelete: () => void; onChanged: () => void; c: ReturnType<typeof useThemeColors>;
