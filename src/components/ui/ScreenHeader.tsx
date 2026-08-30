@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useSegments } from 'expo-router';
 import { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,6 +36,13 @@ export function ScreenHeader({
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const segments = useSegments();
+
+  // Inside the (tabs) group, TopBar sits above this header and has ALREADY
+  // applied insets.top — adding it again pays for the status bar twice and
+  // leaves an unexplained band under the bar. Pushed screens have no TopBar,
+  // so there this header is what keeps the title out of the status bar.
+  const underTopBar = segments[0] === '(tabs)';
   const { community } = useAuth();
 
   // On web, refreshing a deep route leaves an empty history stack, so router.back()
@@ -48,14 +55,14 @@ export function ScreenHeader({
   const showSociety = !isDesktop && !hideSociety && !!community;
 
   return (
-    <View style={{ paddingTop: isDesktop ? insets.top + 16 : insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
+    <View style={{ paddingTop: isDesktop ? insets.top + 16 : underTopBar ? 10 : insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
       {showSociety ? (
         <View
           className="mb-2 flex-row items-center gap-1 self-start rounded-full px-2.5 py-1"
-          style={{ backgroundColor: '#0D948822', borderWidth: 1, borderColor: '#0D948855', maxWidth: '100%' }}
+          style={{ backgroundColor: c.accentSoft, borderWidth: 1, borderColor: c.accentLine, maxWidth: '100%' }}
         >
-          <Ionicons name="business" size={11} color="#0D9488" />
-          <Text className="text-[11px] font-sans-sb" numberOfLines={1} style={{ color: '#0D9488', flexShrink: 1 }}>{community!.name}</Text>
+          <Ionicons name="business" size={11} color={c.accent} />
+          <Text className="text-[11px] font-sans-sb" numberOfLines={1} style={{ color: c.accent, flexShrink: 1 }}>{community!.name}</Text>
         </View>
       ) : null}
 
