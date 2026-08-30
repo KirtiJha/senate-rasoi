@@ -208,7 +208,14 @@ export default function AskScreen() {
               <View className="flex-row items-end gap-2">
                 <BrandMark size={24} />
                 <View className="flex-shrink rounded-2xl rounded-bl-md border border-line bg-surface px-3.5 py-2.5">
-                  <RichText text={m.text} />
+                  {m.text ? (
+                    <RichText text={m.text} />
+                  ) : (
+                    // An empty bubble with a separate spinner underneath it read
+                    // as two things loading. The bubble is the spinner until the
+                    // first token lands, then becomes the answer in place.
+                    <ActivityIndicator size="small" color={ACCENT} />
+                  )}
                 </View>
               </View>
               {m.results && m.results.length > 0 ? (
@@ -261,17 +268,6 @@ export default function AskScreen() {
           )))
         )}
 
-        {/* Only while nothing has streamed yet. Once text is arriving the
-            answer itself is the progress indicator, and a spinner beside it
-            just competes. */}
-        {loading && !messages[messages.length - 1]?.text ? (
-          <View className="mb-4 flex-row items-center gap-2 self-start">
-            <BrandMark size={24} />
-            <View className="rounded-2xl rounded-bl-md border border-line bg-surface px-4 py-3">
-              <ActivityIndicator size="small" color={ACCENT} />
-            </View>
-          </View>
-        ) : null}
       </ScrollView>
 
       {/* Composer */}
