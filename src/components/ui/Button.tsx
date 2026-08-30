@@ -1,28 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { fixed, gradients, useThemeColors } from '../../theme';
+import { fixed, useThemeColors } from '../../theme';
 import { Touchable } from './Touchable';
 
 type Variant = 'primary' | 'whatsapp' | 'outline' | 'ghost' | 'danger' | 'success';
 type Size = 'sm' | 'md' | 'lg';
 
 const BG: Record<Variant, string> = {
-  primary: '', // gradient handled separately
+  primary: 'bg-accent active:bg-accent-press',
   whatsapp: 'bg-whatsapp active:opacity-90',
   success: 'bg-success active:opacity-90',
-  outline: 'bg-transparent border-[1.5px] border-line active:bg-inset',
+  outline: 'bg-accent-soft active:opacity-80',
   ghost: 'bg-transparent active:bg-inset',
-  danger: 'bg-transparent border-[1.5px] border-nonveg active:bg-accent-soft',
+  danger: 'bg-danger active:opacity-90',
 };
 
 const FG: Record<Variant, string> = {
   primary: 'text-on-accent',
-  whatsapp: 'text-white',
+  whatsapp: 'text-[#06251A]',
   success: 'text-white',
-  outline: 'text-ink',
+  outline: 'text-accent',
   ghost: 'text-ink',
-  danger: 'text-nonveg',
+  danger: 'text-on-accent',
 };
 
 const PAD: Record<Size, string> = {
@@ -58,9 +57,10 @@ export function Button({
 }: ButtonProps) {
   const c = useThemeColors();
   const iconColor =
-    variant === 'primary' ? c.onAccent
-    : variant === 'whatsapp' || variant === 'success' ? fixed.white
-    : variant === 'danger' ? c.nonveg
+    variant === 'primary' || variant === 'danger' ? c.onAccent
+    : variant === 'whatsapp' ? '#06251A'
+    : variant === 'success' ? fixed.white
+    : variant === 'outline' ? c.accent
     : c.ink;
   const isDisabled = disabled || loading;
 
@@ -74,25 +74,6 @@ export function Button({
       <Text className={`font-sans-sb ${FG[variant]} ${TXT[size]}`}>{label}</Text>
     </>
   );
-
-  if (variant === 'primary') {
-    return (
-      <Touchable
-        onPress={onPress}
-        disabled={isDisabled}
-        haptic={isDisabled ? null : 'tap'}
-        className={`overflow-hidden ${PAD[size]} ${fullWidth ? 'w-full' : 'self-center'} ${isDisabled ? 'opacity-50' : ''} ${className}`}
-      >
-        <LinearGradient
-          colors={gradients.primary}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-        />
-        <View className="flex-row items-center justify-center gap-2">{content}</View>
-      </Touchable>
-    );
-  }
 
   return (
     <Touchable

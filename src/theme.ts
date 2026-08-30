@@ -27,6 +27,9 @@ const light = {
   warn: '#9A5608',
   danger: '#B3261E',
   info: '#3A4A86',
+  shadowCard: '0 1px 1px rgba(26,40,32,0.04), 0 2px 6px -2px rgba(26,40,32,0.08)',
+  shadowBar: '0 2px 4px rgba(26,40,32,0.06), 0 14px 32px -12px rgba(26,40,32,0.20)',
+  shadowFab: '0 8px 20px -6px rgba(14,107,78,0.45)',
 } as const;
 
 const dark = {
@@ -52,6 +55,9 @@ const dark = {
   warn: '#E8A03C',
   danger: '#F2685C',
   info: '#8FA4E8',
+  shadowCard: 'none',
+  shadowBar: 'none',
+  shadowFab: 'none',
 } as const;
 
 // Fixed (scheme-independent) semantic colors.
