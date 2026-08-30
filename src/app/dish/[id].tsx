@@ -176,7 +176,7 @@ export default function DishDetailScreen() {
     return (
       <View className="flex-1 bg-bg">
         <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
-          <Pressable onPress={goBack} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+          <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={goBack} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
             <Ionicons name="chevron-back" size={22} color={c.ink} />
           </Pressable>
         </View>
@@ -242,7 +242,7 @@ export default function DishDetailScreen() {
           ) : null}
 
           {/* Back button overlaid — rendered last so it stays on top of the overlay */}
-          <Pressable
+          <Pressable accessibilityRole="button" accessibilityLabel="Go back"
             onPress={goBack}
             hitSlop={8}
             className="absolute items-center justify-center rounded-full bg-black/40"

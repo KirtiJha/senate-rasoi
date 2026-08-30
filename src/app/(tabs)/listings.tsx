@@ -320,7 +320,7 @@ function ItemRow({
   const d = display(item);
 
   return (
-    <Pressable onPress={onOpen} className="flex-row items-center gap-3 border-b border-line px-3 py-3 active:bg-inset">
+    <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={onOpen} className="flex-row items-center gap-3 border-b border-line px-3 py-3 active:bg-inset">
       <View className="h-9 w-9 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: c.accentSoft }}>
         <Ionicons name={d.icon as any} size={18} color={c.accent} />
       </View>

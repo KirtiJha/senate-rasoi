@@ -318,7 +318,7 @@ export default function EventDetailScreen() {
               <Text className="flex-1 font-sans-sb text-[13px] text-ink" numberOfLines={1}>
                 {t.profile?.name ?? 'A neighbour'}
               </Text>
-              <Pressable
+              <Pressable accessibilityRole="button" accessibilityLabel="Clear"
                 onPress={async () => {
                   try { await removeTeamMember(event.id, t.user_id); setTeam((p) => p.filter((x) => x.user_id !== t.user_id)); }
                   catch { toast.show('Could not remove'); }
@@ -358,7 +358,7 @@ export default function EventDetailScreen() {
             .filter((r) => r.userId && !team.some((t) => t.user_id === r.userId))
             .slice(0, 40)
             .map((r) => (
-              <Pressable
+              <Pressable accessibilityRole="button" accessibilityLabel="Add"
                 key={r.key}
                 onPress={async () => {
                   if (!r.userId) return;
@@ -401,7 +401,7 @@ function NavRow({
   c: ReturnType<typeof useThemeColors>;
 }) {
   return (
-    <Pressable
+    <Pressable accessibilityRole="button" accessibilityLabel="Open"
       onPress={onPress}
       className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3.5 active:opacity-80"
     >

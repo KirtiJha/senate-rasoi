@@ -364,7 +364,7 @@ export default function PostScreen({
                   <Ionicons name="camera-outline" size={15} color="#16171A" />
                   <Text className="font-sans-sb text-[12px] text-[#16171A]">Change</Text>
                 </Pressable>
-                <Pressable onPress={() => { setPhotoUri(null); setPhotoFlagged(false); }} className="rounded-full bg-surface/95 px-3 py-2">
+                <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={() => { setPhotoUri(null); setPhotoFlagged(false); }} className="rounded-full bg-surface/95 px-3 py-2">
                   <Ionicons name="trash-outline" size={15} color="#E0322B" />
                 </Pressable>
               </View>

@@ -280,7 +280,7 @@ export default function AdminScreen() {
                 clearButtonMode="while-editing"
               />
               {query.length > 0 ? (
-                <Pressable onPress={() => setQuery('')} hitSlop={8}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Clear" onPress={() => setQuery('')} hitSlop={8}>
                   <Ionicons name="close-circle" size={16} color={c.faint} />
                 </Pressable>
               ) : null}

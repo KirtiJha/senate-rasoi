@@ -202,8 +202,8 @@ function SessionCard({
         </View>
         {isBooker ? (
           <View className="flex-row items-center gap-3">
-            {!s.ended ? <Pressable onPress={() => onEdit(s)} hitSlop={6}><Ionicons name="create-outline" size={16} color={c.faint} /></Pressable> : null}
-            <Pressable onPress={() => onCancel(s)} hitSlop={6}><Ionicons name="trash-outline" size={15} color={c.faint} /></Pressable>
+            {!s.ended ? <Pressable accessibilityRole="button" accessibilityLabel="Edit" onPress={() => onEdit(s)} hitSlop={6}><Ionicons name="create-outline" size={16} color={c.faint} /></Pressable> : null}
+            <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={() => onCancel(s)} hitSlop={6}><Ionicons name="trash-outline" size={15} color={c.faint} /></Pressable>
           </View>
         ) : null}
       </View>

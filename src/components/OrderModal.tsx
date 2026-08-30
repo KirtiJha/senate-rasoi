@@ -35,7 +35,7 @@ export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
 
           <View className="mb-3 flex-row items-start justify-between">
             <Text className="font-sans-sb text-[13px] uppercase tracking-wider text-accent">Place an order</Text>
-            <IconButton icon="close" onPress={onClose} />
+            <IconButton icon="close" label="Close" onPress={onClose} />
           </View>
 
           <View className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3">

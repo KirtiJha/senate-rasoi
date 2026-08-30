@@ -158,7 +158,7 @@ export default function ListingDetailScreen() {
     return (
       <View className="flex-1 bg-bg">
         <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
-          <Pressable onPress={goBack} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+          <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={goBack} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
             <Ionicons name="chevron-back" size={22} color={c.ink} />
           </Pressable>
         </View>
@@ -203,7 +203,7 @@ export default function ListingDetailScreen() {
               </ParallaxHero>
             </View>
             {/* Back button overlaid on photo */}
-            <Pressable
+            <Pressable accessibilityRole="button" accessibilityLabel="Go back"
               onPress={goBack}
               className="absolute items-center justify-center rounded-full bg-black/40"
               style={{ top: insets.top + 12, left: 16, width: 40, height: 40 }}
@@ -227,7 +227,7 @@ export default function ListingDetailScreen() {
               <Ionicons name={(cat?.icon as any) ?? 'grid-outline'} size={52} color={c.accent} />
             </View>
             {/* Back button */}
-            <Pressable
+            <Pressable accessibilityRole="button" accessibilityLabel="Go back"
               onPress={goBack}
               className="absolute items-center justify-center rounded-full bg-black/20"
               style={{ top: insets.top + 12, left: 16, width: 40, height: 40 }}

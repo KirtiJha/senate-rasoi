@@ -27,7 +27,7 @@ export function Stepper({
         <Ionicons name="remove" size={22} color={c.ink} />
       </Pressable>
       <Text className="min-w-10 text-center font-display text-lg text-ink">{value}</Text>
-      <Pressable
+      <Pressable accessibilityRole="button" accessibilityLabel="Add"
         onPress={() => onChange(Math.min(max, value + 1))}
         disabled={atMax}
         className={`h-12 w-12 items-center justify-center ${atMax ? 'opacity-30' : 'active:opacity-60'}`}

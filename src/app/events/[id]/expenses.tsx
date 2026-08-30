@@ -220,7 +220,7 @@ export default function ExpensesScreen() {
                       ) : null}
                       <View className="flex-1" />
                       {(mine || isAdmin) && !locked ? (
-                        <Pressable onPress={() => remove(e)} hitSlop={8}>
+                        <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={() => remove(e)} hitSlop={8}>
                           <Ionicons name="trash-outline" size={15} color={c.faint} />
                         </Pressable>
                       ) : null}

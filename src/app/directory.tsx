@@ -124,10 +124,15 @@ export default function DirectoryScreen() {
     return out;
   }, [filtered, sort]);
 
-  const call = (r: Resident) => {
+  const call = async (r: Resident) => {
     const d = (r.phone ?? '').replace(/\D/g, '');
     if (!d) return toast.show('No phone number on file');
-    openUrl(`tel:${d}`);
+    const ok = await confirm({
+      title: `Call ${r.name}?`,
+      message: r.flat ? `Flat ${r.flat} · ${r.phone}` : (r.phone ?? ''),
+      confirmLabel: 'Call',
+    });
+    if (ok) openUrl(`tel:${d}`);
   };
   const whatsapp = (r: Resident) => {
     const wa = r.whatsapp ?? r.phone;
@@ -228,7 +233,7 @@ export default function DirectoryScreen() {
                 style={{ outline: 'none', minWidth: 0 } as any}
               />
               {query.length > 0 ? (
-                <Pressable onPress={() => setQuery('')} hitSlop={8}><Ionicons name="close-circle" size={18} color={c.faint} /></Pressable>
+                <Pressable accessibilityRole="button" accessibilityLabel="Clear" onPress={() => setQuery('')} hitSlop={8}><Ionicons name="close-circle" size={18} color={c.faint} /></Pressable>
               ) : null}
             </View>
             <View className="mt-2.5 flex-row items-center gap-2">
@@ -315,7 +320,7 @@ export default function DirectoryScreen() {
         <View className="border-l border-line bg-bg" style={{ width: 300 }}>
           <View className="flex-row items-center justify-between border-b border-line px-4 py-3">
             <Text className="font-sans-sb text-[15px] text-ink">Filter & sort</Text>
-            <Pressable onPress={() => setShowFilters(false)} hitSlop={8}><Ionicons name="close" size={20} color={c.muted} /></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setShowFilters(false)} hitSlop={8}><Ionicons name="close" size={20} color={c.muted} /></Pressable>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>{filterBody}</ScrollView>
         </View>
@@ -496,10 +501,10 @@ function ResidentRow({
       </View>
 
       {r.phone || r.onboarded ? (
-        <View className="flex-row items-center gap-1.5">
-          {r.phone ? <IconBtn icon="call" onPress={onCall} bg={c.inset} color={c.muted} /> : null}
-          {r.onboarded ? <IconBtn icon="chatbubble-ellipses-outline" onPress={onMessage} bg={c.inset} color={c.muted} /> : null}
-          {r.phone ? <IconBtn icon="logo-whatsapp" onPress={onWhatsApp} bg="#25D36618" color="#25D366" /> : null}
+        <View className="flex-row items-center gap-2">
+          {r.phone ? <IconBtn icon="call" label={`Call ${r.name}`} onPress={onCall} bg={c.inset} color={c.muted} /> : null}
+          {r.onboarded ? <IconBtn icon="chatbubble-ellipses-outline" label={`Message ${r.name}`} onPress={onMessage} bg={c.inset} color={c.muted} /> : null}
+          {r.phone ? <IconBtn icon="logo-whatsapp" label={`WhatsApp ${r.name}`} onPress={onWhatsApp} bg={c.inset} color={c.muted} /> : null}
         </View>
       ) : (
         <Ionicons name="chevron-forward" size={16} color={c.faint} />
@@ -508,10 +513,22 @@ function ResidentRow({
   );
 }
 
-function IconBtn({ icon, onPress, bg, color }: { icon: keyof typeof Ionicons.glyphMap; onPress: () => void; bg: string; color: string }) {
+/**
+ * A 36dp control was sitting 6dp from its neighbour with hitSlop 6, so the tap
+ * regions of "call", "message" and "WhatsApp" abutted exactly — no dead space
+ * between placing a phone call and opening a chat. The targets are 40dp now,
+ * spaced 8, and the hitSlop is gone rather than overlapping.
+ */
+function IconBtn({ icon, label, onPress, bg, color }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void; bg: string; color: string }) {
   return (
-    <Pressable onPress={onPress} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full active:opacity-70" style={{ backgroundColor: bg }}>
-      <Ionicons name={icon} size={16} color={color} />
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      className="h-10 w-10 items-center justify-center rounded-full active:opacity-70"
+      style={{ backgroundColor: bg }}
+    >
+      <Ionicons name={icon} size={17} color={color} />
     </Pressable>
   );
 }

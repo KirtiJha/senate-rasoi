@@ -89,6 +89,7 @@ function NavItemRow({
           marginBottom: 2,
           overflow: 'hidden',
         }}
+        accessibilityRole="button"
         accessibilityLabel={item.label}
       >
         {/* Left accent bar */}
@@ -292,6 +293,7 @@ export function NavRail() {
               justifyContent: 'center',
               borderRadius: 8,
             }}
+            accessibilityRole="button"
             accessibilityLabel={collapsed ? 'Expand navigation' : 'Collapse navigation'}
           >
             <Animated.View style={{ transform: [{ rotate: chevronRotate }] }}>
@@ -351,6 +353,7 @@ export function NavRail() {
           <Pressable
             onPress={openNotifs}
             style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 14, paddingVertical: 10, overflow: 'hidden' }}
+            accessibilityRole="button"
             accessibilityLabel="Notifications"
           >
             <Animated.View style={{ marginLeft: iconMarginL, paddingLeft: 12 }}>
@@ -390,6 +393,7 @@ export function NavRail() {
                 paddingVertical: 11,
                 overflow: 'hidden',
               }}
+              accessibilityRole="button"
               accessibilityLabel="New Post"
             >
               <Animated.View style={{ marginLeft: iconMarginL, paddingLeft: 12 }}>

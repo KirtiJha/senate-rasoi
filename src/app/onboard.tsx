@@ -148,7 +148,7 @@ export default function OnboardScreen() {
                       <Text className="mb-1.5 mt-2 px-1 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Not yours? Onboard a new one</Text>
                     ) : null}
                     {results.map((r) => (
-                      <Pressable key={r.osmId} onPress={() => pick(r)} className="flex-row items-start gap-3 rounded-2xl border border-line bg-surface p-3.5 active:bg-inset" style={{ marginBottom: 8 }}>
+                      <Pressable accessibilityRole="button" accessibilityLabel="Open" key={r.osmId} onPress={() => pick(r)} className="flex-row items-start gap-3 rounded-2xl border border-line bg-surface p-3.5 active:bg-inset" style={{ marginBottom: 8 }}>
                         <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: '#0D948822' }}>
                           <Ionicons name="business" size={17} color="#0D9488" />
                         </View>

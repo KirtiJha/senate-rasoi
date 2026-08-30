@@ -359,7 +359,7 @@ function ManageSheet({
           </View>
           <View className="gap-1">
             {filteredPeople.slice(0, 30).map((p) => (
-              <Pressable key={p.id} onPress={() => addPerson(p.id)} className="flex-row items-center gap-3 rounded-xl px-2 py-2 active:bg-inset">
+              <Pressable accessibilityRole="button" accessibilityLabel="Add a document" key={p.id} onPress={() => addPerson(p.id)} className="flex-row items-center gap-3 rounded-xl px-2 py-2 active:bg-inset">
                 <Avatar name={p.name} size={32} />
                 <View className="flex-1">
                   <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{p.name}</Text>

@@ -101,7 +101,7 @@ export default function DmThreadScreen() {
       {/* Header */}
       <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
         <View className="flex-row items-center gap-2">
-          <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/messages' as any))} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+          <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/messages' as any))} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
             <Ionicons name="chevron-back" size={22} color={c.ink} />
           </Pressable>
           <Pressable
@@ -178,7 +178,7 @@ export default function DmThreadScreen() {
               onSubmitEditing={send}
             />
           </View>
-          <Pressable
+          <Pressable accessibilityRole="button" accessibilityLabel="Send message"
             onPress={send}
             disabled={sending || !body.trim()}
             className={`h-10 w-10 items-center justify-center rounded-full ${body.trim() ? '' : 'bg-inset'}`}

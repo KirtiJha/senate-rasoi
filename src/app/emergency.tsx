@@ -105,7 +105,7 @@ export default function EmergencyScreen() {
                         <Text className="text-[13px] font-sans-md text-faint mt-0.5">{contact.phone}</Text>
                       </View>
                       <View className="flex-row items-center gap-2">
-                        <Pressable
+                        <Pressable accessibilityRole="button" accessibilityLabel="Call"
                           onPress={() => handleCall(contact.phone)}
                           className="h-10 w-10 items-center justify-center rounded-full active:opacity-70"
                           style={{ backgroundColor: color + '18' }}
@@ -113,7 +113,7 @@ export default function EmergencyScreen() {
                           <Ionicons name="call" size={18} color={color} />
                         </Pressable>
                         {isAdmin ? (
-                          <Pressable
+                          <Pressable accessibilityRole="button" accessibilityLabel="Delete"
                             onPress={() => handleDelete(contact)}
                             className="h-10 w-10 items-center justify-center rounded-full active:bg-inset"
                           >
@@ -181,7 +181,7 @@ function AddContactModal({
       <View className="flex-1 bg-bg" style={{ paddingBottom: insets.bottom + 16 }}>
         <View className="border-b border-line px-4 py-4 flex-row items-center justify-between">
           <Text className="font-sans-sb text-[16px] text-ink">Add Emergency Contact</Text>
-          <Pressable onPress={onClose} hitSlop={8}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={8}>
             <Ionicons name="close" size={22} color={c.muted} />
           </Pressable>
         </View>

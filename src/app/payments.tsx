@@ -134,7 +134,7 @@ export default function PaymentsScreen() {
                         <Text className="text-[12px] font-sans-sb text-white">Received</Text>
                       </Pressable>
                     ) : iPaid && p.status === 'initiated' ? (
-                      <Pressable onPress={() => onCancel(p)} hitSlop={6} className="ml-1 h-8 w-8 items-center justify-center rounded-full active:bg-inset">
+                      <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => onCancel(p)} hitSlop={6} className="ml-1 h-8 w-8 items-center justify-center rounded-full active:bg-inset">
                         <Ionicons name="close" size={16} color={c.faint} />
                       </Pressable>
                     ) : null}

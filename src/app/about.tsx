@@ -129,7 +129,7 @@ function InfoRow({ label, value, c }: { label: string; value: string; c: ReturnT
 
 function LinkRow({ label, icon, c, onPress }: { label: string; icon: string; c: ReturnType<typeof useThemeColors>; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} className="flex-row items-center gap-2.5 rounded-xl py-1.5 active:opacity-70">
+    <Pressable accessibilityRole="button" accessibilityLabel="Open" onPress={onPress} className="flex-row items-center gap-2.5 rounded-xl py-1.5 active:opacity-70">
       <Ionicons name={icon as any} size={16} color={c.muted} />
       <Text className="font-sans flex-1 text-[13px] text-ink">{label}</Text>
       <Ionicons name="chevron-forward" size={14} color={c.faint} />

@@ -183,7 +183,7 @@ function MyItemRow({
               <Text className="font-sans-sb text-[11px] text-muted">{item.kind === 'listing' && item.raw.status === 'sold' ? 'Unsell' : 'Sold'}</Text>
             </Pressable>
           ) : null}
-          <Pressable onPress={onDelete} hitSlop={4} className="items-center justify-center rounded-xl bg-[#FEEAEA] px-2.5 py-1.5 active:opacity-70">
+          <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={onDelete} hitSlop={4} className="items-center justify-center rounded-xl bg-[#FEEAEA] px-2.5 py-1.5 active:opacity-70">
             <Ionicons name="trash-outline" size={14} color="#E0322B" />
           </Pressable>
           <Ionicons name="chevron-forward" size={16} color={c.faint} />

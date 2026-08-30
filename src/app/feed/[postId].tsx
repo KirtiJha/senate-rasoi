@@ -150,7 +150,7 @@ export default function PostThreadScreen() {
     return (
       <View className="flex-1 bg-bg">
         <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
-          <Pressable onPress={goBack} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+          <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={goBack} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
             <Ionicons name="chevron-back" size={22} color={c.ink} />
           </Pressable>
         </View>
@@ -176,7 +176,7 @@ export default function PostThreadScreen() {
       {/* Header */}
       <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
         <View className="flex-row items-center gap-2">
-          <Pressable onPress={goBack} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+          <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={goBack} hitSlop={10} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
             <Ionicons name="chevron-back" size={22} color={c.ink} />
           </Pressable>
           <View className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1" style={{ backgroundColor: color + '20' }}>
@@ -270,7 +270,7 @@ export default function PostThreadScreen() {
               style={{ outline: 'none' } as any}
             />
           </View>
-          <Pressable
+          <Pressable accessibilityRole="button" accessibilityLabel="Send comment"
             onPress={sendComment}
             disabled={sending || !commentBody.trim()}
             className={`h-10 w-10 items-center justify-center rounded-full ${commentBody.trim() ? 'bg-accent' : 'bg-inset'}`}
@@ -343,12 +343,12 @@ function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, c }: {
             size={14}
           />
           {isOwn || isAdmin ? (
-            <Pressable onPress={() => { setDraft(comment.body); setEditing(true); }} hitSlop={8}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Edit" onPress={() => { setDraft(comment.body); setEditing(true); }} hitSlop={8}>
               <Ionicons name="create-outline" size={14} color={c.faint} />
             </Pressable>
           ) : null}
           {(isOwn || isAdmin) ? (
-            <Pressable onPress={onDelete} hitSlop={8}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={onDelete} hitSlop={8}>
               <Ionicons name="trash-outline" size={14} color={c.faint} />
             </Pressable>
           ) : null}
@@ -429,7 +429,7 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
           <View className="rounded-t-3xl bg-bg px-4 pt-3" style={{ paddingBottom: insets.bottom + 16 }}>
             <View className="mb-3 flex-row items-center justify-between">
               <Text className="font-display-x text-[18px] text-ink">Edit post</Text>
-              <Pressable onPress={onClose} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full active:bg-inset">
+              <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full active:bg-inset">
                 <Ionicons name="close" size={20} color={c.muted} />
               </Pressable>
             </View>
@@ -455,7 +455,7 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
               {photos.map((p, i) => (
                 <View key={`${p.uri}-${i}`} className="overflow-hidden rounded-xl" style={{ width: 76, height: 76 }}>
                   <Image source={{ uri: p.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-                  <Pressable onPress={() => setPhotos((prev) => prev.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 h-5 w-5 items-center justify-center rounded-full bg-black/60">
+                  <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setPhotos((prev) => prev.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 h-5 w-5 items-center justify-center rounded-full bg-black/60">
                     <Ionicons name="close" size={12} color="#fff" />
                   </Pressable>
                 </View>
@@ -491,7 +491,7 @@ function PostMenu({ post, isOwner, isAdmin, onEdit, onDelete, onPinToggle, onRes
 
   return (
     <>
-      <Pressable onPress={() => setOpen(true)} hitSlop={8} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+      <Pressable accessibilityRole="button" accessibilityLabel="More options" onPress={() => setOpen(true)} hitSlop={8} className="h-9 w-9 items-center justify-center rounded-full active:bg-inset">
         <Ionicons name="ellipsis-horizontal" size={20} color={c.muted} />
       </Pressable>
       {/* Rendered in a Modal so it always sits on top (not under later content). */}

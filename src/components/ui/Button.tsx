@@ -100,14 +100,26 @@ export function Button({
   );
 }
 
+/**
+ * An icon-only control.
+ *
+ * `label` is REQUIRED. This component had no label prop at all, so every
+ * screen using it — including the close button on three modals — was
+ * unlabelled by construction: a screen reader announced "button", with no way
+ * to know what it does. Making it required means the gap cannot reopen, and
+ * the type error is the reminder.
+ */
 export function IconButton({
   icon,
+  label,
   onPress,
   color,
   size = 20,
   className = '',
 }: {
   icon: keyof typeof Ionicons.glyphMap;
+  /** What the button does, in the user's words: "Close", "Remove photo". */
+  label: string;
   onPress?: () => void;
   color?: string;
   size?: number;
@@ -118,6 +130,8 @@ export function IconButton({
     <Pressable
       onPress={onPress}
       hitSlop={10}
+      accessibilityRole="button"
+      accessibilityLabel={label}
       className={`h-9 w-9 items-center justify-center rounded-full active:bg-inset ${className}`}
     >
       <Ionicons name={icon} size={size} color={color ?? c.muted} />

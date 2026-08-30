@@ -140,8 +140,8 @@ export default function RecoDetailScreen() {
             </View>
             {canDeleteQ ? (
               <View className="ml-auto flex-row items-center gap-2.5">
-                <Pressable onPress={openEditQ} hitSlop={8}><Ionicons name="create-outline" size={15} color={c.faint} /></Pressable>
-                <Pressable onPress={removeQuestion} hitSlop={8}><Ionicons name="trash-outline" size={15} color={c.faint} /></Pressable>
+                <Pressable accessibilityRole="button" accessibilityLabel="Edit" onPress={openEditQ} hitSlop={8}><Ionicons name="create-outline" size={15} color={c.faint} /></Pressable>
+                <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={removeQuestion} hitSlop={8}><Ionicons name="trash-outline" size={15} color={c.faint} /></Pressable>
               </View>
             ) : null}
           </View>
@@ -240,9 +240,9 @@ export default function RecoDetailScreen() {
                     {(a.author_id === userId || isAdmin) && editAnsId !== a.id ? (
                       <View className="ml-auto flex-row items-center gap-2.5">
                         {(a.author_id === userId || isAdmin) ? (
-                          <Pressable onPress={() => startEditAns(a)} hitSlop={8}><Ionicons name="create-outline" size={13} color={c.faint} /></Pressable>
+                          <Pressable accessibilityRole="button" accessibilityLabel="Edit" onPress={() => startEditAns(a)} hitSlop={8}><Ionicons name="create-outline" size={13} color={c.faint} /></Pressable>
                         ) : null}
-                        <Pressable onPress={() => removeAnswer(a)} hitSlop={8}><Ionicons name="trash-outline" size={13} color={c.faint} /></Pressable>
+                        <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={() => removeAnswer(a)} hitSlop={8}><Ionicons name="trash-outline" size={13} color={c.faint} /></Pressable>
                       </View>
                     ) : null}
                   </View>

@@ -175,7 +175,7 @@ function MessageBubble({ message, isMine, isOwner, canDelete, accent, onDelete, 
     return (
       <View className="flex-row items-end justify-end gap-1.5">
         {canDelete ? (
-          <Pressable onPress={onDelete} hitSlop={8} className="mb-1">
+          <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={onDelete} hitSlop={8} className="mb-1">
             <Ionicons name="trash-outline" size={13} color={c.faint} />
           </Pressable>
         ) : null}
@@ -206,7 +206,7 @@ function MessageBubble({ message, isMine, isOwner, canDelete, accent, onDelete, 
         </View>
       </View>
       {canDelete ? (
-        <Pressable onPress={onDelete} hitSlop={8} className="mt-1">
+        <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={onDelete} hitSlop={8} className="mt-1">
           <Ionicons name="trash-outline" size={13} color={c.faint} />
         </Pressable>
       ) : null}

@@ -218,7 +218,7 @@ export default function ProfileScreen() {
           {/* Change PIN */}
           <SectionCard title="Security">
             {!pinExpanded ? (
-              <Pressable
+              <Pressable accessibilityRole="button" accessibilityLabel="Open"
                 onPress={() => setPinExpanded(true)}
                 className="flex-row items-center gap-3 rounded-xl border border-line bg-inset px-4 py-3"
               >

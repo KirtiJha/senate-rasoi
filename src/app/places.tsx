@@ -105,7 +105,7 @@ export default function PlacesScreen() {
             style={{ outline: 'none' } as any}
           />
           {query ? (
-            <Pressable onPress={() => setQuery('')} hitSlop={8}><Ionicons name="close-circle" size={17} color={c.faint} /></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Clear" onPress={() => setQuery('')} hitSlop={8}><Ionicons name="close-circle" size={17} color={c.faint} /></Pressable>
           ) : null}
         </View>
       </View>
@@ -180,7 +180,7 @@ function Card({ p, isDesktop, center, showDist, c, onPress }: {
   const photo = p.photos?.[0];
   const dist = showDist && p.lat != null && p.lng != null ? distanceKm(center, { lat: p.lat, lon: p.lng }) : null;
   return (
-    <Pressable
+    <Pressable accessibilityRole="button" accessibilityLabel="Open"
       onPress={onPress}
       className="flex-row items-center gap-3 overflow-hidden rounded-xl bg-bg p-2.5 active:opacity-90"
       style={{ borderWidth: 1, borderColor: c.line, width: isDesktop ? '48.5%' : '100%' }}

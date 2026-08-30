@@ -28,7 +28,7 @@ export function SubscribeModal({ plan, onClose, onConfirm }: SubscribeModalProps
           <View className="mb-4 h-1.5 w-12 self-center rounded-full bg-line" />
           <View className="mb-3 flex-row items-start justify-between">
             <Text className="font-sans-sb text-[13px] uppercase tracking-wider text-accent">Subscribe to tiffin</Text>
-            <IconButton icon="close" onPress={onClose} />
+            <IconButton icon="close" label="Close" onPress={onClose} />
           </View>
 
           <View className="mb-4 rounded-2xl border border-line bg-surface p-3">

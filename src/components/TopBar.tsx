@@ -46,7 +46,7 @@ export function TopBar({ live = false }: { live?: boolean }) {
             onPress={toggle}
             hitSlop={8}
             className="h-9 w-9 items-center justify-center rounded-full bg-inset active:opacity-70"
-            accessibilityLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            accessibilityRole="button" accessibilityLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             <Ionicons name={isDark ? 'sunny' : 'moon'} size={17} color={isDark ? c.accent : c.muted} />
           </Pressable>
@@ -54,7 +54,7 @@ export function TopBar({ live = false }: { live?: boolean }) {
             onPress={open}
             hitSlop={8}
             className="h-9 w-9 items-center justify-center rounded-full bg-inset active:opacity-70"
-            accessibilityLabel="Notifications"
+            accessibilityRole="button" accessibilityLabel="Notifications"
           >
             <Ionicons name="notifications-outline" size={18} color={c.muted} />
             {unreadCount > 0 ? (

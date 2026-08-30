@@ -208,7 +208,7 @@ export default function SearchScreen() {
               returnKeyType="search"
             />
             {query.length > 0 ? (
-              <Pressable onPress={() => { setQuery(''); inputRef.current?.focus(); }} hitSlop={8}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Clear" onPress={() => { setQuery(''); inputRef.current?.focus(); }} hitSlop={8}>
                 <Ionicons name="close-circle" size={19} color={c.faint} />
               </Pressable>
             ) : null}
@@ -269,7 +269,7 @@ export default function SearchScreen() {
 
 function ResultRow({ it, first, c, onPress }: { it: SearchItem; first: boolean; c: ReturnType<typeof useThemeColors>; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'} active:bg-inset`}>
+    <Pressable accessibilityRole="button" accessibilityLabel="Open" onPress={onPress} className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'} active:bg-inset`}>
       {it.avatar ? (
         <Avatar name={it.avatar} size={36} />
       ) : (

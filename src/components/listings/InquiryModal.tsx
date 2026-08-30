@@ -48,7 +48,7 @@ export function InquiryModal({ listing, senderName, onClose, onConfirm }: Inquir
             <Text className="font-sans-sb text-[13px] uppercase tracking-wider text-accent">
               {cat?.ctaLabel ?? 'Contact'}
             </Text>
-            <IconButton icon="close" onPress={onClose} />
+            <IconButton icon="close" label="Close" onPress={onClose} />
           </View>
 
           {/* Listing summary card */}

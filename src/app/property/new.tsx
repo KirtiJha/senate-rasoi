@@ -157,7 +157,7 @@ export default function NewPropertyScreen() {
             {photos.map((uri, i) => (
               <View key={i} style={{ width: 84, height: 84 }} className="overflow-hidden rounded-xl">
                 <Image source={{ uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-                <Pressable onPress={() => setPhotos((p) => p.filter((_, j) => j !== i))} className="absolute right-1 top-1 h-5 w-5 items-center justify-center rounded-full bg-black/60">
+                <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setPhotos((p) => p.filter((_, j) => j !== i))} className="absolute right-1 top-1 h-5 w-5 items-center justify-center rounded-full bg-black/60">
                   <Ionicons name="close" size={13} color="#fff" />
                 </Pressable>
               </View>

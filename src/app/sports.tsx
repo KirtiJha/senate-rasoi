@@ -215,7 +215,7 @@ function CreateGroupSheet({
           {logoUri ? <Image source={{ uri: logoUri }} style={{ width: 64, height: 64 }} contentFit="cover" /> : <Ionicons name="camera-outline" size={22} color={c.faint} />}
         </Pressable>
         <Text className="font-sans flex-1 text-[12px] text-muted">Upload a team photo or logo, or just use the emoji badge below.</Text>
-        {logoUri ? <Pressable onPress={() => setLogoUri(null)} hitSlop={8}><Ionicons name="close-circle" size={20} color={c.faint} /></Pressable> : null}
+        {logoUri ? <Pressable accessibilityRole="button" accessibilityLabel="Clear" onPress={() => setLogoUri(null)} hitSlop={8}><Ionicons name="close-circle" size={20} color={c.faint} /></Pressable> : null}
       </View>
 
       <Text className={lbl}>Emoji badge</Text>

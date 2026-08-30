@@ -119,7 +119,7 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
                       />
                     ) : null}
                     {active && wa ? (
-                      <Pressable onPress={() => openUrl(waLink(wa, `Hi ${o.dish?.chef_name ?? ''}! About my Aangan order for ${o.dish?.dish_name ?? ''}…`))} hitSlop={6}>
+                      <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={() => openUrl(waLink(wa, `Hi ${o.dish?.chef_name ?? ''}! About my Aangan order for ${o.dish?.dish_name ?? ''}…`))} hitSlop={6}>
                         <Ionicons name="logo-whatsapp" size={18} color={c.success} />
                       </Pressable>
                     ) : null}

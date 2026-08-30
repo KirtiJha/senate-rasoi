@@ -201,7 +201,7 @@ function PollCard({
           ) : null}
           {(isAuthor || isAdmin) ? (
             <View className="flex-row gap-1">
-              <Pressable onPress={openEdit} hitSlop={8} className="h-7 w-7 items-center justify-center rounded-full active:bg-inset">
+              <Pressable accessibilityRole="button" accessibilityLabel="Edit" onPress={openEdit} hitSlop={8} className="h-7 w-7 items-center justify-center rounded-full active:bg-inset">
                 <Ionicons name="create-outline" size={14} color={c.faint} />
               </Pressable>
               {!poll.is_closed ? (
@@ -209,7 +209,7 @@ function PollCard({
                   <Ionicons name="lock-closed-outline" size={14} color={c.faint} />
                 </Pressable>
               ) : null}
-              <Pressable onPress={onDelete} hitSlop={8} className="h-7 w-7 items-center justify-center rounded-full active:bg-inset">
+              <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={onDelete} hitSlop={8} className="h-7 w-7 items-center justify-center rounded-full active:bg-inset">
                 <Ionicons name="trash-outline" size={14} color={c.faint} />
               </Pressable>
             </View>
@@ -386,7 +386,7 @@ function CreatePollModal({
                 style={{ outline: 'none' } as any}
               />
               {options.length > 2 ? (
-                <Pressable onPress={() => removeOption(i)} hitSlop={8}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Clear" onPress={() => removeOption(i)} hitSlop={8}>
                   <Ionicons name="close-circle" size={20} color={c.faint} />
                 </Pressable>
               ) : null}

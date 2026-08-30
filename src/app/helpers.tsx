@@ -165,8 +165,8 @@ function PersonRow({ p, badge, c, inline }: { p: RegistryPerson; badge?: string;
       </View>
       {phone ? (
         <>
-          <Pressable onPress={() => openUrl(wa(phone, 'Hi, reaching out via the Aangan emergency registry.'))} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: '#25D36618' }}><Ionicons name="logo-whatsapp" size={17} color="#25D366" /></Pressable>
-          <Pressable onPress={() => openUrl(`tel:${phone}`)} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: c.inset }}><Ionicons name="call" size={16} color={c.muted} /></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={() => openUrl(wa(phone, 'Hi, reaching out via the Aangan emergency registry.'))} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: '#25D36618' }}><Ionicons name="logo-whatsapp" size={17} color="#25D366" /></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Call" onPress={() => openUrl(`tel:${phone}`)} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: c.inset }}><Ionicons name="call" size={16} color={c.muted} /></Pressable>
         </>
       ) : null}
     </View>

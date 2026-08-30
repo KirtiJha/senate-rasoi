@@ -123,7 +123,7 @@ export default function AskScreen() {
                   {m.results.map((item) => {
                     const meta = askSourceMeta(item.source);
                     return (
-                      <Pressable
+                      <Pressable accessibilityRole="button" accessibilityLabel="Open"
                         key={`${item.source}-${item.id}`}
                         onPress={() => router.push(askResultRoute(item) as any)}
                         className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3 active:opacity-75"
@@ -181,7 +181,7 @@ export default function AskScreen() {
               style={{ paddingVertical: 11, outline: 'none', minWidth: 0 } as any}
             />
           </View>
-          <Pressable
+          <Pressable accessibilityRole="button" accessibilityLabel="Send question"
             onPress={() => send(input)}
             disabled={loading || !input.trim()}
             className="h-11 w-11 items-center justify-center rounded-full"

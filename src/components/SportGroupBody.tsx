@@ -225,7 +225,7 @@ export function SportGroupBody({
                     </Pressable>
                   ) : null}
                   {showRemove ? (
-                    <Pressable onPress={() => onRemoveMember(m)} hitSlop={6} className="h-8 w-8 items-center justify-center rounded-full bg-inset active:opacity-70">
+                    <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => onRemoveMember(m)} hitSlop={6} className="h-8 w-8 items-center justify-center rounded-full bg-inset active:opacity-70">
                       <Ionicons name="close" size={15} color={c.danger} />
                     </Pressable>
                   ) : null}
@@ -277,10 +277,10 @@ export function SportGroupBody({
                 </View>
                 {canManage ? (
                   <View className="flex-row items-center gap-2.5">
-                    <Pressable onPress={() => setEditTourney(t)} hitSlop={6}>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Edit" onPress={() => setEditTourney(t)} hitSlop={6}>
                       <Ionicons name="create-outline" size={15} color={c.faint} />
                     </Pressable>
-                    <Pressable onPress={() => confirm({ title: 'Delete tournament', message: `Delete "${t.title}"?`, confirmLabel: 'Delete', destructive: true }).then((ok) => { if (ok) deleteTournament(t.id).then(reload).catch(() => toast.show('Could not delete')); })} hitSlop={6}>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={() => confirm({ title: 'Delete tournament', message: `Delete "${t.title}"?`, confirmLabel: 'Delete', destructive: true }).then((ok) => { if (ok) deleteTournament(t.id).then(reload).catch(() => toast.show('Could not delete')); })} hitSlop={6}>
                       <Ionicons name="trash-outline" size={15} color={c.faint} />
                     </Pressable>
                   </View>

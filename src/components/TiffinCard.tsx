@@ -24,7 +24,7 @@ interface TiffinCardProps {
 
 function TiffinCardBase({ plan, subscribed, onPress, onEdit, width }: TiffinCardProps) {
   return (
-    <Pressable
+    <Pressable accessibilityRole="button" accessibilityLabel="Edit"
       onPress={() => onPress(plan)}
       style={width ? { width } : undefined}
       className="overflow-hidden rounded-3xl border border-line bg-surface active:opacity-90"

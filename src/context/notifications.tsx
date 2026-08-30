@@ -137,7 +137,7 @@ function NotificationsModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={{ flex: 1, backgroundColor: '#00000055' }} onPress={onClose}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Close" style={{ flex: 1, backgroundColor: '#00000055' }} onPress={onClose}>
         <Pressable
           onPress={() => {}}
           style={[

@@ -163,7 +163,7 @@ function KitchenDishCard({
                 </View>
 
                 {wa && ACTIVE_STATUSES.includes(o.status) ? (
-                  <Pressable
+                  <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp"
                     onPress={() => openUrl(waLink(wa, statusMessageForFoodie(dish.dish_name, o.status)))}
                     hitSlop={6}
                     className="h-9 w-9 items-center justify-center rounded-full bg-inset active:opacity-70"
@@ -174,7 +174,7 @@ function KitchenDishCard({
 
                 {o.status === 'placed' ? (
                   <View className="flex-row items-center gap-1.5">
-                    <Pressable onPress={() => onAct(o.id, 'rejected', 'Declined — plates released')} className="h-9 w-9 items-center justify-center rounded-full border border-line active:bg-inset">
+                    <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => onAct(o.id, 'rejected', 'Declined — plates released')} className="h-9 w-9 items-center justify-center rounded-full border border-line active:bg-inset">
                       <Ionicons name="close" size={18} color={c.muted} />
                     </Pressable>
                     <Pressable onPress={() => onAct(o.id, 'accepted', 'Order confirmed ✓', wa, dish.dish_name)} className="h-9 flex-row items-center gap-1 rounded-full bg-success px-3 active:opacity-90">

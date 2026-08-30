@@ -116,7 +116,7 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
                 className="min-w-0 flex-1 font-sans text-[15px] text-ink"
                 style={{ outline: 'none', minWidth: 0 } as any}
               />
-              {query ? <Pressable onPress={() => setQuery('')} hitSlop={8}><Ionicons name="close-circle" size={18} color={c.faint} /></Pressable> : null}
+              {query ? <Pressable accessibilityRole="button" accessibilityLabel="Clear" onPress={() => setQuery('')} hitSlop={8}><Ionicons name="close-circle" size={18} color={c.faint} /></Pressable> : null}
             </View>
             <View className="mt-2.5 flex-row items-center justify-between">
               <Text className="text-[12px] font-sans-md text-muted">{filtered.length} contact{filtered.length === 1 ? '' : 's'}{trade ? ` · ${trade}` : ''}</Text>
@@ -166,7 +166,7 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
         <View className="border-l border-line bg-bg" style={{ width: 300 }}>
           <View className="flex-row items-center justify-between border-b border-line px-4 py-3">
             <Text className="font-sans-sb text-[15px] text-ink">Filter & sort</Text>
-            <Pressable onPress={() => setShowFilters(false)} hitSlop={8}><Ionicons name="close" size={20} color={c.muted} /></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setShowFilters(false)} hitSlop={8}><Ionicons name="close" size={20} color={c.muted} /></Pressable>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>{filterBody}</ScrollView>
         </View>
@@ -208,7 +208,7 @@ function ContactRow({
   const phone = phoneOf(l);
   const note = l.description || (l.attributes?.area as string) || '';
   return (
-    <Pressable onPress={onOpen} className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'} active:bg-inset`}>
+    <Pressable accessibilityRole="button" accessibilityLabel="Call" onPress={onOpen} className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'} active:bg-inset`}>
       <Avatar name={name} size={40} />
       <View className="flex-1" style={{ minWidth: 0 }}>
         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{name}</Text>
@@ -219,7 +219,7 @@ function ContactRow({
           <Pressable onPress={() => openUrl(`tel:${phone}`)} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full active:opacity-70" style={{ backgroundColor: c.inset }}>
             <Ionicons name="call" size={16} color={c.muted} />
           </Pressable>
-          <Pressable onPress={() => openUrl(waLink(phone, `Hi ${name.split(' ')[0]}! 👋 (via our society directory)`))} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full active:opacity-70" style={{ backgroundColor: '#25D36618' }}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={() => openUrl(waLink(phone, `Hi ${name.split(' ')[0]}! 👋 (via our society directory)`))} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full active:opacity-70" style={{ backgroundColor: '#25D36618' }}>
             <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
           </Pressable>
         </View>

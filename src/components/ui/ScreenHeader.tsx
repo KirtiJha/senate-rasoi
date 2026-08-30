@@ -61,7 +61,13 @@ export function ScreenHeader({
 
       <View className="flex-row items-center gap-2">
         {showBack ? (
-          <Pressable onPress={goBack} hitSlop={10} className="-ml-1.5 h-9 w-9 items-center justify-center rounded-full active:bg-inset">
+          <Pressable
+            onPress={goBack}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            className="-ml-1.5 h-10 w-10 items-center justify-center rounded-full active:bg-inset"
+          >
             <Ionicons name="chevron-back" size={22} color={c.ink} />
           </Pressable>
         ) : null}
@@ -71,8 +77,10 @@ export function ScreenHeader({
         {onAdd ? (
           <Pressable
             onPress={onAdd}
+            accessibilityRole="button"
             accessibilityLabel={addLabel}
-            className="h-9 w-9 items-center justify-center rounded-full bg-accent active:bg-accent-press"
+            hitSlop={8}
+            className="h-10 w-10 items-center justify-center rounded-full bg-accent active:bg-accent-press"
           >
             <Ionicons name="add" size={22} color={c.onAccent} />
           </Pressable>

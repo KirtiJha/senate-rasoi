@@ -362,7 +362,7 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
       <KeyboardAvoidingView className="flex-1 bg-bg" style={{ paddingTop: modalInsets.top }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* Header — close + title only, no post button here */}
         <View className="flex-row items-center justify-between border-b border-line px-4 py-4">
-          <Pressable onPress={onClose} hitSlop={10}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={10}>
             <Ionicons name="close" size={24} color={c.muted} />
           </Pressable>
           <Text className="font-sans-sb text-[16px] text-ink">New Post</Text>
@@ -439,7 +439,7 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
               {photos.map((uri, i) => (
                 <View key={`${uri}-${i}`} className="overflow-hidden rounded-xl" style={{ width: 88, height: 88 }}>
                   <Image source={{ uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-                  <Pressable onPress={() => setPhotos((p) => p.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 h-6 w-6 items-center justify-center rounded-full bg-black/60">
+                  <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setPhotos((p) => p.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 h-6 w-6 items-center justify-center rounded-full bg-black/60">
                     <Ionicons name="close" size={13} color="#fff" />
                   </Pressable>
                 </View>

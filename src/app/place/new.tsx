@@ -213,7 +213,7 @@ export default function PlaceFormScreen() {
           {lat != null && lng != null ? (
             <View className="mb-4 overflow-hidden rounded-2xl border border-line">
               <MapPreview lat={lat} lon={lng} height={150} pinColor={ACCENT} />
-              <Pressable onPress={() => { setLat(null); setLng(null); }} className="absolute right-2 top-2 h-7 w-7 items-center justify-center rounded-full bg-black/55">
+              <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => { setLat(null); setLng(null); }} className="absolute right-2 top-2 h-7 w-7 items-center justify-center rounded-full bg-black/55">
                 <Ionicons name="close" size={15} color="#fff" />
               </Pressable>
             </View>
@@ -245,7 +245,7 @@ export default function PlaceFormScreen() {
             {photos.map((p, i) => (
               <View key={`${p.uri}-${i}`} className="overflow-hidden rounded-2xl" style={{ width: 88, height: 88 }}>
                 <Image source={{ uri: p.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-                <Pressable onPress={() => removePhoto(i)} className="absolute right-1 top-1 h-6 w-6 items-center justify-center rounded-full bg-black/60">
+                <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => removePhoto(i)} className="absolute right-1 top-1 h-6 w-6 items-center justify-center rounded-full bg-black/60">
                   <Ionicons name="close" size={13} color="#fff" />
                 </Pressable>
               </View>

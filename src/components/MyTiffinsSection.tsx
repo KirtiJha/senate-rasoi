@@ -175,7 +175,7 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
                         />
                       ) : null}
                       {wa ? (
-                        <Pressable onPress={() => openUrl(waLink(wa, `Hi ${plan?.chef?.name ?? ''}! About my ${plan?.title ?? ''} tiffin…`))} hitSlop={6}>
+                        <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={() => openUrl(waLink(wa, `Hi ${plan?.chef?.name ?? ''}! About my ${plan?.title ?? ''} tiffin…`))} hitSlop={6}>
                           <Ionicons name="logo-whatsapp" size={18} color={c.success} />
                         </Pressable>
                       ) : null}
@@ -220,10 +220,10 @@ function TiffinPlanCard({
         <Pressable onPress={onToggle} hitSlop={6} className="rounded-full bg-inset px-3 py-1.5">
           <Text className="font-sans-sb text-[12px] text-ink">{plan.active ? 'Pause' : 'Resume'}</Text>
         </Pressable>
-        <Pressable onPress={() => setShowEdit(true)} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full border border-line">
+        <Pressable accessibilityRole="button" accessibilityLabel="Edit" onPress={() => setShowEdit(true)} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full border border-line">
           <Ionicons name="create-outline" size={15} color={c.muted} />
         </Pressable>
-        <Pressable onPress={onDelete} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full border border-line">
+        <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={onDelete} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full border border-line">
           <Ionicons name="trash-outline" size={15} color={c.nonveg} />
         </Pressable>
       </View>

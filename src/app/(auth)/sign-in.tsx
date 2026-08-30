@@ -333,7 +333,7 @@ export default function SignInScreen() {
                   </View>
                 </View>
               ) : (
-                <Pressable
+                <Pressable accessibilityRole="button" accessibilityLabel="Open"
                   onPress={() => setShowPicker(true)}
                   className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3.5"
                 >
@@ -438,7 +438,7 @@ export default function SignInScreen() {
           <View className="border-b border-line px-4 pb-3 pt-5">
             <View className="flex-row items-center justify-between mb-3">
               <Text className="font-display-x text-[20px] text-ink">Select Society</Text>
-              <Pressable onPress={() => setShowPicker(false)} hitSlop={10}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setShowPicker(false)} hitSlop={10}>
                 <Ionicons name="close" size={24} color={c.muted} />
               </Pressable>
             </View>
