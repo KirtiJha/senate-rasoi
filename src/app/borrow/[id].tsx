@@ -2,12 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { openPhotoPicker } from '../../lib/photo';
+import { AScrollView } from '../../lib/motion';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
-import { Avatar, Button, Container, ScreenHeader, Sheet } from '../../components/ui';
+import { Avatar, Button, Container, ParallaxHero, ScreenHeader, Sheet } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
@@ -154,15 +156,31 @@ export default function LendItemDetailScreen() {
     if (await confirm({ title: 'Delete item', message: 'Delete this listing?', confirmLabel: 'Delete', destructive: true })) go();
   };
 
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.set(e.contentOffset.y);
+  });
+
   return (
     <View className="flex-1 bg-bg">
       <ScreenHeader icon="swap-horizontal-outline" iconColor={ACCENT} title={isOffer ? 'Lending' : 'Wants to borrow'} showBack hideSociety />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <AScrollView
+        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+      >
         <Container narrow>
           {/* Photo (offers only) */}
           {isOffer ? (
             item.photo_url
-              ? <Image source={{ uri: item.photo_url }} style={{ width: '100%', height: 200 }} contentFit="cover" {...IMAGE_CACHE_PROPS} className="mb-4 rounded-2xl" />
+              ? (
+                <View className="mb-4 overflow-hidden rounded-2xl">
+                  <ParallaxHero scrollY={scrollY} height={220}>
+                    <Image source={{ uri: item.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+                  </ParallaxHero>
+                </View>
+              )
               : <View className="mb-4 items-center justify-center rounded-2xl bg-inset" style={{ height: 140 }}><Ionicons name={m.icon as any} size={36} color={c.faint} /></View>
           ) : null}
 
@@ -297,7 +315,7 @@ export default function LendItemDetailScreen() {
             </View>
           )}
         </Container>
-      </ScrollView>
+      </AScrollView>
 
       {/* Request to borrow sheet */}
       <Sheet visible={showReq} onClose={() => { setNote(''); setShowReq(false); }} title="Request to borrow">

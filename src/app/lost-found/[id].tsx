@@ -2,12 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { openPhotoPicker } from '../../lib/photo';
+import { AScrollView } from '../../lib/motion';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
-import { Avatar, Button, Container, ScreenHeader, Sheet } from '../../components/ui';
+import { Avatar, Button, Container, ParallaxHero, ScreenHeader, Sheet } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -145,6 +147,11 @@ export default function LostFoundDetailScreen() {
   const isLost = item.kind === 'lost';
   const isResolved = item.status === 'resolved';
 
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.set(e.contentOffset.y);
+  });
+
   return (
     <View className="flex-1 bg-bg">
       <ScreenHeader
@@ -154,11 +161,22 @@ export default function LostFoundDetailScreen() {
         showBack
         hideSociety
       />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <AScrollView
+        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+      >
         <Container narrow>
           {/* Photo */}
           {item.photo_url
-            ? <Image source={{ uri: item.photo_url }} style={{ width: '100%', height: 200 }} contentFit="cover" {...IMAGE_CACHE_PROPS} className="mb-4 rounded-2xl" />
+            ? (
+              <View className="mb-4 overflow-hidden rounded-2xl">
+                <ParallaxHero scrollY={scrollY} height={220}>
+                  <Image source={{ uri: item.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+                </ParallaxHero>
+              </View>
+            )
             : <View className="mb-4 items-center justify-center rounded-2xl bg-inset" style={{ height: 120 }}><Ionicons name={m.icon as any} size={36} color={c.faint} /></View>}
 
           {/* Badges */}
@@ -272,7 +290,7 @@ export default function LostFoundDetailScreen() {
             </View>
           )}
         </Container>
-      </ScrollView>
+      </AScrollView>
 
       {/* Edit sheet */}
       <Sheet visible={showEdit} onClose={() => setShowEdit(false)} title="Edit report">
