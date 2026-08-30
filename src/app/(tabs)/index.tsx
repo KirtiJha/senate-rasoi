@@ -10,7 +10,7 @@ import { Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '../../components/BrandMark';
 import { T } from '../../components/T';
-import { Container, ErrorRow, Touchable, useResponsive, VegMark } from '../../components/ui';
+import { Container, ErrorRow, ListRow, Touchable, useResponsive, VegMark } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useUnreadDms } from '../../context/unread';
@@ -296,10 +296,65 @@ export default function HomeScreen() {
     }
   };
 
+  // ── Zone 4 data ──────────────────────────────────────────────────────
+  // "Around the aangan" needs no new query: loadHome already fetches all five
+  // sources. This is a client-side merge of what is on screen anyway.
+  const around = [
+    ...recent.map((r) => ({ id: 'l' + r.id, at: r.created_at, icon: 'pricetag-outline' as const, title: r.title, where: 'Marketplace', href: `/listing/${r.id}` })),
+    ...recentProps.map((r) => ({ id: 'p' + r.id, at: r.created_at, icon: 'key-outline' as const, title: r.title, where: 'Flats', href: `/property/${r.id}` })),
+    ...recentBorrow.map((r) => ({ id: 'b' + r.id, at: r.created_at, icon: 'swap-horizontal-outline' as const, title: r.title, where: 'Borrow', href: `/borrow/${r.id}` })),
+    ...recentPlaces.map((r) => ({ id: 'pl' + r.id, at: r.created_at, icon: 'location-outline' as const, title: r.name, where: 'Places', href: `/place/${r.id}` })),
+    ...recentLostFound.map((r) => ({ id: 'lf' + r.id, at: r.created_at, icon: 'help-circle-outline' as const, title: r.title, where: 'Lost & found', href: `/lost-found/${r.id}` })),
+  ]
+    .filter((x) => x.title)
+    .sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''))
+    .slice(0, 8);
+
+  // ── Zone 2 data ──────────────────────────────────────────────────────
+  // Four separately-styled banners become one mechanism — and, critically,
+  // this renders nothing when there is nothing. A calm society gets a calm
+  // home; today a resident with no news still meets a digest card, an update
+  // card and thirty tiles.
+  const needsYou: { key: string; eyebrow: string; title: string; onPress: () => void }[] = [];
+  if (updateBanner && !bannerDismissed) {
+    needsYou.push({
+      key: 'update',
+      eyebrow: updateBanner.force_update ? 'Update required' : 'Update available',
+      title: updateBanner.release_notes ?? `Version ${updateBanner.version} is ready`,
+      onPress: () => setBannerDismissed(true),
+    });
+  }
+  if (announcement) {
+    needsYou.push({
+      key: 'ann',
+      eyebrow: 'Announcement',
+      title: announcement.title || announcement.body,
+      onPress: () => router.push(`/feed/${announcement.id}` as any),
+    });
+  }
+  if (unread > 0) {
+    needsYou.push({
+      key: 'dm',
+      eyebrow: unread === 1 ? '1 new message' : `${unread} new messages`,
+      title: 'Open your inbox',
+      onPress: () => router.push('/messages' as any),
+    });
+  }
+  if (digest?.summary) {
+    needsYou.push({
+      key: 'digest',
+      eyebrow: 'This week',
+      title: digest.summary,
+      onPress: () => router.push('/feed' as any),
+    });
+  }
+
+  const todayLabel = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
+
   return (
     <ScrollView
       className="flex-1 bg-bg"
-      contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 24, paddingBottom: 40, paddingHorizontal: 16 }}
+      contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 20, paddingBottom: 40, paddingHorizontal: 20 }}
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={c.muted} colors={[c.accent]} />}
     >
@@ -307,234 +362,205 @@ export default function HomeScreen() {
         {loadFailed ? (
           <ErrorRow message="Couldn't refresh your society just now." onRetry={refresh} />
         ) : null}
-        {/* Header */}
-        <View className="mb-6">
-          <Text className="text-[13px] font-sans-md text-accent">{greeting}</Text>
-          <Text className="font-display-x text-[28px] leading-9 text-ink">
-            {profile?.name ? `Hi, ${profile.name.split(' ')[0]} 👋` : 'Your neighbourhood hub'}
-          </Text>
-          <Text className="mt-2 text-[14px] font-sans-md text-muted">
-            What can your society help you with today?
-          </Text>
-        </View>
 
-        {/* Ask Aangan — AI front door */}
-        <Pressable
-          onPress={() => router.push('/ask' as any)}
-          className="mb-5 flex-row items-center gap-3 overflow-hidden rounded-2xl border active:opacity-90"
-          style={{ borderColor: c.accent + '55', backgroundColor: c.accent + '12' }}
-        >
-          <View style={{ marginLeft: 12, marginVertical: 11 }}>
-            <BrandMark size={42} />
-          </View>
-          <View className="min-w-0 flex-1 py-3">
-            <Text className="font-sans-bold text-[15px] text-ink">Ask Aangan</Text>
-            <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>Food, flats, borrow, recommendations — just ask</Text>
-          </View>
-          <Ionicons name="arrow-forward" size={18} color={c.accent} style={{ marginRight: 14 }} />
-        </Pressable>
+        {/* ── 1. Hero ──────────────────────────────────────────────────
+            Society identity appears here, once, rather than in a pill
+            hardcoded above twenty screens. */}
+        <Text className="text-[11px] font-sans-sb uppercase tracking-[0.06em] text-subtle" numberOfLines={1}>
+          {todayLabel}
+        </Text>
+        <Text className="mt-1 font-display-x text-[34px] leading-[38px] text-ink">
+          {profile?.name ? `${greeting}, ${profile.name.split(' ')[0]}` : greeting}
+        </Text>
 
-        {/* Weekly society digest */}
-        {digest ? (
-          <View className="mb-5 overflow-hidden rounded-2xl border border-line bg-surface">
-            <View style={{ height: 3, backgroundColor: c.accent }} />
-            <View className="p-4">
-              <View className="mb-1.5 flex-row items-center gap-2">
-                <Ionicons name="sparkles" size={14} color={c.accent} />
-                <Text className="flex-1 text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: c.accent }}>This week in your society</Text>
-                <Pressable onPress={dismissDigest} hitSlop={8}>
-                  <Ionicons name="close" size={16} color={c.faint} />
-                </Pressable>
-              </View>
-              <Text className="font-sans text-[14px] leading-5 text-ink">{digest.summary}</Text>
-              {digest.highlights.length ? (
-                <View className="mt-2.5 gap-1.5">
-                  {digest.highlights.map((h, i) => (
-                    <View key={i} className="flex-row gap-2">
-                      <Text className="font-sans text-[13px]" style={{ color: c.accent }}>•</Text>
-                      <Text className="font-sans min-w-0 flex-1 text-[13px] leading-5 text-muted">{h}</Text>
-                    </View>
-                  ))}
-                </View>
-              ) : null}
-            </View>
-          </View>
-        ) : null}
-
-        {/* Announcement banner */}
-        {announcement ? (
-          <Pressable
-            onPress={() => router.push(`/feed/${announcement.id}` as any)}
-            className="mb-5 overflow-hidden rounded-2xl border active:opacity-90"
-            style={{ borderColor: '#F59E0B55', backgroundColor: '#F59E0B12' }}
-          >
-            <View style={{ height: 3, backgroundColor: '#F59E0B' }} />
-            <View className="flex-row items-start gap-3 p-4">
-              <View className="h-9 w-9 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: '#F59E0B22' }}>
-                <Ionicons name="megaphone" size={18} color="#F59E0B" />
-              </View>
-              <View className="min-w-0 flex-1">
-                <Text className="text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: '#B45309' }}>Announcement</Text>
-                {announcement.title ? <T source="post" id={announcement.id} field="title" text={announcement.title} showToggle={false} className="font-sans-bold text-[14px] text-ink" numberOfLines={1} /> : null}
-                <T source="post" id={announcement.id} field="body" text={announcement.body} showToggle={false} className="text-[13px] text-muted" numberOfLines={2} />
-              </View>
-              <Pressable onPress={dismissAnnouncement} hitSlop={8}>
-                <Ionicons name="close" size={18} color={c.faint} />
-              </Pressable>
-            </View>
-          </Pressable>
-        ) : null}
-
-        {/* Update banner */}
-        {updateBanner && !bannerDismissed ? (
+        {/* The ask-or-search bar takes hero position because it answers the
+            most common intent. A resident who needs a plumber is asking a
+            question, not scanning thirty labels for the right one. */}
+        <Touchable haptic={null} onPress={() => router.push('/ask' as any)} className="mt-4">
           <View
-            className="mb-5 overflow-hidden rounded-2xl"
-            style={{ backgroundColor: updateBanner.force_update ? '#EF444420' : c.surface, borderWidth: 1, borderColor: updateBanner.force_update ? '#EF4444' : c.line }}
+            className="flex-row items-center gap-3 rounded-full px-4"
+            style={{ height: 52, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, boxShadow: c.shadowCard } as any}
           >
-            <View style={{ height: 3, backgroundColor: updateBanner.force_update ? '#EF4444' : c.accent }} />
-            <View className="flex-row items-start gap-3 p-4">
-              <View
-                className="h-9 w-9 items-center justify-center rounded-xl flex-shrink-0"
-                style={{ backgroundColor: (updateBanner.force_update ? '#EF4444' : c.accent) + '20' }}
-              >
-                <Ionicons name="arrow-up-circle-outline" size={20} color={updateBanner.force_update ? '#EF4444' : c.accent} />
-              </View>
-              <View className="min-w-0 flex-1">
-                <Text className="font-sans-sb text-[14px] text-ink">
-                  {updateBanner.force_update ? 'Update required' : `Version ${updateBanner.version} available`}
-                </Text>
-                <Text className="font-sans mt-0.5 text-[12px] text-muted">
-                  {updateBanner.release_notes ?? (updateBanner.force_update ? 'Please update to continue.' : 'Refresh to get the latest version.')}
-                </Text>
-                <View className="mt-3 flex-row gap-2">
-                  {Platform.OS === 'web' ? (
-                    <Pressable
-                      onPress={() => window.location.reload()}
-                      className="rounded-xl bg-accent px-3.5 py-2 active:opacity-80"
-                    >
-                      <Text className="font-sans-sb text-[12px] text-on-accent">Refresh now</Text>
-                    </Pressable>
-                  ) : (
-                    <Pressable
-                      onPress={applyUpdate}
-                      disabled={updating}
-                      className="rounded-xl bg-accent px-3.5 py-2 active:opacity-80"
-                      style={{ opacity: updating ? 0.6 : 1 }}
-                    >
-                      <Text className="font-sans-sb text-[12px] text-on-accent">
-                        {updating ? 'Updating…' : 'Update now'}
+            <BrandMark size={24} />
+            <Text className="min-w-0 flex-1 text-[15px] font-sans-md text-subtle" numberOfLines={1}>
+              Ask Aangan or search the society
+            </Text>
+            <Ionicons name="arrow-forward" size={17} color={c.accent} />
+          </View>
+        </Touchable>
+
+        {/* ── 2. Needs you ────────────────────────────────────────────── */}
+        {needsYou.length ? (
+          <View className="mt-6" style={{ marginHorizontal: -20 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingHorizontal: 20 }}>
+              {needsYou.map((n) => (
+                <Touchable key={n.key} haptic={null} onPress={n.onPress}>
+                  <View
+                    className="flex-row overflow-hidden"
+                    style={{
+                      width: 300,
+                      backgroundColor: c.surface,
+                      borderTopLeftRadius: 22,
+                      borderTopRightRadius: 22,
+                      borderBottomLeftRadius: 14,
+                      borderBottomRightRadius: 14,
+                      boxShadow: c.shadowCard,
+                    } as any}
+                  >
+                    <View style={{ width: 3, backgroundColor: c.highlight, marginVertical: 12, marginLeft: 12, borderRadius: 2 }} />
+                    <View className="min-w-0 flex-1 px-3 py-3">
+                      <Text className="text-[11px] font-sans-sb uppercase tracking-[0.06em]" style={{ color: c.highlightInk }} numberOfLines={1}>
+                        {n.eyebrow}
                       </Text>
-                    </Pressable>
-                  )}
-                  {!updateBanner.force_update ? (
-                    <Pressable
-                      onPress={() => setBannerDismissed(true)}
-                      className="rounded-xl border border-line bg-inset px-3.5 py-2 active:opacity-70"
-                    >
-                      <Text className="font-sans-sb text-[12px] text-muted">Dismiss</Text>
-                    </Pressable>
-                  ) : null}
-                </View>
-              </View>
-            </View>
+                      <Text className="mt-1 font-sans-sb text-[15px] text-ink" numberOfLines={2}>{n.title}</Text>
+                    </View>
+                  </View>
+                </Touchable>
+              ))}
+            </ScrollView>
           </View>
         ) : null}
 
-        {/* Fresh from kitchens — today's & upcoming home-cooked dishes */}
+        {/* ── 3. Cooking today ────────────────────────────────────────── */}
         <FreshFoodStrip items={dishes} isDesktop={isDesktop} />
 
-        {/* Just listed — newest listings + borrow + lost-found items */}
-        <JustListedStrip listings={recent} borrows={recentBorrow} properties={recentProps} places={recentPlaces} lostFound={recentLostFound} isDesktop={isDesktop} />
-
-        {/* Service grid */}
-        <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
-          {SERVICES.map((cat) => (
-            <ServiceTile key={cat.key} cat={cat} count={counts[cat.key] ?? 0} onPress={() => handleCategoryPress(cat)} />
-          ))}
-        </View>
-
-        {/* Community tools */}
-        <View className="mt-6">
-          <Text className="mb-3 px-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Community</Text>
-          <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
-            {COMMUNITY_TILES.map((tile) => {
-              const badge =
-                tile.key === 'messages' ? (unread > 0 ? unread : 0)
-                : tile.key === 'borrow' ? borrowCount
-                : tile.key === 'lost_found' ? lostFoundCount
-                : (tileCounts[tile.key] ?? 0);
-              return (
-                <View key={tile.key} style={{ width: '50%', padding: 6 }}>
-                  <Pressable
-                    onPress={() => router.push(tile.href as any)}
-                    className="overflow-hidden rounded-2xl bg-surface active:opacity-80"
-                    style={{ borderWidth: 1, borderColor: c.line }}
-                  >
-                    <View style={{ height: 4, backgroundColor: c.accent }} />
-                    <View className="p-4">
-                      <View
-                        className="mb-3 h-11 w-11 items-center justify-center rounded-2xl"
-                        style={{ backgroundColor: c.accentSoft }}
-                      >
-                        <Ionicons name={tile.icon as any} size={22} color={c.accent} />
-                      </View>
-                      <Text className="font-sans-bold text-[15px] text-ink" numberOfLines={1}>{tile.label}</Text>
-                      <Text className="mt-0.5 text-[12px] font-sans-md leading-[18px] text-muted" numberOfLines={2}>{tile.blurb}</Text>
-                    </View>
-                    {badge > 0 ? (
-                      <View
-                        className="absolute items-center justify-center rounded-full px-1.5"
-                        style={{ top: 12, right: 12, minWidth: 20, height: 20, backgroundColor: c.accent }}
-                      >
-                        <Text className="font-sans-bold text-white" style={{ fontSize: 11 }}>
-                          {badge > 99 ? '99+' : badge > 9 ? '9+' : badge}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </Pressable>
-                </View>
-              );
-            })}
+        {/* ── 4. Around the aangan ─────────────────────────────────────
+            What IS happening, rather than a menu of what could. */}
+        {around.length ? (
+          <View className="mb-8">
+            <SectionHead label="Around the aangan" actionLabel="See all" onAction={() => router.push('/listings' as any)} c={c} />
+            <View
+              className="overflow-hidden"
+              style={{
+                backgroundColor: c.surface,
+                borderTopLeftRadius: 22,
+                borderTopRightRadius: 22,
+                borderBottomLeftRadius: 14,
+                borderBottomRightRadius: 14,
+                boxShadow: c.shadowCard,
+              } as any}
+            >
+              {around.map((a, i) => (
+                <ListRow
+                  key={a.id}
+                  icon={a.icon}
+                  title={a.title}
+                  subtitle={a.where}
+                  last={i === around.length - 1}
+                  onPress={() => router.push(a.href as any)}
+                />
+              ))}
+            </View>
           </View>
+        ) : null}
+
+        {/* ── 5. All of Aangan ────────────────────────────────────────── */}
+        <SectionHead label="All of Aangan" c={c} />
+        <View className="flex-row flex-wrap" style={{ marginHorizontal: -5 }}>
+          {SERVICES.map((cat) => (
+            <ModuleTile
+              key={cat.key}
+              icon={cat.icon as any}
+              label={cat.label}
+              badge={0}
+              onPress={() => handleCategoryPress(cat)}
+              c={c}
+            />
+          ))}
+          {COMMUNITY_TILES.map((tile) => (
+            <ModuleTile
+              key={tile.key}
+              icon={tile.icon as any}
+              label={tile.label}
+              badge={
+                tile.key === 'messages' ? unread
+                  : tile.key === 'borrow' ? borrowCount
+                    : tile.key === 'lost_found' ? lostFoundCount
+                      : (tileCounts[tile.key] ?? 0)
+              }
+              onPress={() => router.push(tile.href as any)}
+              c={c}
+            />
+          ))}
         </View>
       </Container>
     </ScrollView>
   );
 }
 
-function ServiceTile({ cat, count = 0, onPress }: { cat: ServiceCategory; count?: number; onPress: () => void }) {
-  const c = useThemeColors();
+function SectionHead({
+  label, actionLabel, onAction, c,
+}: {
+  label: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  c: ReturnType<typeof useThemeColors>;
+}) {
   return (
-    <View style={{ width: '50%', padding: 6 }}>
-      <Pressable
-        onPress={onPress}
-        className="overflow-hidden rounded-2xl bg-surface active:opacity-80"
-        style={{ borderWidth: 1, borderColor: c.line }}
-      >
-        <View style={{ height: 4, backgroundColor: c.accent }} />
-        <View className="p-4">
-          <View
-            className="mb-3 h-11 w-11 items-center justify-center rounded-2xl"
-            style={{ backgroundColor: c.accentSoft }}
-          >
-            <Ionicons name={cat.icon as any} size={22} color={c.accent} />
-          </View>
-          <Text className="font-sans-bold text-[15px] text-ink" numberOfLines={1}>{cat.label}</Text>
-          <Text className="mt-0.5 text-[12px] font-sans-md leading-[18px] text-muted" numberOfLines={2}>{cat.blurb}</Text>
-        </View>
-        {count > 0 ? (
-          <View
-            className="absolute items-center justify-center rounded-full px-1.5"
-            style={{ top: 12, right: 12, minWidth: 22, height: 22, backgroundColor: c.accent }}
-            accessibilityLabel={`${count} listed`}
-          >
-            <Text className="font-sans-bold text-white" style={{ fontSize: 11 }}>{count > 99 ? '99+' : count}</Text>
-          </View>
-        ) : null}
-      </Pressable>
+    <View className="mb-3 mt-6 flex-row items-center justify-between">
+      <Text className="text-[11px] font-sans-sb uppercase tracking-[0.06em] text-subtle">{label}</Text>
+      {actionLabel && onAction ? (
+        <Touchable haptic={null} onPress={onAction}>
+          <Text className="text-[13px] font-sans-sb" style={{ color: c.accent }}>{actionLabel}</Text>
+        </Touchable>
+      ) : null}
     </View>
   );
 }
+
+/**
+ * A module in the index.
+ *
+ * Blurbs are gone: "Posts, announcements & issues" under a tile called Feed is
+ * instruction, not design — it doubled the tile height and halved the density.
+ * So is the coloured strip along the top. What remains is a glyph, a name, and
+ * a count only when the count is something you have to act on — not a vanity
+ * total of how many hospitals exist nearby.
+ */
+function ModuleTile({
+  icon, label, badge, onPress, c,
+}: {
+  icon: any;
+  label: string;
+  badge: number;
+  onPress: () => void;
+  c: ReturnType<typeof useThemeColors>;
+}) {
+  return (
+    <View style={{ width: '50%', padding: 5 }}>
+      <Touchable haptic={null} onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
+        <View
+          className="justify-between p-3.5"
+          style={{
+            height: 96,
+            backgroundColor: c.inset,
+            borderTopLeftRadius: 22,
+            borderTopRightRadius: 22,
+            borderBottomLeftRadius: 14,
+            borderBottomRightRadius: 14,
+          }}
+        >
+          <View className="flex-row items-start justify-between">
+            <Ionicons name={icon} size={24} color={c.ink} />
+            {badge > 0 ? (
+              <View
+                className="items-center justify-center rounded-full px-1.5"
+                style={{ minWidth: 20, height: 20, backgroundColor: c.highlight }}
+              >
+                <Text className="font-sans-bold text-[11px]" style={{ color: c.ink }}>
+                  {badge > 99 ? '99+' : badge}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+          <Text className="font-sans-sb text-[15px] text-ink" numberOfLines={1}>{label}</Text>
+        </View>
+      </Touchable>
+    </View>
+  );
+}
+
+
 
 type StripItem =
   | { kind: 'listing'; id: string; ts: string; raw: ListingRow }
@@ -543,194 +569,7 @@ type StripItem =
   | { kind: 'place'; id: string; ts: string; raw: PlaceRow }
   | { kind: 'lost_found'; id: string; ts: string; raw: LostFoundItem };
 
-/** Horizontal carousel (mobile) / wrapped row (desktop) of the newest listings + borrow items. */
-function JustListedStrip({ listings, borrows, properties, places, lostFound, isDesktop }: { listings: ListingRow[]; borrows: LendItem[]; properties: PropertyRow[]; places: PlaceRow[]; lostFound: LostFoundItem[]; isDesktop: boolean }) {
-  const router = useRouter();
-  const c = useThemeColors();
-  const BORROW_COLOR = '#0891B2';
-  const PROP_COLOR = '#7C3AED';
 
-  const items: StripItem[] = [
-    ...listings.map((l): StripItem => ({ kind: 'listing', id: l.id, ts: l.created_at, raw: l })),
-    ...borrows.map((b): StripItem => ({ kind: 'borrow', id: b.id, ts: b.created_at, raw: b })),
-    ...properties.map((p): StripItem => ({ kind: 'property', id: p.id, ts: p.created_at, raw: p })),
-    ...places.map((p): StripItem => ({ kind: 'place', id: p.id, ts: p.created_at, raw: p })),
-    ...lostFound.map((lf): StripItem => ({ kind: 'lost_found', id: lf.id, ts: lf.created_at, raw: lf })),
-  ].sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 12);
-
-  if (!items.length) return null;
-
-  const ListingCard = ({ l }: { l: ListingRow }) => {
-    const cat = getService(l.category);
-    const color = c.accent;
-    const photo = l.photos?.[0];
-    const title = l.is_referral ? (l.referral_name ?? l.title) : l.title;
-    return (
-      <Pressable
-        onPress={() => router.push(`/listing/${l.id}` as any)}
-        className="overflow-hidden rounded-2xl bg-surface active:opacity-90"
-        style={{ width: 152, borderWidth: 1, borderColor: c.line }}
-      >
-        <View style={{ height: 96 }} className="w-full">
-          {photo
-            ? <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
-            : <View style={{ flex: 1, backgroundColor: color + '20', alignItems: 'center', justifyContent: 'center' }}><Ionicons name={(cat?.icon as any) ?? 'pricetag'} size={28} color={color} /></View>}
-        </View>
-        <View className="p-2.5">
-          <View className="mb-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: color + '20' }}>
-            <Text className="text-[10px] font-sans-sb" style={{ color }} numberOfLines={1}>{cat?.label ?? l.category}</Text>
-          </View>
-          <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{title}</Text>
-          {l.price != null
-            ? <Text className="text-[12px] font-sans-md text-muted">₹{l.price.toLocaleString('en-IN')}</Text>
-            : <Text className="font-sans text-[11px] text-faint">Contact for price</Text>}
-        </View>
-      </Pressable>
-    );
-  };
-
-  const BorrowCard = ({ b }: { b: LendItem }) => {
-    const catMeta = BORROW_CATEGORIES.find((bc) => bc.key === b.category) ?? BORROW_CATEGORIES[BORROW_CATEGORIES.length - 1];
-    const label = b.kind === 'request' ? '🙏 Needs' : '🤝 Lending';
-    return (
-      <Pressable
-        onPress={() => router.push(`/borrow/${b.id}` as any)}
-        className="overflow-hidden rounded-2xl bg-surface active:opacity-90"
-        style={{ width: 152, borderWidth: 1, borderColor: c.line }}
-      >
-        <View style={{ height: 96, backgroundColor: BORROW_COLOR + '18' }} className="w-full items-center justify-center">
-          {b.photo_url
-            ? <Image source={{ uri: b.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
-            : <Ionicons name={catMeta.icon as any} size={32} color={BORROW_COLOR} />}
-        </View>
-        <View className="p-2.5">
-          <View className="mb-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: BORROW_COLOR + '20' }}>
-            <Text className="text-[10px] font-sans-sb" style={{ color: BORROW_COLOR }} numberOfLines={1}>{label} · {catMeta.label}</Text>
-          </View>
-          <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{b.title}</Text>
-          <Text className="font-sans text-[11px] text-faint">{b.owner?.name ?? 'A neighbour'}</Text>
-        </View>
-      </Pressable>
-    );
-  };
-
-  const PropertyCard = ({ p }: { p: PropertyRow }) => {
-    const photo = p.photos?.[0];
-    const tag = p.listing_type === 'rent' ? '🔑 For rent' : '🏠 For sale';
-    return (
-      <Pressable
-        onPress={() => router.push(`/property/${p.id}` as any)}
-        className="overflow-hidden rounded-2xl bg-surface active:opacity-90"
-        style={{ width: 152, borderWidth: 1, borderColor: c.line }}
-      >
-        <View style={{ height: 96 }} className="w-full">
-          {photo
-            ? <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
-            : <View style={{ flex: 1, backgroundColor: PROP_COLOR + '20', alignItems: 'center', justifyContent: 'center' }}><Ionicons name="key" size={28} color={PROP_COLOR} /></View>}
-        </View>
-        <View className="p-2.5">
-          <View className="mb-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: PROP_COLOR + '20' }}>
-            <Text className="text-[10px] font-sans-sb" style={{ color: PROP_COLOR }} numberOfLines={1}>{tag}{p.config ? ` · ${p.config}` : ''}</Text>
-          </View>
-          <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{p.title}</Text>
-          <Text className="font-sans text-[11px] text-faint" numberOfLines={1}>{propertySubtitle(p)}</Text>
-        </View>
-      </Pressable>
-    );
-  };
-
-  const PlaceCard = ({ p }: { p: PlaceRow }) => {
-    const m = placeTypeMeta(p.place_type);
-    const photo = p.photos?.[0];
-    return (
-      <Pressable
-        onPress={() => router.push(`/place/${p.id}` as any)}
-        className="overflow-hidden rounded-2xl bg-surface active:opacity-90"
-        style={{ width: 152, borderWidth: 1, borderColor: c.line }}
-      >
-        <View style={{ height: 96 }} className="w-full">
-          {photo
-            ? <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
-            : <View style={{ flex: 1, backgroundColor: c.accentSoft, alignItems: 'center', justifyContent: 'center' }}><Ionicons name={m.icon as any} size={28} color={c.accent} /></View>}
-        </View>
-        <View className="p-2.5">
-          <View className="mb-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: c.accentSoft }}>
-            <Text className="text-[10px] font-sans-sb" style={{ color: c.accent }} numberOfLines={1}>📍 {m.label}</Text>
-          </View>
-          <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{p.name}</Text>
-          {p.address ? <Text className="font-sans text-[11px] text-faint" numberOfLines={1}>{p.address}</Text> : <Text className="font-sans text-[11px] text-faint">Nearby</Text>}
-        </View>
-      </Pressable>
-    );
-  };
-
-  const LF_COLOR = '#D97706';
-  const LostFoundCard = ({ lf }: { lf: LostFoundItem }) => {
-    const lfCat = LOST_FOUND_CATEGORIES.find((lc) => lc.key === lf.category) ?? LOST_FOUND_CATEGORIES[LOST_FOUND_CATEGORIES.length - 1];
-    const label = lf.kind === 'lost' ? '🔍 Lost' : '📦 Found';
-    return (
-      <Pressable
-        onPress={() => router.push(`/lost-found/${lf.id}` as any)}
-        className="overflow-hidden rounded-2xl bg-surface active:opacity-90"
-        style={{ width: 152, borderWidth: 1, borderColor: c.line }}
-      >
-        <View style={{ height: 96, backgroundColor: LF_COLOR + '18' }} className="w-full items-center justify-center">
-          {lf.photo_url
-            ? <Image source={{ uri: lf.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
-            : <Ionicons name={lfCat.icon as any} size={32} color={LF_COLOR} />}
-        </View>
-        <View className="p-2.5">
-          <View className="mb-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: LF_COLOR + '20' }}>
-            <Text className="text-[10px] font-sans-sb" style={{ color: LF_COLOR }} numberOfLines={1}>{label} · {lfCat.label}</Text>
-          </View>
-          <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{lf.title}</Text>
-          <Text className="font-sans text-[11px] text-faint">{lf.owner?.name ?? 'A neighbour'}</Text>
-        </View>
-      </Pressable>
-    );
-  };
-
-  const renderCard = (i: StripItem) =>
-    i.kind === 'listing' ? <ListingCard key={i.id} l={i.raw} />
-    : i.kind === 'borrow' ? <BorrowCard key={i.id} b={i.raw} />
-    : i.kind === 'property' ? <PropertyCard key={i.id} p={i.raw} />
-    : i.kind === 'lost_found' ? <LostFoundCard key={i.id} lf={i.raw} />
-    : <PlaceCard key={i.id} p={i.raw} />;
-
-  return (
-    <View className="mb-6">
-      <View className="mb-3 flex-row items-center justify-between px-1.5">
-        <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-muted">Just listed</Text>
-        <Pressable onPress={() => router.push('/listings' as any)} hitSlop={8}>
-          <Text className="text-[12px] font-sans-sb text-accent">See all →</Text>
-        </Pressable>
-      </View>
-      {isDesktop ? (
-        <View className="flex-row flex-wrap gap-3">
-          {items.slice(0, 6).map(renderCard)}
-        </View>
-      ) : (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 8 }}>
-          {items.map(renderCard)}
-        </ScrollView>
-      )}
-    </View>
-  );
-}
-
-// Accent colour per meal slot — matches the DishCard chip.
-const SLOT_COLOR: Record<string, string> = {
-  Breakfast: '#E8650A',
-  Lunch: '#16A34A',
-  Dinner: '#6366F1',
-  Snack: '#DB2777',
-};
-const SLOT_PLACEHOLDER: Record<string, [string, string]> = {
-  Breakfast: ['#FFD9A8', '#FFB877'],
-  Lunch: ['#CDEBC5', '#A6D89B'],
-  Dinner: ['#C9C2EC', '#A99FE0'],
-  Snack: ['#F6C6DA', '#EFA3C2'],
-};
 
 /** Friendly serve-date label if it isn't today, else null. */
 function freshServeLabel(serveDate: string): string | null {
