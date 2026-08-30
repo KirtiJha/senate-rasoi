@@ -202,7 +202,6 @@ function DesktopShell() {
           <Stack.Screen name="place/[id]" />
           <Stack.Screen name="helpers" />
           <Stack.Screen name="ask" options={{ animation: 'fade_from_bottom' }} />
-          <Stack.Screen name="messages/index" />
           <Stack.Screen name="messages/new" />
           <Stack.Screen name="messages/[threadId]" />
         </Stack>

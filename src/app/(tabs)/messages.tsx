@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Button, Container, ScreenHeader } from '../../components/ui';
+import { Avatar, Button, Container, RowSkeleton, ScreenHeader } from '../../components/ui';
+import { Empty } from '../../components/Empty';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { InboxThread, fetchInbox, subscribeToInbox } from '../../lib/dm';
@@ -13,7 +13,6 @@ export default function MessagesInboxScreen() {
   const router = useRouter();
   const toast = useToast();
   const c = useThemeColors();
-  const insets = useSafeAreaInsets();
   const { userId } = useAuth();
 
   const [threads, setThreads] = useState<InboxThread[]>([]);
@@ -36,23 +35,26 @@ export default function MessagesInboxScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="mail-outline" title="Messages" showBack onAdd={() => router.push('/messages/new' as any)} addLabel="New message" />
+      <ScreenHeader
+        icon="mail-outline"
+        title="Messages"
+        hideSociety
+        onAdd={() => router.push('/messages/new' as any)}
+        addLabel="New message"
+      />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container>
           {loading ? (
-            <Text className="font-sans py-10 text-center text-[14px] text-muted">Loading…</Text>
+            <View className="overflow-hidden card"><RowSkeleton count={6} /></View>
           ) : threads.length === 0 ? (
-            <View className="items-center px-6 py-20">
-              <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-inset">
-                <Ionicons name="chatbubbles-outline" size={30} color={c.faint} />
-              </View>
-              <Text className="mb-1.5 font-display text-xl text-ink">No messages yet</Text>
-              <Text className="font-sans mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">
-                Start a private conversation with a neighbour — or open their profile and tap Message.
-              </Text>
-              <Button label="New message" icon="create-outline" onPress={() => router.push('/messages/new' as any)} />
-            </View>
+            <Empty
+              icon="chatbubbles-outline"
+              title="No messages yet"
+              action={<Button label="New message" icon="create-outline" onPress={() => router.push('/messages/new' as any)} />}
+            >
+              Start a private conversation with a neighbour — or open their profile and tap Message.
+            </Empty>
           ) : (
             <View style={{ gap: 4 }}>
               {threads.map((t) => (
