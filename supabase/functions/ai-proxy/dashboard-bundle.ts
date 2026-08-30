@@ -667,6 +667,42 @@ async function handleDigest(
   return digest;
 }
 
+/**
+ * Embed rows the triggers marked dirty, for as long as we can spare.
+ *
+ * Runs INSIDE the user's request, so it is strictly bounded: an unbounded
+ * backfill can outlive the Edge Function's execution limit, and when that
+ * happens the worker is killed mid-request and the caller gets no response at
+ * all — the client just hangs. Progress is durable, so whatever a pass embeds
+ * is done for good and the next question continues where it left off.
+ * Answering the question actually asked always takes priority over finishing
+ * the index.
+ *
+ * SHARED BY BOTH ASK PATHS ON PURPOSE. This used to live inline in the `ask`
+ * handler. When the agent was added above it with an early return, the agent
+ * path silently skipped it — and once the app called only the agent, nothing
+ * was ever embedded again. After migration 0077 cleared every vector for the
+ * provider change, that meant 505 rows pending, 0 embedded, and a semantic
+ * search that could never match anything. Extracted so there is one copy that
+ * both callers reach.
+ */
+// deno-lint-ignore no-explicit-any
+async function backfillEmbeddings(admin: any, communityId: string): Promise<void> {
+  const started = Date.now();
+  for (let round = 0; round < 8; round++) {
+    if (Date.now() - started > EMBED_BACKFILL_BUDGET_MS) break;
+    const { data: dirty } = await admin.from('search_documents')
+      .select('source,source_id,content').eq('community_id', communityId).is('embedding', null).limit(80);
+    if (!dirty?.length) break;
+    const vecs = await embedTexts(dirty.map((d: { content: string }) => d.content), 'RETRIEVAL_DOCUMENT');
+    await Promise.all(dirty.map((d: { source: string; source_id: string }, i: number) =>
+      vecs[i]
+        ? admin.from('search_documents').update({ embedding: toVec(vecs[i]) }).eq('source', d.source).eq('source_id', d.source_id)
+        : Promise.resolve()));
+    if (dirty.length < 80) break;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -780,6 +816,11 @@ Deno.serve(async (req) => {
 
   if (body.action === 'agent') {
     try {
+      // Before searching anything, catch the index up. The agent returns early
+      // here, so without this it never reaches the backfill the ask path runs —
+      // which is exactly how the whole index sat at 0 embedded / 505 pending.
+      await backfillEmbeddings(admin, communityId);
+
       const out = await runAgent(
         {
           admin,
@@ -805,28 +846,8 @@ Deno.serve(async (req) => {
 
     // Semantic (pgvector) path — best-effort; falls back to the recent catalog.
     try {
-      // 1. Lazily embed rows the triggers marked dirty — but only for as long as
-      //    we can spare. This runs INSIDE the user's request, and an unbounded
-      //    backfill (previously up to 8 x 80 = 640 embeddings plus 640 row
-      //    updates) can outlive the Edge Function's execution limit. When that
-      //    happens the worker is killed mid-request and the caller gets no
-      //    response at all — the client just hangs forever.
-      //    Progress is durable, so whatever this pass embeds is done for good and
-      //    the next ask continues where it left off. Answering the question the
-      //    user actually asked always takes priority over finishing the index.
-      const backfillStart = Date.now();
-      for (let round = 0; round < 8; round++) {
-        if (Date.now() - backfillStart > EMBED_BACKFILL_BUDGET_MS) break;
-        const { data: dirty } = await admin.from('search_documents')
-          .select('source,source_id,content').eq('community_id', communityId).is('embedding', null).limit(80);
-        if (!dirty?.length) break;
-        const vecs = await embedTexts(dirty.map((d: { content: string }) => d.content), 'RETRIEVAL_DOCUMENT');
-        await Promise.all(dirty.map((d: { source: string; source_id: string }, i: number) =>
-          vecs[i]
-            ? admin.from('search_documents').update({ embedding: toVec(vecs[i]) }).eq('source', d.source).eq('source_id', d.source_id)
-            : Promise.resolve()));
-        if (dirty.length < 80) break;
-      }
+      // 1. Catch the index up on anything the triggers marked dirty.
+      await backfillEmbeddings(admin, communityId);
 
       // 2. Embed the question (blended with the prior turn) and cosine-search.
       const [qVec] = await embedTexts([retrievalText], 'RETRIEVAL_QUERY');
