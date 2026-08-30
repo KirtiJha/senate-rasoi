@@ -111,6 +111,13 @@ export default function LostFoundDetailScreen() {
     } catch { toast.show('Could not delete'); }
   };
 
+  // Must sit above every early return: hooks run unconditionally or React
+  // sees a different number of them between renders.
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.set(e.contentOffset.y);
+  });
+
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
@@ -146,11 +153,6 @@ export default function LostFoundDetailScreen() {
   const wa = item.contact_whatsapp ?? item.owner?.whatsapp ?? null;
   const isLost = item.kind === 'lost';
   const isResolved = item.status === 'resolved';
-
-  const scrollY = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler((e) => {
-    scrollY.set(e.contentOffset.y);
-  });
 
   return (
     <View className="flex-1 bg-bg">

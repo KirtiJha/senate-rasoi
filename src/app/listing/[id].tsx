@@ -126,6 +126,13 @@ export default function ListingDetailScreen() {
     toast.show(listing.status === 'sold' ? 'Marked as active' : 'Marked as sold ✅');
   };
 
+  // Must sit above every early return: hooks run unconditionally or React
+  // sees a different number of them between renders.
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.set(e.contentOffset.y);
+  });
+
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center bg-bg">
@@ -176,10 +183,6 @@ export default function ListingDetailScreen() {
 
   const cat = getService(listing.category);
 
-  const scrollY = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler((e) => {
-    scrollY.set(e.contentOffset.y);
-  });
   const photo = listing.photos[0];
   const isOwner = !!userId && listing.owner_user_id === userId;
   const ownerName = listing.is_referral

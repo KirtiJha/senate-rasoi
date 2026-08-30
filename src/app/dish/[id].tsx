@@ -164,6 +164,13 @@ export default function DishDetailScreen() {
     } catch { toast.show('Could not save — try again'); } finally { setSaving(false); }
   };
 
+  // Must sit above every early return: hooks run unconditionally or React
+  // sees a different number of them between renders.
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.set(e.contentOffset.y);
+  });
+
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center bg-bg">
@@ -203,14 +210,6 @@ export default function DishDetailScreen() {
   const future = serveLabel(dish.serve_date);
   const isOwner = !!userId && dish.chef_user_id === userId;
   const canManage = isOwner || isAdmin;
-
-  // One scroll value drives the hero. Kept on the UI thread, so the parallax
-  // never waits on JS — which matters here because this screen also ticks a
-  // countdown and loads a chat thread.
-  const scrollY = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler((e) => {
-    scrollY.set(e.contentOffset.y);
-  });
 
   return (
     <View className="flex-1 bg-bg">

@@ -108,6 +108,13 @@ export default function LendItemDetailScreen() {
     } catch { toast.show('Could not save — try again'); } finally { setSaving(false); }
   };
 
+  // Must sit above every early return: hooks run unconditionally or React
+  // sees a different number of them between renders.
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.set(e.contentOffset.y);
+  });
+
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
@@ -155,11 +162,6 @@ export default function LendItemDetailScreen() {
     const go = async () => { await deleteItem(item.id); if (router.canGoBack()) router.back(); else router.replace('/borrow' as any); };
     if (await confirm({ title: 'Delete item', message: 'Delete this listing?', confirmLabel: 'Delete', destructive: true })) go();
   };
-
-  const scrollY = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler((e) => {
-    scrollY.set(e.contentOffset.y);
-  });
 
   return (
     <View className="flex-1 bg-bg">
