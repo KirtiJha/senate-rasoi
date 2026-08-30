@@ -6,13 +6,19 @@ import { Touchable } from './Touchable';
 type Variant = 'primary' | 'whatsapp' | 'outline' | 'ghost' | 'danger' | 'success';
 type Size = 'sm' | 'md' | 'lg';
 
+// No `active:` here. Touchable already animates the press — a sink and a
+// spring release — so these were redundant. They were also the bug: NativeWind
+// implements `active:` on native by attaching its own press responder to the
+// element, which made this painted child interactive and let it win the
+// responder from the Pressable wrapping it. Every Button in the app received
+// the touch and did nothing.
 const BG: Record<Variant, string> = {
-  primary: 'bg-accent active:bg-accent-press',
-  whatsapp: 'bg-whatsapp active:opacity-90',
-  success: 'bg-success active:opacity-90',
-  outline: 'bg-accent-soft active:opacity-80',
-  ghost: 'bg-transparent active:bg-inset',
-  danger: 'bg-danger active:opacity-90',
+  primary: 'bg-accent',
+  whatsapp: 'bg-whatsapp',
+  success: 'bg-success',
+  outline: 'bg-accent-soft',
+  ghost: 'bg-transparent',
+  danger: 'bg-danger',
 };
 
 const FG: Record<Variant, string> = {
@@ -89,7 +95,17 @@ export function Button({
       haptic={isDisabled ? null : variant === 'danger' ? 'warning' : 'tap'}
       className={fullWidth ? 'w-full' : ''}
     >
+      {/* pointerEvents="none" is load-bearing, not tidiness.
+          Moving the paint off Touchable onto this child fixed an invisible
+          background, and broke the press: the painted View became the touch
+          target, so the Pressable above it was never offered the responder.
+          On the sign-in screen that produced a button that looked perfect,
+          received the touch, and did nothing at all — on native only, since
+          the web build has no responder negotiation. Making the paint
+          transparent to touches lets the press reach the Pressable while the
+          background still renders. */}
       <View
+        pointerEvents="none"
         className={`flex-row items-center justify-center gap-2 ${BG[variant]} ${PAD[size]} ${
           fullWidth ? 'w-full' : ''
         } ${isDisabled ? 'opacity-50' : ''} ${className}`}

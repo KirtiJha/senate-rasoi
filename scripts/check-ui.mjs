@@ -99,6 +99,54 @@ for (const file of files) {
   }
 }
 
+// ── `active:` on a child of a press target ──────────────────────────
+//
+// NativeWind implements `active:` on native by attaching its OWN press
+// responder to the element that carries it. Put one on a child of a
+// Touchable and that child becomes interactive: it wins the responder, and
+// the Touchable above it is never offered the touch. The press target then
+// receives the finger and does nothing — silently, and on native only, since
+// on web `active:` compiles to CSS `:active` with no responder involved.
+//
+// Every Button in the app was dead this way. The paint had been moved off
+// Touchable onto a child View to fix an invisible background, and it carried
+// `bg-accent active:bg-accent-press` along with it.
+//
+// Touchable already animates the press, so `active:` inside one is redundant
+// as well as harmful.
+for (const file of files) {
+  const code = stripComments(readFileSync(file, 'utf8'));
+  const open = /<Touchable\b[\s\S]*?>/g;
+  let t;
+  while ((t = open.exec(code)) !== null) {
+    const close = code.indexOf('</Touchable>', open.lastIndex);
+    if (close === -1) continue;
+    const body = code.slice(open.lastIndex, close);
+    // Only inert children matter. An `active:` on a nested Pressable is that
+    // element styling its own press, which is fine. The bug is `active:` on
+    // something that is NOT a press target, because NativeWind turns it into
+    // one, and it then outranks the Touchable wrapping it.
+    const PRESSY = /^(Pressable|Touchable|TouchableOpacity|TouchableHighlight|APressable)$/;
+    let hit = null;
+    for (const m of body.matchAll(new RegExp("\\bactive:[\\w[\\]/.-]+", "g"))) {
+      const before = body.slice(0, m.index);
+      const open2 = before.lastIndexOf("<");
+      const name = open2 === -1 ? "" : (before.slice(open2 + 1).match(/^[A-Za-z][\w.]*/) || [""])[0];
+      if (PRESSY.test(name)) continue;
+      hit = m;
+      break;
+    }
+    if (!hit) continue;
+    problems.push({
+      file: relative(SRC, file).split('\\').join('/'),
+      line: code.slice(0, open.lastIndex + hit.index).split('\n').length,
+      tag: 'child of Touchable',
+      prop: 'active',
+      value: hit[0],
+    });
+  }
+}
+
 if (problems.length === 0) {
   console.log(`check-ui: ${files.length} files, no animated components carrying layout or paint in a className.`);
   process.exit(0);
@@ -107,11 +155,17 @@ if (problems.length === 0) {
 console.error(`check-ui: ${problems.length} problem(s) — styles here are dropped silently on native.\n`);
 for (const p of problems) {
   console.error(`  ${p.file}:${p.line}`);
-  console.error(`    <${p.tag} ${p.prop ?? 'className'}="${p.value}${p.value.length >= 60 ? '…' : ''}">`);
   console.error(
-    p.prop === 'style'
-      ? `    Wrap it in a plain <View> that carries the layout.\n`
-      : `    Move layout and paint to \`style\`, or wrap a plain <View> inside.\n`,
+    p.prop === 'active'
+      ? `    ${p.value}  (inside a <Touchable>)`
+      : `    <${p.tag} ${p.prop ?? 'className'}="${p.value}${p.value.length >= 60 ? '…' : ''}">`,
+  );
+  console.error(
+    p.prop === 'active'
+      ? `    Remove it — Touchable animates the press, and this steals the touch.\n`
+      : p.prop === 'style'
+        ? `    Wrap it in a plain <View> that carries the layout.\n`
+        : `    Move layout and paint to \`style\`, or wrap a plain <View> inside.\n`,
   );
 }
 process.exit(1);
