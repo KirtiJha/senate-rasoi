@@ -72,38 +72,6 @@ export function BottomBar() {
 
   return (
     <View style={{ paddingHorizontal: 12, paddingBottom: liftBottom, backgroundColor: 'transparent' }}>
-      {/* Drawn before the bar and lifted over it: an absolutely positioned
-          child of THIS view, which has no border radius, so nothing clips it. */}
-      <Touchable
-        feel="icon"
-        onPress={() => router.navigate('/post' as any)}
-        style={{
-          position: 'absolute',
-          top: -14,
-          alignSelf: 'center',
-          left: 0,
-          right: 0,
-          zIndex: 10,
-          alignItems: 'center',
-        } as any}
-        accessibilityRole="button"
-        accessibilityLabel="Post something"
-      >
-        <View
-          className="items-center justify-center rounded-full"
-          style={{
-            width: 52,
-            height: 52,
-            backgroundColor: c.accent,
-            borderWidth: 3,
-            borderColor: c.bg,
-            boxShadow: c.shadowFab,
-          } as any}
-        >
-          <Ionicons name="add" size={28} color={c.onAccent} />
-        </View>
-      </Touchable>
-
       <View
         className="flex-row items-center justify-around rounded-[28px] border border-line bg-surface"
         style={{ paddingTop: 8, paddingBottom: 6, boxShadow: c.shadowBar } as any}
@@ -111,9 +79,35 @@ export function BottomBar() {
         {ITEMS.map((it) => {
           const active = activeFor(it.route);
 
-          // The FAB is drawn outside this row (see below) so the rounded bar
-          // cannot clip it; this keeps its slot in the layout.
-          if (it.fab) return <View key={it.route} style={{ width: 56 }} />;
+          if (it.fab) {
+            return (
+              <Touchable
+                key={it.route}
+                feel="icon"
+                onPress={() => router.navigate(it.route as any)}
+                style={{ width: 56, alignItems: 'center' }}
+                accessibilityRole="button"
+                accessibilityLabel="Post something"
+              >
+                <View
+                  style={{
+                    width: 52,
+                    height: 52,
+                    marginTop: -22,
+                    borderRadius: 26,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: c.accent,
+                    borderWidth: 3,
+                    borderColor: c.bg,
+                    boxShadow: c.shadowFab,
+                  } as any}
+                >
+                  <Ionicons name="add" size={28} color={c.onAccent} />
+                </View>
+              </Touchable>
+            );
+          }
 
           return (
             <Touchable
