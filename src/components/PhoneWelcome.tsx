@@ -36,9 +36,20 @@ import { Rise, Touchable } from './ui';
  *
  * The emblem leads because it is the most distinctive thing the product owns
  * and it was previously used once, in the footer. It blooms in on open and
- * turns once every ninety seconds — slow enough to read as alive rather than
+ * turns slowly — alive rather than
  * as an animation being performed at you.
  */
+
+/**
+ * Seconds for one full turn of the emblem.
+ *
+ * Started at 90s, which was below the threshold where the eye reads movement:
+ * you noticed it had changed, never that it was moving. 50s still reads as
+ * ambient rather than as an animation demanding attention — and because the
+ * flower is eight-fold symmetric, a petal reaches its neighbour's position
+ * every ~6s, which is the beat you actually perceive.
+ */
+const TURN_MS = 50000;
 
 /** Fixed width so cards size to their own content. See the carousel note. */
 const CARD_W = 210;
@@ -94,7 +105,7 @@ export function PhoneWelcome() {
   const sway = useSharedValue(0);
   useEffect(() => {
     if (reduced) return;
-    spin.set(withRepeat(withTiming(1, { duration: 90000, easing: ease.linear }), -1, false));
+    spin.set(withRepeat(withTiming(1, { duration: TURN_MS, easing: ease.linear }), -1, false));
     // Two loops at different, non-multiple periods, so the lean never repeats
     // on a beat the eye can catch and start predicting.
     tilt.set(withRepeat(withTiming(1, { duration: 7300, easing: ease.standard }), -1, true));
