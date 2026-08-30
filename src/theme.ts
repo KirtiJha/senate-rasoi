@@ -5,40 +5,62 @@ import { useThemePreference } from './context/theme';
 // Mirrors the CSS variables in src/global.css.
 
 const light = {
-  bg: '#FBF8F3',
+  bg: '#F1F3EE',
   surface: '#FFFFFF',
-  inset: '#F1F3EF',
-  ink: '#16171A',
-  muted: '#696E76',
-  faint: '#9CA1A9',
-  line: '#E7E9E6',
-  accent: '#0F6E56',
-  accentPress: '#0B5341',
-  accentSoft: '#E1F5EE',
+  surface2: '#FAFBF8',
+  inset: '#E8EBE4',
+  line: '#DDE1D8',
+  lineStrong: '#C7CCC0',
+  ink: '#141915',
+  muted: '#5A6159',
+  subtle: '#686F66',
+  /** @deprecated 2.45:1 in the old palette. Aliased to `subtle`; codemod pending. */
+  faint: '#686F66',
+  accent: '#0E6B4E',
+  accentPress: '#0A5340',
+  accentSoft: '#DCEBE2',
+  accentLine: '#B6D3C3',
   onAccent: '#FFFFFF',
+  highlight: '#F0A428',
+  highlightInk: '#8A5A06',
+  highlightSoft: '#FBEBCF',
+  warn: '#9A5608',
+  danger: '#B3261E',
+  info: '#3A4A86',
 } as const;
 
 const dark = {
-  bg: '#0D0F0E',
-  surface: '#181B1A',
-  inset: '#212523',
-  ink: '#F4F5F7',
-  muted: '#A5ABB5',
-  faint: '#6E747E',
-  line: '#293330',
-  accent: '#22A37D',
-  accentPress: '#0F6E56',
-  accentSoft: '#12302A',
-  onAccent: '#FFFFFF',
+  bg: '#101512',
+  surface: '#181E1A',
+  surface2: '#1F2621',
+  inset: '#242C26',
+  line: '#2E3830',
+  lineStrong: '#3C4941',
+  ink: '#EDF1EC',
+  muted: '#A0A99F',
+  subtle: '#7E887C',
+  /** @deprecated aliased to `subtle`; codemod pending. */
+  faint: '#7E887C',
+  accent: '#3FB98B',
+  accentPress: '#2FA278',
+  accentSoft: '#14342A',
+  accentLine: '#1F5140',
+  onAccent: '#08150F',
+  highlight: '#F3B03F',
+  highlightInk: '#EFB958',
+  highlightSoft: '#3A2C10',
+  warn: '#E8A03C',
+  danger: '#F2685C',
+  info: '#8FA4E8',
 } as const;
 
 // Fixed (scheme-independent) semantic colors.
 export const fixed = {
-  veg: '#14A06A',
-  nonveg: '#E0322B',
-  egg: '#E0A416',
+  veg: '#0F8C4F',
+  nonveg: '#8E2318',
+  egg: '#D08A0A',
   whatsapp: '#25D366',
-  success: '#14A06A',
+  success: '#127A50',
   orange: '#E8650A', // brand secondary highlight (food, warm accents)
   white: '#FFFFFF',
   black: '#000000',
@@ -46,11 +68,11 @@ export const fixed = {
 
 // Brand gradients — teal (courtyard) with warm orange highlights.
 export const gradients = {
-  hero: ['#15936F', '#0F6E56'] as const, // teal
-  heroDark: ['#0F6E56', '#0A4F3A'] as const,
-  primary: ['#15936F', '#0F6E56'] as const,
+  hero: ['#12805C', '#0E6B4E'] as const, // oxide
+  heroDark: ['#0E6B4E', '#0A4F3A'] as const,
+  primary: ['#12805C', '#0E6B4E'] as const,
   warm: ['#F08A2C', '#E8650A'] as const, // orange (food / warm accents)
-  mint: ['#16A06A', '#3FBE86'] as const, // fresh green (veg / success accents)
+  mint: ['#127A50', '#3FB98B'] as const, // fresh green (veg / success accents)
 };
 
 export type ThemeColors = { [K in keyof typeof light]: string } & {

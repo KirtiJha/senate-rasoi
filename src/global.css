@@ -7,18 +7,32 @@
    data-theme="dark" attribute (set by the in-app toggle). */
 @layer base {
   :root {
-    --bg: 251 248 243; /* warm cream page */
-    --surface: 255 255 255; /* cards */
-    --inset: 241 243 239; /* subtle filled areas */
-    --ink: 22 23 26; /* primary text */
-    --muted: 105 110 118; /* secondary text */
-    --faint: 156 161 169; /* tertiary text */
-    --line: 231 233 230; /* hairline borders */
+    --bg: 241 243 238; /* limewash — green-cast white, not cream */
+    --surface: 255 255 255; /* cards; white maximises food-photo fidelity */
+    --surface-2: 250 251 248; /* nested surface (sheet header over body) */
+    --inset: 232 235 228; /* filled wells — 4 steps off bg so they read as filled */
+    --line: 221 225 216; /* decorative hairlines */
+    --line-strong: 199 204 192; /* dividers that must be seen — 3:1 */
 
-    --accent: 15 110 86; /* teal (courtyard) */
-    --accent-press: 11 83 65;
-    --accent-soft: 225 245 238;
+    --ink: 20 25 21; /* 17.8:1 — green-black, belongs to the palette */
+    --muted: 90 97 89; /* 5.71:1 — secondary text, any size */
+    --subtle: 104 111 102; /* 4.64:1 — replaces --faint, which was 2.45:1 */
+    --faint: 104 111 102; /* DEPRECATED alias of --subtle; codemod pending */
+
+    --accent: 14 107 78; /* oxide floor — 6.50:1 under white */
+    --accent-press: 10 83 64;
+    --accent-soft: 220 235 226; /* 5.27:1 with accent text */
+    --accent-line: 182 211 195;
     --on-accent: 255 255 255;
+
+    --highlight: 240 164 40; /* marigold — carries INK text, never white */
+    --highlight-ink: 138 90 6; /* 5.30:1 — marigold as text on the ground */
+    --highlight-soft: 251 235 207;
+
+    --success: 18 122 80; /* deliberately the brand family */
+    --warn: 154 86 8;
+    --danger: 179 38 30; /* works as text on bg AND as a fill under white */
+    --info: 58 74 134; /* indigo — the other Indian dye */
   }
 
   /* System-preference dark.
@@ -32,33 +46,61 @@
      qualified form emits {light} only. */
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: 13 15 14;
-      --surface: 24 27 26;
-      --inset: 33 37 35;
-      --ink: 244 245 247;
-      --muted: 165 171 181;
-      --faint: 110 116 126;
-      --line: 41 51 48;
-      --accent: 34 163 125;
-      --accent-press: 15 110 86;
-      --accent-soft: 18 48 42;
-      --on-accent: 255 255 255;
+      --bg: 16 21 18;
+      --surface: 24 30 26;
+      --surface-2: 31 38 33;
+      --inset: 36 44 38;
+      --line: 46 56 48;
+      --line-strong: 60 73 65;
+
+      --ink: 237 241 236;
+      --muted: 160 169 159;
+      --subtle: 126 136 124;
+      --faint: 126 136 124;
+
+      --accent: 63 185 139;
+      --accent-press: 47 162 120;
+      --accent-soft: 20 52 42;
+      --accent-line: 31 81 64;
+      --on-accent: 8 21 15; /* dark text on a light-green fill — 7.75:1.
+                               White on mid-green is the tell of a light theme
+                               that was inverted rather than designed. */
+
+      --highlight: 243 176 63;
+      --highlight-ink: 239 185 88;
+      --highlight-soft: 58 44 16;
+
+      --success: 63 185 139;
+      --warn: 232 160 60;
+      --danger: 242 104 92;
+      --info: 143 164 232;
     }
 
     /* Web only: an explicit light choice beats a dark OS. Native has no DOM,
        so this rule is simply dropped there. */
     :root[data-theme='light'] {
-      --bg: 251 248 243;
+      --bg: 241 243 238;
       --surface: 255 255 255;
-      --inset: 241 243 239;
-      --ink: 22 23 26;
-      --muted: 105 110 118;
-      --faint: 156 161 169;
-      --line: 231 233 230;
-      --accent: 15 110 86;
-      --accent-press: 11 83 65;
-      --accent-soft: 225 245 238;
+      --surface-2: 250 251 248;
+      --inset: 232 235 228;
+      --line: 221 225 216;
+      --line-strong: 199 204 192;
+      --ink: 20 25 21;
+      --muted: 90 97 89;
+      --subtle: 104 111 102;
+      --faint: 104 111 102;
+      --accent: 14 107 78;
+      --accent-press: 10 83 64;
+      --accent-soft: 220 235 226;
+      --accent-line: 182 211 195;
       --on-accent: 255 255 255;
+      --highlight: 240 164 40;
+      --highlight-ink: 138 90 6;
+      --highlight-soft: 251 235 207;
+      --success: 18 122 80;
+      --warn: 154 86 8;
+      --danger: 179 38 30;
+      --info: 58 74 134;
     }
   }
 
@@ -66,17 +108,28 @@
      attribute on the document. On native the toggle calls NativeWind's
      colorScheme.set() instead — see src/context/theme.tsx. */
   :root[data-theme='dark'] {
-      --bg: 13 15 14;
-      --surface: 24 27 26;
-      --inset: 33 37 35;
-      --ink: 244 245 247;
-      --muted: 165 171 181;
-      --faint: 110 116 126;
-      --line: 41 51 48;
-      --accent: 34 163 125;
-      --accent-press: 15 110 86;
-      --accent-soft: 18 48 42;
-      --on-accent: 255 255 255;
+    --bg: 16 21 18;
+    --surface: 24 30 26;
+    --surface-2: 31 38 33;
+    --inset: 36 44 38;
+    --line: 46 56 48;
+    --line-strong: 60 73 65;
+    --ink: 237 241 236;
+    --muted: 160 169 159;
+    --subtle: 126 136 124;
+    --faint: 126 136 124;
+    --accent: 63 185 139;
+    --accent-press: 47 162 120;
+    --accent-soft: 20 52 42;
+    --accent-line: 31 81 64;
+    --on-accent: 8 21 15;
+    --highlight: 243 176 63;
+    --highlight-ink: 239 185 88;
+    --highlight-soft: 58 44 16;
+    --success: 63 185 139;
+    --warn: 232 160 60;
+    --danger: 242 104 92;
+    --info: 143 164 232;
   }
 
   html,

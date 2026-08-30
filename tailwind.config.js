@@ -15,19 +15,33 @@ module.exports = {
         muted: 'rgb(var(--muted) / <alpha-value>)',
         faint: 'rgb(var(--faint) / <alpha-value>)',
         line: 'rgb(var(--line) / <alpha-value>)',
+        'line-strong': 'rgb(var(--line-strong) / <alpha-value>)',
+        'surface-2': 'rgb(var(--surface-2) / <alpha-value>)',
+        subtle: 'rgb(var(--subtle) / <alpha-value>)',
 
         // The single brand accent (warm coral — appetite + energy).
         accent: 'rgb(var(--accent) / <alpha-value>)',
         'accent-press': 'rgb(var(--accent-press) / <alpha-value>)',
         'accent-soft': 'rgb(var(--accent-soft) / <alpha-value>)',
         'on-accent': 'rgb(var(--on-accent) / <alpha-value>)',
+        'accent-line': 'rgb(var(--accent-line) / <alpha-value>)',
+
+        // Marigold — the one warm thing in the courtyard. Fills carry INK
+        // text, never white; `highlight-ink` is marigold AS text.
+        highlight: 'rgb(var(--highlight) / <alpha-value>)',
+        'highlight-ink': 'rgb(var(--highlight-ink) / <alpha-value>)',
+        'highlight-soft': 'rgb(var(--highlight-soft) / <alpha-value>)',
+
+        warn: 'rgb(var(--warn) / <alpha-value>)',
+        danger: 'rgb(var(--danger) / <alpha-value>)',
+        info: 'rgb(var(--info) / <alpha-value>)',
 
         // Fixed semantic colors (same in both schemes).
-        veg: '#14A06A',
-        nonveg: '#E0322B',
-        egg: '#E0A416',
+        veg: '#0F8C4F',
+        nonveg: '#8E2318',
+        egg: '#D08A0A',
         whatsapp: '#25D366',
-        success: '#14A06A',
+        success: 'rgb(var(--success) / <alpha-value>)',
       },
       fontFamily: {
         // Bricolage Grotesque — characterful modern display.
@@ -40,11 +54,14 @@ module.exports = {
         'sans-sb': ['HankenGrotesk_600SemiBold'],
         'sans-bold': ['HankenGrotesk_700Bold'],
       },
+      borderRadius: {
+        niche: '22px 22px 14px 14px',
+      },
       boxShadow: {
-        card: '0 1px 2px rgba(10,12,14,0.04), 0 14px 30px -18px rgba(10,12,14,0.30)',
-        soft: '0 2px 12px -6px rgba(10,12,14,0.18)',
-        sheet: '0 -12px 48px rgba(0,0,0,0.28)',
-        fab: '0 10px 26px -8px rgba(255,90,60,0.6)',
+        card: '0 1px 1px rgba(26,40,32,0.04), 0 2px 6px -2px rgba(26,40,32,0.08)',
+        soft: '0 1px 2px rgba(26,40,32,0.05), 0 6px 16px -6px rgba(26,40,32,0.14)',
+        sheet: '0 -8px 40px rgba(26,40,32,0.22)',
+        fab: '0 8px 20px -6px rgba(14,107,78,0.45)',
       },
     },
   },
