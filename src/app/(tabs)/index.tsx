@@ -382,7 +382,7 @@ export default function HomeScreen() {
     };
   });
 
-  const todayLabel = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
+  const todayLabel = new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
 
   return (
     <View className="flex-1 bg-bg">
@@ -394,7 +394,7 @@ export default function HomeScreen() {
           compactStyle,
           {
             position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
-            paddingTop: insets.top + 8, paddingBottom: 10, paddingHorizontal: 20,
+            paddingTop: 12, paddingBottom: 12, paddingHorizontal: 20,
             backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.line,
           },
         ]}
@@ -408,7 +408,7 @@ export default function HomeScreen() {
       className="flex-1 bg-bg"
       onScroll={onScroll}
       scrollEventThrottle={16}
-      contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : insets.top + 16, paddingBottom: 40, paddingHorizontal: 20 }}
+      contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 16, paddingBottom: 40, paddingHorizontal: 20 }}
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={c.muted} colors={[c.accent]} />}
     >
@@ -422,15 +422,12 @@ export default function HomeScreen() {
             hardcoded above twenty screens. */}
         <Animated.View style={heroStyle}>
           <Text className="text-[11px] font-sans-sb uppercase tracking-[0.06em] text-subtle" numberOfLines={1}>
-            {todayLabel}
+            {greeting} · {todayLabel}
           </Text>
-          {/* 40px, not 34: this is the one piece of display type on the screen
-              and it should be unmistakably the largest thing on it. */}
-          <Text className="mt-1.5 font-display-x text-[40px] leading-[44px] text-ink">
-            {greeting},
-          </Text>
-          <Text className="font-display-x text-[40px] leading-[44px]" style={{ color: c.accent }}>
-            {profile?.name ? profile.name.split(' ')[0] : 'neighbour'}
+          {/* The one piece of display type on the screen, and the only thing
+              that needs to be unmistakably the largest. */}
+          <Text className="mt-1 font-display-x text-[40px] leading-[46px] text-ink" numberOfLines={1}>
+            {profile?.name ? profile.name.split(' ')[0] : 'Neighbour'}
           </Text>
         </Animated.View>
 

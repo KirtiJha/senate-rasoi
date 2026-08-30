@@ -2,15 +2,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { openPhotoPicker } from '../../lib/photo';
+import { AScrollView } from '../../lib/motion';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { OrderModal } from '../../components/OrderModal';
 import { PayButton } from '../../components/PayButton';
 import { T } from '../../components/T';
-import { Avatar, Badge, Button, Container, Sheet, useResponsive } from '../../components/ui';
+import { Avatar, Badge, Button, Container, ParallaxHero, Sheet, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useConfirm } from '../../context/confirm';
 import { useToast } from '../../context/toast';
@@ -202,22 +204,39 @@ export default function DishDetailScreen() {
   const isOwner = !!userId && dish.chef_user_id === userId;
   const canManage = isOwner || isAdmin;
 
+  // One scroll value drives the hero. Kept on the UI thread, so the parallax
+  // never waits on JS — which matters here because this screen also ticks a
+  // countdown and loads a chat thread.
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.set(e.contentOffset.y);
+  });
+
   return (
     <View className="flex-1 bg-bg">
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+      <AScrollView
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+      >
         {/* Hero image or slot-themed colour block */}
         <View style={{ height: 280 }}>
-          {dish.photo_url ? (
-            <Image source={{ uri: dish.photo_url }} style={{ width: '100%', height: 280 }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
-          ) : (
-            <LinearGradient colors={[g1, g2]} style={{ width: '100%', height: 280, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 84 }}>{SLOT_EMOJI[dish.slot] ?? '🍽️'}</Text>
-            </LinearGradient>
-          )}
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
+            <ParallaxHero scrollY={scrollY} height={280}>
+              {dish.photo_url ? (
+                <Image source={{ uri: dish.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+              ) : (
+                <LinearGradient colors={[g1, g2]} style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="restaurant-outline" size={54} color="rgba(255,255,255,0.9)" />
+                </LinearGradient>
+              )}
+            </ParallaxHero>
+          </View>
           {soldOut ? (
-            <View className="absolute inset-0 items-center justify-center bg-black/45" pointerEvents="none">
-              <View className="rotate-[-7deg] rounded-xl border-2 border-white px-4 py-1.5">
-                <Text className="font-display-x text-lg uppercase tracking-wider text-white">Sold out</Text>
+            <View className="absolute inset-0 items-center justify-center" pointerEvents="none" style={{ backgroundColor: 'rgba(10,14,11,0.55)' }}>
+              <View className="rounded-full px-4 py-1.5" style={{ backgroundColor: 'rgba(10,14,11,0.72)' }}>
+                <Text className="font-sans-sb text-[13px] uppercase tracking-[0.06em] text-white">Sold out</Text>
               </View>
             </View>
           ) : null}
@@ -299,7 +318,7 @@ export default function DishDetailScreen() {
             ) : null}
           </Container>
         </View>
-      </ScrollView>
+      </AScrollView>
 
       {/* Sticky CTA */}
       {!isOwner ? (
