@@ -19,12 +19,25 @@ import { haptics } from '../lib/haptics';
 import { useThemeColors } from '../theme';
 
 
-const EXAMPLES = [
-  'Veg tiffin for lunch',
+/**
+ * Split in two on purpose.
+ *
+ * Every one of these used to be a question, which taught the one thing people
+ * already assume an assistant does. Nobody guesses that it will draft the
+ * notice or watch for the flat — so the second group is doing the real work
+ * here, and the labels are what make the two modes legible at a glance.
+ */
+const ASK_EXAMPLES = [
+  'Any veg tiffin for lunch?',
+  'Is there a plumber?',
   'Any 2 BHK for rent?',
-  'Where can I borrow a drill?',
-  'How many members are in the society?',
-  'Is there a doctor in the society?',
+  'What did people recommend for tuitions?',
+];
+
+const DO_EXAMPLES = [
+  'Post a notice about the water tanker',
+  'Start a poll about gate timings',
+  'Tell me when a 2 BHK is listed',
 ];
 
 export default function AskScreen() {
@@ -183,13 +196,39 @@ export default function AskScreen() {
       >
         {empty ? (
           <View className="mt-2">
-            <Text className="font-sans mb-3 text-[14px] leading-5 text-muted">
-              Ask anything about your society in plain words — food, flats, things to borrow, recommendations, or your neighbours (members, professions, announcements). Follow-up questions work too.
+            <Text className="font-sans-md mb-1.5 text-[14.5px] leading-[21px] text-ink">
+              Saathi knows your society — the food, the flats, the notices and every reply under
+              them. Ask in plain words, follow-ups and all.
             </Text>
-            <View className="flex-row flex-wrap gap-2">
-              {EXAMPLES.map((ex) => (
+            <Text className="font-sans mb-4 text-[13.5px] leading-[20px] text-subtle">
+              It can also do things for you: draft a notice, open a poll, reserve plates, message a
+              neighbour, or keep watching for something and tell you when it turns up. You will see
+              exactly what it is about to do — nothing happens until you tap Confirm.
+            </Text>
+
+            <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Ask it</Text>
+            <View className="mb-4 flex-row flex-wrap gap-2">
+              {ASK_EXAMPLES.map((ex) => (
                 <Pressable key={ex} onPress={() => send(ex)} className="rounded-full border border-line bg-surface px-3 py-1.5 active:opacity-70">
                   <Text className="text-[12px] font-sans-md text-muted">{ex}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            {/* Tinted, because these are the ones nobody expects — and the ones
+                that make it an assistant rather than a search box. */}
+            <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: c.accent }}>
+              Or ask it to
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {DO_EXAMPLES.map((ex) => (
+                <Pressable
+                  key={ex}
+                  onPress={() => send(ex)}
+                  className="rounded-full px-3 py-1.5 active:opacity-70"
+                  style={{ backgroundColor: c.accentSoft, borderWidth: 1, borderColor: c.accentLine }}
+                >
+                  <Text className="text-[12px] font-sans-md" style={{ color: c.accent }}>{ex}</Text>
                 </Pressable>
               ))}
             </View>
