@@ -410,7 +410,7 @@ export default function HomeScreen() {
       className="flex-1 bg-bg"
       onScroll={onScroll}
       scrollEventThrottle={16}
-      contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 12, paddingBottom: 40, paddingHorizontal: 20 }}
+      contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 0, paddingBottom: 40, paddingHorizontal: 20 }}
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={c.muted} colors={[c.accent]} />}
     >
@@ -422,7 +422,7 @@ export default function HomeScreen() {
         {/* ── 1. Hero ──────────────────────────────────────────────────
             Society identity appears here, once, rather than in a pill
             hardcoded above twenty screens. */}
-        <Animated.View style={heroStyle} className="flex-row items-center gap-3">
+        <Animated.View style={heroStyle} className="flex-row items-center gap-3 pt-3">
           <Avatar name={profile?.name ?? 'You'} size={42} />
           <Text className="min-w-0 flex-1 font-display-x text-[22px] leading-[27px] text-ink" numberOfLines={1}>
             {greeting},{' '}
