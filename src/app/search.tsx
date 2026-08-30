@@ -3,8 +3,8 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BrandMark } from '../components/BrandMark';
 import { Avatar, ErrorState, RowSkeleton, ScreenHeader, useResponsive } from '../components/ui';
+import { SaathiMark } from '../components/SaathiMark';
 import { useAuth } from '../context/auth';
 import { fetchDirectory } from '../lib/directory';
 import { fetchDishes } from '../lib/dishes';
@@ -226,7 +226,7 @@ export default function SearchScreen() {
                 style={{ borderColor: c.accent + '55', backgroundColor: c.accent + '12' }}
               >
                 <View style={{ marginLeft: 12, marginVertical: 11 }}>
-                  <BrandMark size={38} />
+                  <SaathiMark size={38} />
                 </View>
                 <View className="flex-1 py-3">
                   <Text className="font-sans-bold text-[14px] text-ink">Ask Saathi a question</Text>

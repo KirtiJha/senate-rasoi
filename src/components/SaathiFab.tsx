@@ -124,7 +124,16 @@ export function SaathiFab() {
     ],
   }));
 
-  const hidden = keyboardUp || pathname === '/ask' || pathname.startsWith('/messages/');
+  const hidden =
+    keyboardUp
+    // Saathi itself: a button that goes where you already are.
+    || pathname === '/ask'
+    // Home already leads with the ask-or-search bar, and keeps it as a floating
+    // pill once you scroll. A second floating way into the same screen is
+    // clutter, not convenience.
+    || pathname === '/'
+    // A focused two-person conversation is not somewhere to bolt a third party.
+    || pathname.startsWith('/messages/');
   if (hidden) return null;
 
   return (

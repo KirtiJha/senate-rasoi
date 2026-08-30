@@ -12,7 +12,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SaathiMark } from '../../components/SaathiMark';
-import { BrandMark } from '../../components/BrandMark';
 import { T } from '../../components/T';
 import { Avatar, Container, ErrorRow, ModuleTile, Rise, Touchable, useResponsive, VegMark } from '../../components/ui';
 import { useAuth } from '../../context/auth';
@@ -422,7 +421,7 @@ export default function HomeScreen() {
                 boxShadow: c.shadowBar,
               } as any}
             >
-              <BrandMark size={22} />
+              <SaathiMark size={22} />
               <Text
                 className="text-[14px] font-sans-md text-subtle"
                 style={{ flex: 1, minWidth: 0, marginLeft: 10 }}
