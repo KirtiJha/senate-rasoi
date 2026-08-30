@@ -24,11 +24,17 @@ const dir = join(root, 'supabase', 'functions', 'ai-proxy');
 const index = readFileSync(join(dir, 'index.ts'), 'utf8').replace(/\r\n/g, '\n');
 const agent = readFileSync(join(dir, 'agent.ts'), 'utf8').replace(/\r\n/g, '\n');
 
-const IMPORT = "import { runAgent } from './agent.ts';\n";
-if (!index.includes(IMPORT)) {
+// Matches whatever index.ts imports from agent.ts. The named list grows as the
+// agent does, so hard-coding it meant the bundler broke on every addition —
+// which it did, twice, each time refusing to write and leaving the previous
+// bundle in place. Correct behaviour, wrong trigger.
+const IMPORT_RE = /^import \{[^}]*\} from '\.\/agent\.ts';\n/m;
+const importMatch = index.match(IMPORT_RE);
+if (!importMatch) {
   console.error('✗ index.ts no longer imports ./agent.ts — has the layout changed?');
   process.exit(1);
 }
+const IMPORT = importMatch[0];
 
 // `export` on a top-level declaration is meaningless once inlined, and Deno
 // rejects it in a file with no other module syntax.

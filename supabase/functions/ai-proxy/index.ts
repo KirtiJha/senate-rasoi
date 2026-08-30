@@ -16,7 +16,7 @@
 // (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are injected automatically.)
 // ════════════════════════════════════════════════════════════════════
 
-import { runAgent } from './agent.ts';
+import { runAgent, runAgentStream } from './agent.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const OPENAI_KEY = Deno.env.get('OPENAI_API_KEY') ?? '';
@@ -728,7 +728,8 @@ Deno.serve(async (req) => {
     return json({ error: 'Bad request' }, 400);
   }
   if (body.action !== 'autofill' && body.action !== 'ask' && body.action !== 'agent'
-      && body.action !== 'translate' && body.action !== 'digest' && body.action !== 'reembed') {
+      && body.action !== 'translate' && body.action !== 'digest' && body.action !== 'reembed'
+      && body.action !== 'agent-stream') {
     return json({ error: 'Unknown action' }, 400);
   }
 
@@ -857,6 +858,60 @@ Deno.serve(async (req) => {
   // For retrieval, blend the previous user turn so short follow-ups still match.
   const prevUser = [...history].reverse().find((h) => h.role === 'user')?.text;
   const retrievalText = prevUser ? `${prevUser}\n${question}` : question;
+
+  // ── Saathi, streaming ─────────────────────────────────────────────
+  //
+  // Same agent as `agent`, delivered as it happens. Worth the extra path
+  // because the loop can make several sequential model calls: buffered, that
+  // is eight silent seconds and a spinner, which reads as broken. Streamed,
+  // the resident watches it look things up and then watches the answer arrive.
+  //
+  // Server-sent events, one JSON object per line. A hand-rolled protocol
+  // rather than a framework's, because the client is React Native and all it
+  // needs is prose, progress notes, and a final payload.
+  if (body.action === 'agent-stream') {
+    const stream = new ReadableStream({
+      async start(controller) {
+        const enc = new TextEncoder();
+        const send = (e: unknown) => controller.enqueue(enc.encode(`data: ${JSON.stringify(e)}\n\n`));
+        try {
+          await backfillEmbeddings(admin, communityId);
+          await runAgentStream(
+            {
+              admin,
+              communityId,
+              embedQuery: async (text: string) => (await embedTexts([text], 'RETRIEVAL_QUERY'))[0],
+              toVec,
+              hydrate: (idsBySource) => fetchByIds(admin, idsBySource),
+              handle: () => '',
+            },
+            question,
+            history,
+            OPENAI_KEY,
+            OPENAI_MODEL,
+            send,
+          );
+        } catch (e) {
+          console.error('ai-proxy agent-stream error:', e);
+          // The connection is already open, so an error has to travel down it
+          // as an event. Closing without one leaves the client waiting on a
+          // stream that will never produce anything.
+          send({ t: 'error', message: 'Saathi could not finish that — try again in a moment.' });
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        ...CORS,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    });
+  }
 
   if (body.action === 'agent') {
     try {

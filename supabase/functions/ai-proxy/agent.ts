@@ -1,3 +1,5 @@
+import OpenAI from 'npm:openai';
+
 // ════════════════════════════════════════════════════════════════════
 // Aangan — the agent behind Ask Aangan
 //
@@ -136,27 +138,21 @@ const READ_TOOLS = [
 // Terminal tools. Exactly one of these ends the loop.
 const FINISH_TOOLS = [
   {
-    name: 'respond',
+    name: 'show_items',
     description:
-      'Give the resident your final answer. Call this when you have everything you need, or when you have ' +
-      'checked and genuinely found nothing — in which case say so plainly rather than guessing.',
+      'Pin the items you are about to talk about, so they appear as tappable cards under your reply. ' +
+      'Call this BEFORE writing your answer, with the short refs from search results. Then write the ' +
+      'answer as if the cards are already there — name the item, let the card carry the detail.',
     parameters: {
       type: 'object',
       properties: {
-        answer: {
-          type: 'string',
-          description: 'A short, warm, conversational reply. Never invent people, prices, items or contacts.',
-        },
-        result_refs: {
+        refs: {
           type: 'array',
           items: { type: 'string' },
-          description:
-            'Which items to show as tappable cards below your answer — the short refs from search results, ' +
-            'e.g. ["1","3"]. Best first. These become real cards, so name the item in your answer and let the ' +
-            'card carry the detail. Empty when there is nothing to link to.',
+          description: 'Refs from search results, best first, e.g. ["1","3"].',
         },
       },
-      required: ['answer'],
+      required: ['refs'],
     },
   },
   {
@@ -222,7 +218,11 @@ const FINISH_TOOLS = [
   },
 ];
 
-const PROPOSAL_NAMES = new Set(FINISH_TOOLS.filter((t) => t.name !== 'respond').map((t) => t.name));
+// Terminal tools: calling one ends the turn with a confirmation card.
+// show_items is not one — it decorates an answer, it does not replace it.
+const PROPOSAL_NAMES = new Set(
+  FINISH_TOOLS.filter((t) => t.name !== 'show_items').map((t) => t.name),
+);
 
 // ── Read tool implementations ───────────────────────────────────────
 // Every one of these is scoped to the caller's community. That scoping is not
@@ -442,23 +442,60 @@ const PREAMBLE =
   'messages, orders or payments — you cannot see them and must not pretend to. Finish with respond or a ' +
   'propose_ tool; every reply reaches the resident through one of those.';
 
-export async function runAgent(
+/**
+ * Emitted to the client as the agent works. One JSON object per SSE line.
+ *
+ * A deliberately small protocol rather than the SDK's stream format: the
+ * client is React Native, and everything it needs is a line of prose, a note
+ * about what is being looked up, or the final payload. Anything richer would
+ * be shape we do not use.
+ */
+export type AgentEvent =
+  | { t: 'step'; tool: string; summary: string }
+  | { t: 'delta'; v: string }
+  | { t: 'done'; results: { source: string; id: string }[]; proposal?: AgentResult['proposal']; steps: { tool: string; summary: string }[] }
+  | { t: 'error'; message: string };
+
+/**
+ * The agent, streaming.
+ *
+ * WHY THE ANSWER IS PROSE AND NOT A TOOL CALL
+ * The non-streaming version ended by calling a `respond` tool carrying the
+ * answer as an argument. That cannot stream: arguments arrive as JSON, so a
+ * resident would watch `{"answer":"Here are the plum` assemble itself. So the
+ * model now simply writes its answer, which streams a token at a time, and
+ * pins result cards beforehand with `show_items`.
+ *
+ * Proposals stay terminal tool calls. They have no prose to stream — the card
+ * is the message — so nothing is lost by them arriving at once.
+ */
+export async function runAgentStream(
   d: Deps,
   question: string,
   history: { role: 'user' | 'assistant'; text: string }[],
   apiKey: string,
   model: string,
-): Promise<AgentResult> {
-  // OpenAI carries the system prompt as a message, not a separate field.
-  // deno-lint-ignore no-explicit-any
-  const messages: any[] = [{ role: 'system', content: PREAMBLE }];
-  for (const h of history.slice(-8)) {
-    messages.push({ role: h.role === 'user' ? 'user' : 'assistant', content: h.text });
-  }
-  messages.push({ role: 'user', content: question });
+  emit: (e: AgentEvent) => void,
+): Promise<void> {
+  const client = new OpenAI({ apiKey });
 
-  // OpenAI wraps each declaration in { type: 'function', function: … }.
-  const tools = [...READ_TOOLS, ...FINISH_TOOLS].map((t) => ({ type: 'function', function: t }));
+  // The Responses API takes a flat tool shape — {type, name, description,
+  // parameters} — not Chat Completions' nested {type, function:{…}}. Passing
+  // the nested form is an immediate 400.
+  const tools = [...READ_TOOLS, ...FINISH_TOOLS].map((t) => ({
+    type: 'function' as const,
+    name: t.name,
+    description: t.description,
+    parameters: t.parameters,
+    strict: false,
+  }));
+
+  // deno-lint-ignore no-explicit-any
+  const input: any[] = history.slice(-8).map((h) => ({
+    role: h.role === 'user' ? 'user' : 'assistant',
+    content: h.text,
+  }));
+  input.push({ role: 'user', content: question });
 
   const steps: { tool: string; summary: string }[] = [];
   const cardIndex = new Map<string, { source: string; id: string }>();
@@ -476,102 +513,111 @@ export async function runAgent(
     },
   };
 
+  let pinned: { source: string; id: string }[] = [];
+  let answered = false;
+
   for (let step = 0; step < MAX_STEPS; step++) {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model,
-        messages,
-        tools,
-        // Required, not optional. On /v1/chat/completions this model refuses
-        // function tools together with reasoning:
-        //   "Function tools with reasoning_effort are not supported for
-        //    gpt-5.6-luna in /v1/chat/completions. To use function tools, use
-        //    /v1/responses or set reasoning_effort to 'none'."
-        // Losing reasoning matters less here than it would for a single-shot
-        // answer: the loop already supplies the structure that reasoning would
-        // otherwise provide — look, read the result, decide, look again — and
-        // it is markedly faster across six sequential calls. /v1/responses is
-        // the upgrade if the planning turns out to need more depth, and that
-        // is the same move streaming will want.
-        reasoning_effort: 'none',
-        // On the last step every tool but `respond` is withdrawn, so the loop
-        // always ends with an answer rather than another lookup.
-        tool_choice:
-          step === MAX_STEPS - 1
-            ? { type: 'function', function: { name: 'respond' } }
-            : 'auto',
-      }),
-    });
-    if (!res.ok) throw new Error(`OpenAI ${res.status}: ${(await res.text()).slice(0, 200)}`);
-    const data = await res.json();
+    const stream = await client.responses.create({
+      model,
+      input,
+      tools,
+      // Unlike /v1/chat/completions, the Responses API allows tools and
+      // reasoning together — which is why moving here was worth it. Kept low:
+      // the loop already supplies the look/read/decide structure, and this runs
+      // up to six times with someone watching.
+      reasoning: { effort: 'low' },
+      stream: true,
+      // deno-lint-ignore no-explicit-any
+    } as any);
 
-    const msg = data?.choices?.[0]?.message;
-    const calls = msg?.tool_calls ?? [];
+    // deno-lint-ignore no-explicit-any
+    const calls: any[] = [];
+    let sawText = false;
 
-    if (!calls.length) {
-      // Answered in prose instead of calling respond. Take it rather than
-      // failing — a good answer in the wrong shape is still a good answer.
-      const text = String(msg?.content ?? '').trim();
-      return { answer: text || 'Sorry — I could not work that one out.', results: [], steps };
+    // deno-lint-ignore no-explicit-any
+    for await (const event of stream as any) {
+      if (event.type === 'response.output_text.delta') {
+        if (event.delta) { sawText = true; emit({ t: 'delta', v: String(event.delta) }); }
+      } else if (event.type === 'response.output_item.done') {
+        const item = event.item;
+        if (item?.type === 'function_call') calls.push(item);
+        // Assistant prose is echoed back into `input` so the next round has it.
+        if (item?.type === 'message') input.push(item);
+      }
     }
 
-    // Arguments arrive as a JSON *string*, unlike Gemini's parsed object.
-    const parseArgs = (raw: unknown): Record<string, unknown> => {
-      try { return JSON.parse(String(raw ?? '{}')); } catch { return {}; }
-    };
+    // No tool calls means the model has said its piece.
+    if (!calls.length) { answered = sawText; break; }
 
-    const terminal = calls.find((c: { function?: { name?: string } }) =>
-      c.function?.name === 'respond' || PROPOSAL_NAMES.has(String(c.function?.name)));
+    // Every function_call must go back into input alongside its output, or the
+    // next request rejects the orphan.
+    for (const call of calls) input.push(call);
 
-    if (terminal) {
-      const name = String(terminal.function.name);
-      const args = parseArgs(terminal.function.arguments);
+    let terminated = false;
+    for (const call of calls) {
+      const name = String(call.name);
+      let args: Record<string, unknown> = {};
+      try { args = JSON.parse(String(call.arguments ?? '{}')); } catch { args = {}; }
 
-      if (name === 'respond') {
-        // Belt and braces. The model can no longer see a UUID, but it can still
-        // narrate its own handles ("Lokesh - ref: 1"), which is plumbing
-        // leaking into prose. The instructions reduce that; this removes it.
-        const clean = (t: string) =>
-          t
-            .replace(/\s*[-—(\[]?\s*\bref:\s*\S+?\s*[\])]?(?=\s|$)/gi, '')
-            .replace(/[ \t]{2,}/g, ' ')
-            .replace(/[ \t]+([.,;:])/g, '$1')
-            .trim();
-
-        const refs = Array.isArray(args.result_refs) ? (args.result_refs as string[]) : [];
-        const results = refs
-          .map((r) => cardIndex.get(String(r)))
-          .filter((x): x is { source: string; id: string } => !!x);
-        return { answer: clean(String(args.answer ?? '')), results, steps };
+      if (PROPOSAL_NAMES.has(name)) {
+        const { message, ...rest } = args as { message?: string };
+        emit({ t: 'delta', v: String(message ?? '') });
+        emit({
+          t: 'done',
+          results: [],
+          proposal: { type: name, message: String(message ?? ''), args: rest as Record<string, unknown> },
+          steps,
+        });
+        return;
       }
 
-      const { message, ...rest } = args as { message?: string };
-      return {
-        answer: String(message ?? '').trim(),
-        results: [],
-        proposal: { type: name, message: String(message ?? ''), args: rest as Record<string, unknown> },
-        steps,
-      };
-    }
+      if (name === 'show_items') {
+        const refs = Array.isArray(args.refs) ? (args.refs as string[]) : [];
+        pinned = refs.map((r) => cardIndex.get(String(r))).filter((x): x is { source: string; id: string } => !!x);
+        input.push({ type: 'function_call_output', call_id: call.call_id, output: JSON.stringify({ ok: true, shown: pinned.length }) });
+        continue;
+      }
 
-    // Read tools. OpenAI may ask for several at once; run them together and
-    // answer every one — a tool_call left without a matching tool message is a
-    // 400 on the next request, not a soft failure.
-    messages.push(msg);
-    const results = await Promise.all(
-      calls.map(async (call: { id: string; function: { name: string; arguments: string } }) => {
-        const name = String(call.function.name);
-        const { payload, summary } = await runReadTool(name, parseArgs(call.function.arguments), withHandles);
-        return { id: call.id, name, payload, summary };
-      }),
-    );
-    for (const r of results) {
-      steps.push({ tool: r.name, summary: r.summary });
-      messages.push({ role: 'tool', tool_call_id: r.id, content: JSON.stringify(r.payload) });
+      const { payload, summary } = await runReadTool(name, args, withHandles);
+      steps.push({ tool: name, summary });
+      emit({ t: 'step', tool: name, summary });
+      input.push({ type: 'function_call_output', call_id: call.call_id, output: JSON.stringify(payload) });
     }
+    if (terminated) return;
   }
 
-  return { answer: 'I could not work that one out — try asking a different way.', results: [], steps };
+  if (!answered) emit({ t: 'delta', v: 'I could not work that one out — try asking a different way.' });
+  emit({ t: 'done', results: pinned, steps });
+}
+
+/**
+ * The same agent, buffered into one reply.
+ *
+ * Not a second implementation — it runs the streaming one and collects the
+ * events. Two hand-written loops would drift, and the one that drifts is
+ * always the one nobody is looking at.
+ *
+ * Used by the non-streaming `agent` action, which stays for clients that
+ * cannot read a response body incrementally (React Native's stock fetch among
+ * them, which is why this is not hypothetical).
+ */
+export async function runAgent(
+  d: Deps,
+  question: string,
+  history: { role: 'user' | 'assistant'; text: string }[],
+  apiKey: string,
+  model: string,
+): Promise<AgentResult> {
+  let answer = '';
+  let results: { source: string; id: string }[] = [];
+  let proposal: AgentResult['proposal'];
+  let steps: { tool: string; summary: string }[] = [];
+
+  await runAgentStream(d, question, history, apiKey, model, (e) => {
+    if (e.t === 'delta') answer += e.v;
+    else if (e.t === 'done') { results = e.results; proposal = e.proposal; steps = e.steps; }
+    else if (e.t === 'error') answer ||= e.message;
+  });
+
+  return { answer: answer.trim(), results, proposal, steps };
 }
