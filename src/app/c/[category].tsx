@@ -111,7 +111,7 @@ export default function CategoryScreen() {
           numColumns={cols}
           keyExtractor={(item: ListingRow) => item.id}
           renderItem={({ item }: { item: ListingRow }) => (
-            <View style={{ flex: 1, padding: 6 }}>
+            <View style={{ width: `${100 / cols}%`, padding: 6 }}>
               <ListingCard listing={item} onPress={() => router.push(`/listing/${item.id}` as any)} />
             </View>
           )}
