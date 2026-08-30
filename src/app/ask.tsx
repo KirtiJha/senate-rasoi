@@ -7,6 +7,7 @@ import { BrandMark } from '../components/BrandMark';
 import { KeyboardAvoider, ScreenHeader } from '../components/ui';
 import { useToast } from '../context/toast';
 import { ProposalCard, StepsTrail } from '../components/saathi/ProposalCard';
+import { RichText } from '../components/saathi/RichText';
 import { useAuth } from '../context/auth';
 import { AIError, askResultRoute, askSourceMeta } from '../lib/ai';
 import { askAgent } from '../lib/agent';
@@ -160,7 +161,7 @@ export default function AskScreen() {
               <View className="flex-row items-end gap-2">
                 <BrandMark size={24} />
                 <View className="flex-shrink rounded-2xl rounded-bl-md border border-line bg-surface px-3.5 py-2.5">
-                  <Text className="font-sans text-[14px] leading-5 text-ink">{m.text}</Text>
+                  <RichText text={m.text} />
                 </View>
               </View>
               {m.results && m.results.length > 0 ? (
