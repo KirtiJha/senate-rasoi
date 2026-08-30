@@ -123,7 +123,7 @@ export default function ExpensesScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="receipt-outline" iconColor={ACCENT} title="Expenses" showBack hideSociety />
+        <ScreenHeader icon="receipt-outline" title="Expenses" showBack hideSociety />
         <View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View>
       </View>
     );
@@ -133,7 +133,6 @@ export default function ExpensesScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="receipt-outline"
-        iconColor={ACCENT}
         title="Expenses & bills"
         showBack
         hideSociety

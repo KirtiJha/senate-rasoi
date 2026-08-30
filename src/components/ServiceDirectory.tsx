@@ -100,7 +100,6 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon={cat.icon as any}
-        iconColor={c.accent}
         title={cat.label}
         showBack
         onAdd={() => router.push({ pathname: '/post', params: { category: cat.key } } as any)}

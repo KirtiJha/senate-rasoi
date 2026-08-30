@@ -29,7 +29,7 @@ export default function EditListingScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="create-outline" iconColor={c.accent} title="Edit listing" showBack hideSociety />
+        <ScreenHeader icon="create-outline" title="Edit listing" showBack hideSociety />
         <View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View>
       </View>
     );
@@ -38,7 +38,7 @@ export default function EditListingScreen() {
   if (!listing || !cat || !canEdit) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="create-outline" iconColor={c.accent} title="Edit listing" showBack hideSociety />
+        <ScreenHeader icon="create-outline" title="Edit listing" showBack hideSociety />
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="lock-closed-outline" size={44} color={c.faint} />
           <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Can't edit this</Text>

@@ -64,7 +64,7 @@ export default function HelpersScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="heart-outline" iconColor={ACCENT} title="Blood & emergency help" showBack />
+      <ScreenHeader icon="heart-outline" title="Blood & emergency help" showBack />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* Opt-in */}

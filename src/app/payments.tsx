@@ -79,7 +79,6 @@ export default function PaymentsScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="wallet-outline"
-        iconColor="#16A34A"
         title="Payments"
         showBack
         subBar={

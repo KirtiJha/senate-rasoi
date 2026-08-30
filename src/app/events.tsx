@@ -44,7 +44,6 @@ export default function EventsScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="sparkles-outline"
-        iconColor={ACCENT}
         title="Functions"
         showBack
         onAdd={isAdmin ? () => router.push('/events/new' as any) : undefined}

@@ -57,7 +57,7 @@ export default function EventReportScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="stats-chart-outline" iconColor={ACCENT} title="Accounts" showBack hideSociety />
+        <ScreenHeader icon="stats-chart-outline" title="Accounts" showBack hideSociety />
         <View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View>
       </View>
     );
@@ -66,7 +66,7 @@ export default function EventReportScreen() {
   if (!event) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="stats-chart-outline" iconColor={ACCENT} title="Accounts" showBack hideSociety />
+        <ScreenHeader icon="stats-chart-outline" title="Accounts" showBack hideSociety />
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="alert-circle-outline" size={48} color={c.faint} />
           <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Function removed</Text>
@@ -84,7 +84,7 @@ export default function EventReportScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="stats-chart-outline" iconColor={ACCENT} title="Accounts" showBack hideSociety />
+      <ScreenHeader icon="stats-chart-outline" title="Accounts" showBack hideSociety />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container narrow>

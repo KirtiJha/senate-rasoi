@@ -215,7 +215,6 @@ export default function DirectoryScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="people-outline"
-        iconColor="#8B5CF6"
         title="Residents"
         showBack
         onAdd={() => setShowAdd(true)}

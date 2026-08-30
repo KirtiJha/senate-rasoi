@@ -54,7 +54,7 @@ export default function NewEventScreen() {
 
   return (
     <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Plan a function" showBack hideSociety />
+      <ScreenHeader icon="sparkles-outline" title="Plan a function" showBack hideSociety />
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
         keyboardShouldPersistTaps="handled"

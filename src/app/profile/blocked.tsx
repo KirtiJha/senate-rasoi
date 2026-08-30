@@ -52,7 +52,7 @@ export default function BlockedMembersScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="ban-outline" iconColor="#EF4444" title="Blocked members" showBack hideSociety />
+      <ScreenHeader icon="ban-outline" title="Blocked members" showBack hideSociety />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container narrow>

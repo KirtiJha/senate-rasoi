@@ -47,7 +47,6 @@ export default function PropertiesScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="key-outline"
-        iconColor={ACCENT}
         title="Flats for sale & rent"
         showBack
         onAdd={() => router.push('/property/new' as any)}

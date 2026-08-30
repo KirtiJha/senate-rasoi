@@ -77,7 +77,7 @@ export default function OnboardScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="business-outline" iconColor="#0D9488" title="Find your society" showBack hideSociety />
+      <ScreenHeader icon="business-outline" title="Find your society" showBack hideSociety />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>

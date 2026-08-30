@@ -70,7 +70,7 @@ export default function PropertyDetailScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="key-outline" iconColor={ACCENT} title="Flat" showBack hideSociety />
+        <ScreenHeader icon="key-outline" title="Flat" showBack hideSociety />
         <View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View>
       </View>
     );
@@ -78,7 +78,7 @@ export default function PropertyDetailScreen() {
   if (!p) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="key-outline" iconColor={ACCENT} title="Flat" showBack hideSociety />
+        <ScreenHeader icon="key-outline" title="Flat" showBack hideSociety />
         <View className="flex-1 items-center justify-center px-8">
           <Text className="font-sans text-center text-[14px] text-muted">This flat listing is no longer available.</Text>
         </View>
@@ -122,7 +122,7 @@ export default function PropertyDetailScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="key-outline" iconColor={ACCENT} title={isRent ? 'Flat for rent' : 'Flat for sale'} showBack hideSociety right={<ModerationMenu targetType="property" targetId={p.id} targetOwnerId={p.owner_user_id} targetOwnerName={p.owner?.name} />} />
+      <ScreenHeader icon="key-outline" title={isRent ? 'Flat for rent' : 'Flat for sale'} showBack hideSociety right={<ModerationMenu targetType="property" targetId={p.id} targetOwnerId={p.owner_user_id} targetOwnerName={p.owner?.name} />} />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container narrow>

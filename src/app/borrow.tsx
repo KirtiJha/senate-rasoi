@@ -56,7 +56,6 @@ export default function BorrowScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="swap-horizontal-outline"
-        iconColor={ACCENT}
         title="Borrow & Lend"
         showBack
         onAdd={() => router.push(addHref as any)}

@@ -119,7 +119,7 @@ export default function LendItemDetailScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="swap-horizontal-outline" iconColor={ACCENT} title="Item" showBack hideSociety />
+        <ScreenHeader icon="swap-horizontal-outline" title="Item" showBack hideSociety />
         <View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View>
       </View>
     );
@@ -166,7 +166,7 @@ export default function LendItemDetailScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="swap-horizontal-outline" iconColor={ACCENT} title={isOffer ? 'Lending' : 'Wants to borrow'} showBack hideSociety right={<ModerationMenu targetType="borrow" targetId={item.id} targetOwnerId={item.owner_user_id} targetOwnerName={item.owner?.name} />} />
+      <ScreenHeader icon="swap-horizontal-outline" title={isOffer ? 'Lending' : 'Wants to borrow'} showBack hideSociety right={<ModerationMenu targetType="borrow" targetId={item.id} targetOwnerId={item.owner_user_id} targetOwnerName={item.owner?.name} />} />
       <AScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}

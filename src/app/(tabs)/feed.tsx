@@ -116,7 +116,6 @@ export default function FeedScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="chatbubbles-outline"
-        iconColor={c.accent}
         title="Feed"
         hideSociety
         onAdd={() => setShowCompose(true)}

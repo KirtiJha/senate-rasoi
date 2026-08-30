@@ -60,7 +60,7 @@ export default function SportsScreen() {
   return (
     <View className="flex-1 bg-bg">
       <ScreenHeader
-        icon="football-outline" iconColor="#16A34A" title="Sports" showBack onAdd={onAdd} addLabel="Add a sport"
+        icon="football-outline" title="Sports" showBack onAdd={onAdd} addLabel="Add a sport"
         right={(
           <Pressable
             onPress={() => router.push('/sports/dues' as any)}

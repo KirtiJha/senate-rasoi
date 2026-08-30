@@ -101,7 +101,7 @@ export default function PollsScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="bar-chart-outline" iconColor="#8B5CF6" title="Community Polls" showBack onAdd={() => setShowCreate(true)} addLabel="Create poll" />
+      <ScreenHeader icon="bar-chart-outline" title="Community Polls" showBack onAdd={() => setShowCreate(true)} addLabel="Create poll" />
 
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}

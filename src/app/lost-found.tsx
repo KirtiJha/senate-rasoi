@@ -59,7 +59,6 @@ export default function LostFoundScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="search-outline"
-        iconColor={ACCENT}
         title="Lost & Found"
         showBack
         onAdd={() => router.push(addHref as any)}

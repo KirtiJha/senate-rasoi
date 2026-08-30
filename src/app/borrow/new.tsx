@@ -78,7 +78,6 @@ export default function NewLendItemScreen() {
     <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScreenHeader
         icon="swap-horizontal-outline"
-        iconColor={ACCENT}
         title={isOffer ? 'Lend something' : 'I need to borrow'}
         showBack
         hideSociety

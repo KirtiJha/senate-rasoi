@@ -38,7 +38,6 @@ export default function RecommendScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="sparkles-outline"
-        iconColor={ACCENT}
         title="Ask & Recommend"
         showBack
         onAdd={() => setShowAsk(true)}

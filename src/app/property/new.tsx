@@ -131,7 +131,7 @@ export default function NewPropertyScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="key-outline" iconColor={ACCENT} title="Edit flat listing" showBack hideSociety />
+        <ScreenHeader icon="key-outline" title="Edit flat listing" showBack hideSociety />
         <View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View>
       </View>
     );
@@ -139,7 +139,7 @@ export default function NewPropertyScreen() {
 
   return (
     <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScreenHeader icon="key-outline" iconColor={ACCENT} title={isEdit ? 'Edit flat listing' : 'Post your flat'} showBack hideSociety />
+      <ScreenHeader icon="key-outline" title={isEdit ? 'Edit flat listing' : 'Post your flat'} showBack hideSociety />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* Sale / Rent */}

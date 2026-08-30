@@ -121,7 +121,7 @@ export default function LostFoundDetailScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="search-outline" iconColor={ACCENT} title="Lost & Found" showBack hideSociety />
+        <ScreenHeader icon="search-outline" title="Lost & Found" showBack hideSociety />
         <View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View>
       </View>
     );
@@ -158,7 +158,6 @@ export default function LostFoundDetailScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="search-outline"
-        iconColor={ACCENT}
         title={isLost ? 'Lost item' : 'Found item'}
         showBack
         hideSociety

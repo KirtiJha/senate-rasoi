@@ -144,7 +144,7 @@ export default function ContributionsScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="wallet-outline" iconColor={ACCENT} title="Contributions" showBack hideSociety />
+        <ScreenHeader icon="wallet-outline" title="Contributions" showBack hideSociety />
         <View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View>
       </View>
     );
@@ -154,7 +154,6 @@ export default function ContributionsScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="wallet-outline"
-        iconColor={ACCENT}
         title="Contributions"
         showBack
         hideSociety

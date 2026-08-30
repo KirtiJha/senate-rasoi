@@ -156,7 +156,7 @@ export default function PlaceFormScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="location-outline" iconColor={ACCENT} title="Edit place" showBack hideSociety />
+        <ScreenHeader icon="location-outline" title="Edit place" showBack hideSociety />
         <View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View>
       </View>
     );
@@ -164,7 +164,7 @@ export default function PlaceFormScreen() {
 
   return (
     <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScreenHeader icon="location-outline" iconColor={ACCENT} title={isEdit ? 'Edit place' : 'Add a nearby place'} showBack hideSociety />
+      <ScreenHeader icon="location-outline" title={isEdit ? 'Edit place' : 'Add a nearby place'} showBack hideSociety />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* Type */}

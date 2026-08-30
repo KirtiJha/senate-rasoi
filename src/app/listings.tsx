@@ -236,9 +236,7 @@ export default function AllListingsScreen() {
       <ScreenHeader
         showBack
         icon="pricetags-outline"
-        iconColor={c.accent}
         title="All listings"
-        hideSociety
         onAdd={() => router.push('/post' as any)}
         addLabel="New listing"
         subBar={

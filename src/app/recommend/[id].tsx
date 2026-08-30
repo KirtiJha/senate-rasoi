@@ -122,15 +122,15 @@ export default function RecoDetailScreen() {
     catch { toast.show('Could not save'); } finally { setSavingA(false); }
   };
 
-  if (loading) return <View className="flex-1 bg-bg"><ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Question" showBack hideSociety /><View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View></View>;
-  if (!q) return <View className="flex-1 bg-bg"><ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Question" showBack hideSociety /><View className="flex-1 items-center justify-center px-8"><Text className="font-sans text-center text-[14px] text-muted">This question was removed.</Text></View></View>;
+  if (loading) return <View className="flex-1 bg-bg"><ScreenHeader icon="sparkles-outline" title="Question" showBack hideSociety /><View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View></View>;
+  if (!q) return <View className="flex-1 bg-bg"><ScreenHeader icon="sparkles-outline" title="Question" showBack hideSociety /><View className="flex-1 items-center justify-center px-8"><Text className="font-sans text-center text-[14px] text-muted">This question was removed.</Text></View></View>;
 
   const meta = recoCategory(q.category);
   const canDeleteQ = q.author_id === userId || isAdmin;
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Recommendation" showBack hideSociety right={<ModerationMenu targetType="recommend" targetId={q.id} targetOwnerId={q.author_id} targetOwnerName={q.author?.name} />} />
+      <ScreenHeader icon="sparkles-outline" title="Recommendation" showBack hideSociety right={<ModerationMenu targetType="recommend" targetId={q.id} targetOwnerId={q.author_id} targetOwnerName={q.author?.name} />} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* Question */}

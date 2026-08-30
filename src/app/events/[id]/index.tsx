@@ -109,7 +109,7 @@ export default function EventDetailScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Function" showBack hideSociety />
+        <ScreenHeader icon="sparkles-outline" title="Function" showBack hideSociety />
         <View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View>
       </View>
     );
@@ -119,7 +119,7 @@ export default function EventDetailScreen() {
     const goBack = () => router.canGoBack() ? router.back() : router.replace('/events' as any);
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Function" showBack hideSociety />
+        <ScreenHeader icon="sparkles-outline" title="Function" showBack hideSociety />
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="alert-circle-outline" size={48} color={c.faint} />
           <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Function removed</Text>
@@ -138,7 +138,7 @@ export default function EventDetailScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title={event.title} showBack hideSociety />
+      <ScreenHeader icon="sparkles-outline" title={event.title} showBack hideSociety />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container narrow>

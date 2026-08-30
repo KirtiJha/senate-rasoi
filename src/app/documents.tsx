@@ -64,7 +64,6 @@ export default function DocumentsScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="folder-outline"
-        iconColor="#0EA5E9"
         title="Documents"
         showBack
         onAdd={() => setShowUpload(true)}

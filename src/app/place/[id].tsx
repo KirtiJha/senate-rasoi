@@ -41,7 +41,7 @@ export default function PlaceDetailScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="location-outline" iconColor={ACCENT} title="Place" showBack hideSociety />
+        <ScreenHeader icon="location-outline" title="Place" showBack hideSociety />
         <View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View>
       </View>
     );
@@ -51,7 +51,7 @@ export default function PlaceDetailScreen() {
     const goBack = () => router.canGoBack() ? router.back() : router.replace('/places' as any);
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="location-outline" iconColor={ACCENT} title="Place" showBack hideSociety />
+        <ScreenHeader icon="location-outline" title="Place" showBack hideSociety />
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="alert-circle-outline" size={48} color={c.faint} />
           <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Place removed</Text>
@@ -76,7 +76,7 @@ export default function PlaceDetailScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="location-outline" iconColor={ACCENT} title={m.label} showBack hideSociety right={<ModerationMenu targetType="place" targetId={place.id} targetOwnerId={place.created_by} targetOwnerName={place.creator?.name} />} />
+      <ScreenHeader icon="location-outline" title={m.label} showBack hideSociety right={<ModerationMenu targetType="place" targetId={place.id} targetOwnerId={place.created_by} targetOwnerName={place.creator?.name} />} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* Photos. The old strip used fixed 260px cards that cut off

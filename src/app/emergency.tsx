@@ -59,7 +59,6 @@ export default function EmergencyScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="call-outline"
-        iconColor="#EF4444"
         title="Emergency Contacts"
         showBack
         onAdd={isAdmin ? () => setShowAdd(true) : undefined}

@@ -65,7 +65,6 @@ export default function NewLostFoundScreen() {
     <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScreenHeader
         icon="search-outline"
-        iconColor={ACCENT}
         title={isLost ? 'Report lost item' : 'Report found item'}
         showBack
         hideSociety
