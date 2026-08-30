@@ -13,6 +13,7 @@ import { OrderModal } from '../../components/OrderModal';
 import { PayButton } from '../../components/PayButton';
 import { T } from '../../components/T';
 import { Avatar, Badge, Button, Container, ParallaxHero, Sheet, useResponsive } from '../../components/ui';
+import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useConfirm } from '../../context/confirm';
 import { useToast } from '../../context/toast';
@@ -306,6 +307,12 @@ export default function DishDetailScreen() {
                 <Text className="font-sans-bold text-[15px] text-ink">{dish.chef_name}</Text>
                 <Text className="font-sans text-[12px] text-muted">Flat {dish.flat}{dish.upi ? ` · UPI ${dish.upi}` : ''}</Text>
               </View>
+              <ModerationMenu
+                targetType="dish"
+                targetId={dish.id}
+                targetOwnerId={dish.chef_user_id}
+                targetOwnerName={dish.chef_name}
+              />
             </View>
 
             {/* Owner / admin actions */}

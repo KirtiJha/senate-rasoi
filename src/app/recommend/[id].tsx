@@ -7,6 +7,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../../components/T';
 import { Avatar, Container, ScreenHeader, Sheet } from '../../components/ui';
+import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
@@ -129,7 +130,7 @@ export default function RecoDetailScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Recommendation" showBack hideSociety />
+      <ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Recommendation" showBack hideSociety right={<ModerationMenu targetType="recommend" targetId={q.id} targetOwnerId={q.author_id} targetOwnerName={q.author?.name} />} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* Question */}

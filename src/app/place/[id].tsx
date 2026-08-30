@@ -4,6 +4,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { Avatar, Button, Container, Gallery, ScreenHeader } from '../../components/ui';
+import { ModerationMenu } from '../../components/ModerationMenu';
 import { MapPreview } from '../../components/MapPreview';
 import { useAuth } from '../../context/auth';
 import { useConfirm } from '../../context/confirm';
@@ -75,7 +76,7 @@ export default function PlaceDetailScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="location-outline" iconColor={ACCENT} title={m.label} showBack hideSociety />
+      <ScreenHeader icon="location-outline" iconColor={ACCENT} title={m.label} showBack hideSociety right={<ModerationMenu targetType="place" targetId={place.id} targetOwnerId={place.created_by} targetOwnerName={place.creator?.name} />} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* Photos. The old strip used fixed 260px cards that cut off

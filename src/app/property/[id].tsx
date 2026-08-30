@@ -6,6 +6,7 @@ import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, Text
 import { PropertyChat } from '../../components/PropertyChat';
 import { T } from '../../components/T';
 import { Avatar, Button, Container, Gallery, ScreenHeader, Sheet } from '../../components/ui';
+import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
@@ -121,7 +122,7 @@ export default function PropertyDetailScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="key-outline" iconColor={ACCENT} title={isRent ? 'Flat for rent' : 'Flat for sale'} showBack hideSociety />
+      <ScreenHeader icon="key-outline" iconColor={ACCENT} title={isRent ? 'Flat for rent' : 'Flat for sale'} showBack hideSociety right={<ModerationMenu targetType="property" targetId={p.id} targetOwnerId={p.owner_user_id} targetOwnerName={p.owner?.name} />} />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container narrow>

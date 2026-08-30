@@ -1,13 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
 import { ThemePreference, useThemePreference } from '../context/theme';
+import { updateProfile } from '../lib/auth';
 import { supportMailto } from '../lib/support';
+import { SUPPORTED_LANGS, langByCode } from '../lib/translate';
 import { useThemeColors } from '../theme';
 
 /**
@@ -41,10 +44,24 @@ export default function SettingsScreen() {
   const c = useThemeColors();
   const router = useRouter();
   const confirm = useConfirm();
-  const { signOut } = useAuth();
+  const { signOut, userId, profile, refreshProfile } = useAuth();
+  const [savingLang, setSavingLang] = useState<string | null>(null);
   const { preference, setPreference } = useThemePreference();
 
   const version = Constants.expoConfig?.version ?? '—';
+
+  const activeLang = profile?.preferred_lang ?? 'en';
+
+  const pickLang = async (code: string) => {
+    if (!userId || savingLang) return;
+    setSavingLang(code);
+    try {
+      await updateProfile(userId, { preferred_lang: code === 'en' ? null : code });
+      await refreshProfile();
+    } finally {
+      setSavingLang(null);
+    }
+  };
 
   const handleSignOut = async () => {
     // Auth is a phone number plus a 6-digit PIN the resident chose themselves.
@@ -93,6 +110,43 @@ export default function SettingsScreen() {
               })}
             </View>
           </View>
+
+          {/* ── Language ───────────────────────────────────────── */}
+          <SectionLabel>Language</SectionLabel>
+          <Card>
+            {SUPPORTED_LANGS.map((l, i) => {
+              const active = activeLang === l.code;
+              return (
+                <View key={l.code}>
+                  <Pressable
+                    onPress={() => pickLang(l.code)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={l.label}
+                    className="flex-row items-center gap-3 px-4 py-3.5 active:bg-inset"
+                  >
+                    <Text className="flex-1 font-sans-md text-[15px] text-ink">
+                      {l.label}
+                      {l.label !== l.name ? (
+                        <Text className="text-[13px] text-subtle">{'  ' + l.name}</Text>
+                      ) : null}
+                    </Text>
+                    {savingLang === l.code ? (
+                      <ActivityIndicator size="small" color={c.accent} />
+                    ) : active ? (
+                      <Ionicons name="checkmark" size={19} color={c.accent} />
+                    ) : null}
+                  </Pressable>
+                  {i < SUPPORTED_LANGS.length - 1 ? <Divider /> : null}
+                </View>
+              );
+            })}
+          </Card>
+          <Text className="mb-6 -mt-3 px-1 text-[12px] leading-5 text-subtle">
+            Posts, listings and messages written by your neighbours are
+            translated as you read them. English needs no translation, so
+            leaving it here does nothing at all.
+          </Text>
 
           {/* ── Your account ───────────────────────────────────── */}
           <SectionLabel>Your account</SectionLabel>

@@ -10,6 +10,7 @@ import { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimate
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
 import { Avatar, Button, Container, ParallaxHero, ScreenHeader, Sheet } from '../../components/ui';
+import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
@@ -165,7 +166,7 @@ export default function LendItemDetailScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="swap-horizontal-outline" iconColor={ACCENT} title={isOffer ? 'Lending' : 'Wants to borrow'} showBack hideSociety />
+      <ScreenHeader icon="swap-horizontal-outline" iconColor={ACCENT} title={isOffer ? 'Lending' : 'Wants to borrow'} showBack hideSociety right={<ModerationMenu targetType="borrow" targetId={item.id} targetOwnerId={item.owner_user_id} targetOwnerName={item.owner?.name} />} />
       <AScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAuth } from './auth';
-import { Lang, translateBatch, TranslateItem } from '../lib/translate';
+import { Lang, langByCode, translateBatch, TranslateItem } from '../lib/translate';
 
 /**
  * Auto-translation engine. Any `<T>` on screen registers the text it wants in
@@ -25,12 +25,18 @@ const TranslationContext = createContext<Ctx | null>(null);
 
 export function TranslationProvider({ children }: { children: React.ReactNode }) {
   const { profile } = useAuth();
-  // Auto-translation is paused for now (the language feature lives on the
-  // feature/i18n-localization branch). Forcing `lang = null` makes every <T>
-  // render the original text and stops all translate requests — flip this back
-  // to re-enable. (profile is intentionally referenced to keep the dependency.)
-  void profile;
-  const lang = useMemo<Lang | null>(() => null, []);
+
+  // The reader's chosen language, from Settings → Language.
+  //
+  // English is not a translation target: `null` means every <T> renders its
+  // original text and no request is made at all. So the cost of this feature
+  // is zero for anyone who leaves it on English, and it stays that way by
+  // default — preferred_lang is null until someone chooses.
+  const lang = useMemo<Lang | null>(() => {
+    const code = profile?.preferred_lang;
+    if (!code || code === 'en') return null;
+    return langByCode(code);
+  }, [profile?.preferred_lang]);
 
   const [version, setVersion] = useState(0);
 
