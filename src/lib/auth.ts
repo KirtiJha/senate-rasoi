@@ -163,6 +163,8 @@ export async function updateResidentInfo(
     vehicle_no?: string | null;
     show_in_directory?: boolean;
     moved_in?: boolean;
+    /** A second number, shown beside the main one in the directory. */
+    alt_phone?: string | null;
   },
 ): Promise<void> {
   await supabase.from('profiles').update(fields).eq('id', userId);

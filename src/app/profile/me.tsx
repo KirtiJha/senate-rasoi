@@ -26,6 +26,7 @@ export default function ProfileScreen() {
   const [flat, setFlat] = useState(profile?.flat ?? '');
   const [whatsapp, setWhatsapp] = useState(profile?.whatsapp ?? '');
   const [upi, setUpi] = useState(profile?.upi ?? '');
+  const [altPhone, setAltPhone] = useState(profile?.alt_phone ?? '');
   const [residentType, setResidentType] = useState<'owner' | 'tenant' | null>(profile?.resident_type ?? null);
   const [profession, setProfession] = useState(profile?.profession ?? '');
   const [vehicleNo, setVehicleNo] = useState(profile?.vehicle_no ?? '');
@@ -58,6 +59,7 @@ export default function ProfileScreen() {
       setProfession(profile.profession ?? '');
       setVehicleNo(profile.vehicle_no ?? '');
       setShowInDirectory(profile.show_in_directory ?? true);
+      setAltPhone(profile.alt_phone ?? '');
       setMovedIn(profile.moved_in ?? false);
     }
   }, [profile]);
@@ -73,6 +75,7 @@ export default function ProfileScreen() {
         vehicle_no: vehicleNo.trim() || null,
         show_in_directory: showInDirectory,
         moved_in: movedIn,
+        alt_phone: altPhone.trim() || null,
       });
       await refreshProfile();
       toast.show('Profile updated ✅');
@@ -166,6 +169,14 @@ export default function ProfileScreen() {
             </View>
             <Field label="WhatsApp" placeholder="98765 43210" keyboardType="phone-pad" value={whatsapp} onChangeText={setWhatsapp} />
             <Field label="UPI ID" hint="Neighbours pay you directly" autoCapitalize="none" placeholder="priya@ybl" value={upi} onChangeText={setUpi} />
+            <Field
+              label="Alternate phone"
+              hint="Shown in the resident directory alongside your main number"
+              keyboardType="phone-pad"
+              placeholder="98765 43210"
+              value={altPhone}
+              onChangeText={setAltPhone}
+            />
 
             <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">I'm a…</Text>
             <View className="mb-4 flex-row gap-2.5">

@@ -10,6 +10,7 @@ import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import { ThemePreference, useThemePreference } from '../context/theme';
 import { updateProfile } from '../lib/auth';
+import { updateResidentInfo } from '../lib/auth';
 import { MUTABLE_CATEGORIES, fetchMutedTypes, setMuted } from '../lib/notificationPrefs';
 import { supportMailto } from '../lib/support';
 import { SUPPORTED_LANGS, langByCode } from '../lib/translate';
@@ -51,11 +52,26 @@ export default function SettingsScreen() {
   const [savingLang, setSavingLang] = useState<string | null>(null);
   const [muted, setMutedState] = useState<Set<string> | null>(null);
   const [pendingMute, setPendingMute] = useState<string | null>(null);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
   const { preference, setPreference } = useThemePreference();
 
   const version = Constants.expoConfig?.version ?? '—';
 
   const activeLang = profile?.preferred_lang ?? 'en';
+  const inDirectory = profile?.show_in_directory ?? true;
+
+  const toggleDirectory = async () => {
+    if (!profile || savingPrivacy) return;
+    setSavingPrivacy(true);
+    try {
+      await updateResidentInfo(profile.id, { show_in_directory: !inDirectory });
+      await refreshProfile();
+    } catch {
+      toast.show('Could not save that — try again');
+    } finally {
+      setSavingPrivacy(false);
+    }
+  };
 
   useEffect(() => {
     if (!userId) return;
@@ -226,12 +242,47 @@ export default function SettingsScreen() {
             leaving it here does nothing at all.
           </Text>
 
+          {/* ── Privacy ────────────────────────────────────────────
+              This lived only inside the profile editor, several taps away and
+              under a heading nobody reads as "privacy" — while the column it
+              controls defaults to TRUE. So a new resident's phone number is
+              visible to the whole society before they learn the setting
+              exists. Putting it here does not change the default, but it puts
+              the choice where someone looking for it would look. */}
+          <SectionLabel>Privacy</SectionLabel>
+          <Card>
+            <Pressable
+              onPress={toggleDirectory}
+              disabled={!profile || savingPrivacy}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: inDirectory, disabled: !profile }}
+              accessibilityLabel="Show my phone number in the resident directory"
+              className="flex-row items-center gap-3 px-4 py-3 active:bg-inset"
+            >
+              <View className="min-w-0 flex-1">
+                <Text className="font-sans-md text-[15px] text-ink">Show my phone number</Text>
+                <Text className="mt-0.5 text-[12px] leading-4 text-subtle">
+                  {inDirectory
+                    ? 'Neighbours can call and WhatsApp you from the directory'
+                    : "You stay listed, but your number is hidden"}
+                </Text>
+              </View>
+              <Switch
+                value={inDirectory}
+                onValueChange={toggleDirectory}
+                disabled={!profile || savingPrivacy}
+                trackColor={{ false: c.line, true: c.accentSoft }}
+                thumbColor={inDirectory ? c.accent : c.subtle}
+              />
+            </Pressable>
+            <Divider />
+            <Row icon="ban-outline" label="Blocked residents" c={c} onPress={() => router.push('/profile/blocked' as any)} />
+          </Card>
+
           {/* ── Your account ───────────────────────────────────── */}
           <SectionLabel>Your account</SectionLabel>
           <Card>
             <Row icon="person-outline" label="Edit profile" c={c} onPress={() => router.push('/profile/me' as any)} />
-            <Divider />
-            <Row icon="ban-outline" label="Blocked residents" c={c} onPress={() => router.push('/profile/blocked' as any)} />
           </Card>
 
           {/* ── About ──────────────────────────────────────────── */}
