@@ -21,7 +21,7 @@ type MyItem =
   | { kind: 'dish'; id: string; raw: DishRow }
   | { kind: 'tiffin'; id: string; raw: TiffinPlan };
 
-export function MyListingsSection({ onCount }: { onCount?: (n: number) => void } = {}) {
+export function MyListingsSection() {
   const { userId, communityId } = useAuth();
   const toast = useToast();
   const confirm = useConfirm();
@@ -40,13 +40,11 @@ export function MyListingsSection({ onCount }: { onCount?: (n: number) => void }
         fetchDishes(communityId).then((d) => d.filter((x) => x.chef_user_id === userId)).catch(() => [] as DishRow[]),
         listMyTiffinPlans(userId).catch(() => [] as TiffinPlan[]),
       ]);
-      const next: MyItem[] = [
+      setItems([
         ...listings.map((l): MyItem => ({ kind: 'listing', id: l.id, raw: l })),
         ...dishes.map((d): MyItem => ({ kind: 'dish', id: d.id, raw: d })),
         ...plans.map((p): MyItem => ({ kind: 'tiffin', id: p.id, raw: p })),
-      ];
-      setItems(next);
-      onCount?.(next.length);
+      ]);
       fetchInquiryCountsForOwner(listings.map((l) => l.id)).then(setInquiryCounts).catch(() => {});
     } catch (e) {
       console.error(e);

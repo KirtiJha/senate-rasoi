@@ -9,7 +9,7 @@ import { ListingRow } from '../lib/types';
 import { useThemeColors } from '../theme';
 import { Container } from './ui';
 
-export function SavedSection({ onCount }: { onCount?: (n: number) => void } = {}) {
+export function SavedSection() {
   const { userId } = useAuth();
   const router = useRouter();
   const c = useThemeColors();
@@ -19,9 +19,7 @@ export function SavedSection({ onCount }: { onCount?: (n: number) => void } = {}
   const load = useCallback(async () => {
     if (!userId) { setLoading(false); return; }
     try {
-      const rows = await fetchSavedListings(userId);
-      setListings(rows);
-      onCount?.(rows.length);
+      setListings(await fetchSavedListings(userId));
     } catch { /* silently fail */ }
     finally { setLoading(false); }
   }, [userId]);
