@@ -70,6 +70,10 @@ export default function NewLostFoundScreen() {
         hideSociety
       />
       <ScrollView
+        // Fills the space the KeyboardAvoider gives it. Without this the
+        // scroller sizes to its own content and overflows its parent, which
+        // renders the form oversized instead of scrollable.
+        style={{ flex: 1 }}
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}

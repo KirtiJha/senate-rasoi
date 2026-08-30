@@ -128,6 +128,10 @@ export default function ProfileScreen() {
     <KeyboardAvoider>
       <ScreenHeader icon="person-circle-outline" title="My Profile" showBack />
       <ScrollView
+        // Fills the space the KeyboardAvoider gives it. Without this the
+        // scroller sizes to its own content and overflows its parent, which
+        // renders the form oversized instead of scrollable.
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 60, paddingHorizontal: 16 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"

@@ -329,6 +329,10 @@ export default function PostScreen({
   return (
     <KeyboardAvoider>
       <ScrollView
+        // Fills the space the KeyboardAvoider gives it. Without this the
+        // scroller sizes to its own content and overflows its parent, which
+        // renders the form oversized instead of scrollable.
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingTop: embedded ? 14 : isDesktop ? insets.top + 18 : 18, paddingHorizontal: 16, paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}

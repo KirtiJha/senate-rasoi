@@ -1618,6 +1618,8 @@ async function runAgentStream(
 
   let pinned: { source: string; id: string }[] = [];
   let suggestions: string[] = [];
+  // Kept so the follow-up call can see what was actually said.
+  let answerSoFar = '';
   let answered = false;
 
   for (let step = 0; step < MAX_STEPS; step++) {
@@ -1651,7 +1653,11 @@ async function runAgentStream(
     // deno-lint-ignore no-explicit-any
     for await (const event of stream as any) {
       if (event.type === 'response.output_text.delta') {
-        if (event.delta) { sawText = true; emit({ t: 'delta', v: String(event.delta) }); }
+        if (event.delta) {
+          sawText = true;
+          answerSoFar += String(event.delta);
+          emit({ t: 'delta', v: String(event.delta) });
+        }
       } else if (event.type === 'response.output_item.done') {
         if (event.item) produced.push(event.item);
       }
@@ -1716,38 +1722,50 @@ async function runAgentStream(
   }
 
   if (!answered) emit({ t: 'delta', v: 'I could not work that one out — try asking a different way.' });
+
+  // Follow-ups, guaranteed rather than hoped for.
+  //
+  // suggest_next is an optional tool, and a model that has finished thinking
+  // simply answers instead of calling it — so the chips appeared sometimes and
+  // not others, which is worse than never. Asking directly makes it reliable.
+  //
+  // The cost is one small extra call, and it is spent at the only moment it is
+  // free: the answer has already streamed, so the resident is reading while
+  // this runs. Nobody waits for it.
+  if (!suggestions.length && answered) {
+    try {
+      const followups = await client.responses.create({
+        model,
+        input: [
+          {
+            role: 'user',
+            content:
+              'A resident of an Indian housing society asked their society assistant this:\n\n' +
+              `"${question}"\n\nAnd got this answer:\n\n"${answerSoFar.slice(0, 1200)}"\n\n` +
+              'Suggest two or three things they might naturally ask next, in the words a resident would ' +
+              'use, each under 45 characters. They must be answerable from what a society app knows — ' +
+              'food, flats, listings, neighbours, notices, events, things to borrow. Reply as JSON: ' +
+              '{"questions":["…","…"]}',
+          },
+        ],
+        reasoning: { effort: 'none' },
+        // deno-lint-ignore no-explicit-any
+      } as any);
+
+      // deno-lint-ignore no-explicit-any
+      const text = (followups as any).output_text
+        // deno-lint-ignore no-explicit-any
+        ?? (followups as any).output?.flatMap((o: any) => o?.content ?? [])
+          // deno-lint-ignore no-explicit-any
+          ?.map((p: any) => p?.text).filter(Boolean).join('') ?? '';
+      const parsed = JSON.parse(String(text).replace(/^```(?:json)?|```$/g, '').trim());
+      if (Array.isArray(parsed?.questions)) {
+        suggestions = parsed.questions.map((q: unknown) => String(q).trim()).filter(Boolean).slice(0, 3);
+      }
+    } catch {
+      // Chips are a nicety. A failure here must never cost the answer.
+    }
+  }
+
   emit({ t: 'done', results: pinned, steps, suggestions });
-}
-
-/**
- * The same agent, buffered into one reply.
- *
- * Not a second implementation — it runs the streaming one and collects the
- * events. Two hand-written loops would drift, and the one that drifts is
- * always the one nobody is looking at.
- *
- * Used by the non-streaming `agent` action, which stays for clients that
- * cannot read a response body incrementally (React Native's stock fetch among
- * them, which is why this is not hypothetical).
- */
-async function runAgent(
-  d: Deps,
-  question: string,
-  history: { role: 'user' | 'assistant'; text: string }[],
-  apiKey: string,
-  model: string,
-): Promise<AgentResult> {
-  let answer = '';
-  let results: { source: string; id: string }[] = [];
-  let proposal: AgentResult['proposal'];
-  let steps: { tool: string; summary: string }[] = [];
-  let suggestions: string[] = [];
-
-  await runAgentStream(d, question, history, apiKey, model, (e) => {
-    if (e.t === 'delta') answer += e.v;
-    else if (e.t === 'done') { results = e.results; proposal = e.proposal; steps = e.steps; suggestions = e.suggestions ?? []; }
-    else if (e.t === 'error') answer ||= e.message;
-  });
-
-  return { answer: answer.trim(), results, proposal, steps, suggestions };
 }

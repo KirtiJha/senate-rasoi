@@ -140,7 +140,7 @@ export default function NewPropertyScreen() {
   return (
     <KeyboardAvoider>
       <ScreenHeader icon="key-outline" title={isEdit ? 'Edit flat listing' : 'Post your flat'} showBack hideSociety />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* Sale / Rent */}
           <View className="mb-4 flex-row rounded-2xl bg-inset p-1">

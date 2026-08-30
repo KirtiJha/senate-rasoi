@@ -165,7 +165,7 @@ export default function PlaceFormScreen() {
   return (
     <KeyboardAvoider>
       <ScreenHeader icon="location-outline" title={isEdit ? 'Edit place' : 'Add a nearby place'} showBack hideSociety />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* Type */}
           <Text className={label}>Type</Text>

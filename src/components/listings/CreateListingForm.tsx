@@ -183,6 +183,10 @@ export function CreateListingForm({ cat, onBack, existing }: Props) {
   return (
     <KeyboardAvoider>
       <ScrollView
+        // Fills the space the KeyboardAvoider gives it. Without this the
+        // scroller sizes to its own content and overflows its parent, which
+        // renders the form oversized instead of scrollable.
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 18 : 18, paddingHorizontal: 16, paddingBottom: 48 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}

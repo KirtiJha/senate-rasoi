@@ -82,7 +82,7 @@ export default function NewLendItemScreen() {
         showBack
         hideSociety
       />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* Kind toggle */}
           <View className="mb-5 flex-row rounded-2xl p-1" style={{ backgroundColor: c.inset }}>

@@ -249,7 +249,7 @@ export default function SignInScreen() {
 
   return (
     <KeyboardAvoider>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }} keyboardShouldPersistTaps="handled">
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }} keyboardShouldPersistTaps="handled">
         <Container narrow>
           {/* The old header stacked a full brand lockup, a tagline, an emoji
               and two lines of instructions above the first field — most of a
