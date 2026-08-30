@@ -100,8 +100,8 @@ export default function EventReportScreen() {
             <View style={{ height: 4, backgroundColor: ACCENT }} />
             <View className="p-4">
               <View className="flex-row">
-                <BigStat label="Collected" value={rupees(t.collected)} color="#16A34A" />
-                <BigStat label="Spent" value={rupees(t.spent)} color="#EF4444" />
+                <BigStat label="Collected" value={rupees(t.collected)} color={c.accent} />
+                <BigStat label="Spent" value={rupees(t.spent)} color={c.danger} />
               </View>
               <View className="mt-3 border-t border-line pt-3">
                 <Text className="font-sans text-[11px] text-faint">Balance remaining</Text>

@@ -34,6 +34,7 @@ module.exports = {
 
         warn: 'rgb(var(--warn) / <alpha-value>)',
         danger: 'rgb(var(--danger) / <alpha-value>)',
+        'danger-soft': 'rgb(var(--danger-soft) / <alpha-value>)',
         info: 'rgb(var(--info) / <alpha-value>)',
 
         // Fixed semantic colors (same in both schemes).

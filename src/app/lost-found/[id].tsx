@@ -231,7 +231,7 @@ export default function LostFoundDetailScreen() {
                 </Pressable>
               </View>
               <Pressable onPress={removeItem} className="mt-2 flex-row items-center justify-center gap-1.5 py-2 active:opacity-60">
-                <Ionicons name="trash-outline" size={15} color="#EF4444" />
+                <Ionicons name="trash-outline" size={15} color={c.danger} />
                 <Text className="text-[13px] font-sans-sb text-nonveg">Delete report</Text>
               </Pressable>
             </View>
@@ -240,7 +240,7 @@ export default function LostFoundDetailScreen() {
             <View className="mt-5 gap-2.5">
               {isResolved ? (
                 <View className="items-center rounded-2xl border border-line bg-surface p-4">
-                  <Ionicons name="checkmark-circle" size={26} color="#16A34A" />
+                  <Ionicons name="checkmark-circle" size={26} color={c.accent} />
                   <Text className="mt-1 font-sans-bold text-[14px] text-ink">
                     {isLost ? 'This item was found!' : 'This item was returned!'}
                   </Text>

@@ -32,6 +32,7 @@
     --success: 18 122 80; /* deliberately the brand family */
     --warn: 154 86 8;
     --danger: 179 38 30; /* works as text on bg AND as a fill under white */
+    --danger-soft: 251 230 227;
     --info: 58 74 134; /* indigo — the other Indian dye */
   }
 
@@ -73,6 +74,8 @@
       --success: 63 185 139;
       --warn: 232 160 60;
       --danger: 242 104 92;
+    --danger-soft: 51 17 14;
+      --danger-soft: 51 17 14;
       --info: 143 164 232;
     }
 
@@ -100,6 +103,7 @@
       --success: 18 122 80;
       --warn: 154 86 8;
       --danger: 179 38 30;
+      --danger-soft: 251 230 227;
       --info: 58 74 134;
     }
   }
@@ -129,6 +133,7 @@
     --success: 63 185 139;
     --warn: 232 160 60;
     --danger: 242 104 92;
+    --danger-soft: 51 17 14;
     --info: 143 164 232;
   }
 

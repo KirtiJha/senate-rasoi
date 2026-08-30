@@ -43,7 +43,7 @@ function TiffinCardBase({ plan, subscribed, onPress, onEdit, width }: TiffinCard
           </Pressable>
         ) : null}
         <View className="absolute left-2.5 top-2.5 flex-row items-center gap-1.5">
-          <View className="rounded-md bg-white/95 p-0.5">
+          <View className="rounded-md bg-surface/95 p-0.5">
             <VegMark type={plan.veg_type} size={13} />
           </View>
           <Badge label="Tiffin" tone="onPhoto" />

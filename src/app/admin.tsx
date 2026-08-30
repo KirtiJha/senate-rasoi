@@ -304,7 +304,7 @@ export default function AdminScreen() {
                         <Text className="font-sans-sb text-[15px] text-ink" numberOfLines={1}>{m.name || 'Unnamed'}</Text>
                         {self ? <Badge label="you" color={c.accent} /> : null}
                         {memberAdmin ? <Badge label="admin" color={c.accent} /> : null}
-                        {m.blocked ? <Badge label="blocked" color="#EF4444" /> : null}
+                        {m.blocked ? <Badge label="blocked" color={c.danger} /> : null}
                       </View>
                       <Text className="font-sans text-[12px] text-muted">
                         {m.phone ?? '—'}{m.flat ? ` · Flat ${m.flat}` : ''}
@@ -611,8 +611,8 @@ function JoinRequestCard({
 
       {req.status === 'pending' ? (
         <View className="mt-3 flex-row gap-2">
-          <Pressable onPress={() => onUpdate(req.id, 'rejected')} className="flex-1 items-center rounded-xl border border-red-200 bg-red-50 py-2.5">
-            <Text className="text-[13px] font-sans-sb text-red-600">Reject</Text>
+          <Pressable onPress={() => onUpdate(req.id, 'rejected')} className="flex-1 items-center rounded-xl border border-danger/30 bg-danger-soft py-2.5">
+            <Text className="text-[13px] font-sans-sb text-danger">Reject</Text>
           </Pressable>
           <Pressable onPress={() => onUpdate(req.id, 'approved')} className="flex-1 items-center rounded-xl bg-accent py-2.5">
             <Text className="text-[13px] font-sans-sb text-on-accent">Approve</Text>

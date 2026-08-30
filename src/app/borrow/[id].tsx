@@ -212,14 +212,14 @@ export default function LendItemDetailScreen() {
                     ))}
                   </View>
                   <Pressable onPress={removeItem} className="mt-2 flex-row items-center justify-center gap-1.5 py-2 active:opacity-60">
-                    <Ionicons name="trash-outline" size={15} color="#EF4444" />
+                    <Ionicons name="trash-outline" size={15} color={c.danger} />
                     <Text className="text-[13px] font-sans-sb text-nonveg">Delete listing</Text>
                   </Pressable>
                 </View>
               ) : (
                 <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
                   <Pressable onPress={removeItem} className="flex-row items-center justify-center gap-1.5 py-2 active:opacity-60">
-                    <Ionicons name="trash-outline" size={15} color="#EF4444" />
+                    <Ionicons name="trash-outline" size={15} color={c.danger} />
                     <Text className="text-[13px] font-sans-sb text-nonveg">Delete request</Text>
                   </Pressable>
                 </View>

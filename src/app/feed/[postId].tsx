@@ -196,14 +196,14 @@ export default function PostThreadScreen() {
           <View className="mb-6">
             {post.pinned ? (
               <View className="mb-2 flex-row items-center gap-1.5">
-                <Ionicons name="pin" size={13} color="#D97706" />
-                <Text className="text-[12px] font-sans-sb text-amber-600">Pinned by admin</Text>
+                <Ionicons name="pin" size={13} color={c.highlightInk} />
+                <Text className="text-[12px] font-sans-sb text-highlight-ink">Pinned by admin</Text>
               </View>
             ) : null}
             {post.resolved ? (
               <View className="mb-2 flex-row items-center gap-1.5">
-                <Ionicons name="checkmark-circle" size={13} color="#059669" />
-                <Text className="text-[12px] font-sans-sb text-green-600">Marked as resolved</Text>
+                <Ionicons name="checkmark-circle" size={13} color={c.accent} />
+                <Text className="text-[12px] font-sans-sb text-accent">Marked as resolved</Text>
               </View>
             ) : null}
 
@@ -522,7 +522,7 @@ function MenuItem({ icon, label, onPress, c, danger }: { icon: keyof typeof Ioni
   return (
     <Pressable onPress={onPress} className="flex-row items-center gap-2.5 px-4 py-3 active:bg-inset">
       <Ionicons name={icon} size={16} color={danger ? '#DC2626' : c.muted} />
-      <Text className={`text-[14px] font-sans-md ${danger ? 'text-red-600' : 'text-ink'}`}>{label}</Text>
+      <Text className={`text-[14px] font-sans-md ${danger ? 'text-danger' : 'text-ink'}`}>{label}</Text>
     </Pressable>
   );
 }

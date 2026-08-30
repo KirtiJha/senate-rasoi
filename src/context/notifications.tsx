@@ -175,7 +175,7 @@ function NotificationsModal({
                   </Pressable>
                 )}
                 <Pressable onPress={onClearAll} hitSlop={4} className="flex-row items-center gap-1 rounded-full bg-inset px-2.5 py-1 active:opacity-70">
-                  <Ionicons name="trash-outline" size={12} color="#EF4444" />
+                  <Ionicons name="trash-outline" size={12} color={c.danger} />
                   <Text className="text-[12px] font-sans-sb text-[#EF4444]">Clear all</Text>
                 </Pressable>
               </View>

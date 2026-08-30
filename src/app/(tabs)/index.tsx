@@ -794,7 +794,7 @@ function FreshFoodStrip({ items, isDesktop }: { items: DishRow[]; isDesktop: boo
               style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 74 }}
             />
 
-            <View className="absolute left-2 top-2 rounded-md bg-white/95 p-0.5">
+            <View className="absolute left-2 top-2 rounded-md bg-surface/95 p-0.5">
               <VegMark type={d.veg_type} size={13} />
             </View>
             {serveLabel ? (

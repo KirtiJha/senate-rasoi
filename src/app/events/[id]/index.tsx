@@ -166,8 +166,8 @@ export default function EventDetailScreen() {
           {/* Money at a glance */}
           <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
             <View className="flex-row">
-              <Stat label="Collected" value={rupees(totals.collected)} color="#16A34A" />
-              <Stat label="Spent" value={rupees(totals.spent)} color="#EF4444" />
+              <Stat label="Collected" value={rupees(totals.collected)} color={c.accent} />
+              <Stat label="Spent" value={rupees(totals.spent)} color={c.danger} />
               <Stat
                 label="Balance"
                 value={rupees(totals.balance)}
@@ -198,14 +198,14 @@ export default function EventDetailScreen() {
           {/* Where to go */}
           <View className="mt-4 gap-2">
             <NavRow
-              icon="wallet-outline" color="#16A34A"
+              icon="wallet-outline" color={c.accent}
               title="Contributions"
               sub={totals.flatsTotal ? `${totals.flatsPaid}/${totals.flatsTotal} flats · ${rupees(totals.collected)}` : 'Not set up yet'}
               onPress={() => router.push(`/events/${event.id}/contributions` as any)}
               c={c}
             />
             <NavRow
-              icon="receipt-outline" color="#EF4444"
+              icon="receipt-outline" color={c.danger}
               title="Expenses & bills"
               sub={expenses.length ? `${expenses.length} entries · ${rupees(totals.spent)}` : 'Nothing recorded yet'}
               onPress={() => router.push(`/events/${event.id}/expenses` as any)}
@@ -268,7 +268,7 @@ export default function EventDetailScreen() {
               />
               {isAdmin ? (
                 <Pressable onPress={removeEvent} className="mt-2 flex-row items-center justify-center gap-1.5 py-2 active:opacity-60">
-                  <Ionicons name="trash-outline" size={15} color="#EF4444" />
+                  <Ionicons name="trash-outline" size={15} color={c.danger} />
                   <Text className="text-[13px] font-sans-sb text-nonveg">Delete function</Text>
                 </Pressable>
               ) : null}

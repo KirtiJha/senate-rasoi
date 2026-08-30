@@ -187,7 +187,7 @@ function PublicToggle({ value, onToggle, c }: { value: boolean; onToggle: () => 
         <Text className="font-sans text-[12px] text-muted">{value ? 'Any society member can access' : 'Only people you share with can access'}</Text>
       </View>
       <View className={`h-6 w-10 rounded-full p-0.5 ${value ? 'bg-success' : 'bg-line'}`}>
-        <View className={`h-5 w-5 rounded-full bg-white ${value ? 'self-end' : 'self-start'}`} />
+        <View className={`h-5 w-5 rounded-full bg-surface ${value ? 'self-end' : 'self-start'}`} />
       </View>
     </Pressable>
   );

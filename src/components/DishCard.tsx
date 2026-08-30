@@ -90,7 +90,7 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCar
         {/* top row */}
         <View className="absolute left-3 right-3 top-3 flex-row items-start justify-between">
           <View className="flex-row items-center gap-2">
-            <View className="rounded-lg bg-white/95 p-1">
+            <View className="rounded-lg bg-surface/95 p-1">
               <VegMark type={dish.veg_type} size={15} />
             </View>
             {owned ? <Badge label="Your dish" tone="onPhoto" /> : null}

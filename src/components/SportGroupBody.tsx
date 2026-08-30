@@ -226,7 +226,7 @@ export function SportGroupBody({
                   ) : null}
                   {showRemove ? (
                     <Pressable onPress={() => onRemoveMember(m)} hitSlop={6} className="h-8 w-8 items-center justify-center rounded-full bg-inset active:opacity-70">
-                      <Ionicons name="close" size={15} color="#EF4444" />
+                      <Ionicons name="close" size={15} color={c.danger} />
                     </Pressable>
                   ) : null}
                 </View>

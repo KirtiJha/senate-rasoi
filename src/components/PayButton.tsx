@@ -132,7 +132,7 @@ export function PaySheet({
           {isDesktop ? (
             <View className="items-center rounded-2xl border border-line bg-surface p-4">
               {valid ? (
-                <View className="rounded-xl bg-white p-3">
+                <View className="rounded-xl bg-surface p-3">
                   <QRCode value={link} size={180} />
                 </View>
               ) : null}

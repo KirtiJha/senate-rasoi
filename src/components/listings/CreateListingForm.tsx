@@ -213,11 +213,11 @@ export function CreateListingForm({ cat, onBack, existing }: Props) {
               <Image source={{ uri: photoUri }} style={{ width: '100%', height: 200 }} contentFit="cover" />
               <LinearGradient colors={['transparent', 'rgba(0,0,0,0.5)']} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60 }} />
               <View className="absolute bottom-3 right-3 flex-row gap-2">
-                <Pressable onPress={pickPhoto} className="flex-row items-center gap-1.5 rounded-full bg-white/95 px-3 py-2">
+                <Pressable onPress={pickPhoto} className="flex-row items-center gap-1.5 rounded-full bg-surface/95 px-3 py-2">
                   <Ionicons name="camera-outline" size={14} color="#16171A" />
                   <Text className="font-sans-sb text-[12px] text-[#16171A]">Change</Text>
                 </Pressable>
-                <Pressable onPress={() => { setPhotoUri(null); setPhotoFlagged(false); }} className="rounded-full bg-white/95 px-3 py-2">
+                <Pressable onPress={() => { setPhotoUri(null); setPhotoFlagged(false); }} className="rounded-full bg-surface/95 px-3 py-2">
                   <Ionicons name="trash-outline" size={14} color="#E0322B" />
                 </Pressable>
               </View>

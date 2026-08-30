@@ -83,7 +83,7 @@ export default function HelpersScreen() {
             <Pressable onPress={() => setDonor((d) => !d)} className="mb-3 flex-row items-center gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5">
               <Ionicons name={donor ? 'water' : 'water-outline'} size={18} color={donor ? ACCENT : c.muted} />
               <Text className="flex-1 font-sans-sb text-[14px] text-ink">Available to donate blood</Text>
-              <View className={`h-6 w-10 rounded-full p-0.5`} style={{ backgroundColor: donor ? ACCENT : c.line }}><View className={`h-5 w-5 rounded-full bg-white ${donor ? 'self-end' : 'self-start'}`} /></View>
+              <View className={`h-6 w-10 rounded-full p-0.5`} style={{ backgroundColor: donor ? ACCENT : c.line }}><View className={`h-5 w-5 rounded-full bg-surface ${donor ? 'self-end' : 'self-start'}`} /></View>
             </Pressable>
 
             <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">I can also help with</Text>

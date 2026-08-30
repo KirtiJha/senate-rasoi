@@ -184,7 +184,7 @@ export default function PropertyDetailScreen() {
               <View className="flex-row flex-wrap gap-2">
                 {p.amenities.map((a) => (
                   <View key={a} className="flex-row items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1.5">
-                    <Ionicons name="checkmark-circle" size={13} color="#16A34A" />
+                    <Ionicons name="checkmark-circle" size={13} color={c.accent} />
                     <Text className="font-sans text-[12px] text-ink">{a}</Text>
                   </View>
                 ))}
@@ -219,7 +219,7 @@ export default function PropertyDetailScreen() {
                 <Text className="text-[13px] font-sans-sb text-ink">Edit listing & photos</Text>
               </Pressable>
               <Pressable onPress={confirmDelete} className="mt-2 flex-row items-center justify-center gap-1.5 py-2 active:opacity-60">
-                <Ionicons name="trash-outline" size={15} color="#EF4444" />
+                <Ionicons name="trash-outline" size={15} color={c.danger} />
                 <Text className="text-[13px] font-sans-sb text-nonveg">Delete listing</Text>
               </Pressable>
             </View>

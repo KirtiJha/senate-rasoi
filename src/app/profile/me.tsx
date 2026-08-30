@@ -195,7 +195,7 @@ export default function ProfileScreen() {
                 <Text className="font-sans text-[12px] text-muted">{showInDirectory ? 'Neighbours can call & WhatsApp you' : "You're still listed — but your number is hidden"}</Text>
               </View>
               <View className={`h-6 w-10 rounded-full p-0.5 ${showInDirectory ? 'bg-accent' : 'bg-line'}`}>
-                <View className={`h-5 w-5 rounded-full bg-white ${showInDirectory ? 'self-end' : 'self-start'}`} />
+                <View className={`h-5 w-5 rounded-full bg-surface ${showInDirectory ? 'self-end' : 'self-start'}`} />
               </View>
             </Pressable>
 
@@ -209,7 +209,7 @@ export default function ProfileScreen() {
                 <Text className="font-sans text-[12px] text-muted">{movedIn ? 'Shown as living here' : 'Shown as not moved in yet'}</Text>
               </View>
               <View className={`h-6 w-10 rounded-full p-0.5 ${movedIn ? 'bg-accent' : 'bg-line'}`}>
-                <View className={`h-5 w-5 rounded-full bg-white ${movedIn ? 'self-end' : 'self-start'}`} />
+                <View className={`h-5 w-5 rounded-full bg-surface ${movedIn ? 'self-end' : 'self-start'}`} />
               </View>
             </Pressable>
             <Button label={savingProfile ? 'Saving…' : 'Save Changes'} loading={savingProfile} onPress={handleSaveProfile} fullWidth />
@@ -288,15 +288,15 @@ export default function ProfileScreen() {
           </View>
 
           {/* Danger zone */}
-          <View className="rounded-2xl border border-red-200 bg-red-50 p-4">
-            <Text className="mb-1 font-sans-sb text-[13px] text-red-700">Danger Zone</Text>
-            <Text className="font-sans mb-3 text-[12px] text-red-500">Deleting your account permanently removes all your listings, posts, and data. This cannot be undone.</Text>
+          <View className="rounded-2xl border border-danger/30 bg-danger-soft p-4">
+            <Text className="mb-1 font-sans-sb text-[13px] text-danger">Danger Zone</Text>
+            <Text className="font-sans mb-3 text-[12px] text-danger">Deleting your account permanently removes all your listings, posts, and data. This cannot be undone.</Text>
             <Pressable
               onPress={handleDeleteAccount}
-              className="flex-row items-center justify-center gap-2 rounded-xl border border-red-300 bg-white py-2.5 active:bg-red-50"
+              className="flex-row items-center justify-center gap-2 rounded-xl border border-danger/30 bg-surface py-2.5 active:bg-danger-soft"
             >
-              <Ionicons name="trash-outline" size={16} color="#DC2626" />
-              <Text className="font-sans-sb text-[13px] text-red-600">Delete my account</Text>
+              <Ionicons name="trash-outline" size={16} color={c.danger} />
+              <Text className="font-sans-sb text-[13px] text-danger">Delete my account</Text>
             </Pressable>
           </View>
         </Container>

@@ -266,15 +266,15 @@ const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userI
             <Text className="text-[11px] font-sans-sb" style={{ color }}>{POST_CATEGORY_LABELS[post.category]}</Text>
           </View>
           {post.pinned ? (
-            <View className="flex-row items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5">
-              <Ionicons name="pin" size={10} color="#D97706" />
-              <Text className="text-[10px] font-sans-sb text-amber-700">Pinned</Text>
+            <View className="flex-row items-center gap-1 rounded-full bg-highlight-soft px-2 py-0.5">
+              <Ionicons name="pin" size={10} color={c.highlightInk} />
+              <Text className="text-[10px] font-sans-sb text-highlight-ink">Pinned</Text>
             </View>
           ) : null}
           {post.resolved ? (
-            <View className="flex-row items-center gap-1 rounded-full bg-green-100 px-2 py-0.5">
-              <Ionicons name="checkmark-circle" size={10} color="#059669" />
-              <Text className="text-[10px] font-sans-sb text-green-700">Resolved</Text>
+            <View className="flex-row items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5">
+              <Ionicons name="checkmark-circle" size={10} color={c.accent} />
+              <Text className="text-[10px] font-sans-sb text-accent">Resolved</Text>
             </View>
           ) : null}
           <Text className="font-sans ml-auto text-[11px] text-faint">{timeAgo}</Text>

@@ -127,7 +127,7 @@ export default function OnboardScreen() {
                     {existingMatches.map((cm) => (
                       <Pressable key={cm.id} onPress={() => joinExisting(cm)} className="mb-2 flex-row items-center gap-3 rounded-2xl border p-3.5 active:opacity-80" style={{ borderColor: '#16A34A55', backgroundColor: '#16A34A10' }}>
                         <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: '#16A34A22' }}>
-                          <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
+                          <Ionicons name="checkmark-circle" size={18} color={c.accent} />
                         </View>
                         <View className="flex-1">
                           <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{cm.name}</Text>
@@ -192,7 +192,7 @@ export default function OnboardScreen() {
                 // ── Already onboarded ──
                 <View className="mt-4 rounded-2xl border border-line bg-surface p-5">
                   <View className="mb-2 flex-row items-center gap-2">
-                    <Ionicons name="checkmark-circle" size={20} color="#16A34A" />
+                    <Ionicons name="checkmark-circle" size={20} color={c.accent} />
                     <Text className="font-sans-bold text-[16px] text-ink">Already on Aangan</Text>
                   </View>
                   <Text className="font-sans mb-4 text-[14px] leading-[21px] text-muted">

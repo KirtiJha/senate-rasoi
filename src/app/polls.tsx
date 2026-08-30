@@ -261,11 +261,11 @@ function PollCard({
                   />
                 ) : null}
                 <View className="flex-row items-center justify-between px-3.5 py-2.5">
-                  <Text className={`flex-1 text-[13px] ${isMyVote ? 'font-sans-sb text-violet-600' : 'font-sans-md text-ink'}`}>
+                  <Text className={`flex-1 text-[13px] ${isMyVote ? 'font-sans-sb text-accent' : 'font-sans-md text-ink'}`}>
                     {opt.text}
                   </Text>
                   {showResults ? (
-                    <Text className={`text-[12px] ml-2 ${isMyVote ? 'font-sans-sb text-violet-600' : 'text-muted'}`}>
+                    <Text className={`text-[12px] ml-2 ${isMyVote ? 'font-sans-sb text-accent' : 'text-muted'}`}>
                       {pct}%
                     </Text>
                   ) : null}

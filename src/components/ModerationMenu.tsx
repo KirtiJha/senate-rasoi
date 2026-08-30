@@ -115,7 +115,7 @@ export function ModerationMenu({
 
         {targetOwnerId ? (
           <Pressable onPress={doBlock} className={`mt-2 ${row}`} style={{ backgroundColor: '#EF444412' }}>
-            <Ionicons name="ban-outline" size={19} color="#EF4444" />
+            <Ionicons name="ban-outline" size={19} color={c.danger} />
             <View className="flex-1">
               <Text className="font-sans-sb text-[14px] text-nonveg">Block {who}</Text>
               <Text className="font-sans text-[12px] text-muted">Hide their content and stop messages, both ways</Text>
