@@ -69,8 +69,8 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
           {/* Category as a word, not a hue. */}
           {cat ? (
             <View
-              className="absolute left-3 top-3 flex-row items-center gap-1 rounded-full px-2 py-1"
-              style={{ backgroundColor: photo ? 'rgba(10,14,11,0.62)' : c.surface }}
+              className="absolute left-3 flex-row items-center gap-1 rounded-full px-2 py-1"
+              style={{ top: 12, maxWidth: '85%', backgroundColor: photo ? 'rgba(10,14,11,0.62)' : c.surface }}
             >
               <Ionicons
                 name={(cat.icon as any) ?? 'grid-outline'}
@@ -79,7 +79,7 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
               />
               <Text
                 className="text-[10px] font-sans-sb uppercase tracking-[0.06em]"
-                style={{ color: photo ? '#FFFFFF' : c.muted }}
+                style={{ color: photo ? '#FFFFFF' : c.muted, flexShrink: 1 }}
                 numberOfLines={1}
               >
                 {cat.label}
@@ -118,15 +118,23 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
           <View className="flex-row items-baseline gap-1" style={{ minHeight: 24 }}>
             {listing.price != null ? (
               <>
-                <Text className="font-display-x text-[20px] text-ink">
+                <Text className="font-display-x text-[20px] text-ink" numberOfLines={1}>
                   ₹{listing.price.toLocaleString('en-IN')}
                 </Text>
                 {listing.price_unit ? (
-                  <Text className="text-[11px] font-sans-md text-subtle">{listing.price_unit}</Text>
+                  <Text
+                    className="text-[11px] font-sans-md text-subtle"
+                    style={{ flexShrink: 1 }}
+                    numberOfLines={1}
+                  >
+                    {listing.price_unit}
+                  </Text>
                 ) : null}
               </>
             ) : (
-              <Text className="text-[13px] font-sans-md text-subtle">Ask for price</Text>
+              <Text className="text-[13px] font-sans-md text-subtle" numberOfLines={1}>
+                Ask for price
+              </Text>
             )}
           </View>
 
@@ -137,7 +145,7 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
               {listing.owner?.flat ? ` · Flat ${listing.owner.flat}` : ''}
             </Text>
             {cat ? (
-              <View className="flex-row items-center gap-1">
+              <View className="flex-row items-center gap-1" style={{ flexShrink: 0 }}>
                 <Text className="font-sans-sb text-[12px]" style={{ color: c.accent }} numberOfLines={1}>
                   {cat.ctaLabel}
                 </Text>
