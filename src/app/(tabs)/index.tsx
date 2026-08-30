@@ -438,7 +438,7 @@ export default function HomeScreen() {
             <Avatar name={profile?.name ?? 'You'} size={44} />
             <View style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
               <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>
-                {greeting.replace(/[^\p{L}\s]/gu, '').trim()}
+                {greeting}
               </Text>
               <Text
                 className="font-display-x text-[26px] leading-[30px]"
@@ -844,8 +844,8 @@ function FreshFoodStrip({ items, isDesktop }: { items: DishRow[]; isDesktop: boo
 
 function getGreeting() {
   const h = new Date().getHours();
-  if (h >= 5 && h < 12) return 'Good morning ☀️';
-  if (h >= 12 && h < 17) return 'Good afternoon 🍛';
-  if (h >= 17 && h < 21) return 'Good evening 🌙';
-  return 'Good night 🌃';
+  if (h >= 5 && h < 12) return 'Good morning';
+  if (h >= 12 && h < 17) return 'Good afternoon';
+  if (h >= 17 && h < 21) return 'Good evening';
+  return 'Good night';
 }
