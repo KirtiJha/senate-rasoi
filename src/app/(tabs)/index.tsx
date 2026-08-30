@@ -382,7 +382,6 @@ export default function HomeScreen() {
     };
   });
 
-  const todayLabel = new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
 
   return (
     <View className="flex-1 bg-bg">
