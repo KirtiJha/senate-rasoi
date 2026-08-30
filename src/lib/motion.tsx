@@ -1,5 +1,5 @@
 import { cssInterop } from 'nativewind';
-import { Pressable } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { Easing, ReduceMotion } from 'react-native-reanimated';
 
 /**
@@ -80,12 +80,22 @@ export { ReduceMotion };
  * Import these instead of Reanimated's `Animated.*` anywhere a className is
  * involved.
  */
-export const AView = Animated.View;
-export const AText = Animated.Text;
-export const AScrollView = Animated.ScrollView;
+/*
+ * These are FRESH animated components, not aliases.
+ *
+ * `export const AView = Animated.View` followed by `cssInterop(AView, …)`
+ * registers the interop on Animated.View ITSELF — the same object the whole
+ * app imports — so every Animated.View everywhere silently starts routing its
+ * style through NativeWind, including ones that only ever pass a plain style
+ * array. Building separate components leaves Animated.View untouched for
+ * style-only use and confines the interop to the ones that want a className.
+ */
+export const AView = Animated.createAnimatedComponent(View);
+export const AText = Animated.createAnimatedComponent(Text);
+export const AScrollView = Animated.createAnimatedComponent(ScrollView);
 export const APressable = Animated.createAnimatedComponent(Pressable);
 
 cssInterop(AView, { className: 'style' });
 cssInterop(AText, { className: 'style' });
-cssInterop(AScrollView, { className: 'style' });
+cssInterop(AScrollView, { className: 'style', contentContainerClassName: 'contentContainerStyle' });
 cssInterop(APressable, { className: 'style' });
