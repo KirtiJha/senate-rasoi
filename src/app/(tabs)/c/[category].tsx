@@ -107,7 +107,7 @@ export default function CategoryScreen() {
       <Pressable
         onPress={() => router.push({ pathname: '/post', params: { category: cat.key } } as any)}
         className="h-11 w-11 items-center justify-center rounded-full active:opacity-80"
-        style={{ backgroundColor: cat.color }}
+        style={{ backgroundColor: c.accent }}
         accessibilityLabel={`Post in ${cat.label}`}
       >
         <Ionicons name="add" size={24} color="#fff" />

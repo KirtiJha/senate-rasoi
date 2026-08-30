@@ -41,7 +41,6 @@ interface ItemDisplay {
   title: string;
   catKey: string;
   catLabel: string;
-  color: string;
   icon: string;
   priceText: string;
   location: string | null;
@@ -49,10 +48,10 @@ interface ItemDisplay {
 
 function display(item: AllItem): ItemDisplay {
   if (item.kind === 'dish') {
-    return { title: item.raw.dish_name, catKey: 'food', catLabel: 'Home Food', color: FOOD_COLOR, icon: 'restaurant', priceText: `₹${item.raw.price}`, location: null };
+    return { title: item.raw.dish_name, catKey: 'food', catLabel: 'Home Food', icon: 'restaurant', priceText: `₹${item.raw.price}`, location: null };
   }
   if (item.kind === 'tiffin') {
-    return { title: item.raw.title, catKey: 'tiffin', catLabel: 'Tiffin', color: TIFFIN_COLOR, icon: 'repeat', priceText: `₹${item.raw.price}/day`, location: null };
+    return { title: item.raw.title, catKey: 'tiffin', catLabel: 'Tiffin', icon: 'repeat', priceText: `₹${item.raw.price}/day`, location: null };
   }
   if (item.kind === 'borrow') {
     const b = item.raw;
@@ -60,7 +59,7 @@ function display(item: AllItem): ItemDisplay {
       title: b.title,
       catKey: b.kind === 'request' ? 'borrow-request' : 'borrow-offer',
       catLabel: b.kind === 'request' ? '🙏 Needs to borrow' : '🤝 Lending',
-      color: BORROW_COLOR,
+     
       icon: 'swap-horizontal',
       priceText: 'Free',
       location: b.owner?.flat ? `Flat ${b.owner.flat}` : null,
@@ -73,7 +72,7 @@ function display(item: AllItem): ItemDisplay {
       title: p.name,
       catKey: 'places',
       catLabel: `📍 ${m.label}`,
-      color: PLACES_COLOR,
+     
       icon: m.icon,
       priceText: '—',
       location: p.address ?? null,
@@ -86,7 +85,7 @@ function display(item: AllItem): ItemDisplay {
       title: lf.title,
       catKey: lf.kind === 'lost' ? 'lost_found-lost' : 'lost_found-found',
       catLabel: lf.kind === 'lost' ? '🔍 Lost' : '📦 Found',
-      color: LOST_FOUND_COLOR,
+     
       icon: lfCat.icon,
       priceText: '—',
       location: lf.owner?.flat ? `Flat ${lf.owner.flat}` : null,
@@ -98,7 +97,6 @@ function display(item: AllItem): ItemDisplay {
     title: l.is_referral ? l.referral_name ?? l.title : l.title,
     catKey: l.category,
     catLabel: cat?.label ?? l.category,
-    color: cat?.color ?? '#888',
     icon: (cat?.icon as string) ?? 'grid-outline',
     priceText: l.price != null ? `₹${l.price.toLocaleString('en-IN')}${l.price_unit ? ` ${l.price_unit}` : ''}` : '—',
     location: l.location,
@@ -121,13 +119,13 @@ export default function AllListingsScreen() {
   const [category, setCategory] = useState<string | null>(null);
 
   const filterChips = useMemo(() => [
-    { key: 'food', label: 'Home Food', color: FOOD_COLOR, icon: 'restaurant' },
-    { key: 'tiffin', label: 'Tiffin', color: TIFFIN_COLOR, icon: 'repeat' },
-    { key: 'borrow-offer', label: '🤝 Lending', color: BORROW_COLOR, icon: 'swap-horizontal' },
-    { key: 'borrow-request', label: '🙏 Needs', color: BORROW_COLOR, icon: 'hand-left-outline' },
-    { key: 'lost_found-lost', label: '🔍 Lost', color: LOST_FOUND_COLOR, icon: 'search' },
-    { key: 'lost_found-found', label: '📦 Found', color: LOST_FOUND_COLOR, icon: 'search' },
-    { key: 'places', label: '📍 Nearby', color: PLACES_COLOR, icon: 'location' },
+    { key: 'food', label: 'Home Food', icon: 'restaurant' },
+    { key: 'tiffin', label: 'Tiffin', icon: 'repeat' },
+    { key: 'borrow-offer', label: '🤝 Lending', icon: 'swap-horizontal' },
+    { key: 'borrow-request', label: '🙏 Needs', icon: 'hand-left-outline' },
+    { key: 'lost_found-lost', label: '🔍 Lost', icon: 'search' },
+    { key: 'lost_found-found', label: '📦 Found', icon: 'search' },
+    { key: 'places', label: '📍 Nearby', icon: 'location' },
     ...SERVICES.filter((s) => s.kind === 'listing').map((s) => ({ key: s.key, label: s.label, color: c.accent, icon: s.icon })),
   ], []);
 
@@ -222,10 +220,10 @@ export default function AllListingsScreen() {
           key={svc.key}
           onPress={() => setCategory(category === svc.key ? null : svc.key)}
           className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
-          style={{ backgroundColor: category === svc.key ? svc.color : c.accentSoft }}
+          style={{ backgroundColor: category === svc.key ? c.accent : c.accentSoft }}
         >
-          <Ionicons name={svc.icon as any} size={11} color={category === svc.key ? '#fff' : svc.color} />
-          <Text className="text-[12px] font-sans-sb" style={{ color: category === svc.key ? '#fff' : svc.color }}>
+          <Ionicons name={svc.icon as any} size={11} color={category === svc.key ? c.onAccent : c.accent} />
+          <Text className="text-[12px] font-sans-sb" style={{ color: category === svc.key ? c.onAccent : c.accent }}>
             {svc.label}
           </Text>
         </Pressable>

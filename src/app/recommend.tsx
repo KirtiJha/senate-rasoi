@@ -138,8 +138,8 @@ function AskSheet({ visible, onClose, onSubmit, c }: {
           const on = category === r.key;
           return (
             <Pressable key={r.key} onPress={() => setCategory(r.key)} className="flex-row items-center gap-1 rounded-full border px-3 py-1.5" style={{ borderColor: on ? r.color : c.line, backgroundColor: on ? c.accentSoft : c.surface }}>
-              <Ionicons name={r.icon as any} size={12} color={on ? r.color : c.muted} />
-              <Text className="text-[12px] font-sans-sb" style={{ color: on ? r.color : c.muted }}>{r.label}</Text>
+              <Ionicons name={r.icon as any} size={12} color={on ? c.accent : c.muted} />
+              <Text className="text-[12px] font-sans-sb" style={{ color: on ? c.accent : c.muted }}>{r.label}</Text>
             </Pressable>
           );
         })}

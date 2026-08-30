@@ -209,9 +209,9 @@ export default function ListingDetailScreen() {
             ) : null}
           </View>
         ) : (
-          <View style={{ height: 140, backgroundColor: (cat?.color ?? '#888') + '20' }}>
+          <View style={{ height: 140, backgroundColor: c.accentSoft }}>
             <View className="flex-1 items-center justify-center">
-              <Ionicons name={(cat?.icon as any) ?? 'grid-outline'} size={52} color={cat?.color ?? c.muted} />
+              <Ionicons name={(cat?.icon as any) ?? 'grid-outline'} size={52} color={c.accent} />
             </View>
             {/* Back button */}
             <Pressable
@@ -359,7 +359,7 @@ export default function ListingDetailScreen() {
               listingId={listing.id}
               ownerUserId={listing.owner_user_id}
               ownerName={ownerName}
-              accent={cat?.color ?? c.accent}
+              accent={c.accent}
             />
           </Container>
         </View>
@@ -368,31 +368,43 @@ export default function ListingDetailScreen() {
       {/* Sticky CTA */}
       {!isOwner && listing.status === 'active' && cat && (
         <View
-          className="absolute bottom-0 left-0 right-0 border-t border-line bg-bg px-4 pt-3"
-          style={{ paddingBottom: insets.bottom + 12 }}
+          className="absolute bottom-0 left-0 right-0 flex-row items-center gap-2.5 px-4 pt-3"
+          style={{
+            paddingBottom: insets.bottom + 10,
+            backgroundColor: c.surface,
+            borderTopWidth: 1,
+            borderTopColor: c.line,
+            boxShadow: c.shadowBar,
+          } as any}
         >
+          {/* Actions sit side by side rather than stacked, and at `md` rather
+              than `lg` — one row of 44px instead of two of 52px. The bar is
+              `surface`, not `bg`: on a dark ground a bar the same colour as
+              the page has no edge, so it read as text floating over content. */}
           {listing.price != null && listing.owner?.upi ? (
-            <View className="mb-2">
+            <View className="flex-1">
               <PayButton
                 payee={{ id: listing.owner_user_id, name: ownerName, upi: listing.owner.upi }}
                 amount={listing.price}
                 note={listing.title}
                 context={{ type: 'listing', id: listing.id }}
-                label={`Pay ₹${listing.price.toLocaleString('en-IN')} via UPI`}
+                label={`Pay ₹${listing.price.toLocaleString('en-IN')}`}
                 variant="outline"
-                size="lg"
+                size="md"
                 fullWidth
               />
             </View>
           ) : null}
-          <Button
-            label={cat.ctaLabel}
-            icon="logo-whatsapp"
-            variant="whatsapp"
-            size="lg"
-            fullWidth
-            onPress={() => setInquiryListing(listing)}
-          />
+          <View className="flex-1">
+            <Button
+              label={cat.ctaLabel}
+              icon="logo-whatsapp"
+              variant="whatsapp"
+              size="md"
+              fullWidth
+              onPress={() => setInquiryListing(listing)}
+            />
+          </View>
         </View>
       )}
 

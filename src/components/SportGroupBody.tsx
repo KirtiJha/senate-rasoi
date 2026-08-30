@@ -70,7 +70,7 @@ export function SportGroupBody({
   const isCaptain = !!userId && members.some((m) => m.user_id === userId && m.is_captain);
   const canManage = !!isAdmin || isCaptain;
   const sport = group ? getSport(group.sport) : undefined;
-  const color = group?.color ?? sport?.color ?? '#16A34A';
+  const color = c.accent;
   const emoji = group?.emoji ?? sport?.emoji ?? '🏅';
 
   const toggleJoin = async () => {

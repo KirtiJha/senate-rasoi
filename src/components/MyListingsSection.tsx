@@ -145,7 +145,7 @@ function MyItemRow({
     price = `₹${t.price}/day`; status = { text: t.active ? 'active' : 'paused', good: !!t.active };
   } else {
     const l = item.raw; const cat = getService(l.category);
-    title = l.title; catLabel = cat?.label ?? l.category; color = cat?.color ?? '#888'; icon = (cat?.icon as string) ?? 'grid-outline';
+    title = l.title; catLabel = cat?.label ?? l.category; color = c.accent; icon = (cat?.icon as string) ?? 'grid-outline';
     price = l.price != null ? `₹${l.price.toLocaleString('en-IN')}` : null;
     status = { text: l.status, good: l.status === 'active' };
   }

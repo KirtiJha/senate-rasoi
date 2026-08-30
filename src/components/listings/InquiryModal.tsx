@@ -57,7 +57,7 @@ export function InquiryModal({ listing, senderName, onClose, onConfirm }: Inquir
               {photo ? (
                 <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
               ) : (
-                <Ionicons name={(cat?.icon as any) ?? 'grid-outline'} size={24} color={cat?.color ?? c.muted} />
+                <Ionicons name={(cat?.icon as any) ?? 'grid-outline'} size={24} color={c.accent} />
               )}
             </View>
             <View className="flex-1">

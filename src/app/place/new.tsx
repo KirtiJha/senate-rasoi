@@ -173,7 +173,7 @@ export default function PlaceFormScreen() {
             {PLACE_TYPES.map((t) => {
               const on = placeType === t.key;
               return (
-                <Pressable key={t.key} onPress={() => setPlaceType(t.key)} className="flex-row items-center gap-1 rounded-full border px-3 py-1.5" style={{ borderColor: on ? t.color : c.line, backgroundColor: on ? t.color : c.surface }}>
+                <Pressable key={t.key} onPress={() => setPlaceType(t.key)} className="flex-row items-center gap-1 rounded-full border px-3 py-1.5" style={{ borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : c.surface }}>
                   <Ionicons name={t.icon as any} size={12} color={on ? '#fff' : c.muted} />
                   <Text className="text-[12px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{t.label}</Text>
                 </Pressable>

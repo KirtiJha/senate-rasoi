@@ -63,13 +63,13 @@ export function SavedSection() {
               onPress={() => router.push(`/listing/${l.id}` as any)}
               className="mb-3 overflow-hidden rounded-2xl border border-line bg-surface active:opacity-80"
             >
-              {cat && <View style={{ height: 3, backgroundColor: cat.color }} />}
+              {cat && <View style={{ height: 3, backgroundColor: c.accent }} />}
               <View className="flex-row items-center gap-3 p-3.5">
                 <View
                   className="h-10 w-10 items-center justify-center rounded-xl flex-shrink-0"
-                  style={{ backgroundColor: (cat?.color ?? '#888') + '20' }}
+                  style={{ backgroundColor: c.accentSoft }}
                 >
-                  <Ionicons name={(cat?.icon as any) ?? 'grid-outline'} size={20} color={cat?.color ?? c.muted} />
+                  <Ionicons name={(cat?.icon as any) ?? 'grid-outline'} size={20} color={c.accent} />
                 </View>
                 <View className="flex-1">
                   <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{l.title}</Text>

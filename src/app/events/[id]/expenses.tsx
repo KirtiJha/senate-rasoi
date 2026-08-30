@@ -275,7 +275,7 @@ export default function ExpensesScreen() {
                 key={cat.key}
                 onPress={() => setCategory(cat.key)}
                 className="flex-row items-center gap-1 rounded-full border px-3 py-1.5"
-                style={{ borderColor: on ? cat.color : c.line, backgroundColor: on ? cat.color : c.surface }}
+                style={{ borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : c.surface }}
               >
                 <Ionicons name={cat.icon as any} size={12} color={on ? '#fff' : c.muted} />
                 <Text className="text-[12px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{cat.label}</Text>

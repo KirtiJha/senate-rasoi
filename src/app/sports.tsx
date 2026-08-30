@@ -84,10 +84,10 @@ export default function SportsScreen() {
                     key={s.key}
                     onPress={() => setActiveSport(s.key)}
                     className={`flex-row items-center gap-1.5 rounded-full px-3.5 py-1.5 ${on ? '' : 'bg-inset'}`}
-                    style={on ? { backgroundColor: (s.color) + '20' } : undefined}
+                    style={on ? { backgroundColor: c.accentSoft } : undefined}
                   >
                     <Text style={{ fontSize: 14 }}>{s.emoji}</Text>
-                    <Text className="text-[13px] font-sans-sb" style={{ color: on ? s.color : c.muted }}>{s.label}</Text>
+                    <Text className="text-[13px] font-sans-sb" style={{ color: on ? c.accent : c.muted }}>{s.label}</Text>
                   </Pressable>
                 );
               })}

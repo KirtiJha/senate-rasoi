@@ -562,7 +562,7 @@ function JustListedStrip({ listings, borrows, properties, places, lostFound, isD
 
   const ListingCard = ({ l }: { l: ListingRow }) => {
     const cat = getService(l.category);
-    const color = cat?.color ?? '#888';
+    const color = c.accent;
     const photo = l.photos?.[0];
     const title = l.is_referral ? (l.referral_name ?? l.title) : l.title;
     return (

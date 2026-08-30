@@ -106,7 +106,7 @@ export default function SearchScreen() {
         next.push({
           id: `g:${g.id}`, kind: 'sport', title: g.name, subtitle: `${sp?.label ?? g.sport} · ${g.member_count} member${g.member_count === 1 ? '' : 's'}`,
           haystack: `${g.name} ${sp?.label ?? g.sport}`.toLowerCase(),
-          icon: 'football', color: c.accent ?? sp?.color ?? '#16A34A', open: () => router.push(`/sports/${g.id}` as any),
+          icon: 'football', color: c.accent ?? c.accent, open: () => router.push(`/sports/${g.id}` as any),
         });
       }
       for (const doc of documents) {
@@ -137,7 +137,7 @@ export default function SearchScreen() {
         next.push({
           id: `l:${l.id}`, kind: 'listing', title, subtitle: cat?.label ?? l.category,
           haystack: `${title} ${l.description ?? ''} ${cat?.label ?? ''} ${l.location ?? ''}`.toLowerCase(),
-          icon: (cat?.icon as string) ?? 'pricetag', color: cat?.color ?? '#888',
+          icon: (cat?.icon as string) ?? 'pricetag', color: c.accent,
           open: () => router.push(`/listing/${l.id}` as any),
         });
       }

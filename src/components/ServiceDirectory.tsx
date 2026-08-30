@@ -100,7 +100,7 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon={cat.icon as any}
-        iconColor={cat.color}
+        iconColor={c.accent}
         title={cat.label}
         showBack
         onAdd={() => router.push({ pathname: '/post', params: { category: cat.key } } as any)}
@@ -145,7 +145,7 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
               <View key={g.trade} className="mb-5">
                 {g.trade !== '__all' ? (
                   <View className="mb-2 flex-row items-center gap-2">
-                    <View className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                    <View className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: c.accent }} />
                     <Text className="font-sans-bold text-[13px] uppercase tracking-wider text-muted">{g.trade}</Text>
                     <Text className="font-sans text-[12px] text-faint">· {g.rows.length}</Text>
                   </View>

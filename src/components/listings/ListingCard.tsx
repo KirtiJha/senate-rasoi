@@ -43,9 +43,9 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
       ) : (
         <View
           className="items-center justify-center"
-          style={{ height: 100, backgroundColor: (cat?.color ?? '#888') + '15' }}
+          style={{ height: 100, backgroundColor: c.accentSoft }}
         >
-          <Ionicons name={(cat?.icon as any) ?? 'grid-outline'} size={36} color={cat?.color ?? c.muted} />
+          <Ionicons name={(cat?.icon as any) ?? 'grid-outline'} size={36} color={c.accent} />
         </View>
       )}
 
