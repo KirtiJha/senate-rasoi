@@ -1,5 +1,5 @@
 import { Redirect, Slot } from 'expo-router';
-import { View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { TopBar } from '../../components/TopBar';
 import { useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
@@ -16,7 +16,15 @@ export default function TabsLayout() {
   const { ready, session } = useAuth();
   const c = useThemeColors();
 
-  if (!ready) return <View style={{ flex: 1, backgroundColor: c.bg }} />;
+  // A bare View here is indistinguishable from a crash. If the session
+  // check is slow, the app should look busy, not broken.
+  if (!ready) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.bg }}>
+        <ActivityIndicator color={c.accent} />
+      </View>
+    );
+  }
   if (!session) return <Redirect href={'/landing' as any} />;
 
   if (isDesktop) return <Slot />;

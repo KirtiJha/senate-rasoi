@@ -73,12 +73,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      await loadProfile(data.session?.user.id);
-      setReady(true);
-    });
+
+    // `ready` gates BOTH layouts — (auth) and (tabs) each render a bare View
+    // until it flips. So anything that stops this promise from resolving does
+    // not degrade the app, it bricks it: every route renders an empty screen
+    // with no spinner, no error and no way back. Tapping "Sign in" then
+    // navigates correctly and lands on a blank page, which is indistinguishable
+    // from a dead button.
+    //
+    // getSession() reads AsyncStorage and, when a stored token is stale, goes
+    // to the network to refresh it. Either can reject or hang — a corrupt
+    // store, a captive portal, no connectivity on first launch. This had no
+    // catch and no timeout, so one rejection left `ready` false forever.
+    //
+    // However it ends, we end up ready. An app showing sign-in is recoverable;
+    // a blank one is not.
+    const settle = async () => {
+      try {
+        const { data } = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('getSession timed out')), 8000),
+          ),
+        ]);
+        if (!active) return;
+        setSession(data.session);
+        await loadProfile(data.session?.user.id);
+      } catch {
+        if (active) setSession(null);
+      } finally {
+        if (active) setReady(true);
+      }
+    };
+    settle();
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       loadProfile(s?.user.id);
