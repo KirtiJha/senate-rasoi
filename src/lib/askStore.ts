@@ -11,6 +11,8 @@ export interface AskMessage {
   results?: AskResultItem[];
   /** What Saathi looked at before answering — see StepsTrail. */
   steps?: { tool: string; summary: string }[];
+  /** Offered next questions, shown as chips under the answer. */
+  suggestions?: string[];
   /** A write awaiting confirmation. Never executed without a tap. */
   proposal?: { type: string; message: string; args: Record<string, unknown> };
 }

@@ -1056,6 +1056,8 @@ type AgentResult = {
   proposal?: { type: string; message: string; args: Record<string, unknown> };
   /** What the agent actually did to find out, for the "how I got this" trail. */
   steps: { tool: string; summary: string }[];
+  /** Things worth asking next. Nobody knows what an assistant can do. */
+  suggestions?: string[];
 };
 
 // ── Tool declarations ───────────────────────────────────────────────
@@ -1202,6 +1204,58 @@ const FINISH_TOOLS = [
         price: { type: 'number', description: 'Rupees. Omit if not applicable.' },
       },
       required: ['message', 'category', 'title', 'description'],
+    },
+  },
+  {
+    name: 'suggest_next',
+    description:
+      'Offer two or three things the resident could ask next. Call this alongside show_items, before ' +
+      'writing your answer. Suggest what THIS society can actually answer — a real follow-up to what they ' +
+      'just asked, not generic prompts. Skip it when the exchange is finished and there is no natural next ' +
+      'question.',
+    parameters: {
+      type: 'object',
+      properties: {
+        questions: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Two or three short questions, in the words a resident would use, under 45 characters each.',
+        },
+      },
+      required: ['questions'],
+    },
+  },
+  {
+    name: 'propose_order',
+    description:
+      'Offer to reserve plates of a dish the resident has been shown. Only for a dish that appeared in a ' +
+      'search result — never guess a dish that was not returned. Say the dish name and how many plates in ' +
+      'your message so they can check it before confirming.',
+    parameters: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', description: 'One sentence to the resident.' },
+        ref: { type: 'string', description: 'The dish ref from search results, e.g. "2".' },
+        dish_name: { type: 'string', description: 'The dish name exactly as the search returned it.' },
+        qty: { type: 'number', description: 'How many plates. Ask first if they did not say.' },
+      },
+      required: ['message', 'ref', 'dish_name', 'qty'],
+    },
+  },
+  {
+    name: 'propose_message',
+    description:
+      'Offer to send a private message to one neighbour. Use only when the resident clearly wants to ' +
+      'contact a specific person. Find them with find_resident first — never invent a recipient. Write the ' +
+      'message in the resident’s voice, short and polite; they will see the exact text before it sends.',
+    parameters: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', description: 'One sentence to the resident about what you are about to send.' },
+        to_name: { type: 'string', description: 'The neighbour name, exactly as find_resident returned it.' },
+        text: { type: 'string', description: 'The message itself, as it will be sent.' },
+      },
+      required: ['message', 'to_name', 'text'],
     },
   },
   {
@@ -1499,7 +1553,7 @@ const PREAMBLE =
 type AgentEvent =
   | { t: 'step'; tool: string; summary: string }
   | { t: 'delta'; v: string }
-  | { t: 'done'; results: { source: string; id: string }[]; proposal?: AgentResult['proposal']; steps: { tool: string; summary: string }[] }
+  | { t: 'done'; results: { source: string; id: string }[]; proposal?: AgentResult['proposal']; steps: { tool: string; summary: string }[]; suggestions?: string[] }
   | { t: 'error'; message: string };
 
 /**
@@ -1560,6 +1614,7 @@ async function runAgentStream(
   };
 
   let pinned: { source: string; id: string }[] = [];
+  let suggestions: string[] = [];
   let answered = false;
 
   for (let step = 0; step < MAX_STEPS; step++) {
@@ -1614,6 +1669,18 @@ async function runAgentStream(
 
       if (PROPOSAL_NAMES.has(name)) {
         const { message, ...rest } = args as { message?: string };
+        // The model works in handles and never sees an id. Resolve it here so
+        // the client receives something it can actually act on.
+        if (typeof (rest as { ref?: string }).ref === 'string') {
+          const target = cardIndex.get(String((rest as { ref?: string }).ref));
+          if (!target) {
+            input.push({ type: 'function_call_output', call_id: call.call_id, output: JSON.stringify({ error: 'Unknown ref — search first, then use a ref from the results.' }) });
+            continue;
+          }
+          (rest as Record<string, unknown>).source = target.source;
+          (rest as Record<string, unknown>).id = target.id;
+          delete (rest as Record<string, unknown>).ref;
+        }
         emit({ t: 'delta', v: String(message ?? '') });
         emit({
           t: 'done',
@@ -1622,6 +1689,13 @@ async function runAgentStream(
           steps,
         });
         return;
+      }
+
+      if (name === 'suggest_next') {
+        const qs = Array.isArray(args.questions) ? (args.questions as string[]) : [];
+        suggestions = qs.map((q) => String(q).trim()).filter(Boolean).slice(0, 3);
+        input.push({ type: 'function_call_output', call_id: call.call_id, output: JSON.stringify({ ok: true }) });
+        continue;
       }
 
       if (name === 'show_items') {
@@ -1639,7 +1713,7 @@ async function runAgentStream(
   }
 
   if (!answered) emit({ t: 'delta', v: 'I could not work that one out — try asking a different way.' });
-  emit({ t: 'done', results: pinned, steps });
+  emit({ t: 'done', results: pinned, steps, suggestions });
 }
 
 /**
@@ -1664,12 +1738,13 @@ async function runAgent(
   let results: { source: string; id: string }[] = [];
   let proposal: AgentResult['proposal'];
   let steps: { tool: string; summary: string }[] = [];
+  let suggestions: string[] = [];
 
   await runAgentStream(d, question, history, apiKey, model, (e) => {
     if (e.t === 'delta') answer += e.v;
-    else if (e.t === 'done') { results = e.results; proposal = e.proposal; steps = e.steps; }
+    else if (e.t === 'done') { results = e.results; proposal = e.proposal; steps = e.steps; suggestions = e.suggestions ?? []; }
     else if (e.t === 'error') answer ||= e.message;
   });
 
-  return { answer: answer.trim(), results, proposal, steps };
+  return { answer: answer.trim(), results, proposal, steps, suggestions };
 }

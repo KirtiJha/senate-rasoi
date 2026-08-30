@@ -1,5 +1,6 @@
 import { AskResultItem, AIError, invokeAi, readInvokeError } from './ai';
 import { supabase } from './supabase';
+import { getOrCreateThread, sendMessage } from './dm';
 import { createWatch } from './watches';
 
 /**
@@ -33,6 +34,8 @@ export type AgentReply = {
   results: AskResultItem[];
   proposal?: AgentProposal;
   steps: AgentStep[];
+  /** Things worth asking next — nobody knows what an assistant can do. */
+  suggestions?: string[];
 };
 
 const AGENT_TIMEOUT_MS = 60_000; // tool loops take longer than a single answer
@@ -106,6 +109,23 @@ export function describeProposal(p: AgentProposal): ProposalMeta {
           ['Details', str(a.description)],
           ...(a.price != null ? ([['Price', `₹${str(a.price)}`]] as [string, string][]) : []),
         ],
+      };
+    // Both of these commit something to another person — an order a chef will
+    // cook, a message that arrives under your name. The card shows the exact
+    // quantity and the exact text, never a summary of them.
+    case 'propose_order':
+      return {
+        title: 'Reserve plates',
+        icon: 'restaurant-outline',
+        verb: `Reserve ${str(a.qty)}`,
+        lines: [['Dish', str(a.dish_name)], ['Plates', str(a.qty)]],
+      };
+    case 'propose_message':
+      return {
+        title: 'Send a message',
+        icon: 'paper-plane-outline',
+        verb: 'Send it',
+        lines: [['To', str(a.to_name)], ['Message', str(a.text)]],
       };
     case 'propose_watch': {
       const keywords = (Array.isArray(a.keywords) ? (a.keywords as string[]) : []).map(str);
@@ -205,6 +225,39 @@ export async function executeProposal(
       .single();
     if (error) throw error;
     return { route: `/listing/${(data as { id: string }).id}` };
+  }
+
+  if (p.type === 'propose_order') {
+    const qty = Math.max(1, Math.min(20, Number(a.qty) || 1));
+    const { data: me } = await supabase
+      .from('profiles').select('name, flat').eq('id', ctx.userId).single();
+    const { error } = await supabase.from('orders').insert({
+      dish_id: str(a.id),
+      buyer_name: (me as { name?: string } | null)?.name ?? 'A neighbour',
+      buyer_flat: (me as { flat?: string } | null)?.flat ?? null,
+      qty,
+    });
+    if (error) throw error;
+    return { route: '/food' };
+  }
+
+  if (p.type === 'propose_message') {
+    // Resolved by name here rather than by the agent: the edge function is
+    // never given a way to address one resident by id, so the worst a bad
+    // suggestion can do is name someone who does not exist.
+    const { data: match } = await supabase
+      .from('profiles')
+      .select('id, name')
+      .eq('community_id', ctx.communityId)
+      .ilike('name', str(a.to_name))
+      .limit(1)
+      .maybeSingle();
+    const to = (match as { id?: string } | null)?.id;
+    if (!to) throw new AIError(`Could not find ${str(a.to_name)} in the directory.`);
+
+    const threadId = await getOrCreateThread(to);
+    await sendMessage(threadId, ctx.userId, str(a.text));
+    return { route: `/messages/${threadId}` };
   }
 
   if (p.type === 'propose_watch') {

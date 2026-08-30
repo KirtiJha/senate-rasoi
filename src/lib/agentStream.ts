@@ -53,6 +53,7 @@ export async function streamAgent(
   const steps: AgentStep[] = [];
   let results: AgentReply['results'] = [];
   let proposal: AgentProposal | undefined;
+  let suggestions: string[] = [];
 
   try {
     const res = await streamingFetch(`${supabaseUrl}/functions/v1/ai-proxy`, {
@@ -110,6 +111,7 @@ export async function streamAgent(
         } else if (evt.t === 'done') {
           results = (evt.results ?? []) as AgentReply['results'];
           proposal = evt.proposal as AgentProposal | undefined;
+          suggestions = (evt.suggestions ?? []) as string[];
           if (Array.isArray(evt.steps) && evt.steps.length) {
             steps.splice(0, steps.length, ...(evt.steps as AgentStep[]));
           }
@@ -125,5 +127,5 @@ export async function streamAgent(
     clearTimeout(timer);
   }
 
-  return { answer: answer.trim(), results, proposal, steps };
+  return { answer: answer.trim(), results, proposal, steps, suggestions };
 }

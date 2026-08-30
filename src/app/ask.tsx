@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { SaathiMark } from '../components/SaathiMark';
-import { KeyboardAvoider, ScreenHeader } from '../components/ui';
+import { KeyboardAvoider, ScreenHeader, Touchable } from '../components/ui';
 import { useToast } from '../context/toast';
 import { ProposalCard, StepsTrail } from '../components/saathi/ProposalCard';
 import { RichText } from '../components/saathi/RichText';
@@ -102,6 +102,7 @@ export default function AskScreen() {
         role: 'assistant',
         text: r.answer || "I couldn't find anything on that.",
         results: r.results,
+        suggestions: r.suggestions,
         steps: r.steps.length ? r.steps : steps,
         proposal: r.proposal,
       };
@@ -258,6 +259,22 @@ export default function AskScreen() {
                 </View>
               ) : m.steps?.length ? (
                 <StepsTrail steps={m.steps} />
+              ) : null}
+              {!loading && i === messages.length - 1 && m.suggestions?.length ? (
+                <View className="ml-8 mt-2.5 flex-row flex-wrap gap-2">
+                  {m.suggestions.map((q) => (
+                    <Touchable key={q} haptic={null} onPress={() => send(q)}
+                      accessibilityRole="button" accessibilityLabel={q}>
+                      <View
+                        pointerEvents="none"
+                        className="rounded-full px-3 py-1.5"
+                        style={{ backgroundColor: c.accentSoft, borderWidth: 1, borderColor: c.accentLine }}
+                      >
+                        <Text className="text-[12.5px] font-sans-md" style={{ color: c.accent }}>{q}</Text>
+                      </View>
+                    </Touchable>
+                  ))}
+                </View>
               ) : null}
               {m.proposal ? (
                 <View className="ml-8">
