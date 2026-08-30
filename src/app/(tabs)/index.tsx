@@ -13,7 +13,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '../../components/BrandMark';
 import { T } from '../../components/T';
-import { Container, ErrorRow, Rise, Touchable, useResponsive, VegMark } from '../../components/ui';
+import { Avatar, Container, ErrorRow, Rise, Touchable, useResponsive, VegMark } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useUnreadDms } from '../../context/unread';
@@ -366,10 +366,10 @@ export default function HomeScreen() {
   const heroStyle = useAnimatedStyle(() => {
     const y = scrollY.get();
     return {
-      opacity: interpolate(y, [0, 70], [1, 0], Extrapolation.CLAMP),
+      opacity: interpolate(y, [0, 52], [1, 0], Extrapolation.CLAMP),
       transform: [
-        { translateY: interpolate(y, [0, 110], [0, -18], Extrapolation.CLAMP) },
-        { scale: interpolate(y, [0, 110], [1, 0.94], Extrapolation.CLAMP) },
+        { translateY: interpolate(y, [0, 80], [0, -14], Extrapolation.CLAMP) },
+        { scale: interpolate(y, [0, 80], [1, 0.95], Extrapolation.CLAMP) },
       ],
     };
   });
@@ -377,8 +377,8 @@ export default function HomeScreen() {
   const compactStyle = useAnimatedStyle(() => {
     const y = scrollY.get();
     return {
-      opacity: interpolate(y, [60, 110], [0, 1], Extrapolation.CLAMP),
-      transform: [{ translateY: interpolate(y, [60, 110], [-8, 0], Extrapolation.CLAMP) }],
+      opacity: interpolate(y, [44, 82], [0, 1], Extrapolation.CLAMP),
+      transform: [{ translateY: interpolate(y, [44, 82], [-10, 0], Extrapolation.CLAMP) }],
     };
   });
 
@@ -392,23 +392,28 @@ export default function HomeScreen() {
         pointerEvents="none"
         style={[
           compactStyle,
-          {
-            position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
-            paddingTop: 12, paddingBottom: 12, paddingHorizontal: 20,
-            backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.line,
-          },
+          { position: 'absolute', top: 8, left: 20, right: 20, zIndex: 10 },
         ]}
       >
-        <Text className="font-display text-[17px] text-ink" numberOfLines={1}>
-          {profile?.name ? `${greeting}, ${profile.name.split(' ')[0]}` : greeting}
-        </Text>
+        <View
+          className="flex-row items-center gap-2.5 rounded-full px-3 py-2"
+          style={{ backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, boxShadow: c.shadowBar } as any}
+        >
+          <Avatar name={profile?.name ?? 'You'} size={26} />
+          <Text className="min-w-0 flex-1 font-sans-sb text-[15px] text-ink" numberOfLines={1}>
+            {profile?.name ? profile.name.split(' ')[0] : greeting}
+          </Text>
+          <Text className="text-[11px] font-sans-sb uppercase tracking-[0.06em] text-subtle" numberOfLines={1}>
+            {todayLabel}
+          </Text>
+        </View>
       </Animated.View>
 
     <AScrollView
       className="flex-1 bg-bg"
       onScroll={onScroll}
       scrollEventThrottle={16}
-      contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 16, paddingBottom: 40, paddingHorizontal: 20 }}
+      contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 8, paddingBottom: 40, paddingHorizontal: 20 }}
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={c.muted} colors={[c.accent]} />}
     >
@@ -420,15 +425,20 @@ export default function HomeScreen() {
         {/* ── 1. Hero ──────────────────────────────────────────────────
             Society identity appears here, once, rather than in a pill
             hardcoded above twenty screens. */}
-        <Animated.View style={heroStyle}>
-          <Text className="text-[11px] font-sans-sb uppercase tracking-[0.06em] text-subtle" numberOfLines={1}>
-            {greeting} · {todayLabel}
-          </Text>
-          {/* The one piece of display type on the screen, and the only thing
-              that needs to be unmistakably the largest. */}
-          <Text className="mt-1 font-display-x text-[40px] leading-[46px] text-ink" numberOfLines={1}>
-            {profile?.name ? profile.name.split(' ')[0] : 'Neighbour'}
-          </Text>
+        <Animated.View style={heroStyle} className="flex-row items-center gap-3">
+          <Avatar name={profile?.name ?? 'You'} size={48} />
+          <View className="min-w-0 flex-1">
+            <Text className="text-[11px] font-sans-sb uppercase tracking-[0.06em] text-subtle" numberOfLines={1}>
+              {greeting} · {todayLabel}
+            </Text>
+            <Text
+              className="mt-0.5 font-display-x text-[32px] leading-[36px]"
+              style={{ color: c.accent }}
+              numberOfLines={1}
+            >
+              {profile?.name ? profile.name.split(' ')[0] : 'Neighbour'}
+            </Text>
+          </View>
         </Animated.View>
 
         {/* The ask-or-search bar takes hero position because it answers the
