@@ -42,7 +42,7 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
           title lives inside is a card. The coloured strip along the top is
           gone with the rest of the per-category hues.
         */}
-        <View style={{ height: photo ? 152 : 92 }}>
+        <View style={{ height: 148 }}>
           {photo ? (
             <>
               <Image
@@ -58,7 +58,10 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
               />
             </>
           ) : (
-            <View className="h-full w-full items-center justify-center" style={{ backgroundColor: c.inset }}>
+            <View
+              className="h-full w-full items-center"
+              style={{ backgroundColor: c.inset, justifyContent: 'center', paddingBottom: 34 }}
+            >
               <Ionicons name={(cat?.icon as any) ?? 'grid-outline'} size={30} color={c.subtle} />
             </View>
           )}
@@ -92,43 +95,40 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
             </View>
           ) : null}
 
-          {photo ? (
-            <View className="absolute bottom-3 left-3 right-3">
-              {listing.is_referral ? (
-                <Text className="font-sans-sb text-[16px] text-white" numberOfLines={2}>
-                  {listing.referral_name ?? listing.title}
-                </Text>
-              ) : (
-                <T source="listing" id={listing.id} field="title" text={listing.title} showToggle={false}
-                  className="font-sans-sb text-[16px] text-white" numberOfLines={2} />
-              )}
-            </View>
-          ) : null}
-        </View>
-
-        <View style={{ padding: 12 }}>
-          {!photo ? (
-            listing.is_referral ? (
-              <Text className="mb-1 font-sans-sb text-[16px] text-ink" numberOfLines={2}>
+          <View className="absolute bottom-3 left-3 right-3">
+            {listing.is_referral ? (
+              <Text
+                className="font-sans-sb text-[16px]"
+                style={{ color: photo ? '#FFFFFF' : c.ink }}
+                numberOfLines={2}
+              >
                 {listing.referral_name ?? listing.title}
               </Text>
             ) : (
               <T source="listing" id={listing.id} field="title" text={listing.title} showToggle={false}
-                className="mb-1 font-sans-sb text-[16px] text-ink" numberOfLines={2} />
-            )
-          ) : null}
+                className="font-sans-sb text-[16px]"
+                style={{ color: photo ? '#FFFFFF' : c.ink }}
+                numberOfLines={2} />
+            )}
+          </View>
+        </View>
 
+        <View style={{ padding: 12 }}>
           {/* Price is the loud element, and it is ink — a price is not a link. */}
-          {listing.price != null ? (
-            <View className="flex-row items-baseline gap-1">
-              <Text className="font-display-x text-[20px] text-ink">
-                ₹{listing.price.toLocaleString('en-IN')}
-              </Text>
-              {listing.price_unit ? (
-                <Text className="text-[11px] font-sans-md text-subtle">{listing.price_unit}</Text>
-              ) : null}
-            </View>
-          ) : null}
+          <View className="flex-row items-baseline gap-1" style={{ minHeight: 24 }}>
+            {listing.price != null ? (
+              <>
+                <Text className="font-display-x text-[20px] text-ink">
+                  ₹{listing.price.toLocaleString('en-IN')}
+                </Text>
+                {listing.price_unit ? (
+                  <Text className="text-[11px] font-sans-md text-subtle">{listing.price_unit}</Text>
+                ) : null}
+              </>
+            ) : (
+              <Text className="text-[13px] font-sans-md text-subtle">Ask for price</Text>
+            )}
+          </View>
 
           <View className="mt-2 flex-row items-center gap-2">
             <Avatar name={ownerName} size={20} />

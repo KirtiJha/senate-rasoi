@@ -566,6 +566,7 @@ export default function HomeScreen() {
                 icon={cat.icon as any}
                 label={cat.label}
                 blurb={cat.blurb}
+                count={counts[cat.key] ?? 0}
                 onPress={() => handleCategoryPress(cat)}
               />
             </View>
@@ -576,11 +577,11 @@ export default function HomeScreen() {
                 icon={tile.icon as any}
                 label={tile.label}
                 blurb={tile.blurb}
-                badge={
-                  tile.key === 'messages' ? unread
-                    : tile.key === 'borrow' ? borrowCount
-                      : tile.key === 'lost_found' ? lostFoundCount
-                        : (tileCounts[tile.key] ?? 0)
+                badge={tile.key === 'messages' ? unread : 0}
+                count={
+                  tile.key === 'borrow' ? borrowCount
+                    : tile.key === 'lost_found' ? lostFoundCount
+                      : (tileCounts[tile.key] ?? 0)
                 }
                 onPress={() => router.push(tile.href as any)}
               />

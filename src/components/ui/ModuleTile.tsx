@@ -22,13 +22,23 @@ export function ModuleTile({
   label,
   blurb,
   badge = 0,
+  count = 0,
   onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   blurb?: string;
-  /** Shown only when it is something you need to act on. */
+  /**
+   * A summons: unread messages, unpaid dues. Marigold, because you have to do
+   * something about it.
+   */
   badge?: number;
+  /**
+   * Inventory: how many listings are in there. Quiet, because it answers "is
+   * this worth opening?" and nothing more. Rendering it like a badge would
+   * teach people to ignore the badges that matter.
+   */
+  count?: number;
   onPress: () => void;
 }) {
   const c = useThemeColors();
@@ -38,7 +48,11 @@ export function ModuleTile({
       haptic={null}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={badge > 0 ? `${label}, ${badge}` : label}
+      accessibilityLabel={
+        badge > 0 ? `${label}, ${badge} needing attention`
+          : count > 0 ? `${label}, ${count}`
+            : label
+      }
     >
       <View
         className="overflow-hidden rounded-2xl"
@@ -67,6 +81,13 @@ export function ModuleTile({
               {badge > 99 ? '99+' : badge}
             </Text>
           </View>
+        ) : count > 0 ? (
+          <Text
+            className="absolute font-sans-sb text-[12px] text-subtle"
+            style={{ top: 15, right: 13 }}
+          >
+            {count > 99 ? '99+' : count}
+          </Text>
         ) : null}
       </View>
     </Touchable>
