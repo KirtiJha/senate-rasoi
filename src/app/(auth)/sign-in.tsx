@@ -5,9 +5,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
-import { Brandfull } from '../../components/Brand';
+import { DiversityEmblem } from '../../components/Brand';
 import { Field } from '../../components/forms';
-import { Button, Container } from '../../components/ui';
+import { Button, Container, PinInput, Segmented } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { selfResetPin, signIn, signUp } from '../../lib/auth';
@@ -15,6 +15,11 @@ import { Community, fetchCommunities, fetchCommunityById, submitJoinRequest } fr
 import { DirectoryEntry, PhoneDirectoryMatch, findDirectoryByPhone, findRosterMatch, reconcileDirectoryEntry } from '../../lib/directory';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useThemeColors } from '../../theme';
+
+const MODES = [
+  { key: 'in', label: 'Sign in' },
+  { key: 'up', label: 'Create account' },
+] as const;
 
 export default function SignInScreen() {
   const toast = useToast();
@@ -246,38 +251,39 @@ export default function SignInScreen() {
     <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }} keyboardShouldPersistTaps="handled">
         <Container narrow>
-          <View className="mb-7 items-center">
-            <Brandfull />
-            <Text className="font-sans mt-3 text-center text-[14px] leading-5 text-muted">
+          {/* The old header stacked a full brand lockup, a tagline, an emoji
+              and two lines of instructions above the first field — most of a
+              phone screen spent before anything could be typed. The emblem
+              says which app this is; one line says what to do. */}
+          <View className="mb-6 items-center">
+            <DiversityEmblem size={64} />
+            <Text className="font-display-x mt-3 text-center text-[26px] leading-[32px] text-ink">
+              {mode === 'in' ? 'Welcome back' : 'Join your society'}
+            </Text>
+            <Text className="font-sans-md mt-1.5 max-w-[290px] text-center text-[13.5px] leading-[19px] text-subtle">
               {mode === 'in'
-                ? 'Welcome back to your society hub 🏘️\nSign in with your phone & 6-digit code.'
-                : 'Your neighbourhood, all in one place 🏘️\nJoin with your phone & a 6-digit code.'}
+                ? 'Your phone number and the 6-digit code you chose.'
+                : 'Pick a 6-digit code — it is how you sign in. No SMS, no OTP.'}
             </Text>
           </View>
 
-          {/* mode switch */}
-          <View className="mb-5 flex-row rounded-2xl bg-inset p-1">
-            {(['in', 'up'] as const).map((m) => (
-              <Pressable key={m} onPress={() => setMode(m)} className={`flex-1 rounded-xl py-2.5 ${mode === m ? 'bg-surface' : ''}`}>
-                <Text className={`text-center text-[14px] ${mode === m ? 'font-sans-sb text-ink' : 'font-sans-md text-muted'}`}>
-                  {m === 'in' ? 'Sign in' : 'Create account'}
-                </Text>
-              </Pressable>
-            ))}
+          {/* Was a fourth kind of segmented control in this app. Uses the one now. */}
+          <View className="mb-6">
+            <Segmented items={MODES} value={mode} onChange={setMode} />
           </View>
 
           <Field label="Phone number" required placeholder="98765 43210" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
-          <Field
-            label="6-digit code"
-            required
-            hint={mode === 'up' ? 'Choose any 6 digits — your secret PIN to sign in.' : undefined}
-            placeholder="••••••"
-            keyboardType="number-pad"
-            secureTextEntry
-            maxLength={6}
-            value={code}
-            onChangeText={(t: string) => setCode(t.replace(/\D/g, ''))}
-          />
+          <View className="mb-4">
+            <Text className="mb-2 text-[13px] font-sans-sb text-ink">
+              6-digit code <Text style={{ color: c.danger }}>*</Text>
+            </Text>
+            <PinInput value={code} onChange={setCode} accessibilityLabel="Six digit code" />
+            {mode === 'up' ? (
+              <Text className="font-sans mt-2 text-[12px] leading-[17px] text-subtle">
+                Choose any six digits. This is your PIN — you will use it to sign in.
+              </Text>
+            ) : null}
+          </View>
           {mode === 'in' ? (
             <Pressable onPress={openForgotPin} hitSlop={8} className="-mt-1 mb-3 self-end active:opacity-60">
               <Text className="text-[12px] font-sans-sb text-accent">Forgot PIN?</Text>
@@ -602,26 +608,18 @@ export default function SignInScreen() {
                   value={resetPhone}
                   onChangeText={setResetPhone}
                 />
-                <Field
-                  label="New PIN"
-                  required
-                  placeholder="••••••"
-                  keyboardType="number-pad"
-                  secureTextEntry
-                  maxLength={6}
-                  value={resetNewPin}
-                  onChangeText={(t) => setResetNewPin(t.replace(/\D/g, ''))}
-                />
-                <Field
-                  label="Confirm new PIN"
-                  required
-                  placeholder="••••••"
-                  keyboardType="number-pad"
-                  secureTextEntry
-                  maxLength={6}
-                  value={resetConfirmPin}
-                  onChangeText={(t) => setResetConfirmPin(t.replace(/\D/g, ''))}
-                />
+                <View className="mb-4">
+                  <Text className="mb-2 text-[13px] font-sans-sb text-ink">
+                    New PIN <Text style={{ color: c.danger }}>*</Text>
+                  </Text>
+                  <PinInput value={resetNewPin} onChange={setResetNewPin} accessibilityLabel="New PIN" />
+                </View>
+                <View className="mb-4">
+                  <Text className="mb-2 text-[13px] font-sans-sb text-ink">
+                    Confirm new PIN <Text style={{ color: c.danger }}>*</Text>
+                  </Text>
+                  <PinInput value={resetConfirmPin} onChange={setResetConfirmPin} accessibilityLabel="Confirm new PIN" />
+                </View>
                 <Text className="font-sans mb-4 text-[11px] leading-4 text-faint">
                   Can't reset? Ask your society admin to set a temporary PIN for you. You can then sign in and change it from your profile.
                 </Text>
