@@ -98,7 +98,7 @@ export function CourtBookings({
   const recent = sessions.filter((s) => s.ended).slice(0, 4);
 
   return (
-    <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
+    <View className="mt-4 card p-4">
       <View className="mb-3 flex-row items-center justify-between">
         <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-muted">{facility} bookings</Text>
         <View className="flex-row items-center gap-2">

@@ -96,7 +96,7 @@ export default function EventReportScreen() {
           </Text>
 
           {/* Headline numbers */}
-          <View className="mt-4 overflow-hidden rounded-2xl border border-line bg-surface">
+          <View className="mt-4 overflow-hidden card">
             <View style={{ height: 4, backgroundColor: ACCENT }} />
             <View className="p-4">
               <View className="flex-row">
@@ -145,7 +145,7 @@ export default function EventReportScreen() {
               <Text className="mb-2 px-1 text-[11px] font-sans-sb uppercase tracking-wider text-muted">
                 Where the money went
               </Text>
-              <View className="rounded-2xl border border-line bg-surface p-4">
+              <View className="card p-4">
                 {t.byCategory.map((row) => {
                   const meta = catMeta(row.category);
                   const pct = Math.round((row.amount / maxCat) * 100);
@@ -178,7 +178,7 @@ export default function EventReportScreen() {
                 {expenses.map((e) => {
                   const meta = catMeta(e.category);
                   return (
-                    <View key={e.id} className="rounded-2xl border border-line bg-surface p-3.5">
+                    <View key={e.id} className="card p-3.5">
                       <View className="flex-row items-center gap-2.5">
                         <View className="h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: c.accentSoft }}>
                           <Ionicons name={meta.icon as any} size={16} color={c.accent} />
@@ -216,7 +216,7 @@ export default function EventReportScreen() {
             <Text className="mb-2 px-1 text-[11px] font-sans-sb uppercase tracking-wider text-muted">
               Contributions ({t.flatsPaid} of {t.flatsTotal} flats)
             </Text>
-            <View className="rounded-2xl border border-line bg-surface p-4">
+            <View className="card p-4">
               {paid.length === 0 ? (
                 <Text className="font-sans text-[13px] text-faint">Nothing collected yet.</Text>
               ) : (

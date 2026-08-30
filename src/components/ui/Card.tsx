@@ -46,19 +46,21 @@ export function Card({
   children: ReactNode;
 }) {
   const c = useThemeColors();
-  const isDark = c.shadowBar === 'none';
 
   const radius = { borderTopLeftRadius: 22, borderTopRightRadius: 22, borderBottomLeftRadius: 14, borderBottomRightRadius: 14 };
 
+  // Matches the .card class in global.css exactly. That class cannot carry a
+  // box-shadow — the declaration throws in the interop's parser and takes the
+  // whole stylesheet with it — so cards separate with a hairline in both
+  // schemes, and this component agrees rather than drifting from it.
   const surface =
     level === 'flat'
       ? { backgroundColor: c.inset, borderRadius: 18 }
       : {
           ...radius,
-          backgroundColor: level === 'elevated' && isDark ? c.surface2 : c.surface,
-          ...(isDark
-            ? { borderWidth: 1, borderColor: c.line }
-            : { boxShadow: level === 'elevated' ? c.shadowBar : c.shadowCard }),
+          backgroundColor: level === 'elevated' ? c.surface2 : c.surface,
+          borderWidth: 1,
+          borderColor: c.line,
         };
 
   const body = (

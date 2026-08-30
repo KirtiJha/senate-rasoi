@@ -61,7 +61,7 @@ export function SavedSection() {
             <Pressable
               key={l.id}
               onPress={() => router.push(`/listing/${l.id}` as any)}
-              className="mb-3 overflow-hidden rounded-2xl border border-line bg-surface active:opacity-80"
+              className="mb-3 overflow-hidden card active:opacity-80"
             >
               {cat && <View style={{ height: 3, backgroundColor: c.accent }} />}
               <View className="flex-row items-center gap-3 p-3.5">

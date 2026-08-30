@@ -133,7 +133,7 @@ export default function HelpersScreen() {
               </View>
               <View className="mt-2 gap-2">
                 {helpers.map((p) => (
-                  <View key={p.id} className="rounded-2xl border border-line bg-surface p-3.5">
+                  <View key={p.id} className="card p-3.5">
                     <PersonRow p={p} c={c} inline />
                     <View className="mt-2 flex-row flex-wrap gap-1.5">
                       {p.helper_skills.map((s) => <View key={s} className="rounded-full bg-inset px-2 py-0.5"><Text className="font-sans text-[11px] text-muted">{s}</Text></View>)}
@@ -154,7 +154,7 @@ export default function HelpersScreen() {
 function PersonRow({ p, badge, c, inline }: { p: RegistryPerson; badge?: string; c: ReturnType<typeof useThemeColors>; inline?: boolean }) {
   const phone = p.whatsapp ?? p.phone;
   return (
-    <View className={inline ? 'flex-row items-center gap-2.5' : 'flex-row items-center gap-2.5 rounded-2xl border border-line bg-surface p-3'}>
+    <View className={inline ? 'flex-row items-center gap-2.5' : 'flex-row items-center gap-2.5 card p-3'}>
       <Avatar name={p.name} size={36} />
       <View className="flex-1">
         <View className="flex-row items-center gap-1.5">

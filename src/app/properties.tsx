@@ -111,7 +111,7 @@ function PropertyCard({ p, onPress, c }: { p: PropertyRow; onPress: () => void; 
   const sub = propertySubtitle(p);
   const isRent = p.listing_type === 'rent';
   return (
-    <Pressable onPress={onPress} className="flex-row overflow-hidden rounded-2xl border border-line bg-surface active:opacity-90">
+    <Pressable onPress={onPress} className="flex-row overflow-hidden card active:opacity-90">
       <View style={{ width: 108, height: 108, backgroundColor: c.inset }} className="items-center justify-center">
         {p.photos[0] ? (
           <Image source={{ uri: p.photos[0] }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />

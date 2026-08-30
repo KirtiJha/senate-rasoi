@@ -96,7 +96,7 @@ export default function PaymentsScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
           {loading ? (
-            <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={5} /></View>
+            <View className="overflow-hidden card"><RowSkeleton count={5} /></View>
           ) : filtered.length === 0 ? (
             <View className="items-center py-16">
               <Ionicons name="wallet-outline" size={42} color={c.faint} />
@@ -104,7 +104,7 @@ export default function PaymentsScreen() {
               <Text className="font-sans text-[14px] text-muted text-center max-w-xs">When you pay a neighbour (or someone pays you), it shows up here to track.</Text>
             </View>
           ) : (
-            <View className="overflow-hidden rounded-2xl border border-line bg-surface">
+            <View className="overflow-hidden card">
               {filtered.map((p, i) => {
                 const iPaid = p.payer_id === userId;
                 const other = iPaid ? p.payee : p.payer;

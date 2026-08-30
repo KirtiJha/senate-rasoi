@@ -126,7 +126,7 @@ export default function AskScreen() {
                       <Pressable accessibilityRole="button" accessibilityLabel="Open"
                         key={`${item.source}-${item.id}`}
                         onPress={() => router.push(askResultRoute(item) as any)}
-                        className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3 active:opacity-75"
+                        className="flex-row items-center gap-3 card p-3 active:opacity-75"
                       >
                         <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: c.accentSoft }}>
                           <Ionicons name={meta.icon as any} size={17} color={c.accent} />

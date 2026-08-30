@@ -159,7 +159,7 @@ export default function CategoryScreen() {
               <Pressable
                 onPress={loadMore}
                 disabled={loadingMore}
-                className="mt-4 items-center rounded-2xl border border-line bg-surface py-3"
+                className="mt-4 items-center card py-3"
                 style={{ marginHorizontal: 6 }}
               >
                 <Text className="text-[13px] font-sans-md text-muted">

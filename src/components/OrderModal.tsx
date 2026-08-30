@@ -38,7 +38,7 @@ export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
             <IconButton icon="close" label="Close" onPress={onClose} />
           </View>
 
-          <View className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3">
+          <View className="mb-4 flex-row items-center gap-3 card p-3">
             <View className="h-16 w-16 items-center justify-center overflow-hidden rounded-xl bg-inset">
               {dish.photo_url ? (
                 <Image source={{ uri: dish.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" />

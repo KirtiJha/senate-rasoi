@@ -99,7 +99,7 @@ export default function SportsScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container>
           {loading ? (
-            <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={4} /></View>
+            <View className="overflow-hidden card"><RowSkeleton count={4} /></View>
           ) : !currentGroup ? (
             <View className="items-center py-16">
               <Text style={{ fontSize: 44 }} className="mb-3">🏅</Text>

@@ -130,7 +130,7 @@ export function PaySheet({
           {note ? <Text className="font-sans mb-4 text-[13px] text-muted">For: {note}</Text> : null}
 
           {isDesktop ? (
-            <View className="items-center rounded-2xl border border-line bg-surface p-4">
+            <View className="items-center card p-4">
               {valid ? (
                 <View className="rounded-xl bg-surface p-3">
                   <QRCode value={link} size={180} />

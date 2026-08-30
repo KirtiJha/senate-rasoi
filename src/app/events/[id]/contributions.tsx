@@ -179,7 +179,7 @@ export default function ContributionsScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* Summary */}
-          <View className="mb-4 rounded-2xl border border-line bg-surface p-4">
+          <View className="mb-4 card p-4">
             <Text className="font-sans-bold text-[20px]" style={{ color: ACCENT }}>{rupees(totals.collected)}</Text>
             <Text className="font-sans text-[12px] text-muted">
               collected from {totals.flatsPaid} of {totals.flatsTotal} flats
@@ -220,7 +220,7 @@ export default function ContributionsScreen() {
               {canManage && !locked ? (
                 <Pressable
                   onPress={buildRoster}
-                  className="mb-3 flex-row items-center justify-center gap-1.5 rounded-2xl border border-line bg-surface py-2.5 active:opacity-70"
+                  className="mb-3 flex-row items-center justify-center gap-1.5 card py-2.5 active:opacity-70"
                 >
                   <Ionicons name="refresh-outline" size={14} color={c.muted} />
                   <Text className="text-[12px] font-sans-sb text-muted">Refresh flat list from directory</Text>
@@ -234,7 +234,7 @@ export default function ContributionsScreen() {
                     <Pressable
                       key={row.id}
                       onPress={() => (canManage && !locked ? openEdit(row) : undefined)}
-                      className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3.5"
+                      className="flex-row items-center gap-3 card p-3.5"
                     >
                       <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: c.accentSoft }}>
                         <Text className="text-[11px] font-sans-bold" style={{ color: c.accent }}>

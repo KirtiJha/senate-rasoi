@@ -193,7 +193,7 @@ export default function PlaceFormScreen() {
             {searching ? <ActivityIndicator size="small" color={c.faint} /> : null}
           </View>
           {results.length > 0 ? (
-            <View className="mb-2 overflow-hidden rounded-2xl border border-line bg-surface">
+            <View className="mb-2 overflow-hidden card">
               {results.map((r) => (
                 <Pressable key={r.osmId} onPress={() => pickResult(r)} className="flex-row items-start gap-2 border-b border-line px-3.5 py-2.5 active:bg-inset">
                   <Ionicons name="location-outline" size={15} color={ACCENT} style={{ marginTop: 2 }} />

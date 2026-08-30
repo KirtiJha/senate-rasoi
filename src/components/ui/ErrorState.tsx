@@ -101,7 +101,7 @@ export function ErrorRow({
 
   return (
     <View
-      className="mx-4 mb-3 flex-row items-center gap-3 rounded-2xl border border-line bg-surface px-3.5 py-3"
+      className="mx-4 mb-3 flex-row items-center gap-3 card px-3.5 py-3"
       accessibilityRole="alert"
     >
       <Ionicons name="cloud-offline-outline" size={17} color={c.muted} />

@@ -90,7 +90,7 @@ export function ListingChat({ listingId, ownerUserId, ownerName, accent }: Listi
   const count = messages.length;
 
   return (
-    <View className="mb-4 overflow-hidden rounded-2xl border border-line bg-surface">
+    <View className="mb-4 overflow-hidden card">
       {/* Header / toggle */}
       <Pressable onPress={toggle} className="flex-row items-center gap-3 p-4 active:bg-inset">
         <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: accent + '20' }}>

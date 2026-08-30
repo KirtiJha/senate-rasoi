@@ -164,7 +164,7 @@ export default function EventDetailScreen() {
           ) : null}
 
           {/* Money at a glance */}
-          <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
+          <View className="mt-4 card p-4">
             <View className="flex-row">
               <Stat label="Collected" value={rupees(totals.collected)} color={c.accent} />
               <Stat label="Spent" value={rupees(totals.spent)} color={c.danger} />
@@ -236,7 +236,7 @@ export default function EventDetailScreen() {
             ) : (
               <View className="gap-2">
                 {team.map((t) => (
-                  <View key={t.user_id} className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3">
+                  <View key={t.user_id} className="flex-row items-center gap-3 card p-3">
                     <Avatar name={t.profile?.name ?? '?'} size={34} />
                     <View className="min-w-0 flex-1">
                       <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>
@@ -257,7 +257,7 @@ export default function EventDetailScreen() {
 
           {/* Lead controls */}
           {isLead ? (
-            <View className="mt-6 rounded-2xl border border-line bg-surface p-4">
+            <View className="mt-6 card p-4">
               <Text className="mb-2 text-[12px] font-sans-sb uppercase tracking-wider text-muted">Organiser</Text>
               <Button
                 label={`Status: ${meta.label}`}
@@ -312,7 +312,7 @@ export default function EventDetailScreen() {
         </Text>
 
         {team.map((t) => (
-          <View key={t.user_id} className="mb-2 rounded-2xl border border-line bg-surface p-3">
+          <View key={t.user_id} className="mb-2 card p-3">
             <View className="mb-2 flex-row items-center gap-2">
               <Avatar name={t.profile?.name ?? '?'} size={28} />
               <Text className="flex-1 font-sans-sb text-[13px] text-ink" numberOfLines={1}>
@@ -403,7 +403,7 @@ function NavRow({
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="Open"
       onPress={onPress}
-      className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3.5 active:opacity-80"
+      className="flex-row items-center gap-3 card p-3.5 active:opacity-80"
     >
       <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: color + '20' }}>
         <Ionicons name={icon as any} size={20} color={color} />

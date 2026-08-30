@@ -144,7 +144,7 @@ export default function PlacesScreen() {
             groups.map((g) => {
               const open = isOpen(g.type.key);
               return (
-                <View key={g.type.key} className="mb-2.5 overflow-hidden rounded-2xl border border-line bg-surface">
+                <View key={g.type.key} className="mb-2.5 overflow-hidden card">
                   <Pressable onPress={() => toggle(g.type.key)} disabled={!!q} className="flex-row items-center gap-2.5 px-3.5 py-3 active:bg-inset">
                     <View className="h-8 w-8 items-center justify-center rounded-xl" style={{ backgroundColor: c.accentSoft }}>
                       <Ionicons name={g.type.icon as any} size={17} color={c.accent} />

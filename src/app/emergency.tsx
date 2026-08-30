@@ -90,7 +90,7 @@ export default function EmergencyScreen() {
                 const color = EMERGENCY_ROLE_COLORS[contact.role];
                 const icon = EMERGENCY_ROLE_ICONS[contact.role];
                 return (
-                  <View key={contact.id} className="rounded-2xl border border-line bg-surface overflow-hidden">
+                  <View key={contact.id} className="card overflow-hidden">
                     <View style={{ height: 3, backgroundColor: color }} />
                     <View className="flex-row items-center gap-3 p-4">
                       <View

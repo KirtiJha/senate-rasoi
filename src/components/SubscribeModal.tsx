@@ -31,7 +31,7 @@ export function SubscribeModal({ plan, onClose, onConfirm }: SubscribeModalProps
             <IconButton icon="close" label="Close" onPress={onClose} />
           </View>
 
-          <View className="mb-4 rounded-2xl border border-line bg-surface p-3">
+          <View className="mb-4 card p-3">
             <View className="flex-row items-center gap-1.5">
               <VegMark type={plan.veg_type} size={13} />
               <Text className="flex-1 font-display text-[17px] text-ink" numberOfLines={1}>{plan.title}</Text>

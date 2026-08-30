@@ -105,7 +105,7 @@ export default function OnboardScreen() {
                 Search for your apartment or society in Bengaluru. If it's already on Aangan you'll <Text className="font-sans-sb text-ink">join</Text> it; if not, you can <Text className="font-sans-sb text-ink">onboard</Text> it as the founder.
               </Text>
 
-              <View className="flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
+              <View className="flex-row items-center gap-2 card px-3 py-2.5">
                 <Ionicons name="search-outline" size={18} color={c.faint} />
                 <TextInput
                   value={query}
@@ -148,7 +148,7 @@ export default function OnboardScreen() {
                       <Text className="mb-1.5 mt-2 px-1 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Not yours? Onboard a new one</Text>
                     ) : null}
                     {results.map((r) => (
-                      <Pressable accessibilityRole="button" accessibilityLabel="Open" key={r.osmId} onPress={() => pick(r)} className="flex-row items-start gap-3 rounded-2xl border border-line bg-surface p-3.5 active:bg-inset" style={{ marginBottom: 8 }}>
+                      <Pressable accessibilityRole="button" accessibilityLabel="Open" key={r.osmId} onPress={() => pick(r)} className="flex-row items-start gap-3 card p-3.5 active:bg-inset" style={{ marginBottom: 8 }}>
                         <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: '#0D948822' }}>
                           <Ionicons name="business" size={17} color="#0D9488" />
                         </View>
@@ -190,7 +190,7 @@ export default function OnboardScreen() {
                 <View className="items-center py-8"><ActivityIndicator size="small" color={c.muted} /></View>
               ) : existing ? (
                 // ── Already onboarded ──
-                <View className="mt-4 rounded-2xl border border-line bg-surface p-5">
+                <View className="mt-4 card p-5">
                   <View className="mb-2 flex-row items-center gap-2">
                     <Ionicons name="checkmark-circle" size={20} color={c.accent} />
                     <Text className="font-sans-bold text-[16px] text-ink">Already on Aangan</Text>

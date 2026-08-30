@@ -143,7 +143,7 @@ export default function ExpensesScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
-          <View className="mb-4 rounded-2xl border border-line bg-surface p-4">
+          <View className="mb-4 card p-4">
             <Text className="font-sans-bold text-[20px]" style={{ color: ACCENT }}>{rupees(total)}</Text>
             <Text className="font-sans text-[12px] text-muted">
               across {rows.length} {rows.length === 1 ? 'entry' : 'entries'}
@@ -182,7 +182,7 @@ export default function ExpensesScreen() {
                 const m = catMeta(e.category);
                 const mine = e.created_by === userId;
                 return (
-                  <View key={e.id} className="rounded-2xl border border-line bg-surface p-3.5">
+                  <View key={e.id} className="card p-3.5">
                     <View className="flex-row items-center gap-3">
                       <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: c.accentSoft }}>
                         <Ionicons name={m.icon as any} size={19} color={c.accent} />

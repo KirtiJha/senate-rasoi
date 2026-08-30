@@ -222,7 +222,7 @@ export default function DirectoryScreen() {
         addLabel="Add resident"
         subBar={
           <View>
-            <View className="flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
+            <View className="flex-row items-center gap-2 card px-3 py-2.5">
               <Ionicons name="search-outline" size={18} color={c.faint} />
               <TextInput
                 value={query}
@@ -256,7 +256,7 @@ export default function DirectoryScreen() {
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View className="w-full self-center" style={{ maxWidth: DIR_MAX }}>
           {loading ? (
-            <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={6} /></View>
+            <View className="overflow-hidden card"><RowSkeleton count={6} /></View>
           ) : loadFailed ? (
             <ErrorState
               title="Couldn't load the directory"
@@ -294,7 +294,7 @@ export default function DirectoryScreen() {
                     {g.rows.length > 1 ? <Text className="font-sans text-[12px] text-faint">· {g.rows.length} residents</Text> : null}
                   </View>
                 )}
-                <View className="overflow-hidden rounded-2xl border border-line bg-surface">
+                <View className="overflow-hidden card">
                   {g.rows.map((r, i) => (
                     <ResidentRow
                       key={r.key}

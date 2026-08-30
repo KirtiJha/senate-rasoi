@@ -205,7 +205,7 @@ export default function LendItemDetailScreen() {
           {item.description ? <T source="borrow" id={item.id} field="description" text={item.description} className="mt-2 text-[14px] leading-[21px] text-muted" /> : null}
 
           {/* Owner card */}
-          <View className="mt-4 flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3.5">
+          <View className="mt-4 flex-row items-center gap-3 card p-3.5">
             <Avatar name={ownerName} size={40} />
             <View className="flex-1">
               <Text className="font-sans-bold text-[14px] text-ink">{ownerName}</Text>
@@ -222,7 +222,7 @@ export default function LendItemDetailScreen() {
           {isOwner ? (
             <>
               {isOffer ? (
-                <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
+                <View className="mt-4 card p-4">
                   <Text className="mb-2 text-[12px] font-sans-sb uppercase tracking-wider text-muted">Status</Text>
                   <View className="flex-row gap-2">
                     {(['available', 'lent', 'unavailable'] as LendStatus[]).map((s) => (
@@ -237,7 +237,7 @@ export default function LendItemDetailScreen() {
                   </Pressable>
                 </View>
               ) : (
-                <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
+                <View className="mt-4 card p-4">
                   <Pressable onPress={removeItem} className="flex-row items-center justify-center gap-1.5 py-2 active:opacity-60">
                     <Ionicons name="trash-outline" size={15} color={c.danger} />
                     <Text className="text-[13px] font-sans-sb text-nonveg">Delete request</Text>
@@ -251,7 +251,7 @@ export default function LendItemDetailScreen() {
                   <Text className="mb-2 text-[12px] font-sans-sb uppercase tracking-wider text-muted">Borrow requests ({requests.length})</Text>
                   <View className="gap-2">
                     {requests.map((r) => (
-                      <View key={r.id} className="rounded-2xl border border-line bg-surface p-3.5">
+                      <View key={r.id} className="card p-3.5">
                         <View className="flex-row items-center gap-2">
                           <Avatar name={r.requester?.name ?? '?'} size={26} />
                           <View className="flex-1">
@@ -288,7 +288,7 @@ export default function LendItemDetailScreen() {
             <View className="mt-5 gap-2.5">
               {isOffer ? (
                 myRequest ? (
-                  <View className="items-center rounded-2xl border border-line bg-surface p-4">
+                  <View className="items-center card p-4">
                     <Ionicons name={myRequest.status === 'accepted' ? 'checkmark-circle' : myRequest.status === 'declined' ? 'close-circle' : 'time-outline'} size={26} color={myRequest.status === 'accepted' ? '#16A34A' : myRequest.status === 'declined' ? '#EF4444' : ACCENT} />
                     <Text className="mt-1 font-sans-bold text-[14px] text-ink">
                       {myRequest.status === 'pending' ? 'Request sent' : myRequest.status === 'accepted' ? 'Request accepted 🎉' : myRequest.status === 'declined' ? 'Request declined' : 'Returned'}

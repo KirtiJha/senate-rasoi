@@ -269,7 +269,7 @@ export default function AdminScreen() {
         >
           <Container>
             {/* Search */}
-            <View className="mb-4 flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
+            <View className="mb-4 flex-row items-center gap-2 card px-3 py-2.5">
               <Ionicons name="search-outline" size={16} color={c.faint} />
               <TextInput
                 value={query}
@@ -298,7 +298,7 @@ export default function AdminScreen() {
               const self = m.id === userId;
               const memberAdmin = m.roles.includes('admin');
               return (
-                <View key={m.id} className="mb-3 rounded-3xl border border-line bg-surface p-4">
+                <View key={m.id} className="mb-3 card p-4">
                   <View className="flex-row items-center gap-3">
                     <Avatar name={m.name} size={44} />
                     <View className="flex-1">
@@ -501,7 +501,7 @@ function ReportsTab({
             const route = routeFor(r);
             const color = REPORT_STATUS_COLOR[r.status];
             return (
-              <View key={r.id} className="rounded-2xl border border-line bg-surface p-3.5">
+              <View key={r.id} className="card p-3.5">
                 <View className="mb-1.5 flex-row flex-wrap items-center gap-1.5">
                   <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: color + '20' }}>
                     <Text className="text-[10px] font-sans-sb uppercase" style={{ color }}>{r.status}</Text>
@@ -590,7 +590,7 @@ function JoinRequestCard({
   const statusLabel = req.status === 'pending' ? 'Pending' : req.status === 'approved' ? 'Approved' : 'Rejected';
 
   return (
-    <View className="mb-3 rounded-3xl border border-line bg-surface p-4">
+    <View className="mb-3 card p-4">
       <View className="flex-row items-center justify-between mb-2">
         <Text className="font-sans-sb text-[15px] text-ink flex-1 mr-2" numberOfLines={1}>{req.society_name}</Text>
         <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: statusColor + '20' }}>

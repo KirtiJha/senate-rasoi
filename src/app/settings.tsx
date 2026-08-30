@@ -67,7 +67,7 @@ export default function SettingsScreen() {
         <Container>
           {/* ── Appearance ─────────────────────────────────────── */}
           <SectionLabel>Appearance</SectionLabel>
-          <View className="mb-6 overflow-hidden rounded-2xl border border-line bg-surface">
+          <View className="mb-6 overflow-hidden card">
             <View className="flex-row gap-1 p-1.5">
               {THEME_OPTIONS.map((opt) => {
                 const active = preference === opt.value;
@@ -135,7 +135,7 @@ function SectionLabel({ children }: { children: string }) {
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <View className="mb-6 overflow-hidden rounded-2xl border border-line bg-surface">{children}</View>;
+  return <View className="mb-6 overflow-hidden card">{children}</View>;
 }
 
 function Divider() {

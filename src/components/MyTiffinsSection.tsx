@@ -141,7 +141,7 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
               const plan = s.plan;
               const wa = plan?.chef?.whatsapp;
               return (
-                <View key={s.id} className="mb-3 rounded-3xl border border-line bg-surface p-3.5">
+                <View key={s.id} className="mb-3 card p-3.5">
                   <View className="flex-row items-center gap-3">
                     <View className="h-12 w-12 items-center justify-center rounded-2xl bg-inset">
                       <Text style={{ fontSize: 24 }}>🍱</Text>
@@ -212,7 +212,7 @@ function TiffinPlanCard({
   const [showEdit, setShowEdit] = useState(false);
 
   return (
-    <View className={`mb-4 rounded-3xl border border-line bg-surface p-4 ${plan.active ? '' : 'opacity-60'}`}>
+    <View className={`mb-4 card p-4 ${plan.active ? '' : 'opacity-60'}`}>
       <View className="flex-row items-center gap-2">
         <Text className="flex-1 font-display-sb text-[18px] text-ink" numberOfLines={1}>
           {SLOT_EMOJI[plan.slot]} {plan.title}

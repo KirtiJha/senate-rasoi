@@ -194,7 +194,7 @@ export default function SearchScreen() {
         title="Search"
         hideSociety
         subBar={
-          <View className="flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
+          <View className="flex-row items-center gap-2 card px-3 py-2.5">
             <Ionicons name="search-outline" size={19} color={c.faint} />
             <TextInput
               ref={inputRef}
@@ -253,7 +253,7 @@ export default function SearchScreen() {
             grouped.map((g) => (
               <View key={g.kind} className="mb-5">
                 <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-faint">{KIND_LABEL[g.kind]} · {g.rows.length}</Text>
-                <View className="overflow-hidden rounded-2xl border border-line bg-surface">
+                <View className="overflow-hidden card">
                   {g.rows.map((it, i) => (
                     <ResultRow key={it.id} it={it} first={i === 0} c={c} onPress={() => onPick(it)} />
                   ))}
@@ -292,7 +292,7 @@ function RecentsOrHint({
   loading: boolean; recents: string[]; onPick: (q: string) => void; onClear: () => void; c: ReturnType<typeof useThemeColors>;
 }) {
   if (loading) {
-    return <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={5} /></View>;
+    return <View className="overflow-hidden card"><RowSkeleton count={5} /></View>;
   }
   if (recents.length === 0) {
     return (

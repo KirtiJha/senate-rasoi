@@ -27,7 +27,7 @@ function TiffinCardBase({ plan, subscribed, onPress, onEdit, width }: TiffinCard
     <Pressable accessibilityRole="button" accessibilityLabel="Edit"
       onPress={() => onPress(plan)}
       style={width ? { width } : undefined}
-      className="overflow-hidden rounded-3xl border border-line bg-surface active:opacity-90"
+      className="overflow-hidden card active:opacity-90"
     >
       <View className="h-24 w-full bg-inset">
         {plan.photo_url ? (

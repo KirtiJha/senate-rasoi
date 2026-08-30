@@ -22,7 +22,7 @@ export function Skeleton({ style, radius = 8 }: { style?: ViewStyle; radius?: nu
 
 export function ListingCardSkeleton() {
   return (
-    <View className="overflow-hidden rounded-2xl border border-line bg-surface">
+    <View className="overflow-hidden card">
       <Skeleton style={{ height: 140 }} radius={0} />
       <View className="p-3" style={{ gap: 8 }}>
         <Skeleton style={{ width: '80%', height: 14 }} />
@@ -57,7 +57,7 @@ export function RowSkeleton({ count = 6 }: { count?: number }) {
 
 export function DishCardSkeleton() {
   return (
-    <View className="overflow-hidden rounded-3xl border border-line bg-surface">
+    <View className="overflow-hidden card">
       <Skeleton style={{ height: 180 }} radius={0} />
       <View className="p-4">
         <View className="flex-row items-center gap-2.5">

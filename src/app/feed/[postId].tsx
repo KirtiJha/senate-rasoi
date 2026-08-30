@@ -498,7 +498,7 @@ function PostMenu({ post, isOwner, isAdmin, onEdit, onDelete, onPinToggle, onRes
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable className="flex-1" style={{ backgroundColor: '#00000055' }} onPress={() => setOpen(false)}>
           <View
-            className="absolute overflow-hidden rounded-2xl border border-line bg-surface"
+            className="absolute overflow-hidden card"
             style={{ top: insets.top + 52, right: 14, minWidth: 200, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 12 }}
           >
             {isOwner || isAdmin ? (

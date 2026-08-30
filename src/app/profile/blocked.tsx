@@ -78,7 +78,7 @@ export default function BlockedMembersScreen() {
                   return (
                     <View
                       key={row.blocked_id}
-                      className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3.5"
+                      className="flex-row items-center gap-3 card p-3.5"
                     >
                       <Avatar name={name} size={38} />
                       <View className="min-w-0 flex-1">

@@ -286,7 +286,7 @@ export default function DishDetailScreen() {
 
             {/* Plates-left progress */}
             {!soldOut ? (
-              <View className="mb-4 rounded-2xl border border-line bg-surface p-4">
+              <View className="mb-4 card p-4">
                 <View className="h-1.5 w-full overflow-hidden rounded-full bg-inset">
                   <View className={low ? 'h-full rounded-full bg-accent' : 'h-full rounded-full bg-success'} style={{ width: `${Math.max(8, pct * 100)}%` }} />
                 </View>
@@ -300,7 +300,7 @@ export default function DishDetailScreen() {
             ) : null}
 
             {/* Chef card */}
-            <View className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-4">
+            <View className="mb-4 flex-row items-center gap-3 card p-4">
               <Avatar name={dish.chef_name} size={42} />
               <View className="flex-1">
                 <Text className="font-sans-bold text-[15px] text-ink">{dish.chef_name}</Text>

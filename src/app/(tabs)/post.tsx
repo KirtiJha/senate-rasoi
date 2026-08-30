@@ -423,7 +423,7 @@ export default function PostScreen({
               {hasSavedIdentity ? <Button label="Done" variant="outline" size="sm" onPress={() => setEditingIdentity(false)} /> : null}
             </SectionCard>
           ) : (
-            <View className="mb-4 flex-row items-center gap-3 rounded-3xl border border-line bg-surface p-3.5">
+            <View className="mb-4 flex-row items-center gap-3 card p-3.5">
               <Avatar name={chefName} size={40} />
               <View className="flex-1">
                 <Text className="font-sans-sb text-[14px] text-ink">{chefName}</Text>

@@ -204,7 +204,7 @@ export default function LostFoundDetailScreen() {
           ) : null}
 
           {/* Owner card */}
-          <View className="mt-4 flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3.5">
+          <View className="mt-4 flex-row items-center gap-3 card p-3.5">
             <Avatar name={ownerName} size={40} />
             <View className="flex-1">
               <Text className="font-sans-bold text-[14px] text-ink">{ownerName}</Text>
@@ -230,7 +230,7 @@ export default function LostFoundDetailScreen() {
 
           {/* Owner controls */}
           {canManage ? (
-            <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
+            <View className="mt-4 card p-4">
               <Text className="mb-2 text-[12px] font-sans-sb uppercase tracking-wider text-muted">Status</Text>
               <View className="flex-row gap-2">
                 <Pressable
@@ -259,7 +259,7 @@ export default function LostFoundDetailScreen() {
             /* Non-owner: contact via WhatsApp */
             <View className="mt-5 gap-2.5">
               {isResolved ? (
-                <View className="items-center rounded-2xl border border-line bg-surface p-4">
+                <View className="items-center card p-4">
                   <Ionicons name="checkmark-circle" size={26} color={c.accent} />
                   <Text className="mt-1 font-sans-bold text-[14px] text-ink">
                     {isLost ? 'This item was found!' : 'This item was returned!'}
@@ -281,7 +281,7 @@ export default function LostFoundDetailScreen() {
                   }}
                 />
               ) : (
-                <View className="items-center rounded-2xl border border-line bg-surface p-4">
+                <View className="items-center card p-4">
                   <Text className="font-sans text-[13px] text-muted">
                     {isLost
                       ? 'Keep an eye out and check back with the poster if you find it.'

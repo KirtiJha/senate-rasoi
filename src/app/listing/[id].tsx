@@ -299,7 +299,7 @@ export default function ListingDetailScreen() {
             )}
 
             {/* Owner card */}
-            <View className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-4">
+            <View className="mb-4 flex-row items-center gap-3 card p-4">
               <Avatar name={ownerName} size={42} />
               <View className="flex-1">
                 <Text className="font-sans-bold text-[15px] text-ink">{ownerName}</Text>
@@ -326,7 +326,7 @@ export default function ListingDetailScreen() {
 
             {/* Category-specific attributes */}
             {cat && Object.keys(listing.attributes).length > 0 && (
-              <View className="mb-4 rounded-2xl border border-line bg-surface p-4">
+              <View className="mb-4 card p-4">
                 <Text className="mb-3 font-sans-bold text-[13px] text-ink">Details</Text>
                 {cat.attributes
                   .filter((f) => listing.attributes[f.key] != null && listing.attributes[f.key] !== '')

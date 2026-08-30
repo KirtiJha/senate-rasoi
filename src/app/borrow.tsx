@@ -128,7 +128,7 @@ function ItemCard({ item, isOffer }: { item: LendItem; isOffer: boolean }) {
   const lent = item.status !== 'available';
 
   return (
-    <Pressable onPress={() => router.push(`/borrow/${item.id}` as any)} className="flex-row overflow-hidden rounded-2xl border border-line bg-surface active:opacity-90">
+    <Pressable onPress={() => router.push(`/borrow/${item.id}` as any)} className="flex-row overflow-hidden card active:opacity-90">
       <View style={{ width: 92, height: 92, backgroundColor: c.inset }} className="items-center justify-center flex-shrink-0">
         {item.photo_url
           ? <Image source={{ uri: item.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />

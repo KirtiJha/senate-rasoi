@@ -173,3 +173,36 @@
     }
   }
 }
+
+/* ── Card ─────────────────────────────────────────────────────────────
+   The class form of src/components/ui/Card.tsx, so the app's 158 card
+   surfaces can adopt one contract without restructuring their JSX.
+
+   THE NICHE RADIUS: top corners rounder than bottom (22/14), so a card reads
+   as a doorway rather than a rounded rectangle. Before this, 158 cards shared
+   81 distinct class strings and four different radii — rounded-2xl (16),
+   rounded-3xl (24) and two inline pixel values — with one screen using two of
+   them for the same job.
+
+   NO BOX-SHADOW HERE, DELIBERATELY. box-shadow inside a CSS class throws in
+   react-native-css-interop's parser, and a throw during the stylesheet build
+   takes down EVERY class in the app, not just this one — verified by
+   compiling the declaration on its own. Cards separate with a hairline in
+   both schemes instead, which is enough on a limewash ground, and it removes
+   the light-shadow/dark-border split that per-screen classes kept getting
+   right in only one theme. */
+@layer components {
+  .card {
+    background-color: rgb(var(--surface));
+    border-radius: 22px 22px 14px 14px;
+    border-width: 1px;
+    border-color: rgb(var(--line));
+  }
+
+  /* A card sitting ON a card — inside a sheet, or nested in another surface.
+     The fill alone separates it. */
+  .card-flat {
+    background-color: rgb(var(--inset));
+    border-radius: 18px;
+  }
+}

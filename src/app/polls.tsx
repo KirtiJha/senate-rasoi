@@ -194,7 +194,7 @@ function PollCard({
   };
 
   return (
-    <View className="rounded-3xl border border-line bg-surface overflow-hidden">
+    <View className="card overflow-hidden">
       <View style={{ height: 3, backgroundColor: '#8B5CF6' }} />
       <View className="p-4">
         {/* Meta row */}

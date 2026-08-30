@@ -97,7 +97,7 @@ export default function PublicProfileScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
           {/* Profile card */}
-          <View className="mx-4 mt-5 items-center rounded-3xl border border-line bg-surface px-6 py-6">
+          <View className="mx-4 mt-5 items-center card px-6 py-6">
             <Avatar name={displayName} size={72} />
             <Text className="mt-3 font-display-x text-[22px] text-ink">{displayName}</Text>
             {profile.flat ? (
@@ -156,7 +156,7 @@ export default function PublicProfileScreen() {
                     <Pressable
                       key={l.id}
                       onPress={() => router.push(`/listing/${l.id}` as any)}
-                      className="overflow-hidden rounded-2xl border border-line bg-surface active:opacity-80"
+                      className="overflow-hidden card active:opacity-80"
                     >
                       {cat && <View style={{ height: 3, backgroundColor: c.accent }} />}
                       <View className="flex-row items-center gap-3 p-3.5">

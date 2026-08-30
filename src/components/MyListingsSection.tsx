@@ -83,7 +83,7 @@ export function MyListingsSection() {
     return (
       <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12 }} showsVerticalScrollIndicator={false}>
         <Container>
-          <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={5} /></View>
+          <View className="overflow-hidden card"><RowSkeleton count={5} /></View>
         </Container>
       </ScrollView>
     );

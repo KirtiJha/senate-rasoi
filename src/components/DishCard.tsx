@@ -69,7 +69,7 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCar
       onPress={openDetail}
       accessibilityRole="button"
       accessibilityLabel={`View ${dish.dish_name} details`}
-      className="overflow-hidden rounded-3xl border border-line bg-surface shadow-card active:opacity-95"
+      className="overflow-hidden card shadow-card active:opacity-95"
     >
       {/* ── Photo ─────────────────────────────────────────────────── */}
       <View style={{ height: hero ? 230 : 180 }} className="w-full">

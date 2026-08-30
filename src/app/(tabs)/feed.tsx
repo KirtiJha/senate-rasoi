@@ -174,7 +174,7 @@ export default function FeedScreen() {
             <Pressable
               onPress={loadMore}
               disabled={loadingMore}
-              className="mt-3 items-center rounded-2xl border border-line bg-surface py-3.5 active:opacity-70"
+              className="mt-3 items-center card py-3.5 active:opacity-70"
             >
               {loadingMore
                 ? <ActivityIndicator size="small" color={c.muted} />

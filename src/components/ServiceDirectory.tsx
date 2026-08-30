@@ -107,7 +107,7 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
         addLabel={`Add to ${cat.label}`}
         subBar={
           <View>
-            <View className="flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
+            <View className="flex-row items-center gap-2 card px-3 py-2.5">
               <Ionicons name="search-outline" size={18} color={c.faint} />
               <TextInput
                 value={query} onChangeText={setQuery}
@@ -133,7 +133,7 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
           {loading ? (
-            <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={6} /></View>
+            <View className="overflow-hidden card"><RowSkeleton count={6} /></View>
           ) : groups.length === 0 ? (
             <View className="items-center py-16">
               <Ionicons name="construct-outline" size={40} color={c.faint} />
@@ -150,7 +150,7 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
                     <Text className="font-sans text-[12px] text-faint">· {g.rows.length}</Text>
                   </View>
                 ) : null}
-                <View className="overflow-hidden rounded-2xl border border-line bg-surface">
+                <View className="overflow-hidden card">
                   {g.rows.map((l, i) => (
                     <ContactRow key={l.id} l={l} first={i === 0} c={c}
                       onOpen={() => router.push(`/listing/${l.id}` as any)} />

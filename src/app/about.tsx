@@ -36,7 +36,7 @@ export default function AboutScreen() {
         </View>
 
         {/* About the app */}
-        <View className="mb-5 rounded-3xl border border-line bg-surface p-5">
+        <View className="mb-5 card p-5">
           <Text className="mb-3 font-sans-sb text-[13px] text-muted">ABOUT</Text>
           <Text className="font-sans text-[14px] leading-6 text-ink">
             Aangan brings your residential society together — order home food, discover local services, post on the community feed, and connect with your neighbours.
@@ -47,7 +47,7 @@ export default function AboutScreen() {
         </View>
 
         {/* Features */}
-        <View className="mb-5 rounded-3xl border border-line bg-surface p-5">
+        <View className="mb-5 card p-5">
           <Text className="mb-3 font-sans-sb text-[13px] text-muted">FEATURES</Text>
           <View className="gap-3">
             {FEATURES.map((f) => (
@@ -65,7 +65,7 @@ export default function AboutScreen() {
         </View>
 
         {/* Technical Info */}
-        <View className="mb-5 rounded-3xl border border-line bg-surface p-5">
+        <View className="mb-5 card p-5">
           <Text className="mb-3 font-sans-sb text-[13px] text-muted">TECHNICAL</Text>
           <View className="gap-2.5">
             <InfoRow label="Platform" value="React Native (Expo)" c={c} />
@@ -76,7 +76,7 @@ export default function AboutScreen() {
         </View>
 
         {/* Legal */}
-        <View className="rounded-3xl border border-line bg-surface p-5">
+        <View className="card p-5">
           <Text className="mb-3 font-sans-sb text-[13px] text-muted">LEGAL</Text>
           <View className="gap-2">
             <LinkRow label="Privacy Policy" icon="shield-outline" c={c} onPress={() => router.push('/legal?tab=privacy' as any)} />
@@ -87,7 +87,7 @@ export default function AboutScreen() {
         </View>
 
         {/* Developer contact — required for App Store UGC apps (Guideline 1.2) */}
-        <View className="mt-4 rounded-3xl border border-line bg-surface p-5">
+        <View className="mt-4 card p-5">
           <Text className="mb-1 font-sans-sb text-[13px] text-muted">SUPPORT</Text>
           <Text className="font-sans mb-3 text-[13px] leading-[19px] text-muted">
             Report abuse, ask a question, or tell us something's broken. We aim to reply within 3 working days.

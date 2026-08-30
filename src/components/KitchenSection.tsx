@@ -128,7 +128,7 @@ function KitchenDishCard({
   const cd = countdown(dish.order_by);
 
   return (
-    <View className="mb-4 rounded-3xl border border-line bg-surface p-4">
+    <View className="mb-4 card p-4">
       <View className="flex-row items-center gap-2">
         <VegMark type={dish.veg_type} size={15} />
         <Text className="flex-1 font-display-sb text-[18px] text-ink" numberOfLines={1}>

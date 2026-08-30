@@ -88,7 +88,7 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
             const dimmed = o.status === 'cancelled' || o.status === 'rejected';
             const wa = o.dish?.whatsapp;
             return (
-              <View key={o.id} className={`mb-3 rounded-3xl border border-line bg-surface p-3.5 ${dimmed ? 'opacity-60' : ''}`}>
+              <View key={o.id} className={`mb-3 card p-3.5 ${dimmed ? 'opacity-60' : ''}`}>
                 <View className="flex-row items-center gap-3">
                   <View className="h-12 w-12 items-center justify-center rounded-2xl bg-inset">
                     <Text style={{ fontSize: 24 }}>{o.dish ? SLOT_EMOJI[o.dish.slot] : '🍽️'}</Text>

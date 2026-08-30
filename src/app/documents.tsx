@@ -83,7 +83,7 @@ export default function DocumentsScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
           {loading ? (
-            <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={6} /></View>
+            <View className="overflow-hidden card"><RowSkeleton count={6} /></View>
           ) : filtered.length === 0 ? (
             <View className="items-center py-16">
               <Ionicons name="folder-open-outline" size={42} color={c.faint} />
@@ -93,7 +93,7 @@ export default function DocumentsScreen() {
               </Text>
             </View>
           ) : (
-            <View className="overflow-hidden rounded-2xl border border-line bg-surface">
+            <View className="overflow-hidden card">
               {filtered.map((d, i) => (
                 <DocRowView
                   key={d.id}

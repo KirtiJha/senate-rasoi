@@ -126,7 +126,7 @@ export default function DuesScreen() {
               [...byBooker.entries()].map(([bid, items]) => {
                 const selectedTotal = items.filter((it) => it.status === 'due' && selected.has(it.session_id)).reduce((s, it) => s + it.amount, 0);
                 return (
-                  <View key={bid} className="mb-4 rounded-2xl border border-line bg-surface p-4">
+                  <View key={bid} className="mb-4 card p-4">
                     <Text className="mb-2 font-sans-bold text-[14px] text-ink">Pay {items[0].booker_name ?? 'Booker'}</Text>
                     <View className="gap-1.5">
                       {items.map((it) => {
@@ -173,7 +173,7 @@ export default function DuesScreen() {
               [...byMember.entries()].map(([mid, items]) => {
                 const dueTotal = items.filter((p) => p.status === 'due' || p.status === 'initiated').reduce((s, p) => s + p.amount, 0);
                 return (
-                  <View key={mid} className="mb-4 rounded-2xl border border-line bg-surface p-4">
+                  <View key={mid} className="mb-4 card p-4">
                     <View className="mb-2 flex-row items-center justify-between">
                       <Text className="font-sans-bold text-[14px] text-ink">{items[0].name ?? 'Member'}{items[0].flat ? ` · ${items[0].flat}` : ''}</Text>
                       {dueTotal > 0 ? <Text className="text-[12px] font-sans-sb text-nonveg">₹{dueTotal.toFixed(0)} pending</Text> : <Text className="text-[12px] font-sans-sb text-success">All settled</Text>}

@@ -12,7 +12,7 @@ export function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <View className="mb-4 rounded-3xl border border-line bg-surface p-4">
+    <View className="mb-4 card p-4">
       <Text className="font-display text-[17px] text-ink">{title}</Text>
       {subtitle ? <Text className="font-sans mb-3 mt-0.5 text-[12px] text-subtle">{subtitle}</Text> : <View className="mb-3" />}
       {children}

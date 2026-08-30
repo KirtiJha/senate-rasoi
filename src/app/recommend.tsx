@@ -77,7 +77,7 @@ export default function RecommendScreen() {
               {rows.map((q) => {
                 const meta = recoCategory(q.category);
                 return (
-                  <Pressable key={q.id} onPress={() => router.push(`/recommend/${q.id}` as any)} className="rounded-2xl border border-line bg-surface p-4 active:opacity-90">
+                  <Pressable key={q.id} onPress={() => router.push(`/recommend/${q.id}` as any)} className="card p-4 active:opacity-90">
                     <View className="mb-1.5 flex-row items-center gap-1.5">
                       <View className="flex-row items-center gap-1 rounded-full px-2 py-0.5" style={{ backgroundColor: c.accentSoft }}>
                         <Ionicons name={meta.icon as any} size={11} color={c.accent} />

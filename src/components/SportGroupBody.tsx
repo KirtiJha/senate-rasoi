@@ -113,7 +113,7 @@ export function SportGroupBody({
     confirm({ title: 'Delete group', message: msg, confirmLabel: 'Delete', destructive: true }).then((ok) => { if (ok) run(); });
   };
 
-  if (loading) return <View className="overflow-hidden rounded-2xl border border-line bg-surface"><RowSkeleton count={4} /></View>;
+  if (loading) return <View className="overflow-hidden card"><RowSkeleton count={4} /></View>;
   if (!group) return <Text className="py-10 text-center text-muted">This group no longer exists.</Text>;
 
   const schedule = [
@@ -126,7 +126,7 @@ export function SportGroupBody({
   return (
     <>
       {/* Identity */}
-      <View className="items-center rounded-3xl border border-line bg-surface px-6 py-6">
+      <View className="items-center card px-6 py-6">
         {canManage ? (
           <Pressable onPress={() => setShowEdit(true)} hitSlop={8} className="absolute right-3 top-3 flex-row items-center gap-1 rounded-full bg-inset px-2.5 py-1.5 active:opacity-80">
             <Ionicons name="pencil" size={12} color={c.muted} />
@@ -158,7 +158,7 @@ export function SportGroupBody({
 
       {/* Practice */}
       {schedule.length > 0 ? (
-        <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
+        <View className="mt-4 card p-4">
           <Text className="mb-2.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Practice</Text>
           <View className="gap-2">
             {schedule.map((s, i) => (
@@ -172,7 +172,7 @@ export function SportGroupBody({
       ) : null}
 
       {/* Members */}
-      <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
+      <View className="mt-4 card p-4">
         <View className="mb-2.5 flex-row items-center gap-2">
           <Text className="flex-1 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Members · {members.length}</Text>
           {canManage ? (
@@ -247,7 +247,7 @@ export function SportGroupBody({
       ) : null}
 
       {/* Tournaments */}
-      <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
+      <View className="mt-4 card p-4">
         <View className="mb-2.5 flex-row items-center justify-between">
           <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-muted">Upcoming tournaments</Text>
           {canManage ? (

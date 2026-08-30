@@ -59,7 +59,7 @@ export default function NewMessageScreen() {
           <Text className="font-display-x text-[20px] text-ink">New message</Text>
         </View>
         {/* Search */}
-        <View className="mt-3 flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
+        <View className="mt-3 flex-row items-center gap-2 card px-3 py-2.5">
           <Ionicons name="search-outline" size={18} color={c.faint} />
           <TextInput
             value={query}

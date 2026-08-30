@@ -260,7 +260,7 @@ export function CreateListingForm({ cat, onBack, existing }: Props) {
 
           {/* Who is posting (identity card) */}
           {profile && (
-            <View className="mb-4 flex-row items-center gap-3 rounded-3xl border border-line bg-surface p-3.5">
+            <View className="mb-4 flex-row items-center gap-3 card p-3.5">
               <Avatar name={profile.name} size={38} />
               <View className="flex-1">
                 <Text className="font-sans-sb text-[13px] text-ink">{profile.name}</Text>

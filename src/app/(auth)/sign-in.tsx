@@ -335,7 +335,7 @@ export default function SignInScreen() {
               ) : (
                 <Pressable accessibilityRole="button" accessibilityLabel="Open"
                   onPress={() => setShowPicker(true)}
-                  className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3.5"
+                  className="mb-4 flex-row items-center gap-3 card px-4 py-3.5"
                 >
                   <Ionicons name="business-outline" size={18} color={selectedCommunity ? c.accent : c.faint} />
                   <View className="flex-1">
@@ -442,7 +442,7 @@ export default function SignInScreen() {
                 <Ionicons name="close" size={24} color={c.muted} />
               </Pressable>
             </View>
-            <View className="flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
+            <View className="flex-row items-center gap-2 card px-3 py-2.5">
               <Ionicons name="search-outline" size={16} color={c.faint} />
               <TextInput
                 value={communitySearch}
@@ -490,7 +490,7 @@ export default function SignInScreen() {
                 <Text className="font-sans-md text-[14px] text-muted">My society isn't listed — request to add it</Text>
               </Pressable>
             ) : (
-              <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
+              <View className="mt-4 card p-4">
                 <Text className="mb-3 font-sans-sb text-[15px] text-ink">Request to Add Society</Text>
                 <Field label="Society / Building name" required placeholder="Green Meadows CHS" value={jrSocietyName} onChangeText={setJrSocietyName} />
                 <Field label="Address" required placeholder="Sector 12, Andheri West, Mumbai" value={jrSocietyAddress} onChangeText={setJrSocietyAddress} />

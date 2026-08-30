@@ -158,7 +158,7 @@ export default function RecoDetailScreen() {
           </View>
 
           {/* Answer composer */}
-          <View className="mt-5 rounded-2xl border border-line bg-surface p-3.5">
+          <View className="mt-5 card p-3.5">
             <Text className="mb-2 font-sans-bold text-[14px] text-ink">Recommend something</Text>
             <TextInput value={body} onChangeText={setBody} placeholder="Share your recommendation…" placeholderTextColor={c.faint} multiline className="mb-2 rounded-xl border border-line bg-inset px-3 py-2 text-[14px] text-ink" style={{ minHeight: 54, outline: 'none' } as any} />
             <View className="flex-row gap-2">
@@ -183,7 +183,7 @@ export default function RecoDetailScreen() {
           </Text>
           <View className="gap-3">
             {answers.map((a) => (
-              <View key={a.id} className="flex-row gap-2.5 rounded-2xl border border-line bg-surface p-3.5">
+              <View key={a.id} className="flex-row gap-2.5 card p-3.5">
                 {/* Vote */}
                 <Pressable onPress={() => vote(a)} className="items-center" hitSlop={6}>
                   <Ionicons name={a.voted ? 'arrow-up-circle' : 'arrow-up-circle-outline'} size={26} color={a.voted ? ACCENT : c.faint} />

@@ -150,7 +150,7 @@ export default function PropertyDetailScreen() {
           <T source="property" id={p.id} field="title" text={p.title} className="mt-2 font-display-x text-[22px] text-ink" />
 
           {/* Price → contact */}
-          <View className="mt-2 flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3.5 py-2.5">
+          <View className="mt-2 flex-row items-center gap-2 card px-3.5 py-2.5">
             <Ionicons name="pricetag-outline" size={16} color={ACCENT} />
             <Text className="font-sans flex-1 text-[13px] text-muted">Price on request — contact the owner</Text>
           </View>
@@ -159,7 +159,7 @@ export default function PropertyDetailScreen() {
 
           {/* Specs */}
           {specs.length > 0 ? (
-            <View className="mt-4 rounded-2xl border border-line bg-surface p-1">
+            <View className="mt-4 card p-1">
               {specs.map(([k, v], i) => (
                 <View key={k} className={`flex-row items-center justify-between px-3.5 py-2.5 ${i ? 'border-t border-line' : ''}`}>
                   <Text className="font-sans text-[13px] text-muted">{k}</Text>
@@ -185,7 +185,7 @@ export default function PropertyDetailScreen() {
           ) : null}
 
           {/* Owner */}
-          <View className="mt-4 flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3.5">
+          <View className="mt-4 flex-row items-center gap-3 card p-3.5">
             <Avatar name={ownerName} size={42} />
             <View className="flex-1">
               <Text className="font-sans-bold text-[14px] text-ink">{ownerName}</Text>
@@ -195,7 +195,7 @@ export default function PropertyDetailScreen() {
 
           {/* Owner / admin controls */}
           {(isOwner || isAdmin) ? (
-            <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
+            <View className="mt-4 card p-4">
               <Text className="mb-2 text-[12px] font-sans-sb uppercase tracking-wider text-muted">Manage listing</Text>
               <View className="flex-row gap-2">
                 {(['available', isRent ? 'rented' : 'sold'] as PropertyRow['status'][]).map((s) => (
@@ -281,7 +281,7 @@ function ReferralRow({ r, isOwner, c }: { r: PropertyReferralRow; isOwner: boole
   const m = META[r.status];
   const phone = r.candidate_phone;
   return (
-    <View className="rounded-2xl border border-line bg-surface p-3.5">
+    <View className="card p-3.5">
       <View className="flex-row items-center gap-2">
         <Ionicons name="person-circle-outline" size={18} color={c.faint} />
         <Text className="flex-1 font-sans-bold text-[14px] text-ink">{r.candidate_name}</Text>
