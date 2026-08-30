@@ -21,8 +21,10 @@ import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
 import {
   ALL_POST_CATEGORIES, CommentRow, POST_CATEGORY_ICONS, POST_CATEGORY_LABELS,
-  PostCategory, PostRow, createComment, deleteComment, deletePost,
-  fetchComments, fetchPostById, setPinned, setResolved, subscribeToComments, updateComment, updatePost, uploadPostPhoto,
+  PostCategory, PostRow, ReactionMap, createComment, deleteComment, deletePost,
+  fetchCommentReactions, fetchComments, fetchPostById, setPinned, setResolved,
+  subscribeToCommentReactions, subscribeToComments,
+  toggleCommentReaction, updateComment, updatePost, uploadPostPhoto,
 } from '../../lib/posts';
 import { useThemeColors } from '../../theme';
 
@@ -39,6 +41,7 @@ export default function PostThreadScreen() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [comments, setComments] = useState<CommentRow[]>([]);
+  const [reactions, setReactions] = useState<ReactionMap>({});
   const { filterBlocked } = useBlocks();
   const visibleComments = useMemo(
     () => filterBlocked(comments, (cm) => cm.author_id),
@@ -58,12 +61,54 @@ export default function PostThreadScreen() {
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
+  /**
+   * Optimistic by design. A reaction is the cheapest possible interaction, so
+   * making someone wait for a round trip to see their own tap register makes it
+   * feel more expensive than writing the comment did. The UI moves first and
+   * rolls back on failure, which is the honest version of optimism: the state
+   * you see is never a guess that stays a guess.
+   */
+  const toggleReaction = useCallback(async (commentId: string, emoji: string) => {
+    if (!userId) return;
+    const before = reactions;
+    const groups = before[commentId] ?? [];
+    const group = groups.find((g) => g.emoji === emoji);
+    const isOn = !!group?.userIds.includes(userId);
+
+    const next: ReactionMap = { ...before };
+    const updated = groups
+      .map((g) => {
+        if (g.emoji !== emoji) return g;
+        return {
+          emoji,
+          userIds: isOn ? g.userIds.filter((u) => u !== userId) : [...g.userIds, userId],
+        };
+      })
+      // An emoji nobody is left holding stops being a chip.
+      .filter((g) => g.userIds.length > 0);
+    if (!group && !isOn) updated.push({ emoji, userIds: [userId] });
+    next[commentId] = updated;
+    setReactions(next);
+    haptics.select();
+
+    try {
+      await toggleCommentReaction(commentId, userId, emoji, isOn);
+    } catch {
+      setReactions(before);
+      toast.show('Could not save that reaction');
+    }
+  }, [reactions, userId, toast]);
+
   const loadPost = useCallback(async () => {
     if (!postId) return;
     try {
       const [p, cmts] = await Promise.all([fetchPostById(postId), fetchComments(postId)]);
       setPost(p);
       setComments(cmts);
+      // Fetched after the comments they belong to, and a failure here must not
+      // take the post down with it: a thread without reaction chips is still
+      // readable, a thread that failed to load is not.
+      fetchCommentReactions(cmts.map((x) => x.id)).then(setReactions).catch(() => {});
       setLoadFailed(false);
     } catch (e) {
       // A failed request is not a deleted post. Saying "removed by the author
@@ -87,6 +132,19 @@ export default function PostThreadScreen() {
     if (!postId) return;
     const unsub = subscribeToComments(postId, () => {
       fetchComments(postId).then(setComments).catch(() => {});
+    });
+    return unsub;
+  }, [postId]);
+
+  // Reactions live on their own channel, keyed off the comments currently
+  // loaded. Reading commentIds from a ref rather than the deps keeps the
+  // channel from being torn down and rebuilt every time a comment arrives.
+  const commentIds = useRef<string[]>([]);
+  commentIds.current = comments.map((x) => x.id);
+  useEffect(() => {
+    if (!postId) return;
+    const unsub = subscribeToCommentReactions(postId, () => {
+      fetchCommentReactions(commentIds.current).then(setReactions).catch(() => {});
     });
     return unsub;
   }, [postId]);
@@ -249,7 +307,7 @@ export default function PostThreadScreen() {
             </Text>
             <View className="gap-3">
               {visibleComments.map((comment) => (
-                <CommentBubble key={comment.id} comment={comment} userId={userId} isAdmin={!!isAdmin} onDelete={() => handleDeleteComment(comment.id)} onChanged={loadPost} c={c} />
+                <CommentBubble key={comment.id} comment={comment} userId={userId} isAdmin={!!isAdmin} onDelete={() => handleDeleteComment(comment.id)} onChanged={loadPost} reactions={reactions[comment.id] ?? []} onReact={toggleReaction} c={c} />
               ))}
             </View>
           </View>
@@ -344,9 +402,23 @@ export default function PostThreadScreen() {
  */
 const QUICK_EMOJI = ['🙏', '👍', '❤️', '😂', '🎉', '👏', '🔥', '💯', '😍', '🤝', '✅', '🙌', '😅', '😢', '🥳', '☺️'];
 
-function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, c }: {
-  comment: CommentRow; userId: string | null; isAdmin: boolean; onDelete: () => void; onChanged: () => void; c: ReturnType<typeof useThemeColors>;
+/**
+ * The reactions offered on a comment.
+ *
+ * Deliberately shorter than the composer's emoji row. A reaction set is a
+ * vocabulary, not a keyboard: eight choices are scanned at a glance and keep
+ * the counts meaningful, where thirty would scatter one reaction each across a
+ * dozen emoji and say nothing.
+ */
+const REACTION_CHOICES = ['👍', '🙏', '❤️', '😂', '🎉', '👏', '😮', '😢'];
+
+function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, reactions, onReact, c }: {
+  comment: CommentRow; userId: string | null; isAdmin: boolean; onDelete: () => void; onChanged: () => void;
+  reactions: { emoji: string; userIds: string[] }[];
+  onReact: (commentId: string, emoji: string) => void;
+  c: ReturnType<typeof useThemeColors>;
 }) {
+  const [picking, setPicking] = useState(false);
   const toast = useToast();
   const isOwn = comment.author_id === userId;
   const [editing, setEditing] = useState(false);
@@ -384,6 +456,81 @@ function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, c }: {
         ) : (
           <T source="comment" id={comment.id} field="body" text={comment.body} className="text-[13px] leading-5 text-ink" />
         )}
+
+        {!editing ? (
+          <View className="mt-1.5 flex-row flex-wrap items-center gap-1.5">
+            {reactions.map((r) => {
+              const mine = !!userId && r.userIds.includes(userId);
+              return (
+                <Pressable
+                  key={r.emoji}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: mine }}
+                  accessibilityLabel={`${r.emoji} ${r.userIds.length}${mine ? ', including you' : ''}`}
+                  onPress={() => onReact(comment.id, r.emoji)}
+                  hitSlop={4}
+                  className="flex-row items-center gap-1 rounded-full px-2 py-0.5"
+                  style={{
+                    backgroundColor: mine ? c.accentSoft : c.inset,
+                    borderWidth: 1,
+                    borderColor: mine ? c.accentLine : 'transparent',
+                  }}
+                >
+                  <Text style={{ fontSize: 13 }}>{r.emoji}</Text>
+                  <Text
+                    className="text-[11px] font-sans-sb"
+                    style={{ color: mine ? c.accent : c.muted }}
+                  >
+                    {r.userIds.length}
+                  </Text>
+                </Pressable>
+              );
+            })}
+
+            {/* The add button is quiet until there is nothing else in the row,
+                where it has to carry the affordance on its own. */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="React to this comment"
+              accessibilityState={{ expanded: picking }}
+              onPress={() => { haptics.select(); setPicking((v) => !v); }}
+              hitSlop={6}
+              className="flex-row items-center gap-1 rounded-full px-2 py-0.5"
+              style={{ backgroundColor: picking ? c.accentSoft : 'transparent' }}
+            >
+              <Ionicons
+                name="happy-outline"
+                size={14}
+                color={picking ? c.accent : c.faint}
+              />
+              {reactions.length === 0 ? (
+                <Text className="text-[11px] font-sans-sb" style={{ color: picking ? c.accent : c.faint }}>
+                  React
+                </Text>
+              ) : null}
+            </Pressable>
+          </View>
+        ) : null}
+
+        {picking && !editing ? (
+          <View
+            className="mt-1.5 flex-row flex-wrap items-center gap-1 self-start rounded-2xl px-1.5 py-1"
+            style={{ backgroundColor: c.inset, borderWidth: 1, borderColor: c.line }}
+          >
+            {REACTION_CHOICES.map((e) => (
+              <Pressable
+                key={e}
+                accessibilityRole="button"
+                accessibilityLabel={`React with ${e}`}
+                onPress={() => { onReact(comment.id, e); setPicking(false); }}
+                hitSlop={2}
+                style={{ paddingHorizontal: 5, paddingVertical: 3 }}
+              >
+                <Text style={{ fontSize: 21 }}>{e}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
       </View>
       {!editing ? (
         <View className="mt-0.5 flex-row items-center gap-2.5">

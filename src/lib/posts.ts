@@ -285,3 +285,87 @@ export function subscribeToComments(postId: string, onChange: () => void): () =>
     .subscribe();
   return () => { supabase.removeChannel(ch); };
 }
+
+// ── Comment reactions ───────────────────────────────────────────────
+
+/** One emoji on one comment, with who reacted. */
+export type CommentReaction = { comment_id: string; user_id: string; emoji: string };
+
+/** Reactions grouped for rendering: emoji → who, in insertion order. */
+export type ReactionMap = Record<string, { emoji: string; userIds: string[] }[]>;
+
+/**
+ * All reactions for a post's comments in one round trip.
+ *
+ * Fetched by comment id rather than joined onto fetchComments, because the
+ * comment list and its reactions change on completely different schedules —
+ * a reaction must not force the comment rows to be re-fetched and re-rendered.
+ */
+export async function fetchCommentReactions(commentIds: string[]): Promise<ReactionMap> {
+  if (commentIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from('comment_reactions')
+    .select('comment_id, user_id, emoji')
+    .in('comment_id', commentIds)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+
+  const map: ReactionMap = {};
+  for (const r of (data ?? []) as CommentReaction[]) {
+    const groups = (map[r.comment_id] ??= []);
+    const existing = groups.find((g) => g.emoji === r.emoji);
+    if (existing) existing.userIds.push(r.user_id);
+    else groups.push({ emoji: r.emoji, userIds: [r.user_id] });
+  }
+  return map;
+}
+
+/**
+ * Add or remove your reaction. Returns what the state became, so the caller
+ * can reconcile without a re-fetch.
+ *
+ * The primary key (comment_id, user_id, emoji) is what makes this safe to
+ * double-tap: adding twice conflicts rather than duplicating, so a fast double
+ * press cannot leave two rows behind.
+ */
+export async function toggleCommentReaction(
+  commentId: string,
+  userId: string,
+  emoji: string,
+  isOn: boolean,
+): Promise<void> {
+  if (isOn) {
+    const { error } = await supabase
+      .from('comment_reactions')
+      .delete()
+      .eq('comment_id', commentId)
+      .eq('user_id', userId)
+      .eq('emoji', emoji);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from('comment_reactions')
+      .insert({ comment_id: commentId, user_id: userId, emoji });
+    // A duplicate means someone double-tapped and the row already exists,
+    // which is the state we wanted anyway.
+    if (error && error.code !== '23505') throw error;
+  }
+}
+
+/**
+ * Live reaction changes for one thread.
+ *
+ * Unfiltered, unlike subscribeToComments: reactions are keyed by comment, not
+ * by post, so there is no post_id column to filter on server-side. RLS still
+ * bounds what arrives — a member only ever receives rows for comments in their
+ * own society — and the callback re-reads the whole map for the comments
+ * currently on screen, so a stray event costs one cheap query and nothing else.
+ */
+export function subscribeToCommentReactions(postId: string, onChange: () => void): () => void {
+  if (!isSupabaseConfigured) return () => {};
+  const ch = supabase
+    .channel(`comment-reactions-${postId}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'comment_reactions' }, onChange)
+    .subscribe();
+  return () => { supabase.removeChannel(ch); };
+}
