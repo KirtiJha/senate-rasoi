@@ -422,24 +422,21 @@ export default function HomeScreen() {
         {/* ── 1. Hero ──────────────────────────────────────────────────
             Society identity appears here, once, rather than in a pill
             hardcoded above twenty screens. */}
-        <Animated.View
-          style={[
-            heroStyle,
-            { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 12, paddingBottom: 4 },
-          ]}
-        >
-          <Avatar name={profile?.name ?? 'You'} size={42} />
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>
-              {greeting.replace(/[^\p{L}\s]/gu, '').trim()}
-            </Text>
-            <Text
-              className="font-display-x text-[26px] leading-[30px]"
-              style={{ color: c.accent }}
-              numberOfLines={1}
-            >
-              {profile?.name ? profile.name.split(' ')[0] : 'Neighbour'}
-            </Text>
+        <Animated.View style={heroStyle}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 10, paddingBottom: 6 }}>
+            <Avatar name={profile?.name ?? 'You'} size={44} />
+            <View style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
+              <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>
+                {greeting.replace(/[^\p{L}\s]/gu, '').trim()}
+              </Text>
+              <Text
+                className="font-display-x text-[26px] leading-[30px]"
+                style={{ color: c.accent }}
+                numberOfLines={1}
+              >
+                {profile?.name ? profile.name.split(' ')[0] : 'Neighbour'}
+              </Text>
+            </View>
           </View>
         </Animated.View>
 
@@ -454,7 +451,7 @@ export default function HomeScreen() {
           >
             <BrandMark size={24} />
             <Text className="min-w-0 flex-1 text-[15px] font-sans-md text-subtle" numberOfLines={1}>
-              Ask Aangan or search the society
+              Ask or search Aangan
             </Text>
             <Ionicons name="arrow-forward" size={17} color={c.accent} />
           </View>
@@ -463,14 +460,16 @@ export default function HomeScreen() {
 
         {/* ── 2. Needs you ────────────────────────────────────────────── */}
         {needsYou.length ? (
-          <Rise index={1} className="mt-6" style={{ marginHorizontal: -20 }}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingHorizontal: 20 }}>
+          <Rise index={1} style={{ marginTop: 22 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 4 }}>
               {needsYou.map((n) => (
                 <Touchable key={n.key} haptic={null} onPress={n.onPress}>
                   <View
-                    className="flex-row overflow-hidden"
                     style={{
-                      width: 300,
+                      flexDirection: 'row',
+                      width: 268,
+                      height: 88,
+                      overflow: 'hidden',
                       backgroundColor: c.surface,
                       borderTopLeftRadius: 22,
                       borderTopRightRadius: 22,
@@ -479,12 +478,14 @@ export default function HomeScreen() {
                       boxShadow: c.shadowCard,
                     } as any}
                   >
-                    <View style={{ width: 3, backgroundColor: c.highlight, marginVertical: 12, marginLeft: 12, borderRadius: 2 }} />
-                    <View className="min-w-0 flex-1 px-3 py-3">
+                    <View style={{ width: 3, backgroundColor: c.highlight, marginVertical: 14, marginLeft: 12, borderRadius: 2 }} />
+                    <View style={{ flex: 1, minWidth: 0, paddingHorizontal: 12, paddingVertical: 14, justifyContent: 'center' }}>
                       <Text className="text-[11px] font-sans-sb uppercase tracking-[0.06em]" style={{ color: c.highlightInk }} numberOfLines={1}>
                         {n.eyebrow}
                       </Text>
-                      <Text className="mt-1 font-sans-sb text-[15px] text-ink" numberOfLines={2}>{n.title}</Text>
+                      <Text className="mt-1 font-sans-sb text-[14px] leading-[19px] text-ink" numberOfLines={2}>
+                        {n.title}
+                      </Text>
                     </View>
                   </View>
                 </Touchable>
@@ -501,7 +502,7 @@ export default function HomeScreen() {
         {/* ── 4. Around the aangan ─────────────────────────────────────
             What IS happening, rather than a menu of what could. */}
         {around.length ? (
-          <Rise index={3} className="mb-8">
+          <Rise index={3} style={{ marginBottom: 32 }}>
             <SectionHead label="Around the aangan" actionLabel="See all" onAction={() => router.push('/listings' as any)} c={c} />
             <View
               className="overflow-hidden"
