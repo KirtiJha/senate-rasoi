@@ -1,28 +1,29 @@
-import Svg, { G, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 import { useThemeColors } from '../theme';
 
 /**
- * Saathi's mark: two hands meeting.
+ * Saathi's mark: two neighbours, one slightly behind the other.
  *
- * साथी means companion, and the handshake is the honest picture of what this
- * is — a neighbour who does something with you, not a search box.
+ * साथी means companion, and that is what this draws — not a tool, not a
+ * sparkle, not a search box. Two people, one a step behind and lighter, which
+ * is the whole idea: somebody alongside you rather than in front of you.
  *
- * CROPPED AT THE WRIST on purpose. A full handshake needs arms, and arms need
- * room this never has: 18px in the nav rail, 22px in a header, 24px beside
- * every reply. Cuff, hand, grip — three shapes — is what survives at that size.
- * Everything above the wrist is detail nobody can see and strokes that close up
- * the gaps between the fingers.
+ * WHY THIS SHAPE AND NOT A HANDSHAKE
+ * A handshake is the obvious picture and the wrong geometry. It needs
+ * interlocking fingers, and at the sizes this actually appears — 18px in the
+ * nav rail, 22px in a header, 24px beside every reply — the gaps between
+ * fingers fall below a pixel and it collapses into a blob. Two heads and two
+ * shoulders are four primitives with clear space between them, and they stay
+ * legible all the way down.
  *
- * The seam between the two hands is drawn in the background colour rather than
- * left as a gap in the geometry. On a filled mark a gap would show the page
- * through it and read as a crack; a seam reads as one hand in front of the
- * other, which is what a handshake looks like.
+ * Built from circles and arcs on purpose. Freehand path data is guesswork
+ * without a render in front of you; primitives come out exactly as specified.
  */
 export function SaathiMark({
   size = 24,
   color,
-  /** Solid rather than outlined — for active nav states. */
+  /** Both figures at full strength — for active nav states. */
   filled = false,
 }: {
   size?: number;
@@ -31,53 +32,16 @@ export function SaathiMark({
 }) {
   const c = useThemeColors();
   const tint = color ?? c.accent;
-  const seam = c.bg;
+  // The companion sits back. Fading rather than outlining keeps it one colour,
+  // which matters when this is drawn in white on the accent.
+  const behind = filled ? 0.75 : 0.55;
 
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48" accessibilityLabel="Saathi">
-      {/* Lower-left hand, reaching up and right. The cuff is squarer than the
-          hand so the two read as different things at a glance. */}
-      <G>
-        <Rect x={1.5} y={30} width={12} height={11} rx={3} transform="rotate(-22 7.5 35.5)" fill={tint} />
-        <Path
-          d="M10.5 33.5 L23 26.5 Q27.5 24 30 28 L31.5 30.5 Q33 33.5 29.5 35.5 L18 42 Q14 44 11.5 40 L9.5 37 Q8 34.5 10.5 33.5 Z"
-          fill={tint}
-        />
-      </G>
-
-      {/* Lower-right hand, mirrored. */}
-      <G>
-        <Rect x={34.5} y={30} width={12} height={11} rx={3} transform="rotate(22 40.5 35.5)" fill={tint} />
-        <Path
-          d="M37.5 33.5 L25 26.5 Q20.5 24 18 28 L16.5 30.5 Q15 33.5 18.5 35.5 L30 42 Q34 44 36.5 40 L38.5 37 Q40 34.5 37.5 33.5 Z"
-          fill={tint}
-          opacity={0.92}
-        />
-      </G>
-
-      {/* The grip: the near hand closing over the far one, and the seam that
-          makes the overlap legible instead of a single blob. */}
-      <Path
-        d="M18.5 28.5 Q24 25.5 29.5 28.5 L28 34 Q24 36.5 20 34 Z"
-        fill={tint}
-      />
-      <Path
-        d="M20.5 27 L28.5 31.5"
-        stroke={seam}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        opacity={filled ? 0.9 : 0.75}
-      />
-
-      {/* Thumb over the top of the grip — the detail that tips it from
-          "two shapes touching" to "a handshake". */}
-      <Path
-        d="M19 26.5 Q22.5 22.5 26 24.5"
-        stroke={tint}
-        strokeWidth={4.2}
-        strokeLinecap="round"
-        fill="none"
-      />
+      <Circle cx={17} cy={17} r={6.5} fill={tint} />
+      <Path d="M6 41 a11 11 0 0 1 22 0 Z" fill={tint} />
+      <Circle cx={33} cy={20} r={5.5} fill={tint} opacity={behind} />
+      <Path d="M24 41 a9.5 9.5 0 0 1 19 0 Z" fill={tint} opacity={behind} />
     </Svg>
   );
 }

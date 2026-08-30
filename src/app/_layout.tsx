@@ -22,6 +22,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { BottomBar } from '../components/BottomBar';
+import { SaathiFab } from '../components/SaathiFab';
 import { NavRail } from '../components/NavRail';
 import { useResponsive } from '../components/ui';
 import { AuthProvider } from '../context/auth';
@@ -206,6 +207,10 @@ function DesktopShell() {
           <Stack.Screen name="messages/[threadId]" />
         </Stack>
       </View>
+      {/* Rendered beside BottomBar rather than inside any screen, so Saathi is
+          one tap from everywhere instead of two taps from Home. Same visibility
+          rule: signed in, on a phone. */}
+      {showBottomBar ? <SaathiFab /> : null}
       {showBottomBar ? <BottomBar /> : null}
     </View>
   );

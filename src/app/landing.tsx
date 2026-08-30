@@ -154,11 +154,16 @@ export default function LandingScreen() {
                   every notice and every reply under it. Ask the way you'd ask a neighbour, follow-ups and all.
                 </Text>
                 <Text className="font-sans-md mt-3" style={{ fontSize: 15, lineHeight: 23, color: P.muted }}>
-                  It can also do things for you: draft the notice, open the poll, put the item on the
-                  marketplace. It shows you exactly what it wrote and nothing is posted until you tap Confirm.
+                  It can also do things for you: draft the notice, open the poll, list the item, reserve plates
+                  of tonight's dish, message a neighbour. It shows you exactly what it wrote, and nothing
+                  happens until you tap Confirm.
+                </Text>
+                <Text className="font-sans-md mt-3" style={{ fontSize: 15, lineHeight: 23, color: P.muted }}>
+                  And it keeps watching when you close the app. Ask it to tell you when a 2 BHK comes up and it
+                  will — once, when it happens. Every watch has its own switch.
                 </Text>
                 <View className="mt-4 flex-row flex-wrap gap-2">
-                  {['Any veg tiffin for lunch?', 'Is there a plumber?', 'Post a notice about the water tanker', 'Start a poll about the gate timings'].map((q) => (
+                  {['Any veg tiffin for lunch?', 'Is there a plumber?', 'Post a notice about the water tanker', 'Tell me when a 2 BHK is listed'].map((q) => (
                     <View key={q} className="rounded-full px-3 py-1.5" style={{ borderWidth: 1, borderColor: P.line, backgroundColor: P.bg }}>
                       <Text className="font-sans-md" style={{ fontSize: 12.5, color: P.muted }}>{q}</Text>
                     </View>

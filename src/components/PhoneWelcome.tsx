@@ -68,7 +68,7 @@ const PITCH = [
 const INSIDE = [
   { icon: 'restaurant', title: 'Home food & tiffins', body: 'Daily dishes from verified home chefs. Reserve a plate, subscribe to a tiffin.' },
   { icon: 'pricetags', title: 'Marketplace', body: 'Buy, sell and find trusted help across 15 categories — tuitions to carpooling.' },
-  { icon: 'sparkles', title: 'Saathi', body: 'Ask anything about your society — or have it draft the notice, open the poll, list the item. You confirm before anything is posted.' },
+  { icon: 'sparkles', title: 'Saathi', body: 'Ask anything about your society, have it draft the notice or reserve the plates, and let it watch for the flat you want. You confirm everything.' },
   { icon: 'people', title: 'Resident directory', body: 'Owners and tenants by flat, with one-tap call, WhatsApp or invite.' },
   { icon: 'stats-chart', title: 'Polls & notices', body: 'Decide together with live results, instead of forty “+1” messages.' },
   { icon: 'wallet', title: 'UPI payments', body: 'Pay neighbour to neighbour, with a ledger both sides confirm.' },
