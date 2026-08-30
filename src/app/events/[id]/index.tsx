@@ -144,8 +144,8 @@ export default function EventDetailScreen() {
         <Container narrow>
           {/* Status + date */}
           <View className="flex-row flex-wrap items-center gap-1.5">
-            <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: meta.color + '20' }}>
-              <Text className="text-[11px] font-sans-sb" style={{ color: meta.color }}>{meta.label}</Text>
+            <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.accentSoft }}>
+              <Text className="text-[11px] font-sans-sb" style={{ color: c.accent }}>{meta.label}</Text>
             </View>
             {event.event_date ? (
               <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.inset }}>
@@ -293,11 +293,11 @@ export default function EventDetailScreen() {
                 key={s}
                 onPress={() => changeStatus(s)}
                 className="flex-row items-center gap-3 rounded-2xl border px-3.5 py-3"
-                style={{ borderColor: on ? m.color : c.line, backgroundColor: on ? m.color + '12' : c.surface }}
+                style={{ borderColor: on ? m.color : c.line, backgroundColor: on ? c.accentSoft : c.surface }}
               >
-                <View className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: m.color }} />
+                <View className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: c.accent }} />
                 <Text className="flex-1 font-sans-sb text-[14px] text-ink">{m.label}</Text>
-                {on ? <Ionicons name="checkmark" size={16} color={m.color} /> : null}
+                {on ? <Ionicons name="checkmark" size={16} color={c.accent} /> : null}
               </Pressable>
             );
           })}

@@ -146,12 +146,12 @@ export default function PlacesScreen() {
               return (
                 <View key={g.type.key} className="mb-2.5 overflow-hidden rounded-2xl border border-line bg-surface">
                   <Pressable onPress={() => toggle(g.type.key)} disabled={!!q} className="flex-row items-center gap-2.5 px-3.5 py-3 active:bg-inset">
-                    <View className="h-8 w-8 items-center justify-center rounded-xl" style={{ backgroundColor: g.type.color + '20' }}>
-                      <Ionicons name={g.type.icon as any} size={17} color={g.type.color} />
+                    <View className="h-8 w-8 items-center justify-center rounded-xl" style={{ backgroundColor: c.accentSoft }}>
+                      <Ionicons name={g.type.icon as any} size={17} color={c.accent} />
                     </View>
                     <Text className="flex-1 font-sans-bold text-[15px] text-ink">{g.type.label}</Text>
-                    <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: g.type.color + '18' }}>
-                      <Text className="text-[12px] font-sans-bold" style={{ color: g.type.color }}>{g.rows.length}</Text>
+                    <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.accentSoft }}>
+                      <Text className="text-[12px] font-sans-bold" style={{ color: c.accent }}>{g.rows.length}</Text>
                     </View>
                     {!q ? <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={c.faint} /> : null}
                   </Pressable>
@@ -185,17 +185,17 @@ function Card({ p, isDesktop, center, showDist, c, onPress }: {
       className="flex-row items-center gap-3 overflow-hidden rounded-xl bg-bg p-2.5 active:opacity-90"
       style={{ borderWidth: 1, borderColor: c.line, width: isDesktop ? '48.5%' : '100%' }}
     >
-      <View className="overflow-hidden rounded-xl" style={{ width: 52, height: 52, backgroundColor: m.color + '18' }}>
+      <View className="overflow-hidden rounded-xl" style={{ width: 52, height: 52, backgroundColor: c.accentSoft }}>
         {photo
           ? <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
-          : <View className="flex-1 items-center justify-center"><Ionicons name={m.icon as any} size={22} color={m.color} /></View>}
+          : <View className="flex-1 items-center justify-center"><Ionicons name={m.icon as any} size={22} color={c.accent} /></View>}
       </View>
       <View className="flex-1">
         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{p.name}</Text>
         {p.address ? <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{p.address}</Text> : null}
         <View className="mt-0.5 flex-row items-center gap-2">
           {p.hours ? <Text className="font-sans text-[11px] text-faint" numberOfLines={1}>🕒 {p.hours}</Text> : null}
-          {dist != null ? <Text className="text-[11px] font-sans-sb" style={{ color: m.color }}>{dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`}</Text> : null}
+          {dist != null ? <Text className="text-[11px] font-sans-sb" style={{ color: c.accent }}>{dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`}</Text> : null}
         </View>
       </View>
       <Ionicons name="chevron-forward" size={18} color={c.faint} />

@@ -470,13 +470,13 @@ export default function HomeScreen() {
                     className="overflow-hidden rounded-2xl bg-surface active:opacity-80"
                     style={{ borderWidth: 1, borderColor: c.line }}
                   >
-                    <View style={{ height: 4, backgroundColor: tile.color }} />
+                    <View style={{ height: 4, backgroundColor: c.accent }} />
                     <View className="p-4">
                       <View
                         className="mb-3 h-11 w-11 items-center justify-center rounded-2xl"
-                        style={{ backgroundColor: tile.color + '20' }}
+                        style={{ backgroundColor: c.accentSoft }}
                       >
-                        <Ionicons name={tile.icon as any} size={22} color={tile.color} />
+                        <Ionicons name={tile.icon as any} size={22} color={c.accent} />
                       </View>
                       <Text className="font-sans-bold text-[15px] text-ink" numberOfLines={1}>{tile.label}</Text>
                       <Text className="mt-0.5 text-[12px] font-sans-md leading-[18px] text-muted" numberOfLines={2}>{tile.blurb}</Text>
@@ -484,7 +484,7 @@ export default function HomeScreen() {
                     {badge > 0 ? (
                       <View
                         className="absolute items-center justify-center rounded-full px-1.5"
-                        style={{ top: 12, right: 12, minWidth: 20, height: 20, backgroundColor: tile.color }}
+                        style={{ top: 12, right: 12, minWidth: 20, height: 20, backgroundColor: c.accent }}
                       >
                         <Text className="font-sans-bold text-white" style={{ fontSize: 11 }}>
                           {badge > 99 ? '99+' : badge > 9 ? '9+' : badge}
@@ -511,13 +511,13 @@ function ServiceTile({ cat, count = 0, onPress }: { cat: ServiceCategory; count?
         className="overflow-hidden rounded-2xl bg-surface active:opacity-80"
         style={{ borderWidth: 1, borderColor: c.line }}
       >
-        <View style={{ height: 4, backgroundColor: cat.color }} />
+        <View style={{ height: 4, backgroundColor: c.accent }} />
         <View className="p-4">
           <View
             className="mb-3 h-11 w-11 items-center justify-center rounded-2xl"
-            style={{ backgroundColor: cat.color + '20' }}
+            style={{ backgroundColor: c.accentSoft }}
           >
-            <Ionicons name={cat.icon as any} size={22} color={cat.color} />
+            <Ionicons name={cat.icon as any} size={22} color={c.accent} />
           </View>
           <Text className="font-sans-bold text-[15px] text-ink" numberOfLines={1}>{cat.label}</Text>
           <Text className="mt-0.5 text-[12px] font-sans-md leading-[18px] text-muted" numberOfLines={2}>{cat.blurb}</Text>
@@ -525,7 +525,7 @@ function ServiceTile({ cat, count = 0, onPress }: { cat: ServiceCategory; count?
         {count > 0 ? (
           <View
             className="absolute items-center justify-center rounded-full px-1.5"
-            style={{ top: 12, right: 12, minWidth: 22, height: 22, backgroundColor: cat.color }}
+            style={{ top: 12, right: 12, minWidth: 22, height: 22, backgroundColor: c.accent }}
             accessibilityLabel={`${count} listed`}
           >
             <Text className="font-sans-bold text-white" style={{ fontSize: 11 }}>{count > 99 ? '99+' : count}</Text>
@@ -651,11 +651,11 @@ function JustListedStrip({ listings, borrows, properties, places, lostFound, isD
         <View style={{ height: 96 }} className="w-full">
           {photo
             ? <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
-            : <View style={{ flex: 1, backgroundColor: m.color + '20', alignItems: 'center', justifyContent: 'center' }}><Ionicons name={m.icon as any} size={28} color={m.color} /></View>}
+            : <View style={{ flex: 1, backgroundColor: c.accentSoft, alignItems: 'center', justifyContent: 'center' }}><Ionicons name={m.icon as any} size={28} color={c.accent} /></View>}
         </View>
         <View className="p-2.5">
-          <View className="mb-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: m.color + '20' }}>
-            <Text className="text-[10px] font-sans-sb" style={{ color: m.color }} numberOfLines={1}>📍 {m.label}</Text>
+          <View className="mb-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: c.accentSoft }}>
+            <Text className="text-[10px] font-sans-sb" style={{ color: c.accent }} numberOfLines={1}>📍 {m.label}</Text>
           </View>
           <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{p.name}</Text>
           {p.address ? <Text className="font-sans text-[11px] text-faint" numberOfLines={1}>{p.address}</Text> : <Text className="font-sans text-[11px] text-faint">Nearby</Text>}

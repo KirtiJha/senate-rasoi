@@ -128,7 +128,7 @@ export default function AllListingsScreen() {
     { key: 'lost_found-lost', label: '🔍 Lost', color: LOST_FOUND_COLOR, icon: 'search' },
     { key: 'lost_found-found', label: '📦 Found', color: LOST_FOUND_COLOR, icon: 'search' },
     { key: 'places', label: '📍 Nearby', color: PLACES_COLOR, icon: 'location' },
-    ...SERVICES.filter((s) => s.kind === 'listing').map((s) => ({ key: s.key, label: s.label, color: s.color, icon: s.icon })),
+    ...SERVICES.filter((s) => s.kind === 'listing').map((s) => ({ key: s.key, label: s.label, color: c.accent, icon: s.icon })),
   ], []);
 
   const load = useCallback(async () => {
@@ -222,7 +222,7 @@ export default function AllListingsScreen() {
           key={svc.key}
           onPress={() => setCategory(category === svc.key ? null : svc.key)}
           className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
-          style={{ backgroundColor: category === svc.key ? svc.color : svc.color + '18' }}
+          style={{ backgroundColor: category === svc.key ? svc.color : c.accentSoft }}
         >
           <Ionicons name={svc.icon as any} size={11} color={category === svc.key ? '#fff' : svc.color} />
           <Text className="text-[12px] font-sans-sb" style={{ color: category === svc.key ? '#fff' : svc.color }}>
@@ -323,8 +323,8 @@ function ItemRow({
 
   return (
     <Pressable onPress={onOpen} className="flex-row items-center gap-3 border-b border-line px-3 py-3 active:bg-inset">
-      <View className="h-9 w-9 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: d.color + '20' }}>
-        <Ionicons name={d.icon as any} size={18} color={d.color} />
+      <View className="h-9 w-9 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: c.accentSoft }}>
+        <Ionicons name={d.icon as any} size={18} color={c.accent} />
       </View>
 
       <View className="flex-1" style={{ minWidth: 0 }}>

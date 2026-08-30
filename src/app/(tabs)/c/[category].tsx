@@ -14,7 +14,7 @@ import { fetchListings, getCachedListings, subscribeToListings } from '../../../
 import { getService } from '../../../lib/services';
 import { isSupabaseConfigured } from '../../../lib/supabase';
 import { ListingRow } from '../../../lib/types';
-import { layout } from '../../../theme';
+import { layout, useThemeColors } from '../../../theme';
 
 export default function CategoryScreen() {
   const { category } = useLocalSearchParams<{ category: string }>();
@@ -22,6 +22,7 @@ export default function CategoryScreen() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
+  const c = useThemeColors();
   const { communityId } = useAuth();
 
   const PAGE = 20;
@@ -96,8 +97,8 @@ export default function CategoryScreen() {
 
   const header = (
     <View className="mb-5 flex-row items-center gap-3" style={{ paddingHorizontal: 6 }}>
-      <View className="h-12 w-12 items-center justify-center rounded-2xl" style={{ backgroundColor: cat.color + '22' }}>
-        <Ionicons name={cat.icon as any} size={24} color={cat.color} />
+      <View className="h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft">
+        <Ionicons name={cat.icon as any} size={24} color={c.accent} />
       </View>
       <View className="flex-1">
         <Text className="font-display-x text-[22px] text-ink">{cat.label}</Text>

@@ -137,10 +137,10 @@ export default function DuesScreen() {
                           <Pressable key={it.session_id} disabled={!payable} onPress={() => toggle(it.session_id)} className="flex-row items-center gap-2.5 rounded-xl bg-inset px-3 py-2.5">
                             {payable ? (
                               <Ionicons name={sel ? 'checkbox' : 'square-outline'} size={18} color={sel ? ACCENT : c.faint} />
-                            ) : <Ionicons name="ellipse" size={8} color={meta.color} style={{ marginHorizontal: 5 }} />}
+                            ) : <Ionicons name="ellipse" size={8} color={c.accent} style={{ marginHorizontal: 5 }} />}
                             <View className="flex-1">
                               <Text className="text-[13px] font-sans-sb text-ink">{it.title ?? 'Court session'} · {fmtDate(it.session_date)}</Text>
-                              <Text className="font-sans text-[11px]" style={{ color: meta.color }}>{meta.label}</Text>
+                              <Text className="font-sans text-[11px]" style={{ color: c.accent }}>{meta.label}</Text>
                             </View>
                             <Text className="font-sans-bold text-[14px] text-ink">₹{it.amount.toFixed(0)}</Text>
                             {it.status === 'initiated' && it.payment_id ? (
@@ -183,10 +183,10 @@ export default function DuesScreen() {
                         const meta = STATUS_META[p.status];
                         return (
                           <View key={p.session_id} className="flex-row items-center gap-2.5 rounded-xl bg-inset px-3 py-2.5">
-                            <Ionicons name="ellipse" size={8} color={meta.color} />
+                            <Ionicons name="ellipse" size={8} color={c.accent} />
                             <View className="flex-1">
                               <Text className="text-[13px] font-sans-sb text-ink">{p.title ?? 'Court session'} · {fmtDate(p.session_date)}</Text>
-                              <Text className="font-sans text-[11px]" style={{ color: meta.color }}>{meta.label}</Text>
+                              <Text className="font-sans text-[11px]" style={{ color: c.accent }}>{meta.label}</Text>
                             </View>
                             <Text className="font-sans-bold text-[14px] text-ink">₹{p.amount.toFixed(0)}</Text>
                             {p.status === 'initiated' && p.payment_id ? (

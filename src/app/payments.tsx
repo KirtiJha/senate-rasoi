@@ -124,8 +124,8 @@ export default function PaymentsScreen() {
                     </View>
                     <View className="items-end gap-1">
                       <Text className="font-display-x text-[16px] text-ink">₹{amt}</Text>
-                      <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: st.color + '20' }}>
-                        <Text className="text-[10px] font-sans-sb uppercase" style={{ color: st.color }}>{st.label}</Text>
+                      <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.accentSoft }}>
+                        <Text className="text-[10px] font-sans-sb uppercase" style={{ color: c.accent }}>{st.label}</Text>
                       </View>
                     </View>
                     {/* Actions — works for neighbour payments and sports dues alike */}

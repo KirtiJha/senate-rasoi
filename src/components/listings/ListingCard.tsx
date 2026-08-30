@@ -29,7 +29,7 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
       style={{ borderWidth: 1, borderColor: c.line }}
     >
       {/* Colour accent strip */}
-      {cat && <View style={{ height: 3, backgroundColor: cat.color }} />}
+      {cat && <View style={{ height: 3, backgroundColor: c.accent }} />}
 
       {/* Photo or icon placeholder */}
       {photo ? (
@@ -84,15 +84,26 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
           </Text>
         </View>
 
-        {/* CTA label */}
+        {/*
+          The affordance, not a button.
+ 
+          This was a full-width bar filled with `c.accentSoft` — a 9% alpha
+          tint of a frozen per-category hex. Alpha tints assume a white backdrop,
+          so on a dark card the fill all but vanished and the row read as a big
+          empty section, with #FF9800 text floating in it. It also looked like a
+          button while doing nothing: the whole card is already pressable, and
+          the real action lives on the detail screen.
+ 
+          So it becomes what it actually is — a compact accent-coloured cue that
+          there is something to do here, sized to its text and legible in both
+          schemes because it uses no fill at all.
+        */}
         {cat && (
-          <View
-            className="mt-2.5 items-center rounded-xl py-2"
-            style={{ backgroundColor: cat.color + '18' }}
-          >
-            <Text className="font-sans-sb text-[12px]" style={{ color: cat.color }}>
+          <View className="mt-2.5 flex-row items-center gap-1">
+            <Text className="font-sans-sb text-[12px] text-accent" numberOfLines={1}>
               {cat.ctaLabel}
             </Text>
+            <Ionicons name="arrow-forward" size={12} color={c.accent} />
           </View>
         )}
       </View>

@@ -79,9 +79,9 @@ export default function RecommendScreen() {
                 return (
                   <Pressable key={q.id} onPress={() => router.push(`/recommend/${q.id}` as any)} className="rounded-2xl border border-line bg-surface p-4 active:opacity-90">
                     <View className="mb-1.5 flex-row items-center gap-1.5">
-                      <View className="flex-row items-center gap-1 rounded-full px-2 py-0.5" style={{ backgroundColor: meta.color + '18' }}>
-                        <Ionicons name={meta.icon as any} size={11} color={meta.color} />
-                        <Text className="text-[10px] font-sans-sb" style={{ color: meta.color }}>{meta.label}</Text>
+                      <View className="flex-row items-center gap-1 rounded-full px-2 py-0.5" style={{ backgroundColor: c.accentSoft }}>
+                        <Ionicons name={meta.icon as any} size={11} color={c.accent} />
+                        <Text className="text-[10px] font-sans-sb" style={{ color: c.accent }}>{meta.label}</Text>
                       </View>
                       <Text className="font-sans ml-auto text-[11px] text-faint">{q.answer_count} {q.answer_count === 1 ? 'answer' : 'answers'}</Text>
                     </View>
@@ -137,7 +137,7 @@ function AskSheet({ visible, onClose, onSubmit, c }: {
         {RECO_CATEGORIES.map((r) => {
           const on = category === r.key;
           return (
-            <Pressable key={r.key} onPress={() => setCategory(r.key)} className="flex-row items-center gap-1 rounded-full border px-3 py-1.5" style={{ borderColor: on ? r.color : c.line, backgroundColor: on ? r.color + '14' : c.surface }}>
+            <Pressable key={r.key} onPress={() => setCategory(r.key)} className="flex-row items-center gap-1 rounded-full border px-3 py-1.5" style={{ borderColor: on ? r.color : c.line, backgroundColor: on ? c.accentSoft : c.surface }}>
               <Ionicons name={r.icon as any} size={12} color={on ? r.color : c.muted} />
               <Text className="text-[12px] font-sans-sb" style={{ color: on ? r.color : c.muted }}>{r.label}</Text>
             </Pressable>

@@ -197,11 +197,11 @@ export function CreateListingForm({ cat, onBack, existing }: Props) {
           <View className="mb-1 flex-row items-center gap-2">
             <View
               className="h-8 w-8 items-center justify-center rounded-xl"
-              style={{ backgroundColor: cat.color + '22' }}
+              style={{ backgroundColor: c.accentSoft }}
             >
-              <Ionicons name={cat.icon as any} size={18} color={cat.color} />
+              <Ionicons name={cat.icon as any} size={18} color={c.accent} />
             </View>
-            <Text className="font-sans-md text-[13px]" style={{ color: cat.color }}>{cat.label}</Text>
+            <Text className="font-sans-md text-[13px]" style={{ color: c.accent }}>{cat.label}</Text>
           </View>
           <Text className="mb-4 font-display-x text-[28px] text-ink">
             {isEdit ? (isDirectory ? 'Edit contact' : 'Edit listing') : isDirectory ? 'Recommend a contact' : 'Post a listing'}

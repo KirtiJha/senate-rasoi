@@ -149,8 +149,8 @@ function DocRowView({
   const meta = [doc.owner?.name ?? 'Someone', formatBytes(doc.file_size)].filter(Boolean).join(' · ');
   return (
     <View className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'}`}>
-      <View className="h-10 w-10 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: g.color + '20' }}>
-        <Ionicons name={g.icon as any} size={20} color={g.color} />
+      <View className="h-10 w-10 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: c.accentSoft }}>
+        <Ionicons name={g.icon as any} size={20} color={c.accent} />
       </View>
       <Pressable onPress={onPreview} className="flex-1 active:opacity-70" style={{ minWidth: 0 }}>
         <View className="flex-row items-center gap-1.5">
@@ -231,8 +231,8 @@ function UploadSheet({
     <Sheet visible={visible} onClose={onClose} title="Upload document" footer={<Button label={busy ? 'Uploading…' : 'Upload'} loading={busy} fullWidth disabled={!file || !name.trim()} onPress={submit} />}>
       {file && g ? (
         <Pressable onPress={pick} className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-inset p-3.5 active:opacity-80">
-          <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: g.color + '20' }}>
-            <Ionicons name={g.icon as any} size={20} color={g.color} />
+          <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: c.accentSoft }}>
+            <Ionicons name={g.icon as any} size={20} color={c.accent} />
           </View>
           <View className="flex-1">
             <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{file.name}</Text>

@@ -118,11 +118,11 @@ function EventCard({ e }: { e: SocietyEvent }) {
       className="overflow-hidden rounded-2xl border bg-surface active:opacity-90"
       style={{ borderColor: c.line }}
     >
-      <View style={{ height: 4, backgroundColor: meta.color }} />
+      <View style={{ height: 4, backgroundColor: c.accent }} />
       <View className="p-4">
         <View className="mb-1.5 flex-row flex-wrap items-center gap-1.5">
-          <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: meta.color + '20' }}>
-            <Text className="text-[10px] font-sans-sb" style={{ color: meta.color }}>{meta.label}</Text>
+          <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.accentSoft }}>
+            <Text className="text-[10px] font-sans-sb" style={{ color: c.accent }}>{meta.label}</Text>
           </View>
           {e.event_date ? (
             <Text className="font-sans text-[11px] text-faint">{formatDate(e.event_date)}</Text>

@@ -317,13 +317,13 @@ export default function PostScreen({
                   className="overflow-hidden rounded-2xl bg-surface active:opacity-75"
                   style={{ borderWidth: 1, borderColor: c.line }}
                 >
-                  <View style={{ height: 3, backgroundColor: svc.color }} />
+                  <View style={{ height: 3, backgroundColor: c.accent }} />
                   <View className="p-3.5">
                     <View
                       className="mb-2.5 h-10 w-10 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: svc.color + '20' }}
+                      style={{ backgroundColor: c.accentSoft }}
                     >
-                      <Ionicons name={svc.icon as any} size={20} color={svc.color} />
+                      <Ionicons name={svc.icon as any} size={20} color={c.accent} />
                     </View>
                     <Text className="font-sans-bold text-[13px] text-ink" numberOfLines={1}>{svc.label}</Text>
                     <Text className="mt-0.5 text-[11px] font-sans-md text-muted" numberOfLines={2}>{svc.blurb}</Text>

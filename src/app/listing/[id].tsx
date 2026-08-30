@@ -239,9 +239,9 @@ export default function ListingDetailScreen() {
             {/* Category badge + status */}
             <View className="mb-3 flex-row items-center gap-2 flex-wrap">
               {cat && (
-                <View className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1" style={{ backgroundColor: cat.color + '20' }}>
-                  <Ionicons name={cat.icon as any} size={12} color={cat.color} />
-                  <Text className="font-sans-sb text-[11px]" style={{ color: cat.color }}>{cat.label}</Text>
+                <View className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1" style={{ backgroundColor: c.accentSoft }}>
+                  <Ionicons name={cat.icon as any} size={12} color={c.accent} />
+                  <Text className="font-sans-sb text-[11px]" style={{ color: c.accent }}>{cat.label}</Text>
                 </View>
               )}
               {listing.status !== 'active' && (

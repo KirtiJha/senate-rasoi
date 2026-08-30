@@ -184,8 +184,8 @@ export default function ExpensesScreen() {
                 return (
                   <View key={e.id} className="rounded-2xl border border-line bg-surface p-3.5">
                     <View className="flex-row items-center gap-3">
-                      <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: m.color + '20' }}>
-                        <Ionicons name={m.icon as any} size={19} color={m.color} />
+                      <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: c.accentSoft }}>
+                        <Ionicons name={m.icon as any} size={19} color={c.accent} />
                       </View>
                       <View className="min-w-0 flex-1">
                         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{e.title}</Text>

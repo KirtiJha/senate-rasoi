@@ -236,8 +236,8 @@ export default function ContributionsScreen() {
                       onPress={() => (canManage && !locked ? openEdit(row) : undefined)}
                       className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3.5"
                     >
-                      <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: m.color + '18' }}>
-                        <Text className="text-[11px] font-sans-bold" style={{ color: m.color }}>
+                      <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: c.accentSoft }}>
+                        <Text className="text-[11px] font-sans-bold" style={{ color: c.accent }}>
                           {row.flat.slice(0, 4)}
                         </Text>
                       </View>
@@ -248,8 +248,8 @@ export default function ContributionsScreen() {
                           {row.contributor?.name ? ` · ${row.contributor.name}` : ''}
                         </Text>
                         <View className="mt-0.5 flex-row items-center gap-1.5">
-                          <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: m.color + '20' }}>
-                            <Text className="text-[10px] font-sans-sb" style={{ color: m.color }}>{m.label}</Text>
+                          <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: c.accentSoft }}>
+                            <Text className="text-[10px] font-sans-sb" style={{ color: c.accent }}>{m.label}</Text>
                           </View>
                           {row.method ? <Text className="font-sans text-[11px] text-faint">{row.method}</Text> : null}
                         </View>

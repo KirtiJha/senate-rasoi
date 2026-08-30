@@ -52,8 +52,8 @@ export default function AboutScreen() {
           <View className="gap-3">
             {FEATURES.map((f) => (
               <View key={f.label} className="flex-row items-start gap-3">
-                <View className="mt-0.5 h-7 w-7 items-center justify-center rounded-xl" style={{ backgroundColor: f.color + '20' }}>
-                  <Ionicons name={f.icon as any} size={14} color={f.color} />
+                <View className="mt-0.5 h-7 w-7 items-center justify-center rounded-xl" style={{ backgroundColor: c.accentSoft }}>
+                  <Ionicons name={f.icon as any} size={14} color={c.accent} />
                 </View>
                 <View className="flex-1">
                   <Text className="font-sans-sb text-[13px] text-ink">{f.label}</Text>

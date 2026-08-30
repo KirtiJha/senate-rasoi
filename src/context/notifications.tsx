@@ -198,8 +198,8 @@ function NotificationsModal({
                     className="flex-row items-start gap-3 border-b border-line px-4 py-3 active:bg-inset"
                     style={{ backgroundColor: item.read ? undefined : c.accent + '08' }}
                   >
-                    <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: meta.color + '20' }}>
-                      <Ionicons name={meta.icon} size={17} color={meta.color} />
+                    <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: c.accentSoft }}>
+                      <Ionicons name={meta.icon} size={17} color={c.accent} />
                     </View>
                     <View className="flex-1">
                       <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{item.title}</Text>

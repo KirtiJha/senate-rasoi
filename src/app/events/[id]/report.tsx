@@ -152,12 +152,12 @@ export default function EventReportScreen() {
                   return (
                     <View key={row.category} className="mb-3 last:mb-0">
                       <View className="mb-1 flex-row items-center gap-1.5">
-                        <Ionicons name={meta.icon as any} size={12} color={meta.color} />
+                        <Ionicons name={meta.icon as any} size={12} color={c.accent} />
                         <Text className="font-sans flex-1 text-[13px] text-ink">{meta.label}</Text>
                         <Text className="text-[13px] font-sans-sb text-ink">{rupees(row.amount)}</Text>
                       </View>
                       <View className="h-1.5 overflow-hidden rounded-full" style={{ backgroundColor: c.inset }}>
-                        <View style={{ width: `${pct}%`, height: '100%', backgroundColor: meta.color }} />
+                        <View style={{ width: `${pct}%`, height: '100%', backgroundColor: c.accent }} />
                       </View>
                     </View>
                   );
@@ -180,8 +180,8 @@ export default function EventReportScreen() {
                   return (
                     <View key={e.id} className="rounded-2xl border border-line bg-surface p-3.5">
                       <View className="flex-row items-center gap-2.5">
-                        <View className="h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: meta.color + '20' }}>
-                          <Ionicons name={meta.icon as any} size={16} color={meta.color} />
+                        <View className="h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: c.accentSoft }}>
+                          <Ionicons name={meta.icon as any} size={16} color={c.accent} />
                         </View>
                         <View className="min-w-0 flex-1">
                           <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{e.title}</Text>

@@ -128,13 +128,13 @@ export default function AskScreen() {
                         onPress={() => router.push(askResultRoute(item) as any)}
                         className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3 active:opacity-75"
                       >
-                        <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: meta.color + '20' }}>
-                          <Ionicons name={meta.icon as any} size={17} color={meta.color} />
+                        <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: c.accentSoft }}>
+                          <Ionicons name={meta.icon as any} size={17} color={c.accent} />
                         </View>
                         <View className="min-w-0 flex-1">
                           <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{item.title}</Text>
                           <Text className="font-sans text-[11px] text-muted" numberOfLines={1}>
-                            <Text style={{ color: meta.color }}>{meta.label}</Text>{item.reason ? ` · ${item.reason}` : ''}
+                            <Text style={{ color: c.accent }}>{meta.label}</Text>{item.reason ? ` · ${item.reason}` : ''}
                           </Text>
                         </View>
                         <Ionicons name="chevron-forward" size={15} color={c.faint} />

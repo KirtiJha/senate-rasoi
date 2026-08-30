@@ -88,9 +88,9 @@ export default function PlaceDetailScreen() {
           ) : null}
 
           {/* Type badge + name */}
-          <View className="mb-1 self-start flex-row items-center gap-1.5 rounded-full px-2.5 py-1" style={{ backgroundColor: m.color + '18' }}>
-            <Ionicons name={m.icon as any} size={13} color={m.color} />
-            <Text className="text-[11px] font-sans-sb" style={{ color: m.color }}>{m.label}</Text>
+          <View className="mb-1 self-start flex-row items-center gap-1.5 rounded-full px-2.5 py-1" style={{ backgroundColor: c.accentSoft }}>
+            <Ionicons name={m.icon as any} size={13} color={c.accent} />
+            <Text className="text-[11px] font-sans-sb" style={{ color: c.accent }}>{m.label}</Text>
           </View>
           <Text className="font-display text-[24px] leading-[30px] text-ink">{place.name}</Text>
           {place.hours ? <Text className="font-sans mt-1 text-[13px] text-muted">🕒 {place.hours}</Text> : null}

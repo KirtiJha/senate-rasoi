@@ -106,7 +106,7 @@ export default function SearchScreen() {
         next.push({
           id: `g:${g.id}`, kind: 'sport', title: g.name, subtitle: `${sp?.label ?? g.sport} · ${g.member_count} member${g.member_count === 1 ? '' : 's'}`,
           haystack: `${g.name} ${sp?.label ?? g.sport}`.toLowerCase(),
-          icon: 'football', color: g.color ?? sp?.color ?? '#16A34A', open: () => router.push(`/sports/${g.id}` as any),
+          icon: 'football', color: c.accent ?? sp?.color ?? '#16A34A', open: () => router.push(`/sports/${g.id}` as any),
         });
       }
       for (const doc of documents) {
@@ -114,7 +114,7 @@ export default function SearchScreen() {
         next.push({
           id: `doc:${doc.id}`, kind: 'document', title: doc.name, subtitle: `${doc.is_public ? 'Public' : 'Shared'} · ${doc.owner?.name ?? 'Someone'}`,
           haystack: `${doc.name} ${doc.description ?? ''}`.toLowerCase(),
-          icon: fg.icon, color: fg.color, open: () => router.push('/documents' as any),
+          icon: fg.icon, color: c.accent, open: () => router.push('/documents' as any),
         });
       }
       for (const d of dishes) {
@@ -273,8 +273,8 @@ function ResultRow({ it, first, c, onPress }: { it: SearchItem; first: boolean; 
       {it.avatar ? (
         <Avatar name={it.avatar} size={36} />
       ) : (
-        <View className="h-9 w-9 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: it.color + '20' }}>
-          <Ionicons name={it.icon as any} size={18} color={it.color} />
+        <View className="h-9 w-9 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: c.accentSoft }}>
+          <Ionicons name={it.icon as any} size={18} color={c.accent} />
         </View>
       )}
       <View className="flex-1" style={{ minWidth: 0 }}>
