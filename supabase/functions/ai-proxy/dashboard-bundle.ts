@@ -154,7 +154,7 @@ async function postWithRetry(url: string, body: unknown, label: string, tries = 
 async function llmJSON(
   parts: unknown[],
   schema: Record<string, unknown>,
-  temperature: number,
+  _temperature: number,
 ): Promise<Record<string, unknown>> {
   // Gemini's part shape → OpenAI's content shape.
   const content = (parts as Record<string, unknown>[]).map((p) => {
@@ -182,7 +182,11 @@ async function llmJSON(
       model: OPENAI_MODEL,
       messages: [{ role: 'user', content }],
       response_format: { type: 'json_object' },
-      temperature,
+      // No temperature. gpt-5.6-luna is a reasoning model (reasoning.effort:
+      // none|low|medium|high|xhigh|max, medium by default), and reasoning
+      // models reject sampling parameters outright rather than ignoring them —
+      // a 400 on every autofill and digest. The parameter bought us very
+      // little over these small schemas, so it is simply not sent.
     },
     'OpenAI',
   );
