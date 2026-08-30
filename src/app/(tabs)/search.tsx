@@ -10,7 +10,7 @@ import { fetchDirectory } from '../../lib/directory';
 import { fetchDishes } from '../../lib/dishes';
 import { fetchDocuments, fileGlyph } from '../../lib/documents';
 import { fetchAllListings } from '../../lib/listings';
-import { POST_CATEGORY_COLORS, POST_CATEGORY_ICONS, fetchPosts } from '../../lib/posts';
+import { POST_CATEGORY_ICONS, fetchPosts } from '../../lib/posts';
 import { addRecentSearch, clearRecentSearches, getRecentSearches } from '../../lib/recentSearches';
 import { getService } from '../../lib/services';
 import { fetchGroups, getSport } from '../../lib/sports';
@@ -147,7 +147,7 @@ export default function SearchScreen() {
           id: `p:${p.id}`, kind: 'post', title, subtitle: `${p.author?.name ?? 'Someone'} · Feed`,
           haystack: `${p.title ?? ''} ${p.body} ${p.author?.name ?? ''}`.toLowerCase(),
           icon: (POST_CATEGORY_ICONS[p.category] as string) ?? 'chatbubble',
-          color: POST_CATEGORY_COLORS[p.category] ?? c.muted,
+          color: c.accent,
           open: () => router.push('/feed' as any),
         });
       }

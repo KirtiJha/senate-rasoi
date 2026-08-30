@@ -19,7 +19,7 @@ import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
 import {
-  ALL_POST_CATEGORIES, CommentRow, POST_CATEGORY_COLORS, POST_CATEGORY_ICONS, POST_CATEGORY_LABELS,
+  ALL_POST_CATEGORIES, CommentRow, POST_CATEGORY_ICONS, POST_CATEGORY_LABELS,
   PostCategory, PostRow, createComment, deleteComment, deletePost,
   fetchComments, fetchPostById, setPinned, setResolved, subscribeToComments, updateComment, updatePost, uploadPostPhoto,
 } from '../../lib/posts';
@@ -166,7 +166,7 @@ export default function PostThreadScreen() {
     );
   }
 
-  const color = POST_CATEGORY_COLORS[post.category];
+  const color = c.accent;
   const icon = POST_CATEGORY_ICONS[post.category];
   const isOwner = post.author_id === userId;
   const canManage = isOwner || isAdmin;
@@ -437,7 +437,7 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3 -mx-1" contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}>
               {cats.map((k) => {
                 const on = category === k;
-                const color = POST_CATEGORY_COLORS[k];
+                const color = c.accent;
                 return (
                   <Pressable key={k} onPress={() => setCategory(k)} className="flex-row items-center gap-1 rounded-full border px-3 py-1.5" style={{ borderColor: on ? color : c.line, backgroundColor: on ? color : c.surface }}>
                     <Ionicons name={POST_CATEGORY_ICONS[k] as any} size={12} color={on ? '#fff' : c.muted} />

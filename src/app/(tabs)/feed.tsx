@@ -18,7 +18,7 @@ import { useConfirm } from '../../context/confirm';
 import { useBlocks } from '../../context/blocks';
 import { useToast } from '../../context/toast';
 import {
-  ALL_POST_CATEGORIES, POST_CATEGORY_COLORS, POST_CATEGORY_ICONS,
+  ALL_POST_CATEGORIES, POST_CATEGORY_ICONS,
   POST_CATEGORY_LABELS, PostCategory, PostRow,
   createPost, fetchPosts, subscribeToFeed,
 } from '../../lib/posts';
@@ -249,15 +249,20 @@ function PostCardSkeleton() {
 const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userId: string | null }) {
   const router = useRouter();
   const c = useThemeColors();
-  const color = POST_CATEGORY_COLORS[post.category];
+  const color = c.accent;
   const icon = POST_CATEGORY_ICONS[post.category];
   const isOwn = post.author_id === userId;
   const timeAgo = formatTimeAgo(post.created_at);
 
   return (
-    <Pressable onPress={() => router.push(`/feed/${post.id}` as any)} className="rounded-3xl bg-surface active:opacity-85" style={{ borderWidth: 1, borderColor: c.line }}>
-      {/* Category accent strip */}
-      <View style={{ height: 3, backgroundColor: color, borderTopLeftRadius: 20, borderTopRightRadius: 20 }} />
+    <Pressable
+      onPress={() => router.push(`/feed/${post.id}` as any)}
+      className="overflow-hidden rounded-2xl bg-surface active:opacity-85"
+      style={{ borderWidth: 1, borderColor: c.line }}
+    >
+      {/* Accent rule — clipped by the card, so it follows the corner instead
+          of guessing at it. */}
+      <View style={{ height: 3, backgroundColor: c.accent }} />
 
       <View className="p-4">
         {/* Header row */}
@@ -389,7 +394,7 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
             <View className="flex-row gap-2">
               {availableCategories.map((cat) => {
-                const color = POST_CATEGORY_COLORS[cat];
+                const color = c.accent;
                 const on = category === cat;
                 return (
                   <Pressable
