@@ -199,7 +199,7 @@ export default function PlaceFormScreen() {
                   <Ionicons name="location-outline" size={15} color={ACCENT} style={{ marginTop: 2 }} />
                   <View className="flex-1">
                     <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{r.name}</Text>
-                    <Text className="text-[11px] text-muted" numberOfLines={1}>{r.address}</Text>
+                    <Text className="font-sans text-[11px] text-muted" numberOfLines={1}>{r.address}</Text>
                   </View>
                 </Pressable>
               ))}
@@ -253,13 +253,13 @@ export default function PlaceFormScreen() {
             {photos.length < MAX_PHOTOS ? (
               <Pressable onPress={pickPhoto} className="items-center justify-center rounded-2xl border border-dashed border-line bg-surface active:opacity-70" style={{ width: 88, height: 88 }}>
                 <Ionicons name="camera-outline" size={22} color={ACCENT} />
-                <Text className="mt-1 text-[10px] text-muted">Add</Text>
+                <Text className="font-sans mt-1 text-[10px] text-muted">Add</Text>
               </Pressable>
             ) : null}
           </View>
 
           <Button label={isEdit ? 'Save changes' : 'Add place'} icon="checkmark" size="lg" fullWidth loading={submitting} onPress={submit} />
-          <Text className="mt-3 text-center text-[12px] leading-[18px] text-faint">
+          <Text className="font-sans mt-3 text-center text-[12px] leading-[18px] text-faint">
             Shared with everyone in your society. You (or an admin) can edit or remove it anytime.
           </Text>
         </Container>

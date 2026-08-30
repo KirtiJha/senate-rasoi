@@ -111,7 +111,7 @@ export default function DmThreadScreen() {
             <Avatar name={thread?.other.name ?? '?'} size={34} />
             <View>
               <Text className="font-sans-bold text-[15px] text-ink" numberOfLines={1}>{thread?.other.name ?? 'Neighbour'}</Text>
-              {thread?.other.flat ? <Text className="text-[11px] text-faint">Flat {thread.other.flat}</Text> : null}
+              {thread?.other.flat ? <Text className="font-sans text-[11px] text-faint">Flat {thread.other.flat}</Text> : null}
             </View>
           </Pressable>
           {thread?.other.id ? (
@@ -139,7 +139,7 @@ export default function DmThreadScreen() {
             retrying={retrying}
           />
         ) : messages.length === 0 ? (
-          <Text className="py-10 text-center text-[13px] text-muted">
+          <Text className="font-sans py-10 text-center text-[13px] text-muted">
             No messages yet. Say hello to {thread?.other.name ?? 'your neighbour'} 👋
           </Text>
         ) : (
@@ -157,7 +157,7 @@ export default function DmThreadScreen() {
           <View className="items-center rounded-2xl bg-inset px-4 py-3">
             <Ionicons name="ban-outline" size={20} color={c.faint} />
             <Text className="mt-1 font-sans-sb text-[13px] text-muted">This conversation is unavailable</Text>
-            <Text className="mt-0.5 text-center text-[12px] text-faint">
+            <Text className="font-sans mt-0.5 text-center text-[12px] text-faint">
               You can manage this in Profile → Blocked members.
             </Text>
           </View>

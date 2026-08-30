@@ -59,7 +59,7 @@ export default function EventsScreen() {
             <View className="items-center py-20">
               <Text style={{ fontSize: 44 }} className="mb-3">🎉</Text>
               <Text className="font-display text-xl text-ink mb-1">No functions yet</Text>
-              <Text className="max-w-xs text-center text-[14px] text-muted">
+              <Text className="font-sans max-w-xs text-center text-[14px] text-muted">
                 Diwali, Ganesh Chaturthi, Holi — plan it here, collect contributions,
                 track every bill, and publish the accounts to everyone.
               </Text>
@@ -72,7 +72,7 @@ export default function EventsScreen() {
                   <Text className="font-sans-sb text-[14px] text-white">Plan a function</Text>
                 </Pressable>
               ) : (
-                <Text className="mt-4 text-[12px] text-faint">Your society admin can start one.</Text>
+                <Text className="font-sans mt-4 text-[12px] text-faint">Your society admin can start one.</Text>
               )}
             </View>
           ) : (
@@ -124,26 +124,26 @@ function EventCard({ e }: { e: SocietyEvent }) {
             <Text className="text-[10px] font-sans-sb" style={{ color: meta.color }}>{meta.label}</Text>
           </View>
           {e.event_date ? (
-            <Text className="text-[11px] text-faint">{formatDate(e.event_date)}</Text>
+            <Text className="font-sans text-[11px] text-faint">{formatDate(e.event_date)}</Text>
           ) : null}
         </View>
 
         <Text className="font-sans-bold text-[16px] text-ink" numberOfLines={1}>{e.title}</Text>
         {e.description ? (
-          <Text className="mt-0.5 text-[13px] text-muted" numberOfLines={2}>{e.description}</Text>
+          <Text className="font-sans mt-0.5 text-[13px] text-muted" numberOfLines={2}>{e.description}</Text>
         ) : null}
 
         <View className="mt-2 flex-row items-center gap-3">
           {e.venue ? (
             <View className="flex-row items-center gap-1">
               <Ionicons name="location-outline" size={12} color={c.faint} />
-              <Text className="text-[11px] text-faint" numberOfLines={1}>{e.venue}</Text>
+              <Text className="font-sans text-[11px] text-faint" numberOfLines={1}>{e.venue}</Text>
             </View>
           ) : null}
           {e.suggested_contribution != null ? (
             <View className="flex-row items-center gap-1">
               <Ionicons name="wallet-outline" size={12} color={c.faint} />
-              <Text className="text-[11px] text-faint">₹{e.suggested_contribution} / flat</Text>
+              <Text className="font-sans text-[11px] text-faint">₹{e.suggested_contribution} / flat</Text>
             </View>
           ) : null}
         </View>

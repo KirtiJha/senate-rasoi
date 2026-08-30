@@ -111,7 +111,7 @@ export function PaySheet({
       {!payee.upi ? (
         <View className="items-center py-6">
           <Ionicons name="card-outline" size={32} color={c.faint} />
-          <Text className="mt-3 text-center text-[14px] text-muted">{payee.name} hasn't added a UPI ID yet. Ask them for it to pay directly.</Text>
+          <Text className="font-sans mt-3 text-center text-[14px] text-muted">{payee.name} hasn't added a UPI ID yet. Ask them for it to pay directly.</Text>
         </View>
       ) : (
         <>
@@ -127,7 +127,7 @@ export function PaySheet({
             />
           </View>
 
-          {note ? <Text className="mb-4 text-[13px] text-muted">For: {note}</Text> : null}
+          {note ? <Text className="font-sans mb-4 text-[13px] text-muted">For: {note}</Text> : null}
 
           {isDesktop ? (
             <View className="items-center rounded-2xl border border-line bg-surface p-4">
@@ -136,7 +136,7 @@ export function PaySheet({
                   <QRCode value={link} size={180} />
                 </View>
               ) : null}
-              <Text className="mt-3 text-center text-[13px] text-muted">Scan with any UPI app to pay</Text>
+              <Text className="font-sans mt-3 text-center text-[13px] text-muted">Scan with any UPI app to pay</Text>
               <Pressable onPress={copyUpi} className="mt-2 flex-row items-center gap-1.5 rounded-full bg-inset px-3 py-1.5 active:opacity-70">
                 <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={14} color={c.muted} />
                 <Text className="text-[13px] font-sans-sb text-ink">{copied ? 'Copied' : payee.upi}</Text>
@@ -146,7 +146,7 @@ export function PaySheet({
             <Button label="Pay via UPI app" icon="open-outline" variant="whatsapp" fullWidth disabled={!valid} onPress={openUpiApp} />
           )}
 
-          <Text className="mt-3 text-center text-[11px] leading-4 text-faint">
+          <Text className="font-sans mt-3 text-center text-[11px] leading-4 text-faint">
             Pays {payee.name} directly via UPI. After paying, tap “record it” so they can confirm receipt.
           </Text>
         </>

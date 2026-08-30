@@ -138,7 +138,7 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
             <View className="items-center py-16">
               <Ionicons name="construct-outline" size={40} color={c.faint} />
               <Text className="mt-3 font-display text-xl text-ink mb-1">No contacts found</Text>
-              <Text className="text-[14px] text-muted text-center max-w-xs">{query || trade ? 'Try a different search or filter.' : 'Tap + to add a trusted service contact.'}</Text>
+              <Text className="font-sans text-[14px] text-muted text-center max-w-xs">{query || trade ? 'Try a different search or filter.' : 'Tap + to add a trusted service contact.'}</Text>
             </View>
           ) : (
             groups.map((g) => (
@@ -147,7 +147,7 @@ export function ServiceDirectory({ cat }: { cat: ServiceCategory }) {
                   <View className="mb-2 flex-row items-center gap-2">
                     <View className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
                     <Text className="font-sans-bold text-[13px] uppercase tracking-wider text-muted">{g.trade}</Text>
-                    <Text className="text-[12px] text-faint">· {g.rows.length}</Text>
+                    <Text className="font-sans text-[12px] text-faint">· {g.rows.length}</Text>
                   </View>
                 ) : null}
                 <View className="overflow-hidden rounded-2xl border border-line bg-surface">
@@ -212,7 +212,7 @@ function ContactRow({
       <Avatar name={name} size={40} />
       <View className="flex-1" style={{ minWidth: 0 }}>
         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{name}</Text>
-        {note ? <Text className="text-[12px] text-muted" numberOfLines={1}>{note}</Text> : null}
+        {note ? <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{note}</Text> : null}
       </View>
       {phone ? (
         <View className="flex-row items-center gap-1.5">

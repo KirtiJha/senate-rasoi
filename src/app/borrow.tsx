@@ -96,14 +96,14 @@ export default function BorrowScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container>
           {loading ? (
-            <Text className="px-1 py-10 text-center text-[13px] text-muted">Loading…</Text>
+            <Text className="font-sans px-1 py-10 text-center text-[13px] text-muted">Loading…</Text>
           ) : rows.length === 0 ? (
             <View className="items-center px-6 py-16">
               <View className="mb-3 h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: ACCENT + '18' }}>
                 <Ionicons name="swap-horizontal" size={26} color={ACCENT} />
               </View>
               <Text className="font-sans-bold text-[15px] text-ink">{emptyTitle}</Text>
-              <Text className="mt-1 max-w-[300px] text-center text-[13px] text-muted">{emptyBlurb}</Text>
+              <Text className="font-sans mt-1 max-w-[300px] text-center text-[13px] text-muted">{emptyBlurb}</Text>
               <Pressable onPress={() => router.push(addHref as any)} className="mt-5 flex-row items-center gap-2 rounded-2xl px-5 py-3 active:opacity-90" style={{ backgroundColor: ACCENT }}>
                 <Ionicons name="add" size={18} color="#fff" />
                 <Text className="font-sans-bold text-[14px] text-white">{isOffer ? 'Lend something' : 'Post a request'}</Text>
@@ -151,7 +151,7 @@ function ItemCard({ item, isOffer }: { item: LendItem; isOffer: boolean }) {
         </View>
         <T source="borrow" id={item.id} field="title" text={item.title} showToggle={false} className="mt-0.5 font-sans-bold text-[14px] text-ink" numberOfLines={1} />
         {item.description ? <T source="borrow" id={item.id} field="description" text={item.description} showToggle={false} className="text-[12px] text-muted" numberOfLines={2} /> : null}
-        <Text className="mt-auto pt-1 text-[11px] text-faint">{item.owner?.name ?? 'A neighbour'}{item.owner?.flat ? ` · Flat ${item.owner.flat}` : ''}</Text>
+        <Text className="font-sans mt-auto pt-1 text-[11px] text-faint">{item.owner?.name ?? 'A neighbour'}{item.owner?.flat ? ` · Flat ${item.owner.flat}` : ''}</Text>
       </View>
     </Pressable>
   );

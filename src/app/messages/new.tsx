@@ -85,7 +85,7 @@ export default function NewMessageScreen() {
           ) : filtered.length === 0 ? (
             <View className="items-center px-6 py-16">
               <Ionicons name="people-outline" size={34} color={c.faint} />
-              <Text className="mt-2 text-[14px] text-muted text-center">
+              <Text className="font-sans mt-2 text-[14px] text-muted text-center">
                 {members.length === 0 ? 'No other neighbours have joined yet.' : 'No neighbours match that search.'}
               </Text>
             </View>
@@ -101,7 +101,7 @@ export default function NewMessageScreen() {
                   <Avatar name={m.name} size={42} />
                   <View className="flex-1">
                     <Text className="font-sans-bold text-[15px] text-ink" numberOfLines={1}>{m.name}</Text>
-                    {m.flat ? <Text className="text-[12px] text-muted">Flat {m.flat}</Text> : null}
+                    {m.flat ? <Text className="font-sans text-[12px] text-muted">Flat {m.flat}</Text> : null}
                   </View>
                   {opening === m.id ? (
                     <ActivityIndicator size="small" color={c.muted} />

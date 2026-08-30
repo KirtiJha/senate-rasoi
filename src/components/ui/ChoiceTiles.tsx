@@ -40,7 +40,7 @@ export function ChoiceTiles<T extends string>({
                 <Text className={`text-[14px] ${selected ? 'font-sans-sb text-ink' : 'font-sans-md text-ink'}`}>
                   {opt.label}
                 </Text>
-                {opt.hint ? <Text className="text-[11px] text-faint">{opt.hint}</Text> : null}
+                {opt.hint ? <Text className="font-sans text-[11px] text-faint">{opt.hint}</Text> : null}
               </View>
               {selected ? <Ionicons name="checkmark-circle" size={18} color={c.accent} /> : null}
             </Pressable>

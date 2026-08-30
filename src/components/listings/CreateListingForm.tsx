@@ -229,7 +229,7 @@ export function CreateListingForm({ cat, onBack, existing }: Props) {
             >
               <Ionicons name="camera" size={24} color={c.accent} />
               <Text className="mt-2 font-sans-sb text-[13px] text-ink">Add a photo</Text>
-              <Text className="mt-0.5 text-[11px] text-faint">Optional but recommended</Text>
+              <Text className="font-sans mt-0.5 text-[11px] text-faint">Optional but recommended</Text>
             </Pressable>
           ))}
 
@@ -252,7 +252,7 @@ export function CreateListingForm({ cat, onBack, existing }: Props) {
           {!isDirectory && photoUri && photoFlagged ? (
             <View className="-mt-1 mb-4 flex-row items-start gap-2 rounded-2xl border border-nonveg/40 bg-nonveg/10 px-3.5 py-3">
               <Ionicons name="alert-circle" size={16} color={c.nonveg} />
-              <Text className="flex-1 text-[12px] leading-[17px] text-nonveg">
+              <Text className="font-sans flex-1 text-[12px] leading-[17px] text-nonveg">
                 This photo doesn't look like an item you can list. Please change or remove it before posting.
               </Text>
             </View>
@@ -264,7 +264,7 @@ export function CreateListingForm({ cat, onBack, existing }: Props) {
               <Avatar name={profile.name} size={38} />
               <View className="flex-1">
                 <Text className="font-sans-sb text-[13px] text-ink">{profile.name}</Text>
-                <Text className="text-[11px] text-faint">Flat {profile.flat ?? '—'}</Text>
+                <Text className="font-sans text-[11px] text-faint">Flat {profile.flat ?? '—'}</Text>
               </View>
             </View>
           )}
@@ -345,7 +345,7 @@ export function CreateListingForm({ cat, onBack, existing }: Props) {
             disabled={photoFlagged}
             onPress={submit}
           />
-          <Text className="mt-2 text-center text-[12px] leading-4 text-faint">
+          <Text className="font-sans mt-2 text-center text-[12px] leading-4 text-faint">
             Visible to everyone in the society immediately.
           </Text>
         </Container>

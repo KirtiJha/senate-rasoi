@@ -45,7 +45,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
             style={{ width: '100%', maxWidth: 360, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}
           >
             <Text className="font-display-x text-[19px] text-ink">{opts?.title}</Text>
-            {opts?.message ? <Text className="mt-2 text-[14px] leading-[20px] text-muted">{opts.message}</Text> : null}
+            {opts?.message ? <Text className="font-sans mt-2 text-[14px] leading-[20px] text-muted">{opts.message}</Text> : null}
             <View className="mt-5 flex-row justify-end gap-2.5">
               <Pressable onPress={() => close(false)} className="rounded-xl border border-line bg-inset px-4 py-2.5 active:opacity-80">
                 <Text className="font-sans-sb text-[14px] text-muted">{opts?.cancelLabel ?? 'Cancel'}</Text>

@@ -130,7 +130,7 @@ export default function LostFoundDetailScreen() {
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="alert-circle-outline" size={48} color={c.faint} />
           <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Report removed</Text>
-          <Text className="mt-1.5 text-center text-[13px] text-muted">This report is no longer available — it may have been removed by the poster.</Text>
+          <Text className="font-sans mt-1.5 text-center text-[13px] text-muted">This report is no longer available — it may have been removed by the poster.</Text>
           <Pressable onPress={goBack} className="mt-5 rounded-xl border border-line bg-surface px-5 py-2.5 active:bg-inset">
             <Text className="font-sans-sb text-[14px] text-ink">Go back</Text>
           </Pressable>
@@ -188,7 +188,7 @@ export default function LostFoundDetailScreen() {
             <Avatar name={ownerName} size={40} />
             <View className="flex-1">
               <Text className="font-sans-bold text-[14px] text-ink">{ownerName}</Text>
-              <Text className="text-[12px] text-muted">{item.owner?.flat ? `Flat ${item.owner.flat}` : 'Neighbour'}</Text>
+              <Text className="font-sans text-[12px] text-muted">{item.owner?.flat ? `Flat ${item.owner.flat}` : 'Neighbour'}</Text>
             </View>
             {canManage ? (
               <Pressable
@@ -244,7 +244,7 @@ export default function LostFoundDetailScreen() {
                   <Text className="mt-1 font-sans-bold text-[14px] text-ink">
                     {isLost ? 'This item was found!' : 'This item was returned!'}
                   </Text>
-                  <Text className="text-[12px] text-muted">The owner has marked this as resolved.</Text>
+                  <Text className="font-sans text-[12px] text-muted">The owner has marked this as resolved.</Text>
                 </View>
               ) : wa ? (
                 <Button
@@ -262,7 +262,7 @@ export default function LostFoundDetailScreen() {
                 />
               ) : (
                 <View className="items-center rounded-2xl border border-line bg-surface p-4">
-                  <Text className="text-[13px] text-muted">
+                  <Text className="font-sans text-[13px] text-muted">
                     {isLost
                       ? 'Keep an eye out and check back with the poster if you find it.'
                       : 'Contact the poster through your society group if this is yours.'}
@@ -288,7 +288,7 @@ export default function LostFoundDetailScreen() {
           </Pressable>
           {editPhoto ? (
             <Pressable onPress={() => setEditPhoto(null)} hitSlop={8}>
-              <Text className="text-[13px] text-nonveg">Remove photo</Text>
+              <Text className="font-sans text-[13px] text-nonveg">Remove photo</Text>
             </Pressable>
           ) : null}
         </View>

@@ -140,11 +140,11 @@ export default function DuesScreen() {
                             ) : <Ionicons name="ellipse" size={8} color={meta.color} style={{ marginHorizontal: 5 }} />}
                             <View className="flex-1">
                               <Text className="text-[13px] font-sans-sb text-ink">{it.title ?? 'Court session'} · {fmtDate(it.session_date)}</Text>
-                              <Text className="text-[11px]" style={{ color: meta.color }}>{meta.label}</Text>
+                              <Text className="font-sans text-[11px]" style={{ color: meta.color }}>{meta.label}</Text>
                             </View>
                             <Text className="font-sans-bold text-[14px] text-ink">₹{it.amount.toFixed(0)}</Text>
                             {it.status === 'initiated' && it.payment_id ? (
-                              <Pressable onPress={() => undo(it.payment_id!)} hitSlop={6}><Text className="ml-1 text-[11px] text-faint underline">undo</Text></Pressable>
+                              <Pressable onPress={() => undo(it.payment_id!)} hitSlop={6}><Text className="font-sans ml-1 text-[11px] text-faint underline">undo</Text></Pressable>
                             ) : null}
                           </Pressable>
                         );
@@ -186,7 +186,7 @@ export default function DuesScreen() {
                             <Ionicons name="ellipse" size={8} color={meta.color} />
                             <View className="flex-1">
                               <Text className="text-[13px] font-sans-sb text-ink">{p.title ?? 'Court session'} · {fmtDate(p.session_date)}</Text>
-                              <Text className="text-[11px]" style={{ color: meta.color }}>{meta.label}</Text>
+                              <Text className="font-sans text-[11px]" style={{ color: meta.color }}>{meta.label}</Text>
                             </View>
                             <Text className="font-sans-bold text-[14px] text-ink">₹{p.amount.toFixed(0)}</Text>
                             {p.status === 'initiated' && p.payment_id ? (
@@ -198,7 +198,7 @@ export default function DuesScreen() {
                                 <Text className="text-[11px] font-sans-sb" style={{ color: ACCENT }}>Mark paid</Text>
                               </Pressable>
                             ) : p.status === 'paid' && p.payment_id ? (
-                              <Pressable onPress={() => revert(p.payment_id!)} hitSlop={6} className="ml-1"><Text className="text-[11px] text-faint underline">undo</Text></Pressable>
+                              <Pressable onPress={() => revert(p.payment_id!)} hitSlop={6} className="ml-1"><Text className="font-sans text-[11px] text-faint underline">undo</Text></Pressable>
                             ) : null}
                           </View>
                         );
@@ -219,7 +219,7 @@ function Empty({ icon, text, c }: { icon: keyof typeof Ionicons.glyphMap; text: 
   return (
     <View className="items-center py-16">
       <Ionicons name={icon} size={38} color={c.faint} />
-      <Text className="mt-3 max-w-[260px] text-center text-[14px] text-muted">{text}</Text>
+      <Text className="font-sans mt-3 max-w-[260px] text-center text-[14px] text-muted">{text}</Text>
     </View>
   );
 }

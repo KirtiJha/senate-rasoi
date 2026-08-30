@@ -104,7 +104,7 @@ export default function SportsScreen() {
             <View className="items-center py-16">
               <Text style={{ fontSize: 44 }} className="mb-3">🏅</Text>
               <Text className="mb-1.5 font-display text-xl text-ink">No sports groups yet</Text>
-              <Text className="mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">
+              <Text className="font-sans mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">
                 Start a group for your society's badminton, cricket and more.
               </Text>
               <Button label="Add a sport" icon="add" onPress={onAdd} />
@@ -214,7 +214,7 @@ function CreateGroupSheet({
         <Pressable onPress={pickLogo} className="h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-inset active:opacity-80">
           {logoUri ? <Image source={{ uri: logoUri }} style={{ width: 64, height: 64 }} contentFit="cover" /> : <Ionicons name="camera-outline" size={22} color={c.faint} />}
         </Pressable>
-        <Text className="flex-1 text-[12px] text-muted">Upload a team photo or logo, or just use the emoji badge below.</Text>
+        <Text className="font-sans flex-1 text-[12px] text-muted">Upload a team photo or logo, or just use the emoji badge below.</Text>
         {logoUri ? <Pressable onPress={() => setLogoUri(null)} hitSlop={8}><Ionicons name="close-circle" size={20} color={c.faint} /></Pressable> : null}
       </View>
 
@@ -244,7 +244,7 @@ function CreateGroupSheet({
       </View>
       <Text className={lbl}>Court / ground</Text>
       <TextInput value={location} onChangeText={setLocation} placeholder="e.g. Clubhouse court 1" placeholderTextColor={c.faint} className={`mb-4 ${input}`} style={{ outline: 'none' } as any} />
-      {time.trim() && !isValidTime(time) ? <Text className="-mt-2 mb-3 text-[11px] text-nonveg">Enter time as HH:MM (e.g. 18:00)</Text> : null}
+      {time.trim() && !isValidTime(time) ? <Text className="font-sans -mt-2 mb-3 text-[11px] text-nonveg">Enter time as HH:MM (e.g. 18:00)</Text> : null}
 
       <Text className={lbl}>About (optional)</Text>
       <TextInput value={description} onChangeText={setDescription} placeholder="Who's it for, skill level, etc." placeholderTextColor={c.faint} multiline className={input} style={{ minHeight: 64, outline: 'none' } as any} />

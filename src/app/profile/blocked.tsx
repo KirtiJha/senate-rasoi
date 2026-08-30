@@ -62,14 +62,14 @@ export default function BlockedMembersScreen() {
             <View className="items-center py-20">
               <Ionicons name="shield-checkmark-outline" size={40} color={c.faint} />
               <Text className="mt-3 font-display text-xl text-ink">No one is blocked</Text>
-              <Text className="mt-1 max-w-xs text-center text-[14px] text-muted">
+              <Text className="font-sans mt-1 max-w-xs text-center text-[14px] text-muted">
                 If a neighbour is being abusive, you can block them from their profile or from
                 the ⋯ menu on any of their posts.
               </Text>
             </View>
           ) : (
             <>
-              <Text className="mb-3 text-[13px] leading-[19px] text-muted">
+              <Text className="font-sans mb-3 text-[13px] leading-[19px] text-muted">
                 You won't see content from these members, and neither of you can message the other.
               </Text>
               <View className="gap-2">
@@ -83,7 +83,7 @@ export default function BlockedMembersScreen() {
                       <Avatar name={name} size={38} />
                       <View className="min-w-0 flex-1">
                         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{name}</Text>
-                        <Text className="text-[12px] text-muted">
+                        <Text className="font-sans text-[12px] text-muted">
                           {row.profile?.flat ? `Flat ${row.profile.flat}` : 'Neighbour'}
                         </Text>
                       </View>

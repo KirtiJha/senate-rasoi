@@ -38,15 +38,15 @@ export function SubscribeModal({ plan, onClose, onConfirm }: SubscribeModalProps
             </View>
             <View className="mt-1 flex-row items-center gap-1.5">
               <Avatar name={plan.chef?.name ?? '?'} size={18} />
-              <Text className="text-[12px] text-muted">{plan.chef?.name ?? 'Chef'} · {SLOT_EMOJI[plan.slot]} {plan.slot} · {daysLabel(plan.days_of_week)}</Text>
+              <Text className="font-sans text-[12px] text-muted">{plan.chef?.name ?? 'Chef'} · {SLOT_EMOJI[plan.slot]} {plan.slot} · {daysLabel(plan.days_of_week)}</Text>
             </View>
-            {plan.description ? <Text className="mt-2 text-[13px] leading-5 text-muted">{plan.description}</Text> : null}
+            {plan.description ? <Text className="font-sans mt-2 text-[13px] leading-5 text-muted">{plan.description}</Text> : null}
           </View>
 
           <View className="mb-4 flex-row items-center justify-between">
             <View>
               <Text className="font-sans-sb text-[15px] text-ink">Plates each day</Text>
-              <Text className="text-[12px] text-faint">Up to {plan.max_per_day} per day</Text>
+              <Text className="font-sans text-[12px] text-faint">Up to {plan.max_per_day} per day</Text>
             </View>
             <Stepper value={qty} min={1} max={plan.max_per_day} onChange={setQty} />
           </View>
@@ -69,10 +69,10 @@ export function SubscribeModal({ plan, onClose, onConfirm }: SubscribeModalProps
           </View>
 
           <Button label="Subscribe & message chef" icon="logo-whatsapp" variant="whatsapp" size="lg" fullWidth onPress={() => onConfirm(plan, qty, startToday)} />
-          <Text className="mt-2.5 text-center text-[11px] leading-4 text-faint">
+          <Text className="font-sans mt-2.5 text-center text-[11px] leading-4 text-faint">
             You'll get this tiffin on {daysLabel(plan.days_of_week).toLowerCase()}. Pause or cancel anytime in You → Tiffins.
           </Text>
-          <Text className="mt-2 text-center text-[11px] leading-4 text-faint">
+          <Text className="font-sans mt-2 text-center text-[11px] leading-4 text-faint">
             This tiffin is cooked by a resident. Aangan only lists it and isn&apos;t responsible for the food,
             payment, or delivery — your subscription is directly with the cook.
           </Text>

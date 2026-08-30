@@ -162,7 +162,7 @@ export default function FeedScreen() {
               <Text className="font-display text-xl text-ink mb-1">
                 {activeFilter === 'all' ? 'No posts yet' : `No ${POST_CATEGORY_LABELS[activeFilter as PostCategory]} posts`}
               </Text>
-              <Text className="text-[14px] text-muted text-center max-w-xs">
+              <Text className="font-sans text-[14px] text-muted text-center max-w-xs">
                 Be the first to start a conversation in your society.
               </Text>
             </View>
@@ -180,7 +180,7 @@ export default function FeedScreen() {
                 : <Text className="font-sans-sb text-[14px] text-muted">Load more</Text>}
             </Pressable>
           ) : posts.length > 0 ? (
-            <Text className="py-4 text-center text-[12px] text-faint">You're all caught up</Text>
+            <Text className="font-sans py-4 text-center text-[12px] text-faint">You're all caught up</Text>
           ) : null
         }
       />
@@ -277,7 +277,7 @@ const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userI
               <Text className="text-[10px] font-sans-sb text-green-700">Resolved</Text>
             </View>
           ) : null}
-          <Text className="ml-auto text-[11px] text-faint">{timeAgo}</Text>
+          <Text className="font-sans ml-auto text-[11px] text-faint">{timeAgo}</Text>
         </View>
 
         {/* Content */}
@@ -302,7 +302,7 @@ const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userI
         {/* Author row */}
         <View className="mt-3 flex-row items-center gap-2">
           <Avatar name={post.author?.name ?? '?'} size={22} />
-          <Text className="flex-1 text-[12px] text-faint">
+          <Text className="font-sans flex-1 text-[12px] text-faint">
             {isOwn ? 'You' : post.author?.name ?? 'Someone'}
             {post.author?.flat ? ` · Flat ${post.author.flat}` : ''}
           </Text>

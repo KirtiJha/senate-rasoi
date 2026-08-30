@@ -298,7 +298,7 @@ export default function AllListingsScreen() {
               <View className="items-center py-20">
                 <Text style={{ fontSize: 40 }} className="mb-3">🗂️</Text>
                 <Text className="font-display text-xl text-ink mb-1">{category ? 'Nothing here yet' : 'Nothing posted yet'}</Text>
-                <Text className="text-[14px] text-muted text-center max-w-xs">
+                <Text className="font-sans text-[14px] text-muted text-center max-w-xs">
                   Dishes, tiffins and listings your neighbours post show up here.
                 </Text>
               </View>
@@ -330,11 +330,11 @@ function ItemRow({
       <View className="flex-1" style={{ minWidth: 0 }}>
         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{d.title}</Text>
         {!isDesktop ? (
-          <Text className="text-[12px] text-muted" numberOfLines={1}>
+          <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>
             {d.catLabel}{d.priceText !== '—' ? ` · ${d.priceText}` : ''}
           </Text>
         ) : d.location ? (
-          <Text className="text-[12px] text-faint" numberOfLines={1}>📍 {d.location}</Text>
+          <Text className="font-sans text-[12px] text-faint" numberOfLines={1}>📍 {d.location}</Text>
         ) : null}
       </View>
 

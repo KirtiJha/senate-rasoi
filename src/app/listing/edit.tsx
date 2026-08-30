@@ -42,7 +42,7 @@ export default function EditListingScreen() {
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="lock-closed-outline" size={44} color={c.faint} />
           <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Can't edit this</Text>
-          <Text className="mt-1.5 text-center text-[13px] text-muted">{!listing ? 'Listing not found.' : "You can only edit your own listings."}</Text>
+          <Text className="font-sans mt-1.5 text-center text-[13px] text-muted">{!listing ? 'Listing not found.' : "You can only edit your own listings."}</Text>
           <Pressable onPress={() => router.back()} className="mt-5 rounded-xl border border-line bg-surface px-5 py-2.5 active:bg-inset">
             <Text className="font-sans-sb text-[14px] text-ink">Go back</Text>
           </Pressable>

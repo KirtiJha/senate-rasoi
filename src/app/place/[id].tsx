@@ -54,7 +54,7 @@ export default function PlaceDetailScreen() {
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="alert-circle-outline" size={48} color={c.faint} />
           <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Place removed</Text>
-          <Text className="mt-1.5 text-center text-[13px] text-muted">This place is no longer listed.</Text>
+          <Text className="font-sans mt-1.5 text-center text-[13px] text-muted">This place is no longer listed.</Text>
           <Pressable onPress={goBack} className="mt-5 rounded-xl border border-line bg-surface px-5 py-2.5 active:bg-inset">
             <Text className="font-sans-sb text-[14px] text-ink">Go back</Text>
           </Pressable>
@@ -93,9 +93,9 @@ export default function PlaceDetailScreen() {
             <Text className="text-[11px] font-sans-sb" style={{ color: m.color }}>{m.label}</Text>
           </View>
           <Text className="font-display text-[24px] leading-[30px] text-ink">{place.name}</Text>
-          {place.hours ? <Text className="mt-1 text-[13px] text-muted">🕒 {place.hours}</Text> : null}
-          {place.address ? <Text className="mt-1 text-[13px] leading-[19px] text-muted">{place.address}</Text> : null}
-          {place.description ? <Text className="mt-3 text-[14px] leading-[21px] text-ink">{place.description}</Text> : null}
+          {place.hours ? <Text className="font-sans mt-1 text-[13px] text-muted">🕒 {place.hours}</Text> : null}
+          {place.address ? <Text className="font-sans mt-1 text-[13px] leading-[19px] text-muted">{place.address}</Text> : null}
+          {place.description ? <Text className="font-sans mt-3 text-[14px] leading-[21px] text-ink">{place.description}</Text> : null}
 
           {/* Contact actions */}
           <View className="mt-4 flex-row flex-wrap gap-2">
@@ -142,7 +142,7 @@ export default function PlaceDetailScreen() {
           {/* Added by */}
           <View className="mt-5 flex-row items-center gap-2">
             <Avatar name={place.creator?.name ?? 'Neighbour'} size={24} />
-            <Text className="text-[12px] text-muted">Added by <Text className="font-sans-sb text-ink">{place.creator?.name ?? 'a neighbour'}</Text>{place.creator?.flat ? ` · Flat ${place.creator.flat}` : ''}</Text>
+            <Text className="font-sans text-[12px] text-muted">Added by <Text className="font-sans-sb text-ink">{place.creator?.name ?? 'a neighbour'}</Text>{place.creator?.flat ? ` · Flat ${place.creator.flat}` : ''}</Text>
           </View>
 
           {/* Manage */}

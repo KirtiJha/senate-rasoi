@@ -96,7 +96,7 @@ export function MyListingsSection() {
           <Text style={{ fontSize: 30 }}>📋</Text>
         </View>
         <Text className="mb-1.5 font-display text-xl text-ink">Nothing posted yet</Text>
-        <Text className="mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">
+        <Text className="font-sans mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">
           Post a dish, tiffin, service or product and it'll show up here.
         </Text>
         <Button label="New post" icon="add" onPress={() => router.push('/post')} />

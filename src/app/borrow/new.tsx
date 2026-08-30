@@ -104,7 +104,7 @@ export default function NewLendItemScreen() {
               <Pressable onPress={pick} className="mb-4 h-32 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface active:opacity-70">
                 {photo
                   ? <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-                  : <><Ionicons name="camera-outline" size={26} color={ACCENT} /><Text className="mt-1 text-[12px] text-muted">Add a photo</Text></>}
+                  : <><Ionicons name="camera-outline" size={26} color={ACCENT} /><Text className="font-sans mt-1 text-[12px] text-muted">Add a photo</Text></>}
               </Pressable>
 
               {photo ? (
@@ -125,7 +125,7 @@ export default function NewLendItemScreen() {
                 <View className="-mt-2 mb-4 flex-row items-start gap-2 rounded-2xl border border-nonveg/40 bg-nonveg/10 px-3.5 py-3">
                   <Ionicons name="alert-circle" size={16} color={c.nonveg} />
                   <View className="flex-1">
-                    <Text className="text-[12px] leading-[17px] text-nonveg">This photo doesn't look like an item you can lend. Please change it before posting.</Text>
+                    <Text className="font-sans text-[12px] leading-[17px] text-nonveg">This photo doesn't look like an item you can lend. Please change it before posting.</Text>
                     <Pressable onPress={() => { setPhoto(null); setPhotoFlagged(false); }} hitSlop={6} className="mt-1 self-start">
                       <Text className="text-[12px] font-sans-sb text-nonveg underline">Remove photo</Text>
                     </Pressable>
@@ -179,7 +179,7 @@ export default function NewLendItemScreen() {
             disabled={isOffer && photoFlagged}
             onPress={submit}
           />
-          <Text className="mt-3 text-center text-[12px] leading-[18px] text-faint">
+          <Text className="font-sans mt-3 text-center text-[12px] leading-[18px] text-faint">
             {isOffer
               ? "It's a free favour between neighbours — you'll approve who borrows and mark it returned."
               : "Neighbours with the item can reach out to you directly."}

@@ -101,10 +101,10 @@ export default function PublicProfileScreen() {
             <Avatar name={displayName} size={72} />
             <Text className="mt-3 font-display-x text-[22px] text-ink">{displayName}</Text>
             {profile.flat ? (
-              <Text className="mt-0.5 text-[13px] text-muted">Flat {profile.flat}</Text>
+              <Text className="font-sans mt-0.5 text-[13px] text-muted">Flat {profile.flat}</Text>
             ) : null}
             {profile.resident_type || profile.profession ? (
-              <Text className="mt-0.5 text-[13px] text-muted">
+              <Text className="font-sans mt-0.5 text-[13px] text-muted">
                 {profile.resident_type ? (profile.resident_type === 'owner' ? 'Owner' : 'Tenant') : ''}
                 {profile.resident_type && profile.profession ? ' · ' : ''}
                 {profile.profession ?? ''}
@@ -125,7 +125,7 @@ export default function PublicProfileScreen() {
                 <View className="mt-4 w-full items-center rounded-2xl border border-line bg-inset px-4 py-3">
                   <Ionicons name="ban-outline" size={20} color={c.faint} />
                   <Text className="mt-1 font-sans-sb text-[13px] text-muted">Blocked</Text>
-                  <Text className="mt-0.5 text-center text-[12px] text-faint">
+                  <Text className="font-sans mt-0.5 text-center text-[12px] text-faint">
                     Unblock from Profile → Blocked members to see their content again.
                   </Text>
                 </View>
@@ -169,7 +169,7 @@ export default function PublicProfileScreen() {
                         <View className="flex-1">
                           <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{l.title}</Text>
                           <View className="mt-0.5 flex-row items-center gap-2">
-                            <Text className="text-[11px] text-muted">{cat?.label ?? l.category}</Text>
+                            <Text className="font-sans text-[11px] text-muted">{cat?.label ?? l.category}</Text>
                             {l.price != null && (
                               <Text className="text-[11px] font-sans-sb text-accent">₹{l.price.toLocaleString('en-IN')}</Text>
                             )}
@@ -185,7 +185,7 @@ export default function PublicProfileScreen() {
           ) : (
             <View className="mt-10 items-center px-6">
               <Ionicons name="list-outline" size={36} color={c.faint} />
-              <Text className="mt-2 text-[14px] text-muted">No active listings</Text>
+              <Text className="font-sans mt-2 text-[14px] text-muted">No active listings</Text>
             </View>
           )}
         </Container>

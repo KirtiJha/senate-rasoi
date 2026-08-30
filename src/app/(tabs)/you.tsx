@@ -36,7 +36,7 @@ export default function YouScreen() {
               <Text className="font-display-x text-[22px] text-ink" numberOfLines={1}>
                 {profile?.name ?? 'You'}
               </Text>
-              <Text className="text-[12px] text-muted">{profile?.phone ?? ''}</Text>
+              <Text className="font-sans text-[12px] text-muted">{profile?.phone ?? ''}</Text>
             </View>
             <Pressable
               onPress={() => router.push('/settings' as any)}

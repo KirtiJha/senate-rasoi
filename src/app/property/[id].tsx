@@ -80,7 +80,7 @@ export default function PropertyDetailScreen() {
       <View className="flex-1 bg-bg">
         <ScreenHeader icon="key-outline" iconColor={ACCENT} title="Flat" showBack hideSociety />
         <View className="flex-1 items-center justify-center px-8">
-          <Text className="text-center text-[14px] text-muted">This flat listing is no longer available.</Text>
+          <Text className="font-sans text-center text-[14px] text-muted">This flat listing is no longer available.</Text>
         </View>
       </View>
     );
@@ -160,7 +160,7 @@ export default function PropertyDetailScreen() {
           {/* Price → contact */}
           <View className="mt-2 flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3.5 py-2.5">
             <Ionicons name="pricetag-outline" size={16} color={ACCENT} />
-            <Text className="flex-1 text-[13px] text-muted">Price on request — contact the owner</Text>
+            <Text className="font-sans flex-1 text-[13px] text-muted">Price on request — contact the owner</Text>
           </View>
 
           {p.description ? <T source="property" id={p.id} field="description" text={p.description} className="mt-3 text-[14px] leading-[21px] text-muted" /> : null}
@@ -170,7 +170,7 @@ export default function PropertyDetailScreen() {
             <View className="mt-4 rounded-2xl border border-line bg-surface p-1">
               {specs.map(([k, v], i) => (
                 <View key={k} className={`flex-row items-center justify-between px-3.5 py-2.5 ${i ? 'border-t border-line' : ''}`}>
-                  <Text className="text-[13px] text-muted">{k}</Text>
+                  <Text className="font-sans text-[13px] text-muted">{k}</Text>
                   <Text className="font-sans-sb text-[13px] text-ink">{v}</Text>
                 </View>
               ))}
@@ -185,7 +185,7 @@ export default function PropertyDetailScreen() {
                 {p.amenities.map((a) => (
                   <View key={a} className="flex-row items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1.5">
                     <Ionicons name="checkmark-circle" size={13} color="#16A34A" />
-                    <Text className="text-[12px] text-ink">{a}</Text>
+                    <Text className="font-sans text-[12px] text-ink">{a}</Text>
                   </View>
                 ))}
               </View>
@@ -197,7 +197,7 @@ export default function PropertyDetailScreen() {
             <Avatar name={ownerName} size={42} />
             <View className="flex-1">
               <Text className="font-sans-bold text-[14px] text-ink">{ownerName}</Text>
-              <Text className="text-[12px] text-muted">{p.owner?.flat ? `Flat ${p.owner.flat} · Owner` : 'Owner'}</Text>
+              <Text className="font-sans text-[12px] text-muted">{p.owner?.flat ? `Flat ${p.owner.flat} · Owner` : 'Owner'}</Text>
             </View>
           </View>
 
@@ -251,7 +251,7 @@ export default function PropertyDetailScreen() {
             ) : phone ? (
               <Button label="Call owner for price" icon="call" size="lg" fullWidth onPress={() => openUrl(`tel:${phone}`)} />
             ) : (
-              <Text className="text-center text-[12px] text-faint">The owner hasn't added a contact number.</Text>
+              <Text className="font-sans text-center text-[12px] text-faint">The owner hasn't added a contact number.</Text>
             )}
             {!isOwner ? (
               <Button label="Recommend a buyer / tenant" icon="people-outline" variant="outline" size="lg" fullWidth onPress={() => setShowRefer(true)} />
@@ -297,8 +297,8 @@ function ReferralRow({ r, isOwner, c }: { r: PropertyReferralRow; isOwner: boole
           <Text className="text-[10px] font-sans-sb" style={{ color: m.fg }}>{m.label}</Text>
         </Pressable>
       </View>
-      <Text className="mt-0.5 text-[11.5px] text-muted">Recommended by {r.referrer?.name ?? 'a neighbour'}{r.referrer?.flat ? ` · Flat ${r.referrer.flat}` : ''}</Text>
-      {r.note ? <Text className="mt-1.5 text-[13px] leading-[19px] text-ink">{r.note}</Text> : null}
+      <Text className="font-sans mt-0.5 text-[11px] text-muted">Recommended by {r.referrer?.name ?? 'a neighbour'}{r.referrer?.flat ? ` · Flat ${r.referrer.flat}` : ''}</Text>
+      {r.note ? <Text className="font-sans mt-1.5 text-[13px] leading-[19px] text-ink">{r.note}</Text> : null}
       {isOwner && phone ? (
         <View className="mt-2.5 flex-row gap-2">
           <Pressable onPress={() => openUrl(waLink(phone, `Hi ${r.candidate_name}, I heard you're looking for a flat — let's connect.`))} className="flex-row items-center gap-1 rounded-full px-3 py-1.5" style={{ backgroundColor: '#25D36618' }}>
@@ -329,7 +329,7 @@ function ReferralSheet({ visible, onClose, onSubmit, defaultName, c }: {
   const input = 'rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink';
   return (
     <Sheet visible={visible} onClose={() => { reset(); onClose(); }} title="Recommend a buyer / tenant">
-      <Text className="mb-3 text-[13px] leading-[19px] text-muted">
+      <Text className="font-sans mb-3 text-[13px] leading-[19px] text-muted">
         Know someone looking for a flat? Share their details and the owner will reach out to them.
       </Text>
       <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Their name</Text>

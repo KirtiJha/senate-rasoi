@@ -10,3 +10,4 @@ export { Stepper } from './Stepper';
 export { VegMark } from './VegMark';
 export { ErrorState, ErrorRow } from './ErrorState';
 export { Touchable } from './Touchable';
+export { Txt, type TxtVariant, type TxtTone } from './Txt';

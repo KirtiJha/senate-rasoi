@@ -26,7 +26,7 @@ export default function ChildSafetyScreen() {
           <Text className="mb-1 font-display-x text-[20px] text-ink">
             Aangan standards against child sexual abuse and exploitation
           </Text>
-          <Text className="mb-4 text-[12px] text-faint">Last updated: {UPDATED}</Text>
+          <Text className="font-sans mb-4 text-[12px] text-faint">Last updated: {UPDATED}</Text>
 
           {SECTIONS.map((s) => (
             <View key={s.h} className="mb-5">

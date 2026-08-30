@@ -57,14 +57,14 @@ export default function RecommendScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container>
           {loading ? (
-            <Text className="px-1 py-10 text-center text-[13px] text-muted">Loading…</Text>
+            <Text className="font-sans px-1 py-10 text-center text-[13px] text-muted">Loading…</Text>
           ) : rows.length === 0 ? (
             <View className="items-center px-6 py-16">
               <View className="mb-3 h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: ACCENT + '18' }}>
                 <Ionicons name="sparkles" size={26} color={ACCENT} />
               </View>
               <Text className="font-sans-bold text-[15px] text-ink">No questions yet</Text>
-              <Text className="mt-1 max-w-[280px] text-center text-[13px] text-muted">
+              <Text className="font-sans mt-1 max-w-[280px] text-center text-[13px] text-muted">
                 Looking for a good doctor, tutor, plumber or vendor? Ask your neighbours.
               </Text>
               <Pressable onPress={() => setShowAsk(true)} className="mt-5 flex-row items-center gap-2 rounded-2xl px-5 py-3 active:opacity-90" style={{ backgroundColor: ACCENT }}>
@@ -83,13 +83,13 @@ export default function RecommendScreen() {
                         <Ionicons name={meta.icon as any} size={11} color={meta.color} />
                         <Text className="text-[10px] font-sans-sb" style={{ color: meta.color }}>{meta.label}</Text>
                       </View>
-                      <Text className="ml-auto text-[11px] text-faint">{q.answer_count} {q.answer_count === 1 ? 'answer' : 'answers'}</Text>
+                      <Text className="font-sans ml-auto text-[11px] text-faint">{q.answer_count} {q.answer_count === 1 ? 'answer' : 'answers'}</Text>
                     </View>
                     <T source="recommend" id={q.id} field="title" text={q.title} showToggle={false} className="font-sans-bold text-[15px] text-ink" />
                     {q.detail ? <T source="recommend" id={q.id} field="detail" text={q.detail} showToggle={false} className="mt-0.5 text-[13px] text-muted" numberOfLines={2} /> : null}
                     <View className="mt-2 flex-row items-center gap-2">
                       <Avatar name={q.author?.name ?? '?'} size={20} />
-                      <Text className="text-[11.5px] text-faint">{q.author?.name ?? 'A neighbour'}{q.author?.flat ? ` · Flat ${q.author.flat}` : ''}</Text>
+                      <Text className="font-sans text-[11px] text-faint">{q.author?.name ?? 'A neighbour'}{q.author?.flat ? ` · Flat ${q.author.flat}` : ''}</Text>
                     </View>
                   </Pressable>
                 );

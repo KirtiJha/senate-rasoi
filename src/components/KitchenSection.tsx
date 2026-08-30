@@ -145,7 +145,7 @@ function KitchenDishCard({
 
       <View className="mt-3">
         {orders.length === 0 ? (
-          <Text className="py-2 text-[13px] text-faint">No orders yet — sit tight!</Text>
+          <Text className="font-sans py-2 text-[13px] text-faint">No orders yet — sit tight!</Text>
         ) : (
           orders.map((o) => {
             const wa = o.orderer?.whatsapp ?? o.orderer?.phone;
@@ -157,7 +157,7 @@ function KitchenDishCard({
                     {o.buyer_name}
                     {o.buyer_flat ? <Text className="font-sans text-faint"> · {o.buyer_flat}</Text> : null}
                   </Text>
-                  <Text className="text-[12px] text-muted">
+                  <Text className="font-sans text-[12px] text-muted">
                     {o.qty} plate{o.qty !== 1 ? 's' : ''} · ₹{o.qty * dish.price}
                   </Text>
                 </View>
@@ -208,7 +208,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   return (
     <View className={`flex-1 rounded-2xl px-3 py-2 ${accent ? 'bg-accent-soft' : 'bg-inset'}`}>
       <Text className={`font-display text-[18px] ${accent ? 'text-accent' : 'text-ink'}`}>{value}</Text>
-      <Text className="text-[11px] text-muted">{label}</Text>
+      <Text className="font-sans text-[11px] text-muted">{label}</Text>
     </View>
   );
 }

@@ -116,9 +116,9 @@ export function CourtBookings({
       </View>
 
       {loading ? (
-        <Text className="py-2 text-[13px] text-muted">Loading…</Text>
+        <Text className="font-sans py-2 text-[13px] text-muted">Loading…</Text>
       ) : sessions.length === 0 ? (
-        <Text className="py-2 text-[13px] text-muted">No {noun} booked yet. {isMember ? 'Book one and your group gets notified to confirm.' : ''}</Text>
+        <Text className="font-sans py-2 text-[13px] text-muted">No {noun} booked yet. {isMember ? 'Book one and your group gets notified to confirm.' : ''}</Text>
       ) : (
         <View className="gap-2.5">
           {upcoming.map((s) => (
@@ -196,7 +196,7 @@ function SessionCard({
       <View className="flex-row items-start justify-between">
         <View className="flex-1">
           <Text className="font-sans-bold text-[14px] text-ink">{fmtDate(s.session_date)}{time ? ` · ${time}` : ''}</Text>
-          <Text className="mt-0.5 text-[12px] text-muted">
+          <Text className="font-sans mt-0.5 text-[12px] text-muted">
             {[s.title, s.location, durationLabel(s.duration_min)].filter(Boolean).join(' · ') || 'Court session'}
           </Text>
         </View>
@@ -215,11 +215,11 @@ function SessionCard({
           <Text className="text-[11px] font-sans-sb" style={{ color: accent }}>{s.confirmedCount} in</Text>
         </View>
         {s.charge > 0 ? (
-          <Text className="text-[11px] text-muted">₹{s.charge} · ₹{s.perHead}/head{s.ended ? '' : ' (so far)'}</Text>
-        ) : <Text className="text-[11px] text-faint">Free court</Text>}
+          <Text className="font-sans text-[11px] text-muted">₹{s.charge} · ₹{s.perHead}/head{s.ended ? '' : ' (so far)'}</Text>
+        ) : <Text className="font-sans text-[11px] text-faint">Free court</Text>}
       </View>
       {s.confirmed.length ? (
-        <Text className="mt-1 text-[11px] text-faint" numberOfLines={1}>
+        <Text className="font-sans mt-1 text-[11px] text-faint" numberOfLines={1}>
           {s.confirmed.map((p) => (p.user_id === userId ? 'You' : p.profile?.name ?? 'Member')).join(', ')}
         </Text>
       ) : null}
@@ -230,17 +230,17 @@ function SessionCard({
           <Text className="text-[11px] font-sans-sb" style={{ color: accent }}>You booked · you're in</Text>
           <Pressable onPress={() => onManage(s)} className="flex-row items-center gap-1 rounded-full bg-surface px-2.5 py-1" style={{ borderWidth: 1, borderColor: c.line }}>
             <Ionicons name="people-outline" size={13} color={c.muted} />
-            <Text className="text-[11.5px] font-sans-sb text-muted">Manage players</Text>
+            <Text className="text-[11px] font-sans-sb text-muted">Manage players</Text>
           </Pressable>
         </View>
       ) : s.ended ? (
         <Text className="mt-2 text-[11px] font-sans-sb text-faint">Session ended{s.myStatus === 'confirmed' ? ' · settle in Dues' : ''}</Text>
       ) : locked ? (
         <View className="mt-2.5 rounded-xl px-3 py-2" style={{ backgroundColor: c.surface, borderWidth: 1, borderColor: c.line }}>
-          <Text className="text-[11.5px] font-sans-sb" style={{ color: s.myStatus === 'confirmed' ? accent : c.muted }}>
+          <Text className="text-[11px] font-sans-sb" style={{ color: s.myStatus === 'confirmed' ? accent : c.muted }}>
             {s.myStatus === 'confirmed' ? "You're in ✓" : s.myStatus === 'declined' ? "You marked: can't come" : 'No response recorded'}
           </Text>
-          <Text className="mt-0.5 text-[11px] text-faint">RSVP closed (15 min after start). Ask the booker to change your attendance.</Text>
+          <Text className="font-sans mt-0.5 text-[11px] text-faint">RSVP closed (15 min after start). Ask the booker to change your attendance.</Text>
         </View>
       ) : (
         <View className="mt-2.5">
@@ -255,7 +255,7 @@ function SessionCard({
               style={{ backgroundColor: s.myStatus === 'confirmed' ? accent : c.surface, borderWidth: 1.5, borderColor: s.myStatus === 'confirmed' ? accent : c.line, opacity: busy ? 0.6 : 1 }}
             >
               <Ionicons name={s.myStatus === 'confirmed' ? 'checkmark-circle' : 'checkmark'} size={15} color={s.myStatus === 'confirmed' ? '#fff' : c.muted} />
-              <Text className="text-[12.5px] font-sans-sb" style={{ color: s.myStatus === 'confirmed' ? '#fff' : c.muted }}>I'm in</Text>
+              <Text className="text-[12px] font-sans-sb" style={{ color: s.myStatus === 'confirmed' ? '#fff' : c.muted }}>I'm in</Text>
             </Pressable>
             <Pressable
               onPress={() => onRespond(s, 'declined')}
@@ -264,7 +264,7 @@ function SessionCard({
               style={{ backgroundColor: s.myStatus === 'declined' ? '#6B7280' : c.surface, borderWidth: 1.5, borderColor: s.myStatus === 'declined' ? '#6B7280' : c.line, opacity: busy ? 0.6 : 1 }}
             >
               <Ionicons name={s.myStatus === 'declined' ? 'close-circle' : 'close'} size={15} color={s.myStatus === 'declined' ? '#fff' : c.muted} />
-              <Text className="text-[12.5px] font-sans-sb" style={{ color: s.myStatus === 'declined' ? '#fff' : c.muted }}>Can't</Text>
+              <Text className="text-[12px] font-sans-sb" style={{ color: s.myStatus === 'declined' ? '#fff' : c.muted }}>Can't</Text>
             </Pressable>
           </View>
         </View>
@@ -365,7 +365,7 @@ function CreateBookingSheet({
 
       <Text className={lbl}>Your UPI (to collect shares)</Text>
       <TextInput value={upi} onChangeText={setUpi} autoCapitalize="none" placeholder="name@bank" placeholderTextColor={c.faint} className={`mb-2 ${input}`} style={{ outline: 'none' } as any} />
-      <Text className="mb-1 text-[11px] leading-[16px] text-faint">
+      <Text className="font-sans mb-1 text-[11px] leading-[16px] text-faint">
         The charge splits equally among everyone marked “in” (including you) and updates live as people confirm. Each player pays their share to this UPI; you can also mark cash payments yourself.
       </Text>
     </Sheet>
@@ -425,7 +425,7 @@ function DurationChips({ value, onChange, accent, c }: { value: number; onChange
     <View className="flex-row flex-wrap gap-1.5">
       {[30, 45, 60, 90, 120].map((mins) => (
         <Pressable key={mins} onPress={() => onChange(mins)} className="rounded-full px-3.5 py-1.5" style={chipStyle(value === mins, accent, c)}>
-          <Text className="text-[12.5px] font-sans-sb" style={{ color: value === mins ? '#fff' : c.muted }}>{durationLabel(mins)}</Text>
+          <Text className="text-[12px] font-sans-sb" style={{ color: value === mins ? '#fff' : c.muted }}>{durationLabel(mins)}</Text>
         </Pressable>
       ))}
     </View>
@@ -460,7 +460,7 @@ function NumberChips({ options, value, onChange, suffix, accent, c }: { options:
     <View className="flex-row flex-wrap gap-1.5">
       {options.map((n) => (
         <Pressable key={n} onPress={() => onChange(n)} className="rounded-full px-3.5 py-1.5" style={chipStyle(value === n, accent, c)}>
-          <Text className="text-[12.5px] font-sans-sb" style={{ color: value === n ? '#fff' : c.muted }}>{n}{suffix ?? ''}</Text>
+          <Text className="text-[12px] font-sans-sb" style={{ color: value === n ? '#fff' : c.muted }}>{n}{suffix ?? ''}</Text>
         </Pressable>
       ))}
     </View>
@@ -483,7 +483,7 @@ function ManagePlayersSheet({ session, members, accent, c, onClose, onSet }: {
   })();
   return (
     <Sheet visible={!!session} onClose={onClose} title="Who played?">
-      <Text className="mb-3 text-[12.5px] leading-[18px] text-muted">
+      <Text className="font-sans mb-3 text-[12px] leading-[18px] text-muted">
         Mark each member in or out — the cost splits among everyone marked “in”, so no one who played is left off and your share stays fair.
       </Text>
       <View className="gap-1.5">
@@ -494,24 +494,24 @@ function ManagePlayersSheet({ session, members, accent, c, onClose, onSet }: {
             <View key={m.user_id} className="flex-row items-center gap-2 rounded-xl border border-line bg-inset px-3 py-2">
               <View className="flex-1">
                 <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{m.name ?? 'Member'}{isBooker ? ' · booker' : ''}</Text>
-                {m.flat ? <Text className="text-[11px] text-faint">Flat {m.flat}</Text> : null}
+                {m.flat ? <Text className="font-sans text-[11px] text-faint">Flat {m.flat}</Text> : null}
               </View>
               {isBooker ? (
-                <Text className="text-[11.5px] font-sans-sb" style={{ color: accent }}>In</Text>
+                <Text className="text-[11px] font-sans-sb" style={{ color: accent }}>In</Text>
               ) : (
                 <View className="flex-row gap-1.5">
                   <Pressable onPress={() => onSet(m.user_id, 'confirmed')} className="rounded-lg px-2.5 py-1.5" style={chipStyle(st === 'confirmed', accent, c)}>
-                    <Text className="text-[11.5px] font-sans-sb" style={{ color: st === 'confirmed' ? '#fff' : c.muted }}>In</Text>
+                    <Text className="text-[11px] font-sans-sb" style={{ color: st === 'confirmed' ? '#fff' : c.muted }}>In</Text>
                   </Pressable>
                   <Pressable onPress={() => onSet(m.user_id, 'declined')} className="rounded-lg px-2.5 py-1.5" style={chipStyle(st === 'declined', '#6B7280', c)}>
-                    <Text className="text-[11.5px] font-sans-sb" style={{ color: st === 'declined' ? '#fff' : c.muted }}>Out</Text>
+                    <Text className="text-[11px] font-sans-sb" style={{ color: st === 'declined' ? '#fff' : c.muted }}>Out</Text>
                   </Pressable>
                 </View>
               )}
             </View>
           );
         })}
-        {roster.length === 0 ? <Text className="text-[12px] text-faint">No members yet.</Text> : null}
+        {roster.length === 0 ? <Text className="font-sans text-[12px] text-faint">No members yet.</Text> : null}
       </View>
     </Sheet>
   );
@@ -552,7 +552,7 @@ function EditBookingSheet({ session, accent, facility, c, onClose, onSave }: {
 
   return (
     <Sheet visible={!!session} onClose={onClose} title="Edit booking" footer={<Button label="Save changes" fullWidth disabled={!valid} onPress={save} />}>
-      <Text className="mb-3 text-[12px] leading-[18px] text-faint">Applies to this and any upcoming sessions of this booking. Past sessions are unaffected.</Text>
+      <Text className="font-sans mb-3 text-[12px] leading-[18px] text-faint">Applies to this and any upcoming sessions of this booking. Past sessions are unaffected.</Text>
 
       <Text className={lbl}>Title (optional)</Text>
       <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Evening doubles" placeholderTextColor={c.faint} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />
@@ -578,7 +578,7 @@ function EditBookingSheet({ session, accent, facility, c, onClose, onSave }: {
         <Ionicons name={reset ? 'checkbox' : 'square-outline'} size={20} color={reset ? accent : c.faint} />
         <View className="flex-1">
           <Text className="font-sans-sb text-[13px] text-ink">Ask everyone to re-confirm</Text>
-          <Text className="text-[11px] text-muted">Clears current responses for upcoming sessions and notifies the group.</Text>
+          <Text className="font-sans text-[11px] text-muted">Clears current responses for upcoming sessions and notifies the group.</Text>
         </View>
       </Pressable>
     </Sheet>

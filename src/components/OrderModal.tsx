@@ -53,7 +53,7 @@ export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
               </View>
               <View className="mt-1 flex-row items-center gap-1.5">
                 <Avatar name={dish.chef_name} size={18} />
-                <Text className="text-[12px] text-muted">{dish.chef_name} · Flat {dish.flat}</Text>
+                <Text className="font-sans text-[12px] text-muted">{dish.chef_name} · Flat {dish.flat}</Text>
               </View>
             </View>
           </View>
@@ -61,7 +61,7 @@ export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
           <View className="mb-4 flex-row items-center justify-between">
             <View>
               <Text className="font-sans-sb text-[15px] text-ink">How many plates?</Text>
-              <Text className="text-[12px] text-faint">{dish.plates_left} available</Text>
+              <Text className="font-sans text-[12px] text-faint">{dish.plates_left} available</Text>
             </View>
             <Stepper value={qty} min={1} max={dish.plates_left} onChange={setQty} />
           </View>
@@ -72,11 +72,11 @@ export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
           </View>
 
           <Button label="Reserve & message on WhatsApp" icon="logo-whatsapp" variant="whatsapp" size="lg" fullWidth onPress={() => onConfirm(dish, qty)} />
-          <Text className="mt-2.5 text-center text-[11px] leading-4 text-faint">
+          <Text className="font-sans mt-2.5 text-center text-[11px] leading-4 text-faint">
             Ordering as {profile.chefName || 'you'}. Reserves your plates; the chef confirms next.
             {dish.upi ? ` Pay via UPI ${dish.upi}.` : ''}
           </Text>
-          <Text className="mt-2 text-center text-[11px] leading-4 text-faint">
+          <Text className="font-sans mt-2 text-center text-[11px] leading-4 text-faint">
             This dish is cooked by a resident. Aangan only lists it and isn&apos;t responsible for the food,
             payment, or delivery — your order is directly with the cook.
           </Text>

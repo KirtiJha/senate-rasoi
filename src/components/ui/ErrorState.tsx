@@ -56,7 +56,7 @@ export function ErrorState({
         {title}
       </Text>
 
-      <Text className="mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">{message}</Text>
+      <Text className="font-sans mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">{message}</Text>
 
       {onRetry ? (
         <Button
@@ -91,7 +91,7 @@ export function ErrorRow({
       accessibilityRole="alert"
     >
       <Ionicons name="cloud-offline-outline" size={17} color={c.muted} />
-      <Text className="min-w-0 flex-1 text-[13px] text-muted">{message}</Text>
+      <Text className="font-sans min-w-0 flex-1 text-[13px] text-muted">{message}</Text>
       {onRetry ? (
         <Button label="Retry" onPress={onRetry} variant="ghost" size="sm" />
       ) : null}

@@ -41,7 +41,7 @@ export function SavedSection() {
           <Ionicons name="bookmark-outline" size={32} color={c.faint} />
         </View>
         <Text className="mb-1.5 font-display text-xl text-ink">No saved listings</Text>
-        <Text className="max-w-xs text-center text-[14px] leading-6 text-muted">
+        <Text className="font-sans max-w-xs text-center text-[14px] leading-6 text-muted">
           Tap the bookmark icon on any listing to save it here for later.
         </Text>
       </View>

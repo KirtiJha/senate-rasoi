@@ -165,7 +165,7 @@ export default function NewPropertyScreen() {
             {photos.length < 8 ? (
               <Pressable onPress={pickPhotos} style={{ width: 84, height: 84 }} className="items-center justify-center rounded-xl border border-dashed border-line bg-surface active:opacity-70">
                 <Ionicons name="camera-outline" size={22} color={ACCENT} />
-                <Text className="mt-0.5 text-[10px] text-muted">Add</Text>
+                <Text className="font-sans mt-0.5 text-[10px] text-muted">Add</Text>
               </Pressable>
             ) : null}
           </View>
@@ -229,7 +229,7 @@ export default function NewPropertyScreen() {
           <TextInput value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="98765 43210" placeholderTextColor={c.faint} className={`mb-5 ${input}`} style={{ outline: 'none' } as any} />
 
           <Button label={isEdit ? 'Save changes' : 'Post flat listing'} icon="checkmark" size="lg" fullWidth loading={submitting} onPress={submit} />
-          <Text className="mt-3 text-center text-[12px] leading-[18px] text-faint">
+          <Text className="font-sans mt-3 text-center text-[12px] leading-[18px] text-faint">
             The price is never shown — neighbours tap "Contact owner for price". You can mark it sold/rented anytime.
           </Text>
         </Container>
@@ -245,7 +245,7 @@ function Chips({ options, value, onPick, c, className = '' }: { options: string[
         const on = value === o;
         return (
           <Pressable key={o} onPress={() => onPick(o)} className="rounded-full border px-3.5 py-1.5" style={{ borderColor: on ? ACCENT : c.line, backgroundColor: on ? ACCENT : c.surface }}>
-            <Text className="text-[12.5px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{o}</Text>
+            <Text className="text-[12px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{o}</Text>
           </Pressable>
         );
       })}

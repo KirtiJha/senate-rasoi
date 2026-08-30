@@ -138,7 +138,7 @@ export default function PlacesScreen() {
             <View className="items-center justify-center py-16">
               <Ionicons name="search" size={40} color={c.faint} />
               <Text className="mt-3 text-center font-sans-bold text-[15px] text-ink">No matches</Text>
-              <Text className="mt-1 text-center text-[13px] text-muted">Try a different search or filter.</Text>
+              <Text className="font-sans mt-1 text-center text-[13px] text-muted">Try a different search or filter.</Text>
             </View>
           ) : (
             groups.map((g) => {
@@ -192,9 +192,9 @@ function Card({ p, isDesktop, center, showDist, c, onPress }: {
       </View>
       <View className="flex-1">
         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{p.name}</Text>
-        {p.address ? <Text className="text-[12px] text-muted" numberOfLines={1}>{p.address}</Text> : null}
+        {p.address ? <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{p.address}</Text> : null}
         <View className="mt-0.5 flex-row items-center gap-2">
-          {p.hours ? <Text className="text-[11px] text-faint" numberOfLines={1}>🕒 {p.hours}</Text> : null}
+          {p.hours ? <Text className="font-sans text-[11px] text-faint" numberOfLines={1}>🕒 {p.hours}</Text> : null}
           {dist != null ? <Text className="text-[11px] font-sans-sb" style={{ color: m.color }}>{dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`}</Text> : null}
         </View>
       </View>
@@ -208,7 +208,7 @@ function EmptyState({ onAdd, c }: { onAdd: () => void; c: ReturnType<typeof useT
     <View className="items-center justify-center px-8 py-16">
       <Ionicons name="location-outline" size={48} color={c.faint} />
       <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">No places yet</Text>
-      <Text className="mt-1.5 text-center text-[13px] leading-[19px] text-muted">Be the first to add a handy nearby contact — a hospital, clinic, school, supermarket, salon and more.</Text>
+      <Text className="font-sans mt-1.5 text-center text-[13px] leading-[19px] text-muted">Be the first to add a handy nearby contact — a hospital, clinic, school, supermarket, salon and more.</Text>
       <Pressable onPress={onAdd} className="mt-5 flex-row items-center gap-1.5 rounded-2xl px-5 py-2.5 active:opacity-80" style={{ backgroundColor: ACCENT }}>
         <Ionicons name="add" size={18} color="#fff" /><Text className="font-sans-sb text-[14px] text-white">Add a place</Text>
       </Pressable>

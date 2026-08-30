@@ -43,6 +43,16 @@ module.exports = {
         whatsapp: '#25D366',
         success: 'rgb(var(--success) / <alpha-value>)',
       },
+      // Six roles, replacing 27 arbitrary pixel sizes. Line-height ships with
+      // the size — it was previously set at only ~15 sites out of 1,396.
+      fontSize: {
+        display: ['34px', { lineHeight: '38px', letterSpacing: '-0.02em' }],
+        title: ['22px', { lineHeight: '27px', letterSpacing: '-0.01em' }],
+        heading: ['17px', { lineHeight: '23px' }],
+        body: ['15px', { lineHeight: '22px' }],
+        label: ['13px', { lineHeight: '17px', letterSpacing: '0.01em' }],
+        micro: ['11px', { lineHeight: '14px', letterSpacing: '0.06em' }],
+      },
       fontFamily: {
         // Bricolage Grotesque — characterful modern display.
         display: ['BricolageGrotesque_700Bold'],

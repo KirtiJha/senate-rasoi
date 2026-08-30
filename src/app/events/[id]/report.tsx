@@ -90,7 +90,7 @@ export default function EventReportScreen() {
         <Container narrow>
           {/* Heading */}
           <Text className="font-display-x text-[22px] text-ink">{event.title}</Text>
-          <Text className="mt-0.5 text-[13px] text-muted">
+          <Text className="font-sans mt-0.5 text-[13px] text-muted">
             {isFinal ? 'Final accounts' : 'Live accounts — updating as money moves'}
             {event.event_date ? ` · ${event.event_date}` : ''}
           </Text>
@@ -104,19 +104,19 @@ export default function EventReportScreen() {
                 <BigStat label="Spent" value={rupees(t.spent)} color="#EF4444" />
               </View>
               <View className="mt-3 border-t border-line pt-3">
-                <Text className="text-[11px] text-faint">Balance remaining</Text>
+                <Text className="font-sans text-[11px] text-faint">Balance remaining</Text>
                 <Text className="font-sans-bold text-[26px]" style={{ color: t.balance < 0 ? '#EF4444' : ACCENT }}>
                   {rupees(t.balance)}
                 </Text>
                 {t.balance < 0 ? (
-                  <Text className="mt-0.5 text-[12px] text-nonveg">
+                  <Text className="font-sans mt-0.5 text-[12px] text-nonveg">
                     Spending has exceeded what's been collected.
                   </Text>
                 ) : null}
               </View>
 
               {t.budget != null ? (
-                <Text className="mt-2 text-[12px] text-muted">
+                <Text className="font-sans mt-2 text-[12px] text-muted">
                   Planned budget was {rupees(t.budget)}
                   {t.spent > t.budget ? ` · over by ${rupees(t.spent - t.budget)}` : ''}
                 </Text>
@@ -128,7 +128,7 @@ export default function EventReportScreen() {
           {treasurer ? (
             <View className="mt-3 flex-row items-start gap-2 rounded-2xl border border-line bg-inset px-3.5 py-3">
               <Ionicons name="information-circle-outline" size={16} color={c.muted} />
-              <Text className="flex-1 text-[12px] leading-[17px] text-muted">
+              <Text className="font-sans flex-1 text-[12px] leading-[17px] text-muted">
                 Collected and held by{' '}
                 <Text className="font-sans-sb text-ink">
                   {treasurer.profile?.name ?? 'the treasurer'}
@@ -153,7 +153,7 @@ export default function EventReportScreen() {
                     <View key={row.category} className="mb-3 last:mb-0">
                       <View className="mb-1 flex-row items-center gap-1.5">
                         <Ionicons name={meta.icon as any} size={12} color={meta.color} />
-                        <Text className="flex-1 text-[13px] text-ink">{meta.label}</Text>
+                        <Text className="font-sans flex-1 text-[13px] text-ink">{meta.label}</Text>
                         <Text className="text-[13px] font-sans-sb text-ink">{rupees(row.amount)}</Text>
                       </View>
                       <View className="h-1.5 overflow-hidden rounded-full" style={{ backgroundColor: c.inset }}>
@@ -172,7 +172,7 @@ export default function EventReportScreen() {
               Every expense ({expenses.length})
             </Text>
             {expenses.length === 0 ? (
-              <Text className="px-1 text-[13px] text-faint">Nothing spent yet.</Text>
+              <Text className="font-sans px-1 text-[13px] text-faint">Nothing spent yet.</Text>
             ) : (
               <View className="gap-2">
                 {expenses.map((e) => {
@@ -185,7 +185,7 @@ export default function EventReportScreen() {
                         </View>
                         <View className="min-w-0 flex-1">
                           <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{e.title}</Text>
-                          <Text className="text-[11px] text-faint" numberOfLines={1}>
+                          <Text className="font-sans text-[11px] text-faint" numberOfLines={1}>
                             {e.vendor ? `${e.vendor} · ` : ''}{e.spent_on ?? '—'}
                             {e.paid_by?.name ? ` · paid by ${e.paid_by.name}` : ''}
                           </Text>
@@ -202,7 +202,7 @@ export default function EventReportScreen() {
                           <Text className="text-[11px] font-sans-sb text-muted">View bill</Text>
                         </Pressable>
                       ) : (
-                        <Text className="mt-1.5 text-[11px]" style={{ color: '#B45309' }}>No bill attached</Text>
+                        <Text className="font-sans mt-1.5 text-[11px]" style={{ color: '#B45309' }}>No bill attached</Text>
                       )}
                     </View>
                   );
@@ -218,12 +218,12 @@ export default function EventReportScreen() {
             </Text>
             <View className="rounded-2xl border border-line bg-surface p-4">
               {paid.length === 0 ? (
-                <Text className="text-[13px] text-faint">Nothing collected yet.</Text>
+                <Text className="font-sans text-[13px] text-faint">Nothing collected yet.</Text>
               ) : (
                 (showAllFlats ? paid : paid.slice(0, 12)).map((row) => (
                   <View key={row.id} className="mb-2 flex-row items-center gap-2 last:mb-0">
                     <Text className="w-16 text-[12px] font-sans-sb text-ink">{row.flat}</Text>
-                    <Text className="flex-1 text-[12px] text-muted" numberOfLines={1}>
+                    <Text className="font-sans flex-1 text-[12px] text-muted" numberOfLines={1}>
                       {row.contributor?.name ?? '—'}
                       {row.method ? ` · ${row.method}` : ''}
                     </Text>
@@ -243,7 +243,7 @@ export default function EventReportScreen() {
               ) : null}
 
               {unpaid.length > 0 ? (
-                <Text className="mt-3 border-t border-line pt-3 text-[12px] text-muted">
+                <Text className="font-sans mt-3 border-t border-line pt-3 text-[12px] text-muted">
                   {unpaid.length} {unpaid.length === 1 ? 'flat has' : 'flats have'} not contributed yet
                   {' '}({rupees(t.pending)} expected).
                 </Text>
@@ -251,7 +251,7 @@ export default function EventReportScreen() {
             </View>
           </View>
 
-          <Text className="mt-6 text-center text-[11px] leading-[16px] text-faint">
+          <Text className="font-sans mt-6 text-center text-[11px] leading-[16px] text-faint">
             {isFinal
               ? 'These accounts are final and can no longer be edited.'
               : 'These figures update live as contributions and bills are recorded.'}
@@ -265,7 +265,7 @@ export default function EventReportScreen() {
 function BigStat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <View className="flex-1">
-      <Text className="text-[11px] text-faint">{label}</Text>
+      <Text className="font-sans text-[11px] text-faint">{label}</Text>
       <Text className="font-sans-bold text-[19px]" style={{ color }}>{value}</Text>
     </View>
   );

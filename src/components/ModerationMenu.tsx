@@ -109,7 +109,7 @@ export function ModerationMenu({
           <Ionicons name="flag-outline" size={19} color={c.ink} />
           <View className="flex-1">
             <Text className="font-sans-sb text-[14px] text-ink">Report this {label(targetType)}</Text>
-            <Text className="text-[12px] text-muted">Send it to your society admins</Text>
+            <Text className="font-sans text-[12px] text-muted">Send it to your society admins</Text>
           </View>
         </Pressable>
 
@@ -118,7 +118,7 @@ export function ModerationMenu({
             <Ionicons name="ban-outline" size={19} color="#EF4444" />
             <View className="flex-1">
               <Text className="font-sans-sb text-[14px] text-nonveg">Block {who}</Text>
-              <Text className="text-[12px] text-muted">Hide their content and stop messages, both ways</Text>
+              <Text className="font-sans text-[12px] text-muted">Hide their content and stop messages, both ways</Text>
             </View>
           </Pressable>
         ) : null}
@@ -140,7 +140,7 @@ export function ModerationMenu({
           />
         }
       >
-        <Text className="mb-3 text-[13px] leading-[19px] text-muted">
+        <Text className="font-sans mb-3 text-[13px] leading-[19px] text-muted">
           Reports go to your society admins. They can see what you reported and why.
         </Text>
 
@@ -161,7 +161,7 @@ export function ModerationMenu({
                 />
                 <View className="flex-1">
                   <Text className="font-sans-sb text-[14px] text-ink">{r.label}</Text>
-                  <Text className="text-[12px] text-muted">{r.blurb}</Text>
+                  <Text className="font-sans text-[12px] text-muted">{r.blurb}</Text>
                 </View>
               </Pressable>
             );

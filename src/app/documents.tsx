@@ -88,7 +88,7 @@ export default function DocumentsScreen() {
             <View className="items-center py-16">
               <Ionicons name="folder-open-outline" size={42} color={c.faint} />
               <Text className="mt-3 font-display text-xl text-ink mb-1">No documents yet</Text>
-              <Text className="text-[14px] text-muted text-center max-w-xs">
+              <Text className="font-sans text-[14px] text-muted text-center max-w-xs">
                 {filter === 'all' ? 'Upload society notices, bylaws, forms and more — keep them public or share privately.' : 'Nothing here. Try another filter.'}
               </Text>
             </View>
@@ -159,7 +159,7 @@ function DocRowView({
             <Text className="text-[9px] font-sans-sb uppercase" style={{ color: doc.is_public ? '#16A34A' : c.muted }}>{doc.is_public ? 'Public' : 'Private'}</Text>
           </View>
         </View>
-        <Text className="text-[12px] text-muted" numberOfLines={1}>{meta}</Text>
+        <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{meta}</Text>
       </Pressable>
       <View className="flex-row items-center gap-1">
         <IconBtn icon="eye-outline" onPress={onPreview} c={c} />
@@ -184,7 +184,7 @@ function PublicToggle({ value, onToggle, c }: { value: boolean; onToggle: () => 
       <Ionicons name={value ? 'globe-outline' : 'lock-closed-outline'} size={18} color={value ? '#16A34A' : c.muted} />
       <View className="flex-1">
         <Text className="font-sans-sb text-[14px] text-ink">{value ? 'Public' : 'Private'}</Text>
-        <Text className="text-[12px] text-muted">{value ? 'Any society member can access' : 'Only people you share with can access'}</Text>
+        <Text className="font-sans text-[12px] text-muted">{value ? 'Any society member can access' : 'Only people you share with can access'}</Text>
       </View>
       <View className={`h-6 w-10 rounded-full p-0.5 ${value ? 'bg-success' : 'bg-line'}`}>
         <View className={`h-5 w-5 rounded-full bg-white ${value ? 'self-end' : 'self-start'}`} />
@@ -236,14 +236,14 @@ function UploadSheet({
           </View>
           <View className="flex-1">
             <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{file.name}</Text>
-            <Text className="text-[12px] text-muted">{formatBytes(file.size)} · Tap to change</Text>
+            <Text className="font-sans text-[12px] text-muted">{formatBytes(file.size)} · Tap to change</Text>
           </View>
         </Pressable>
       ) : (
         <Pressable onPress={pick} className="mb-4 items-center rounded-2xl border border-dashed border-line bg-inset py-7 active:opacity-80">
           <Ionicons name="cloud-upload-outline" size={28} color={c.muted} />
           <Text className="mt-2 font-sans-sb text-[14px] text-ink">Choose a file</Text>
-          <Text className="text-[12px] text-muted">Any file up to {MAX_DOCUMENT_MB} MB</Text>
+          <Text className="font-sans text-[12px] text-muted">Any file up to {MAX_DOCUMENT_MB} MB</Text>
         </Pressable>
       )}
 
@@ -350,7 +350,7 @@ function ManageSheet({
               ))}
             </View>
           ) : (
-            <Text className="mb-3 text-[13px] text-muted">Not shared with anyone yet.</Text>
+            <Text className="font-sans mb-3 text-[13px] text-muted">Not shared with anyone yet.</Text>
           )}
 
           <View className="mb-2 flex-row items-center gap-2 rounded-2xl border border-line bg-inset px-3 py-2.5">
@@ -363,7 +363,7 @@ function ManageSheet({
                 <Avatar name={p.name} size={32} />
                 <View className="flex-1">
                   <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{p.name}</Text>
-                  {p.flat ? <Text className="text-[12px] text-faint">Flat {p.flat}</Text> : null}
+                  {p.flat ? <Text className="font-sans text-[12px] text-faint">Flat {p.flat}</Text> : null}
                 </View>
                 <Ionicons name="add-circle" size={22} color={c.accent} />
               </Pressable>

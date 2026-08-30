@@ -121,7 +121,7 @@ export default function SettingsScreen() {
             <Row icon="trash-outline" label="Delete my account" c={c} danger onPress={() => router.push('/profile/me' as any)} />
           </Card>
 
-          <Text className="mt-2 text-center text-[12px] text-faint">Aangan v{version}</Text>
+          <Text className="font-sans mt-2 text-center text-[12px] text-faint">Aangan v{version}</Text>
         </Container>
       </ScrollView>
     </View>

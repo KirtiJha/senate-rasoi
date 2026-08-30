@@ -145,11 +145,11 @@ export default function ExpensesScreen() {
         <Container narrow>
           <View className="mb-4 rounded-2xl border border-line bg-surface p-4">
             <Text className="font-sans-bold text-[20px]" style={{ color: ACCENT }}>{rupees(total)}</Text>
-            <Text className="text-[12px] text-muted">
+            <Text className="font-sans text-[12px] text-muted">
               across {rows.length} {rows.length === 1 ? 'entry' : 'entries'}
             </Text>
             {withoutBill > 0 ? (
-              <Text className="mt-1.5 text-[12px]" style={{ color: '#B45309' }}>
+              <Text className="font-sans mt-1.5 text-[12px]" style={{ color: '#B45309' }}>
                 ⚠️ {withoutBill} {withoutBill === 1 ? 'entry has' : 'entries have'} no bill attached
               </Text>
             ) : null}
@@ -159,7 +159,7 @@ export default function ExpensesScreen() {
             <View className="mb-4 flex-row items-start gap-2 rounded-2xl border px-3.5 py-3"
                   style={{ borderColor: '#0891B255', backgroundColor: '#0891B212' }}>
               <Ionicons name="lock-closed-outline" size={16} color="#0891B2" />
-              <Text className="flex-1 text-[12px] leading-[17px]" style={{ color: '#0E7490' }}>
+              <Text className="font-sans flex-1 text-[12px] leading-[17px]" style={{ color: '#0E7490' }}>
                 The accounts are published and closed. Expenses can no longer be changed.
               </Text>
             </View>
@@ -169,7 +169,7 @@ export default function ExpensesScreen() {
             <View className="items-center py-16">
               <Ionicons name="receipt-outline" size={40} color={c.faint} />
               <Text className="mt-3 font-sans-sb text-[15px] text-ink">No expenses yet</Text>
-              <Text className="mt-1 max-w-xs text-center text-[13px] text-muted">
+              <Text className="font-sans mt-1 max-w-xs text-center text-[13px] text-muted">
                 Record every payment with its bill so the final accounts hold up.
               </Text>
               {onTeam && !locked ? (
@@ -189,7 +189,7 @@ export default function ExpensesScreen() {
                       </View>
                       <View className="min-w-0 flex-1">
                         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{e.title}</Text>
-                        <Text className="text-[12px] text-muted" numberOfLines={1}>
+                        <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>
                           {m.label}
                           {e.vendor ? ` · ${e.vendor}` : ''}
                           {e.spent_on ? ` · ${e.spent_on}` : ''}
@@ -216,7 +216,7 @@ export default function ExpensesScreen() {
                         </View>
                       )}
                       {e.paid_by?.name ? (
-                        <Text className="text-[11px] text-faint">Paid by {e.paid_by.name}</Text>
+                        <Text className="font-sans text-[11px] text-faint">Paid by {e.paid_by.name}</Text>
                       ) : null}
                       <View className="flex-1" />
                       {(mine || isAdmin) && !locked ? (
@@ -250,11 +250,11 @@ export default function ExpensesScreen() {
           ) : (
             <>
               <Ionicons name="camera-outline" size={24} color={ACCENT} />
-              <Text className="mt-1 text-[12px] text-muted">Photograph the bill</Text>
+              <Text className="font-sans mt-1 text-[12px] text-muted">Photograph the bill</Text>
             </>
           )}
         </Pressable>
-        <Text className="mb-3 text-[12px] text-faint">
+        <Text className="font-sans mb-3 text-[12px] text-faint">
           Optional, but an expense without a bill is the one residents ask about.
         </Text>
 

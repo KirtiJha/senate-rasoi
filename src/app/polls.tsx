@@ -113,7 +113,7 @@ export default function PollsScreen() {
             <View className="items-center py-20">
               <Ionicons name="bar-chart-outline" size={44} color={c.faint} />
               <Text className="mt-3 font-display text-xl text-ink">No polls yet</Text>
-              <Text className="mt-1 text-center text-[14px] text-muted max-w-xs">
+              <Text className="font-sans mt-1 text-center text-[14px] text-muted max-w-xs">
                 Create a poll to gather opinions from your society members.
               </Text>
             </View>
@@ -190,7 +190,7 @@ function PollCard({
         {/* Meta row */}
         <View className="flex-row items-center gap-2 mb-3">
           <Avatar name={poll.author?.name ?? '?'} size={22} />
-          <Text className="flex-1 text-[12px] text-faint">
+          <Text className="font-sans flex-1 text-[12px] text-faint">
             {poll.author?.name ?? 'Someone'}
             {poll.author?.flat ? ` · Flat ${poll.author.flat}` : ''}
           </Text>
@@ -225,7 +225,7 @@ function PollCard({
               </Pressable>
               {editImg ? <Pressable onPress={() => setEditImg(null)} hitSlop={6}><Text className="text-[13px] font-sans-sb text-nonveg">Remove</Text></Pressable> : null}
             </View>
-            <Text className="mb-4 text-[12px] text-faint">Options stay the same so existing votes are preserved.</Text>
+            <Text className="font-sans mb-4 text-[12px] text-faint">Options stay the same so existing votes are preserved.</Text>
             <Pressable onPress={saveEdit} disabled={saving} className="items-center rounded-2xl bg-accent py-3 active:opacity-80" style={{ opacity: saving ? 0.6 : 1 }}>
               <Text className="font-sans-sb text-[15px]" style={{ color: c.onAccent }}>{saving ? 'Saving…' : 'Save changes'}</Text>
             </Pressable>
@@ -276,7 +276,7 @@ function PollCard({
           })}
         </View>
 
-        <Text className="mt-2.5 text-[11px] text-faint">
+        <Text className="font-sans mt-2.5 text-[11px] text-faint">
           {poll.total_votes} vote{poll.total_votes !== 1 ? 's' : ''}
           {!hasVoted && !poll.is_closed ? ' · Tap to vote' : ''}
         </Text>

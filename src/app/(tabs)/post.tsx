@@ -378,7 +378,7 @@ export default function PostScreen({
                 <Ionicons name="camera" size={26} color={c.accent} />
               </View>
               <Text className="font-sans-sb text-[14px] text-ink">Add a photo of your dish</Text>
-              <Text className="mt-0.5 text-[12px] text-faint">A tasty photo gets more orders (optional)</Text>
+              <Text className="font-sans mt-0.5 text-[12px] text-faint">A tasty photo gets more orders (optional)</Text>
             </Pressable>
           ))}
 
@@ -401,7 +401,7 @@ export default function PostScreen({
           {mode === 'dish' && photoUri && photoFlagged ? (
             <View className="-mt-1 mb-4 flex-row items-start gap-2 rounded-2xl border border-nonveg/40 bg-nonveg/10 px-3.5 py-3">
               <Ionicons name="alert-circle" size={16} color={c.nonveg} />
-              <Text className="flex-1 text-[12px] leading-[17px] text-nonveg">
+              <Text className="font-sans flex-1 text-[12px] leading-[17px] text-nonveg">
                 This photo doesn't look like food. Please change or remove it before posting your dish.
               </Text>
             </View>
@@ -427,7 +427,7 @@ export default function PostScreen({
               <Avatar name={chefName} size={40} />
               <View className="flex-1">
                 <Text className="font-sans-sb text-[14px] text-ink">{chefName}</Text>
-                <Text className="text-[12px] text-faint">Flat {flat} · {whatsapp}</Text>
+                <Text className="font-sans text-[12px] text-faint">Flat {flat} · {whatsapp}</Text>
               </View>
               <Pressable onPress={() => setEditingIdentity(true)} className="flex-row items-center gap-1 rounded-full bg-inset px-3 py-2">
                 <Ionicons name="pencil" size={13} color={c.accent} />
@@ -518,7 +518,7 @@ export default function PostScreen({
                 );
               })}
             </View>
-            <Text className="-mt-2 mb-2 text-[11px] text-faint">
+            <Text className="font-sans -mt-2 mb-2 text-[11px] text-faint">
               {cutoffPreview(cutoff, slot, serveOffset)} · neighbours can't order after this.
             </Text>
 
@@ -585,7 +585,7 @@ export default function PostScreen({
             disabled={mode === 'dish' && photoFlagged}
             onPress={mode === 'dish' ? submit : submitTiffin}
           />
-          <Text className="mt-2.5 text-center text-[12px] leading-4 text-faint">
+          <Text className="font-sans mt-2.5 text-center text-[12px] leading-4 text-faint">
             Goes live instantly for everyone in the society.
           </Text>
         </Container>

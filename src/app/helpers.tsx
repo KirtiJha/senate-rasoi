@@ -70,7 +70,7 @@ export default function HelpersScreen() {
           {/* Opt-in */}
           <View className="rounded-2xl border p-4" style={{ borderColor: ACCENT + '40', backgroundColor: ACCENT + '0C' }}>
             <Text className="font-sans-bold text-[15px] text-ink">Join the registry</Text>
-            <Text className="mb-3 mt-0.5 text-[12.5px] leading-[18px] text-muted">Opt in so neighbours can reach you fast in an emergency. You're only listed if you choose to be.</Text>
+            <Text className="font-sans mb-3 mt-0.5 text-[12px] leading-[18px] text-muted">Opt in so neighbours can reach you fast in an emergency. You're only listed if you choose to be.</Text>
 
             <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Your blood group</Text>
             <View className="mb-3 flex-row flex-wrap gap-2">
@@ -117,7 +117,7 @@ export default function HelpersScreen() {
               retrying={reloading}
             />
           ) : donors.length === 0 ? (
-            <Text className="px-1 py-3 text-[13px] text-muted">{bloodFilter === 'all' ? 'No donors have opted in yet — be the first.' : `No ${bloodFilter} donors listed yet.`}</Text>
+            <Text className="font-sans px-1 py-3 text-[13px] text-muted">{bloodFilter === 'all' ? 'No donors have opted in yet — be the first.' : `No ${bloodFilter} donors listed yet.`}</Text>
           ) : (
             <View className="gap-2">
               {donors.map((p) => <PersonRow key={p.id} p={p} badge={p.blood_group!} c={c} />)}
@@ -136,7 +136,7 @@ export default function HelpersScreen() {
                   <View key={p.id} className="rounded-2xl border border-line bg-surface p-3.5">
                     <PersonRow p={p} c={c} inline />
                     <View className="mt-2 flex-row flex-wrap gap-1.5">
-                      {p.helper_skills.map((s) => <View key={s} className="rounded-full bg-inset px-2 py-0.5"><Text className="text-[11px] text-muted">{s}</Text></View>)}
+                      {p.helper_skills.map((s) => <View key={s} className="rounded-full bg-inset px-2 py-0.5"><Text className="font-sans text-[11px] text-muted">{s}</Text></View>)}
                     </View>
                   </View>
                 ))}
@@ -144,7 +144,7 @@ export default function HelpersScreen() {
             </>
           ) : null}
 
-          <Text className="mt-6 text-center text-[11px] leading-[16px] text-faint">In a real emergency, also call official services (112). This registry is a convenience, not a substitute.</Text>
+          <Text className="font-sans mt-6 text-center text-[11px] leading-[16px] text-faint">In a real emergency, also call official services (112). This registry is a convenience, not a substitute.</Text>
         </Container>
       </ScrollView>
     </View>
@@ -161,7 +161,7 @@ function PersonRow({ p, badge, c, inline }: { p: RegistryPerson; badge?: string;
           <Text className="font-sans-bold text-[14px] text-ink">{p.name}</Text>
           {badge ? <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: ACCENT + '18' }}><Text className="text-[11px] font-sans-bold" style={{ color: ACCENT }}>{badge}</Text></View> : null}
         </View>
-        {p.flat ? <Text className="text-[12px] text-muted">Flat {p.flat}</Text> : null}
+        {p.flat ? <Text className="font-sans text-[12px] text-muted">Flat {p.flat}</Text> : null}
       </View>
       {phone ? (
         <>

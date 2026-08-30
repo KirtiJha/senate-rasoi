@@ -103,7 +103,7 @@ export default function NewLostFoundScreen() {
             ) : (
               <>
                 <Ionicons name="camera-outline" size={26} color={ACCENT} />
-                <Text className="mt-1 text-[12px] text-muted">Add a photo</Text>
+                <Text className="font-sans mt-1 text-[12px] text-muted">Add a photo</Text>
               </>
             )}
           </Pressable>
@@ -166,7 +166,7 @@ export default function NewLostFoundScreen() {
             loading={submitting}
             onPress={submit}
           />
-          <Text className="mt-3 text-center text-[12px] leading-[18px] text-faint">
+          <Text className="font-sans mt-3 text-center text-[12px] leading-[18px] text-faint">
             {isLost
               ? 'Your neighbours will be notified and can reach out if they spot it.'
               : "The owner can contact you to claim the item. You're a star! ⭐"}

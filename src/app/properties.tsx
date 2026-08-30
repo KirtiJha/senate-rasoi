@@ -69,14 +69,14 @@ export default function PropertiesScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container>
           {loading ? (
-            <Text className="px-1 py-10 text-center text-[13px] text-muted">Loading…</Text>
+            <Text className="font-sans px-1 py-10 text-center text-[13px] text-muted">Loading…</Text>
           ) : rows.length === 0 ? (
             <View className="items-center px-6 py-16">
               <View className="mb-3 h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: ACCENT + '18' }}>
                 <Ionicons name="home-outline" size={26} color={ACCENT} />
               </View>
               <Text className="font-sans-bold text-[15px] text-ink">{mine ? "You haven't posted a flat" : 'No flats listed yet'}</Text>
-              <Text className="mt-1 max-w-[280px] text-center text-[13px] text-muted">
+              <Text className="font-sans mt-1 max-w-[280px] text-center text-[13px] text-muted">
                 {mine ? 'Post your flat for sale or rent — neighbours can ask details and recommend buyers.' : 'Be the first to list your flat for sale or rent in your society.'}
               </Text>
               <Pressable onPress={() => router.push('/property/new' as any)} className="mt-5 flex-row items-center gap-2 rounded-2xl px-5 py-3 active:opacity-90" style={{ backgroundColor: ACCENT }}>
@@ -131,10 +131,10 @@ function PropertyCard({ p, onPress, c }: { p: PropertyRow; onPress: () => void; 
           ) : null}
         </View>
         <T source="property" id={p.id} field="title" text={p.title} showToggle={false} className="mt-1 font-sans-bold text-[14px] text-ink" numberOfLines={1} />
-        {sub ? <Text className="text-[12px] text-muted" numberOfLines={1}>{sub}</Text> : null}
+        {sub ? <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{sub}</Text> : null}
         <View className="mt-auto flex-row items-center gap-1 pt-1.5">
           <Ionicons name="pricetag-outline" size={12} color={c.faint} />
-          <Text className="text-[11.5px] font-sans-sb text-muted">Contact owner for price</Text>
+          <Text className="text-[11px] font-sans-sb text-muted">Contact owner for price</Text>
         </View>
       </View>
     </Pressable>

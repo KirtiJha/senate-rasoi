@@ -122,7 +122,7 @@ export default function RecoDetailScreen() {
   };
 
   if (loading) return <View className="flex-1 bg-bg"><ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Question" showBack hideSociety /><View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View></View>;
-  if (!q) return <View className="flex-1 bg-bg"><ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Question" showBack hideSociety /><View className="flex-1 items-center justify-center px-8"><Text className="text-center text-[14px] text-muted">This question was removed.</Text></View></View>;
+  if (!q) return <View className="flex-1 bg-bg"><ScreenHeader icon="sparkles-outline" iconColor={ACCENT} title="Question" showBack hideSociety /><View className="flex-1 items-center justify-center px-8"><Text className="font-sans text-center text-[14px] text-muted">This question was removed.</Text></View></View>;
 
   const meta = recoCategory(q.category);
   const canDeleteQ = q.author_id === userId || isAdmin;
@@ -154,7 +154,7 @@ export default function RecoDetailScreen() {
           ) : null}
           <View className="mt-2 flex-row items-center gap-2">
             <Avatar name={q.author?.name ?? '?'} size={22} />
-            <Text className="text-[12px] text-faint">Asked by {q.author?.name ?? 'a neighbour'}{q.author?.flat ? ` · Flat ${q.author.flat}` : ''}</Text>
+            <Text className="font-sans text-[12px] text-faint">Asked by {q.author?.name ?? 'a neighbour'}{q.author?.flat ? ` · Flat ${q.author.flat}` : ''}</Text>
           </View>
 
           {/* Answer composer */}
@@ -169,7 +169,7 @@ export default function RecoDetailScreen() {
               <Pressable onPress={() => pickImg(setAnsPhoto)} className="h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-dashed border-line bg-inset active:opacity-70">
                 {ansPhoto ? <Image source={{ uri: ansPhoto }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : <Ionicons name="image-outline" size={18} color={c.faint} />}
               </Pressable>
-              {ansPhoto ? <Pressable onPress={() => setAnsPhoto(null)} hitSlop={6}><Text className="text-[12px] font-sans-sb text-nonveg">Remove photo</Text></Pressable> : <Text className="text-[12px] text-faint">Add a photo (optional)</Text>}
+              {ansPhoto ? <Pressable onPress={() => setAnsPhoto(null)} hitSlop={6}><Text className="text-[12px] font-sans-sb text-nonveg">Remove photo</Text></Pressable> : <Text className="font-sans text-[12px] text-faint">Add a photo (optional)</Text>}
             </View>
             <Pressable onPress={submit} disabled={!body.trim() || posting} className="mt-2 flex-row items-center justify-center gap-1.5 rounded-xl py-2.5" style={{ backgroundColor: body.trim() ? ACCENT : c.inset }}>
               {posting ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="send" size={15} color={body.trim() ? '#fff' : c.faint} />}
@@ -201,7 +201,7 @@ export default function RecoDetailScreen() {
                         <Pressable onPress={() => pickImg((uri) => setAEditPhoto({ uri, isNew: true }))} className="h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-dashed border-line bg-inset active:opacity-70">
                           {aEditPhoto ? <Image source={{ uri: aEditPhoto.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : <Ionicons name="image-outline" size={16} color={c.faint} />}
                         </Pressable>
-                        {aEditPhoto ? <Pressable onPress={() => setAEditPhoto(null)} hitSlop={6}><Text className="text-[12px] font-sans-sb text-nonveg">Remove</Text></Pressable> : <Text className="text-[12px] text-faint">Photo</Text>}
+                        {aEditPhoto ? <Pressable onPress={() => setAEditPhoto(null)} hitSlop={6}><Text className="text-[12px] font-sans-sb text-nonveg">Remove</Text></Pressable> : <Text className="font-sans text-[12px] text-faint">Photo</Text>}
                       </View>
                       <View className="mt-2 flex-row gap-2">
                         <Pressable onPress={saveEditAns} disabled={savingA} className="rounded-full px-3 py-1.5" style={{ backgroundColor: ACCENT }}><Text className="text-[12px] font-sans-sb text-white">{savingA ? 'Saving…' : 'Save'}</Text></Pressable>
@@ -236,7 +236,7 @@ export default function RecoDetailScreen() {
                   )}
                   <View className="mt-2 flex-row items-center gap-1.5">
                     <Avatar name={a.author?.name ?? '?'} size={18} />
-                    <Text className="text-[11px] text-faint">{a.author?.name ?? 'A neighbour'}{a.author?.flat ? ` · ${a.author.flat}` : ''}</Text>
+                    <Text className="font-sans text-[11px] text-faint">{a.author?.name ?? 'A neighbour'}{a.author?.flat ? ` · ${a.author.flat}` : ''}</Text>
                     {(a.author_id === userId || isAdmin) && editAnsId !== a.id ? (
                       <View className="ml-auto flex-row items-center gap-2.5">
                         {(a.author_id === userId || isAdmin) ? (
@@ -249,7 +249,7 @@ export default function RecoDetailScreen() {
                 </View>
               </View>
             ))}
-            {answers.length === 0 ? <Text className="py-4 text-center text-[13px] text-muted">No recommendations yet — be the first to help.</Text> : null}
+            {answers.length === 0 ? <Text className="font-sans py-4 text-center text-[13px] text-muted">No recommendations yet — be the first to help.</Text> : null}
           </View>
         </Container>
       </ScrollView>

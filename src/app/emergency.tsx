@@ -78,7 +78,7 @@ export default function EmergencyScreen() {
             <View className="items-center py-20">
               <Ionicons name="call-outline" size={44} color={c.faint} />
               <Text className="mt-3 font-display text-xl text-ink">No contacts yet</Text>
-              <Text className="mt-1 text-center text-[14px] text-muted max-w-xs">
+              <Text className="font-sans mt-1 text-center text-[14px] text-muted max-w-xs">
                 {isAdmin
                   ? 'Add important numbers like security, maintenance, and emergency services.'
                   : 'The society admin will add emergency contacts here.'}
@@ -101,7 +101,7 @@ export default function EmergencyScreen() {
                       </View>
                       <View className="flex-1">
                         <Text className="font-sans-sb text-[15px] text-ink">{contact.name}</Text>
-                        <Text className="text-[12px] text-muted">{contact.category || EMERGENCY_ROLE_LABELS[contact.role]}</Text>
+                        <Text className="font-sans text-[12px] text-muted">{contact.category || EMERGENCY_ROLE_LABELS[contact.role]}</Text>
                         <Text className="text-[13px] font-sans-md text-faint mt-0.5">{contact.phone}</Text>
                       </View>
                       <View className="flex-row items-center gap-2">

@@ -17,7 +17,7 @@ export function FoodDisclaimer() {
       className="mt-3 flex-row gap-2.5 rounded-2xl border border-line bg-inset p-3.5 active:opacity-80"
     >
       <Ionicons name="information-circle-outline" size={18} color={c.muted} style={{ marginTop: 1 }} />
-      <Text className="flex-1 text-[12px] leading-[18px] text-muted">
+      <Text className="font-sans flex-1 text-[12px] leading-[18px] text-muted">
         <Text className="font-sans-sb text-ink">Aangan is a listing platform only. </Text>
         Home food and tiffins are cooked and sold by individual residents in home kitchens — not by
         Aangan. We don&apos;t prepare, inspect, or guarantee any dish, and are not responsible for its

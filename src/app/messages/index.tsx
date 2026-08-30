@@ -41,14 +41,14 @@ export default function MessagesInboxScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container>
           {loading ? (
-            <Text className="py-10 text-center text-[14px] text-muted">Loading…</Text>
+            <Text className="font-sans py-10 text-center text-[14px] text-muted">Loading…</Text>
           ) : threads.length === 0 ? (
             <View className="items-center px-6 py-20">
               <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-inset">
                 <Ionicons name="chatbubbles-outline" size={30} color={c.faint} />
               </View>
               <Text className="mb-1.5 font-display text-xl text-ink">No messages yet</Text>
-              <Text className="mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">
+              <Text className="font-sans mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">
                 Start a private conversation with a neighbour — or open their profile and tap Message.
               </Text>
               <Button label="New message" icon="create-outline" onPress={() => router.push('/messages/new' as any)} />
@@ -67,9 +67,9 @@ export default function MessagesInboxScreen() {
                       <Text className="flex-1 font-sans-bold text-[15px] text-ink" numberOfLines={1}>
                         {t.other.name}{t.other.flat ? <Text className="font-sans-md text-[12px] text-faint"> · Flat {t.other.flat}</Text> : null}
                       </Text>
-                      <Text className="text-[11px] text-faint">{timeAgo(t.lastMessageAt)}</Text>
+                      <Text className="font-sans text-[11px] text-faint">{timeAgo(t.lastMessageAt)}</Text>
                     </View>
-                    <Text className="mt-0.5 text-[13px] text-muted" numberOfLines={1}>
+                    <Text className="font-sans mt-0.5 text-[13px] text-muted" numberOfLines={1}>
                       {t.lastMessage ?? 'Say hello 👋'}
                     </Text>
                   </View>

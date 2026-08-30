@@ -110,7 +110,7 @@ export default function LostFoundScreen() {
             <View className="items-center py-20">
               <Text style={{ fontSize: 44 }} className="mb-3">{isLost ? '🔍' : '📦'}</Text>
               <Text className="font-display text-xl text-ink mb-1">{emptyTitle}</Text>
-              <Text className="text-[14px] text-muted text-center max-w-xs">{emptyBlurb}</Text>
+              <Text className="font-sans text-[14px] text-muted text-center max-w-xs">{emptyBlurb}</Text>
               <Pressable
                 onPress={() => router.push(addHref as any)}
                 className="mt-6 rounded-2xl px-5 py-3 active:opacity-80"
@@ -169,9 +169,9 @@ function ItemCard({ item }: { item: LostFoundItem }) {
           </View>
           <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{item.title}</Text>
           {item.description ? (
-            <Text className="text-[12px] text-muted" numberOfLines={1}>{item.description}</Text>
+            <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{item.description}</Text>
           ) : null}
-          <Text className="text-[11px] text-faint mt-0.5">
+          <Text className="font-sans text-[11px] text-faint mt-0.5">
             {item.owner?.name ?? 'A neighbour'}{item.owner?.flat ? ` · Flat ${item.owner.flat}` : ''}
           </Text>
         </View>

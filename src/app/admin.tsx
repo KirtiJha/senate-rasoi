@@ -222,7 +222,7 @@ export default function AdminScreen() {
               <View key={s.label} className="flex-1 items-center rounded-2xl bg-inset py-2.5 px-1">
                 <Ionicons name={s.icon} size={15} color={c.muted} />
                 <Text className="font-sans-bold text-[16px] text-ink mt-0.5">{s.value}</Text>
-                <Text className="text-[10px] text-faint">{s.label}</Text>
+                <Text className="font-sans text-[10px] text-faint">{s.label}</Text>
               </View>
             ))}
           </View>
@@ -288,7 +288,7 @@ export default function AdminScreen() {
 
             {filtered.length === 0 && query.length > 0 ? (
               <View className="items-center py-10">
-                <Text className="text-[14px] text-muted">No members match "{query}"</Text>
+                <Text className="font-sans text-[14px] text-muted">No members match "{query}"</Text>
               </View>
             ) : null}
 
@@ -306,7 +306,7 @@ export default function AdminScreen() {
                         {memberAdmin ? <Badge label="admin" color={c.accent} /> : null}
                         {m.blocked ? <Badge label="blocked" color="#EF4444" /> : null}
                       </View>
-                      <Text className="text-[12px] text-muted">
+                      <Text className="font-sans text-[12px] text-muted">
                         {m.phone ?? '—'}{m.flat ? ` · Flat ${m.flat}` : ''}
                       </Text>
                     </View>
@@ -351,7 +351,7 @@ export default function AdminScreen() {
               <View className="items-center py-16">
                 <Ionicons name="mail-open-outline" size={40} color={c.faint} />
                 <Text className="mt-3 font-sans-sb text-[15px] text-ink">No join requests</Text>
-                <Text className="mt-1 text-[13px] text-muted">Society join requests appear here</Text>
+                <Text className="font-sans mt-1 text-[13px] text-muted">Society join requests appear here</Text>
               </View>
             ) : null}
             {requests.map((req) => (
@@ -368,7 +368,7 @@ export default function AdminScreen() {
         <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: '#0008' }}>
           <View style={{ width: '100%', maxWidth: 380, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}>
             <Text className="font-display-x text-[19px] text-ink">Reset PIN</Text>
-            <Text className="mt-1.5 text-[14px] text-muted">
+            <Text className="font-sans mt-1.5 text-[14px] text-muted">
               Set a new 6-digit PIN for{' '}
               <Text className="font-sans-sb text-ink">{pinResetMember?.name || 'this member'}</Text>.
               Share the new PIN with them securely.
@@ -490,7 +490,7 @@ function ReportsTab({
           <View className="items-center py-16">
             <Ionicons name="shield-checkmark-outline" size={40} color={c.faint} />
             <Text className="mt-3 font-sans-sb text-[15px] text-ink">Nothing to review</Text>
-            <Text className="mt-1 text-[13px] text-muted">Content your members report appears here</Text>
+            <Text className="font-sans mt-1 text-[13px] text-muted">Content your members report appears here</Text>
           </View>
         ) : null}
 
@@ -512,13 +512,13 @@ function ReportsTab({
                   </View>
                 </View>
 
-                <Text className="text-[13px] text-ink">
+                <Text className="font-sans text-[13px] text-ink">
                   <Text className="font-sans-sb">{r.reporter?.name ?? 'A member'}</Text>
                   {' reported '}
                   <Text className="font-sans-sb">{r.target_owner?.name ?? 'this content'}</Text>
                 </Text>
                 {r.details ? (
-                  <Text className="mt-1 text-[13px] leading-[19px] text-muted">"{r.details}"</Text>
+                  <Text className="font-sans mt-1 text-[13px] leading-[19px] text-muted">"{r.details}"</Text>
                 ) : null}
 
                 <View className="mt-2.5 flex-row flex-wrap gap-2">
@@ -596,16 +596,16 @@ function JoinRequestCard({
         </View>
       </View>
 
-      <Text className="text-[12px] text-muted mb-1">{req.society_address}</Text>
+      <Text className="font-sans text-[12px] text-muted mb-1">{req.society_address}</Text>
 
       <View className="mt-2 rounded-2xl bg-inset p-3">
         <Text className="text-[11px] font-sans-sb text-faint mb-1">REQUESTER</Text>
         <Text className="text-[13px] font-sans-md text-ink">{req.requester_name}</Text>
-        <Text className="text-[12px] text-muted">{req.requester_phone}</Text>
-        {req.requester_email ? <Text className="text-[12px] text-muted">{req.requester_email}</Text> : null}
+        <Text className="font-sans text-[12px] text-muted">{req.requester_phone}</Text>
+        {req.requester_email ? <Text className="font-sans text-[12px] text-muted">{req.requester_email}</Text> : null}
       </View>
 
-      <Text className="mt-2 text-[11px] text-faint">
+      <Text className="font-sans mt-2 text-[11px] text-faint">
         {new Date(req.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
       </Text>
 

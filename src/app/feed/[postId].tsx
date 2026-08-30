@@ -157,7 +157,7 @@ export default function PostThreadScreen() {
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="alert-circle-outline" size={48} color={c.faint} />
           <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Post removed</Text>
-          <Text className="mt-1.5 text-center text-[13px] text-muted">This post is no longer available — it may have been removed by the author or an admin.</Text>
+          <Text className="font-sans mt-1.5 text-center text-[13px] text-muted">This post is no longer available — it may have been removed by the author or an admin.</Text>
           <Pressable onPress={goBack} className="mt-5 rounded-xl border border-line bg-surface px-5 py-2.5 active:bg-inset">
             <Text className="font-sans-sb text-[14px] text-ink">Go back</Text>
           </Pressable>
@@ -226,7 +226,7 @@ export default function PostThreadScreen() {
                 <Text className="font-sans-sb text-[13px] text-ink">
                   {post.author_id === userId ? 'You' : post.author?.name ?? 'Someone'}
                 </Text>
-                <Text className="text-[11px] text-faint">
+                <Text className="font-sans text-[11px] text-faint">
                   {post.author?.flat ? `Flat ${post.author.flat} · ` : ''}{formatTimeAgo(post.created_at)}
                 </Text>
               </View>
@@ -314,8 +314,8 @@ function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, c }: {
       <View className="flex-1">
         <View className="flex-row items-center gap-2 mb-0.5">
           <Text className="font-sans-sb text-[12px] text-ink">{isOwn ? 'You' : comment.author?.name ?? 'Someone'}</Text>
-          {comment.author?.flat ? <Text className="text-[11px] text-faint">Flat {comment.author.flat}</Text> : null}
-          <Text className="ml-auto text-[11px] text-faint">{formatTimeAgo(comment.created_at)}</Text>
+          {comment.author?.flat ? <Text className="font-sans text-[11px] text-faint">Flat {comment.author.flat}</Text> : null}
+          <Text className="font-sans ml-auto text-[11px] text-faint">{formatTimeAgo(comment.created_at)}</Text>
         </View>
         {editing ? (
           <View>
@@ -463,7 +463,7 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
               {photos.length < MAX_PHOTOS ? (
                 <Pressable onPress={pickPhotos} className="items-center justify-center rounded-xl border border-dashed border-line bg-inset active:opacity-70" style={{ width: 76, height: 76 }}>
                   <Ionicons name="image-outline" size={20} color={c.muted} />
-                  <Text className="mt-0.5 text-[10px] text-muted">Add</Text>
+                  <Text className="font-sans mt-0.5 text-[10px] text-muted">Add</Text>
                 </Pressable>
               ) : null}
             </View>

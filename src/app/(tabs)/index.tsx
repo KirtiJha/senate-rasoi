@@ -346,13 +346,13 @@ export default function HomeScreen() {
                   <Ionicons name="close" size={16} color={c.faint} />
                 </Pressable>
               </View>
-              <Text className="text-[14px] leading-5 text-ink">{digest.summary}</Text>
+              <Text className="font-sans text-[14px] leading-5 text-ink">{digest.summary}</Text>
               {digest.highlights.length ? (
                 <View className="mt-2.5 gap-1.5">
                   {digest.highlights.map((h, i) => (
                     <View key={i} className="flex-row gap-2">
-                      <Text className="text-[13px]" style={{ color: c.accent }}>•</Text>
-                      <Text className="min-w-0 flex-1 text-[13px] leading-5 text-muted">{h}</Text>
+                      <Text className="font-sans text-[13px]" style={{ color: c.accent }}>•</Text>
+                      <Text className="font-sans min-w-0 flex-1 text-[13px] leading-5 text-muted">{h}</Text>
                     </View>
                   ))}
                 </View>
@@ -403,7 +403,7 @@ export default function HomeScreen() {
                 <Text className="font-sans-sb text-[14px] text-ink">
                   {updateBanner.force_update ? 'Update required' : `Version ${updateBanner.version} available`}
                 </Text>
-                <Text className="mt-0.5 text-[12px] text-muted">
+                <Text className="font-sans mt-0.5 text-[12px] text-muted">
                   {updateBanner.release_notes ?? (updateBanner.force_update ? 'Please update to continue.' : 'Refresh to get the latest version.')}
                 </Text>
                 <View className="mt-3 flex-row gap-2">
@@ -583,7 +583,7 @@ function JustListedStrip({ listings, borrows, properties, places, lostFound, isD
           <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{title}</Text>
           {l.price != null
             ? <Text className="text-[12px] font-sans-md text-muted">₹{l.price.toLocaleString('en-IN')}</Text>
-            : <Text className="text-[11px] text-faint">Contact for price</Text>}
+            : <Text className="font-sans text-[11px] text-faint">Contact for price</Text>}
         </View>
       </Pressable>
     );
@@ -608,7 +608,7 @@ function JustListedStrip({ listings, borrows, properties, places, lostFound, isD
             <Text className="text-[10px] font-sans-sb" style={{ color: BORROW_COLOR }} numberOfLines={1}>{label} · {catMeta.label}</Text>
           </View>
           <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{b.title}</Text>
-          <Text className="text-[11px] text-faint">{b.owner?.name ?? 'A neighbour'}</Text>
+          <Text className="font-sans text-[11px] text-faint">{b.owner?.name ?? 'A neighbour'}</Text>
         </View>
       </Pressable>
     );
@@ -633,7 +633,7 @@ function JustListedStrip({ listings, borrows, properties, places, lostFound, isD
             <Text className="text-[10px] font-sans-sb" style={{ color: PROP_COLOR }} numberOfLines={1}>{tag}{p.config ? ` · ${p.config}` : ''}</Text>
           </View>
           <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{p.title}</Text>
-          <Text className="text-[11px] text-faint" numberOfLines={1}>{propertySubtitle(p)}</Text>
+          <Text className="font-sans text-[11px] text-faint" numberOfLines={1}>{propertySubtitle(p)}</Text>
         </View>
       </Pressable>
     );
@@ -658,7 +658,7 @@ function JustListedStrip({ listings, borrows, properties, places, lostFound, isD
             <Text className="text-[10px] font-sans-sb" style={{ color: m.color }} numberOfLines={1}>📍 {m.label}</Text>
           </View>
           <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{p.name}</Text>
-          {p.address ? <Text className="text-[11px] text-faint" numberOfLines={1}>{p.address}</Text> : <Text className="text-[11px] text-faint">Nearby</Text>}
+          {p.address ? <Text className="font-sans text-[11px] text-faint" numberOfLines={1}>{p.address}</Text> : <Text className="font-sans text-[11px] text-faint">Nearby</Text>}
         </View>
       </Pressable>
     );
@@ -684,7 +684,7 @@ function JustListedStrip({ listings, borrows, properties, places, lostFound, isD
             <Text className="text-[10px] font-sans-sb" style={{ color: LF_COLOR }} numberOfLines={1}>{label} · {lfCat.label}</Text>
           </View>
           <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{lf.title}</Text>
-          <Text className="text-[11px] text-faint">{lf.owner?.name ?? 'A neighbour'}</Text>
+          <Text className="font-sans text-[11px] text-faint">{lf.owner?.name ?? 'A neighbour'}</Text>
         </View>
       </Pressable>
     );

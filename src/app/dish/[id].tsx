@@ -181,7 +181,7 @@ export default function DishDetailScreen() {
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="alert-circle-outline" size={48} color={c.faint} />
           <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Dish removed</Text>
-          <Text className="mt-1.5 text-center text-[13px] text-muted">This dish is no longer available — it may have sold out or been removed by the chef.</Text>
+          <Text className="font-sans mt-1.5 text-center text-[13px] text-muted">This dish is no longer available — it may have sold out or been removed by the chef.</Text>
           <Pressable onPress={goBack} className="mt-5 rounded-xl border border-line bg-surface px-5 py-2.5 active:bg-inset">
             <Text className="font-sans-sb text-[14px] text-ink">Go back</Text>
           </Pressable>
@@ -286,7 +286,7 @@ export default function DishDetailScreen() {
               <Avatar name={dish.chef_name} size={42} />
               <View className="flex-1">
                 <Text className="font-sans-bold text-[15px] text-ink">{dish.chef_name}</Text>
-                <Text className="text-[12px] text-muted">Flat {dish.flat}{dish.upi ? ` · UPI ${dish.upi}` : ''}</Text>
+                <Text className="font-sans text-[12px] text-muted">Flat {dish.flat}{dish.upi ? ` · UPI ${dish.upi}` : ''}</Text>
               </View>
             </View>
 

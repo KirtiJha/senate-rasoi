@@ -66,7 +66,7 @@ export function InquiryModal({ listing, senderName, onClose, onConfirm }: Inquir
               </Text>
               <View className="mt-1 flex-row items-center gap-1.5">
                 <Avatar name={ownerName} size={16} />
-                <Text className="text-[11px] text-muted">{ownerName}</Text>
+                <Text className="font-sans text-[11px] text-muted">{ownerName}</Text>
               </View>
             </View>
             {listing.price != null && (
@@ -104,7 +104,7 @@ export function InquiryModal({ listing, senderName, onClose, onConfirm }: Inquir
             fullWidth
             onPress={() => onConfirm(listing, message)}
           />
-          <Text className="mt-2.5 text-center text-[11px] leading-4 text-faint">
+          <Text className="font-sans mt-2.5 text-center text-[11px] leading-4 text-faint">
             Opens WhatsApp and notifies {ownerName} on Aangan.
           </Text>
         </Pressable>

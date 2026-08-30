@@ -185,7 +185,7 @@ function NotificationsModal({
           {items.length === 0 ? (
             <View className="items-center px-6 py-16">
               <Ionicons name="notifications-off-outline" size={34} color={c.faint} />
-              <Text className="mt-2 text-[14px] text-muted">You're all caught up</Text>
+              <Text className="font-sans mt-2 text-[14px] text-muted">You're all caught up</Text>
             </View>
           ) : (
             <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 8 }} showsVerticalScrollIndicator={false}>
@@ -203,8 +203,8 @@ function NotificationsModal({
                     </View>
                     <View className="flex-1">
                       <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{item.title}</Text>
-                      {item.body ? <Text className="text-[13px] text-muted" numberOfLines={2}>{item.body}</Text> : null}
-                      <Text className="mt-0.5 text-[11px] text-faint">{timeAgo(item.created_at)}</Text>
+                      {item.body ? <Text className="font-sans text-[13px] text-muted" numberOfLines={2}>{item.body}</Text> : null}
+                      <Text className="font-sans mt-0.5 text-[11px] text-faint">{timeAgo(item.created_at)}</Text>
                     </View>
                     {/* Per-row read/unread toggle (doesn't navigate) */}
                     <Pressable

@@ -97,7 +97,7 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
                     <Text className="font-display-sb text-[16px] text-ink" numberOfLines={1}>{o.dish?.dish_name ?? 'Dish'}</Text>
                     <View className="mt-0.5 flex-row items-center gap-1.5">
                       <Avatar name={o.dish?.chef_name ?? '?'} size={16} />
-                      <Text className="text-[12px] text-muted" numberOfLines={1}>
+                      <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>
                         {o.dish?.chef_name ?? 'Chef'} · {o.qty} plate{o.qty !== 1 ? 's' : ''} · {orderDate(o.created_at)}
                       </Text>
                     </View>

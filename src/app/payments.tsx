@@ -101,7 +101,7 @@ export default function PaymentsScreen() {
             <View className="items-center py-16">
               <Ionicons name="wallet-outline" size={42} color={c.faint} />
               <Text className="mt-3 font-display text-xl text-ink mb-1">No payments yet</Text>
-              <Text className="text-[14px] text-muted text-center max-w-xs">When you pay a neighbour (or someone pays you), it shows up here to track.</Text>
+              <Text className="font-sans text-[14px] text-muted text-center max-w-xs">When you pay a neighbour (or someone pays you), it shows up here to track.</Text>
             </View>
           ) : (
             <View className="overflow-hidden rounded-2xl border border-line bg-surface">
@@ -120,7 +120,7 @@ export default function PaymentsScreen() {
                           {iPaid ? `To ${other?.name ?? 'Neighbour'}` : `From ${other?.name ?? 'Neighbour'}`}
                         </Text>
                       </View>
-                      <Text className="text-[12px] text-muted" numberOfLines={1}>{p.note || 'Payment'} · {timeAgo(p.created_at)}</Text>
+                      <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{p.note || 'Payment'} · {timeAgo(p.created_at)}</Text>
                     </View>
                     <View className="items-end gap-1">
                       <Text className="font-display-x text-[16px] text-ink">₹{amt}</Text>

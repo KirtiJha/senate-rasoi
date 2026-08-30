@@ -29,7 +29,7 @@ export default function AboutScreen() {
             <Ionicons name="home" size={36} color={c.onAccent} />
           </View>
           <Text className="font-display-x text-[28px] text-ink">Aangan</Text>
-          <Text className="mt-1 text-[14px] text-muted">Your neighbourhood community hub</Text>
+          <Text className="font-sans mt-1 text-[14px] text-muted">Your neighbourhood community hub</Text>
           <View className="mt-3 rounded-full border border-line bg-surface px-4 py-1.5">
             <Text className="text-[12px] font-sans-md text-faint">Version {APP_VERSION}</Text>
           </View>
@@ -38,10 +38,10 @@ export default function AboutScreen() {
         {/* About the app */}
         <View className="mb-5 rounded-3xl border border-line bg-surface p-5">
           <Text className="mb-3 font-sans-sb text-[13px] text-muted">ABOUT</Text>
-          <Text className="text-[14px] leading-6 text-ink">
+          <Text className="font-sans text-[14px] leading-6 text-ink">
             Aangan brings your residential society together — order home food, discover local services, post on the community feed, and connect with your neighbours.
           </Text>
-          <Text className="mt-3 text-[14px] leading-6 text-ink">
+          <Text className="font-sans mt-3 text-[14px] leading-6 text-ink">
             Built for Indian housing societies, Aangan works across all society types — apartments, gated communities, and more.
           </Text>
         </View>
@@ -57,7 +57,7 @@ export default function AboutScreen() {
                 </View>
                 <View className="flex-1">
                   <Text className="font-sans-sb text-[13px] text-ink">{f.label}</Text>
-                  <Text className="text-[12px] text-muted">{f.desc}</Text>
+                  <Text className="font-sans text-[12px] text-muted">{f.desc}</Text>
                 </View>
               </View>
             ))}
@@ -89,7 +89,7 @@ export default function AboutScreen() {
         {/* Developer contact — required for App Store UGC apps (Guideline 1.2) */}
         <View className="mt-4 rounded-3xl border border-line bg-surface p-5">
           <Text className="mb-1 font-sans-sb text-[13px] text-muted">SUPPORT</Text>
-          <Text className="mb-3 text-[13px] leading-[19px] text-muted">
+          <Text className="font-sans mb-3 text-[13px] leading-[19px] text-muted">
             Report abuse, ask a question, or tell us something's broken. We aim to reply within 3 working days.
           </Text>
           <LinkRow
@@ -100,7 +100,7 @@ export default function AboutScreen() {
           />
         </View>
 
-        <Text className="mt-6 text-center text-[12px] text-faint">
+        <Text className="font-sans mt-6 text-center text-[12px] text-faint">
           Made with ❤️ for Indian communities
         </Text>
         </Container>
@@ -121,7 +121,7 @@ const FEATURES = [
 function InfoRow({ label, value, c }: { label: string; value: string; c: ReturnType<typeof useThemeColors> }) {
   return (
     <View className="flex-row items-center justify-between">
-      <Text className="text-[13px] text-muted">{label}</Text>
+      <Text className="font-sans text-[13px] text-muted">{label}</Text>
       <Text className="text-[13px] font-sans-md text-ink">{value}</Text>
     </View>
   );
@@ -131,7 +131,7 @@ function LinkRow({ label, icon, c, onPress }: { label: string; icon: string; c: 
   return (
     <Pressable onPress={onPress} className="flex-row items-center gap-2.5 rounded-xl py-1.5 active:opacity-70">
       <Ionicons name={icon as any} size={16} color={c.muted} />
-      <Text className="flex-1 text-[13px] text-ink">{label}</Text>
+      <Text className="font-sans flex-1 text-[13px] text-ink">{label}</Text>
       <Ionicons name="chevron-forward" size={14} color={c.faint} />
     </Pressable>
   );

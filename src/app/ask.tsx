@@ -89,7 +89,7 @@ export default function AskScreen() {
       >
         {empty ? (
           <View className="mt-2">
-            <Text className="mb-3 text-[14px] leading-5 text-muted">
+            <Text className="font-sans mb-3 text-[14px] leading-5 text-muted">
               Ask anything about your society in plain words — food, flats, things to borrow, recommendations, or your neighbours (members, professions, announcements). Follow-up questions work too.
             </Text>
             <View className="flex-row flex-wrap gap-2">
@@ -103,7 +103,7 @@ export default function AskScreen() {
         ) : (
           messages.map((m, i) => (m.role === 'user' ? (
             <View key={i} className="mb-3 max-w-[85%] self-end rounded-2xl rounded-br-md px-3.5 py-2.5" style={{ backgroundColor: ACCENT }}>
-              <Text className="text-[14px] leading-5 text-white">{m.text}</Text>
+              <Text className="font-sans text-[14px] leading-5 text-white">{m.text}</Text>
             </View>
           ) : (
             // A definite width, not `self-start`. Sized to content, Yoga
@@ -115,7 +115,7 @@ export default function AskScreen() {
               <View className="flex-row items-end gap-2">
                 <BrandMark size={24} />
                 <View className="flex-shrink rounded-2xl rounded-bl-md border border-line bg-surface px-3.5 py-2.5">
-                  <Text className="text-[14px] leading-5 text-ink">{m.text}</Text>
+                  <Text className="font-sans text-[14px] leading-5 text-ink">{m.text}</Text>
                 </View>
               </View>
               {m.results && m.results.length > 0 ? (
@@ -133,7 +133,7 @@ export default function AskScreen() {
                         </View>
                         <View className="min-w-0 flex-1">
                           <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{item.title}</Text>
-                          <Text className="text-[11px] text-muted" numberOfLines={1}>
+                          <Text className="font-sans text-[11px] text-muted" numberOfLines={1}>
                             <Text style={{ color: meta.color }}>{meta.label}</Text>{item.reason ? ` · ${item.reason}` : ''}
                           </Text>
                         </View>

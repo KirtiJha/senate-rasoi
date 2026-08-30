@@ -95,7 +95,7 @@ export function PropertyChat({ propertyId, ownerUserId, ownerName, accent }: Pro
         </View>
         <View className="flex-1">
           <Text className="font-sans-bold text-[14px] text-ink">Ask the owner</Text>
-          <Text className="text-[12px] text-muted">
+          <Text className="font-sans text-[12px] text-muted">
             {count > 0 ? `${count} message${count === 1 ? '' : 's'}` : 'Ask for details — floor, availability, etc.'}
           </Text>
         </View>
@@ -107,7 +107,7 @@ export function PropertyChat({ propertyId, ownerUserId, ownerName, accent }: Pro
           {!loaded ? (
             <View className="items-center py-6"><ActivityIndicator size="small" color={c.muted} /></View>
           ) : count === 0 ? (
-            <Text className="py-4 text-center text-[13px] text-muted">
+            <Text className="font-sans py-4 text-center text-[13px] text-muted">
               No questions yet. Be the first to ask {ownerName || 'the owner'} for details.
             </Text>
           ) : (
@@ -154,7 +154,7 @@ export function PropertyChat({ propertyId, ownerUserId, ownerName, accent }: Pro
               </Pressable>
             </View>
           ) : (
-            <Text className="mt-2 text-center text-[12px] text-faint">Sign in to ask a question.</Text>
+            <Text className="font-sans mt-2 text-center text-[12px] text-faint">Sign in to ask a question.</Text>
           )}
         </View>
       ) : null}
@@ -180,8 +180,8 @@ function MessageBubble({ message, isMine, isOwner, canDelete, accent, onDelete, 
           </Pressable>
         ) : null}
         <View className="max-w-[80%] rounded-2xl rounded-br-md px-3 py-2" style={{ backgroundColor: accent }}>
-          <Text className="text-[13px] leading-5 text-white">{message.body}</Text>
-          <Text className="mt-0.5 text-right text-[10px] text-white/70">{timeAgo(message.created_at)}</Text>
+          <Text className="font-sans text-[13px] leading-5 text-white">{message.body}</Text>
+          <Text className="font-sans mt-0.5 text-right text-[10px] text-white/70">{timeAgo(message.created_at)}</Text>
         </View>
       </View>
     );
@@ -197,12 +197,12 @@ function MessageBubble({ message, isMine, isOwner, canDelete, accent, onDelete, 
               <Text className="text-[9px] font-sans-sb uppercase tracking-wide" style={{ color: accent }}>Owner</Text>
             </View>
           ) : message.author?.flat ? (
-            <Text className="text-[11px] text-faint">Flat {message.author.flat}</Text>
+            <Text className="font-sans text-[11px] text-faint">Flat {message.author.flat}</Text>
           ) : null}
-          <Text className="ml-auto text-[10px] text-faint">{timeAgo(message.created_at)}</Text>
+          <Text className="font-sans ml-auto text-[10px] text-faint">{timeAgo(message.created_at)}</Text>
         </View>
         <View className="self-start max-w-[88%] rounded-2xl rounded-tl-md bg-inset px-3 py-2">
-          <Text className="text-[13px] leading-5 text-ink">{message.body}</Text>
+          <Text className="font-sans text-[13px] leading-5 text-ink">{message.body}</Text>
         </View>
       </View>
       {canDelete ? (

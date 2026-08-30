@@ -38,7 +38,7 @@ export default function LegalScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
-          <Text className="mb-4 text-[12px] text-faint">Last updated: {UPDATED}</Text>
+          <Text className="font-sans mb-4 text-[12px] text-faint">Last updated: {UPDATED}</Text>
           {(tab === 'terms' ? TERMS : PRIVACY).map((s) => (
             <View key={s.h} className="mb-5">
               <Text className="mb-1.5 font-display-x text-[17px] text-ink">{s.h}</Text>

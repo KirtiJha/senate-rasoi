@@ -160,7 +160,7 @@ export default function EventDetailScreen() {
           </View>
 
           {event.description ? (
-            <Text className="mt-3 text-[14px] leading-[21px] text-muted">{event.description}</Text>
+            <Text className="font-sans mt-3 text-[14px] leading-[21px] text-muted">{event.description}</Text>
           ) : null}
 
           {/* Money at a glance */}
@@ -178,7 +178,7 @@ export default function EventDetailScreen() {
             {pct != null ? (
               <View className="mt-3">
                 <View className="mb-1 flex-row justify-between">
-                  <Text className="text-[11px] text-faint">Against budget {rupees(totals.budget!)}</Text>
+                  <Text className="font-sans text-[11px] text-faint">Against budget {rupees(totals.budget!)}</Text>
                   <Text className="text-[11px] font-sans-sb text-muted">{pct}%</Text>
                 </View>
                 <View className="h-2 overflow-hidden rounded-full" style={{ backgroundColor: c.inset }}>
@@ -188,7 +188,7 @@ export default function EventDetailScreen() {
             ) : null}
 
             {totals.flatsTotal > 0 ? (
-              <Text className="mt-3 text-[12px] text-muted">
+              <Text className="font-sans mt-3 text-[12px] text-muted">
                 {totals.flatsPaid} of {totals.flatsTotal} flats have contributed
                 {totals.pending > 0 ? ` · ${rupees(totals.pending)} still expected` : ''}
               </Text>
@@ -232,7 +232,7 @@ export default function EventDetailScreen() {
             </View>
 
             {team.length === 0 ? (
-              <Text className="px-1 text-[13px] text-faint">Nobody added yet.</Text>
+              <Text className="font-sans px-1 text-[13px] text-faint">Nobody added yet.</Text>
             ) : (
               <View className="gap-2">
                 {team.map((t) => (
@@ -242,7 +242,7 @@ export default function EventDetailScreen() {
                       <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>
                         {t.profile?.name ?? 'A neighbour'}
                       </Text>
-                      <Text className="text-[12px] text-muted">
+                      <Text className="font-sans text-[12px] text-muted">
                         {t.profile?.flat ? `Flat ${t.profile.flat}` : 'Neighbour'}
                       </Text>
                     </View>
@@ -279,7 +279,7 @@ export default function EventDetailScreen() {
 
       {/* Status sheet */}
       <Sheet visible={showStatus} onClose={() => setShowStatus(false)} title="Function status">
-        <Text className="mb-3 text-[13px] leading-[19px] text-muted">
+        <Text className="font-sans mb-3 text-[13px] leading-[19px] text-muted">
           Moving to <Text className="font-sans-sb">Collecting</Text> notifies everyone that
           contributions are open. <Text className="font-sans-sb">Completed</Text> publishes the
           accounts and closes the books.
@@ -306,7 +306,7 @@ export default function EventDetailScreen() {
 
       {/* Team picker */}
       <Sheet visible={showTeam} onClose={() => setShowTeam(false)} title="Core team">
-        <Text className="mb-3 text-[13px] leading-[19px] text-muted">
+        <Text className="font-sans mb-3 text-[13px] leading-[19px] text-muted">
           The <Text className="font-sans-sb">lead</Text> runs the function.
           The <Text className="font-sans-sb">treasurer</Text> is the only one who can confirm money received.
         </Text>
@@ -371,13 +371,13 @@ export default function EventDetailScreen() {
                 style={{ backgroundColor: c.inset }}
               >
                 <Avatar name={r.name} size={26} />
-                <Text className="flex-1 text-[13px] text-ink" numberOfLines={1}>{r.name}</Text>
-                <Text className="text-[11px] text-faint">{[r.block, r.flat].filter(Boolean).join('-')}</Text>
+                <Text className="font-sans flex-1 text-[13px] text-ink" numberOfLines={1}>{r.name}</Text>
+                <Text className="font-sans text-[11px] text-faint">{[r.block, r.flat].filter(Boolean).join('-')}</Text>
                 <Ionicons name="add-circle-outline" size={18} color={ACCENT} />
               </Pressable>
             ))}
           {residents.length === 0 ? (
-            <Text className="text-[12px] text-faint">Loading residents…</Text>
+            <Text className="font-sans text-[12px] text-faint">Loading residents…</Text>
           ) : null}
         </View>
       </Sheet>
@@ -388,7 +388,7 @@ export default function EventDetailScreen() {
 function Stat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <View className="flex-1">
-      <Text className="text-[11px] text-faint">{label}</Text>
+      <Text className="font-sans text-[11px] text-faint">{label}</Text>
       <Text className="font-sans-bold text-[17px]" style={{ color }}>{value}</Text>
     </View>
   );
@@ -410,7 +410,7 @@ function NavRow({
       </View>
       <View className="min-w-0 flex-1">
         <Text className="font-sans-bold text-[14px] text-ink">{title}</Text>
-        <Text className="text-[12px] text-muted" numberOfLines={1}>{sub}</Text>
+        <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{sub}</Text>
       </View>
       <Ionicons name="chevron-forward" size={16} color={c.faint} />
     </Pressable>

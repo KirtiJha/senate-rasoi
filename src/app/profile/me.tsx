@@ -134,7 +134,7 @@ export default function ProfileScreen() {
               <Avatar name={profile?.name ?? 'Me'} size={72} />
             </View>
             <Text className="font-display-x text-[22px] text-ink">{profile?.name ?? '—'}</Text>
-            {profile?.flat ? <Text className="text-[13px] text-muted">Flat {profile.flat}</Text> : null}
+            {profile?.flat ? <Text className="font-sans text-[13px] text-muted">Flat {profile.flat}</Text> : null}
 
             {/* Role chip */}
             <View className="mt-2 flex-row flex-wrap justify-center gap-1.5">
@@ -192,7 +192,7 @@ export default function ProfileScreen() {
               <Ionicons name={showInDirectory ? 'call-outline' : 'eye-off-outline'} size={18} color={showInDirectory ? c.accent : c.muted} />
               <View className="flex-1">
                 <Text className="font-sans-sb text-[14px] text-ink">Show my phone number in the directory</Text>
-                <Text className="text-[12px] text-muted">{showInDirectory ? 'Neighbours can call & WhatsApp you' : "You're still listed — but your number is hidden"}</Text>
+                <Text className="font-sans text-[12px] text-muted">{showInDirectory ? 'Neighbours can call & WhatsApp you' : "You're still listed — but your number is hidden"}</Text>
               </View>
               <View className={`h-6 w-10 rounded-full p-0.5 ${showInDirectory ? 'bg-accent' : 'bg-line'}`}>
                 <View className={`h-5 w-5 rounded-full bg-white ${showInDirectory ? 'self-end' : 'self-start'}`} />
@@ -206,7 +206,7 @@ export default function ProfileScreen() {
               <Ionicons name={movedIn ? 'home' : 'home-outline'} size={18} color={movedIn ? c.accent : c.muted} />
               <View className="flex-1">
                 <Text className="font-sans-sb text-[14px] text-ink">I've moved into the society</Text>
-                <Text className="text-[12px] text-muted">{movedIn ? 'Shown as living here' : 'Shown as not moved in yet'}</Text>
+                <Text className="font-sans text-[12px] text-muted">{movedIn ? 'Shown as living here' : 'Shown as not moved in yet'}</Text>
               </View>
               <View className={`h-6 w-10 rounded-full p-0.5 ${movedIn ? 'bg-accent' : 'bg-line'}`}>
                 <View className={`h-5 w-5 rounded-full bg-white ${movedIn ? 'self-end' : 'self-start'}`} />
@@ -290,7 +290,7 @@ export default function ProfileScreen() {
           {/* Danger zone */}
           <View className="rounded-2xl border border-red-200 bg-red-50 p-4">
             <Text className="mb-1 font-sans-sb text-[13px] text-red-700">Danger Zone</Text>
-            <Text className="mb-3 text-[12px] text-red-500">Deleting your account permanently removes all your listings, posts, and data. This cannot be undone.</Text>
+            <Text className="font-sans mb-3 text-[12px] text-red-500">Deleting your account permanently removes all your listings, posts, and data. This cannot be undone.</Text>
             <Pressable
               onPress={handleDeleteAccount}
               className="flex-row items-center justify-center gap-2 rounded-xl border border-red-300 bg-white py-2.5 active:bg-red-50"

@@ -19,7 +19,7 @@ export function Empty({
       </View>
       <Text className="mb-1.5 font-display text-xl text-ink">{title}</Text>
       {children ? (
-        <Text className="mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">{children}</Text>
+        <Text className="font-sans mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">{children}</Text>
       ) : null}
       {action}
     </View>

@@ -247,7 +247,7 @@ export default function SearchScreen() {
             <View className="items-center py-16">
               <Ionicons name="search-outline" size={40} color={c.faint} />
               <Text className="mt-3 font-display text-xl text-ink mb-1">No results</Text>
-              <Text className="text-[14px] text-muted text-center max-w-xs">Nothing matched “{query.trim()}”. Try a different word.</Text>
+              <Text className="font-sans text-[14px] text-muted text-center max-w-xs">Nothing matched “{query.trim()}”. Try a different word.</Text>
             </View>
           ) : (
             grouped.map((g) => (
@@ -279,7 +279,7 @@ function ResultRow({ it, first, c, onPress }: { it: SearchItem; first: boolean; 
       )}
       <View className="flex-1" style={{ minWidth: 0 }}>
         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{it.title}</Text>
-        <Text className="text-[12px] text-muted" numberOfLines={1}>{it.subtitle}</Text>
+        <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{it.subtitle}</Text>
       </View>
       <Ionicons name="chevron-forward" size={16} color={c.faint} />
     </Pressable>
@@ -299,7 +299,7 @@ function RecentsOrHint({
       <View className="items-center py-16">
         <Ionicons name="sparkles-outline" size={36} color={c.faint} />
         <Text className="mt-3 font-display text-xl text-ink mb-1">Search anything</Text>
-        <Text className="text-[14px] text-muted text-center max-w-xs">Residents, home food, tiffins, listings and posts — all in one place.</Text>
+        <Text className="font-sans text-[14px] text-muted text-center max-w-xs">Residents, home food, tiffins, listings and posts — all in one place.</Text>
       </View>
     );
   }

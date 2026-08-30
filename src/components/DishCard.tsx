@@ -133,7 +133,7 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCar
 
         <View className="mt-3 flex-row items-center gap-2">
           <Avatar name={dish.chef_name} size={26} />
-          <Text className="flex-1 text-[12px] text-muted" numberOfLines={1}>
+          <Text className="font-sans flex-1 text-[12px] text-muted" numberOfLines={1}>
             <Text className="font-sans-sb text-ink">{dish.chef_name}</Text> · Flat {dish.flat}
             {dish.upi ? ` · UPI ${dish.upi}` : ''}
           </Text>
@@ -154,7 +154,7 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCar
           <View className="flex-row items-end gap-2.5">
             <View>
               <Text className="font-display-x text-[22px] text-ink">₹{dish.price}</Text>
-              <Text className="-mt-1 text-[11px] text-faint">per plate</Text>
+              <Text className="font-sans -mt-1 text-[11px] text-faint">per plate</Text>
             </View>
             <View
               className="mb-0.5 flex-row items-center gap-1 rounded-full px-2.5 py-1"

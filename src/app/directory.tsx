@@ -262,7 +262,7 @@ export default function DirectoryScreen() {
             <View className="items-center py-16">
               <Ionicons name="people-outline" size={40} color={c.faint} />
               <Text className="mt-3 font-display text-xl text-ink mb-1">No residents found</Text>
-              <Text className="text-[14px] text-muted text-center max-w-xs">
+              <Text className="font-sans text-[14px] text-muted text-center max-w-xs">
                 {query || filter !== 'all' ? 'Try a different search or filter.' : 'Add a neighbour with the Add button.'}
               </Text>
             </View>
@@ -273,7 +273,7 @@ export default function DirectoryScreen() {
                   <View className="mb-2 flex-row items-center gap-2">
                     <Ionicons name="text-outline" size={14} color={c.muted} />
                     <Text className="font-sans-bold text-[13px] uppercase tracking-wider text-muted">All residents · A–Z</Text>
-                    <Text className="text-[12px] text-faint">· {g.rows.length}</Text>
+                    <Text className="font-sans text-[12px] text-faint">· {g.rows.length}</Text>
                   </View>
                 ) : (
                   <View className="mb-2 flex-row items-center gap-2">
@@ -286,7 +286,7 @@ export default function DirectoryScreen() {
                         <Text className="text-[10px] font-sans-sb uppercase" style={{ color: '#8B5CF6' }}>Block {g.block}</Text>
                       </View>
                     ) : null}
-                    {g.rows.length > 1 ? <Text className="text-[12px] text-faint">· {g.rows.length} residents</Text> : null}
+                    {g.rows.length > 1 ? <Text className="font-sans text-[12px] text-faint">· {g.rows.length} residents</Text> : null}
                   </View>
                 )}
                 <View className="overflow-hidden rounded-2xl border border-line bg-surface">
@@ -450,7 +450,7 @@ function DetailRow({ icon, label, value, c, last }: { icon: keyof typeof Ionicon
     <View className={`flex-row items-center gap-3 px-2.5 py-2.5 ${last ? '' : 'border-b border-line'}`}>
       <Ionicons name={icon} size={16} color={c.faint} />
       <Text className="w-20 text-[12px] font-sans-sb uppercase tracking-wide text-faint">{label}</Text>
-      <Text className="flex-1 text-[14px] text-ink" selectable>{value}</Text>
+      <Text className="font-sans flex-1 text-[14px] text-ink" selectable>{value}</Text>
     </View>
   );
 }
@@ -474,7 +474,7 @@ function ResidentRow({
     >
       <Avatar name={r.name} size={40} />
       <View className="flex-1" style={{ minWidth: 0 }}>
-        <Text className="font-sans-bold text-[14.5px] text-ink" numberOfLines={1}>{r.name}</Text>
+        <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{r.name}</Text>
         <View className="mt-0.5 flex-row items-center gap-1.5">
           {r.resident_type ? (
             <View className="rounded px-1.5 py-0.5" style={{ backgroundColor: typeColor + '20' }}>
@@ -491,7 +491,7 @@ function ResidentRow({
               <Text className="text-[9px] font-sans-sb uppercase text-muted">Not moved in</Text>
             </View>
           ) : null}
-          {sub ? <Text className="flex-1 text-[12px] text-muted" numberOfLines={1}>{sub}</Text> : null}
+          {sub ? <Text className="font-sans flex-1 text-[12px] text-muted" numberOfLines={1}>{sub}</Text> : null}
         </View>
       </View>
 
@@ -552,7 +552,7 @@ function AddResidentModal({
       title="Add a resident"
       footer={<Button label={busy ? 'Adding…' : 'Add resident'} loading={busy} fullWidth disabled={!name.trim()} onPress={submit} />}
     >
-      <Text className="mb-4 text-[13px] text-muted">Add a neighbour to the directory. If they're not on Aangan yet, you can invite them after.</Text>
+      <Text className="font-sans mb-4 text-[13px] text-muted">Add a neighbour to the directory. If they're not on Aangan yet, you can invite them after.</Text>
       <Field label="Name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} />
       <View className="flex-row gap-3">
         <View className="w-24"><Field label="Block" autoCapitalize="characters" placeholder="E" value={block} onChangeText={setBlock} /></View>

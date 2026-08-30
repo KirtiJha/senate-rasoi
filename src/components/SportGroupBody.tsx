@@ -150,7 +150,7 @@ export function SportGroupBody({
           <Text style={{ fontSize: 12 }}>{sport?.emoji}</Text>
           <Text className="text-[12px] font-sans-sb" style={{ color }}>{sport?.label ?? group.sport}</Text>
         </View>
-        {group.description ? <Text className="mt-3 text-center text-[14px] leading-6 text-muted">{group.description}</Text> : null}
+        {group.description ? <Text className="font-sans mt-3 text-center text-[14px] leading-6 text-muted">{group.description}</Text> : null}
         <View className="mt-4 w-full">
           <Button label={isMember ? 'Leave group' : 'Join group'} fullWidth variant={isMember ? 'outline' : 'primary'} onPress={toggleJoin} />
         </View>
@@ -164,7 +164,7 @@ export function SportGroupBody({
             {schedule.map((s, i) => (
               <View key={i} className="flex-row items-center gap-2.5">
                 <Ionicons name={s.icon} size={16} color={c.muted} />
-                <Text className="text-[14px] text-ink">{s.text}</Text>
+                <Text className="font-sans text-[14px] text-ink">{s.text}</Text>
               </View>
             ))}
           </View>
@@ -196,7 +196,7 @@ export function SportGroupBody({
           ) : null}
         </View>
         {members.length === 0 ? (
-          <Text className="py-2 text-[13px] text-muted">No members yet.</Text>
+          <Text className="font-sans py-2 text-[13px] text-muted">No members yet.</Text>
         ) : (
           <View className="gap-2.5">
             {members.map((m) => {
@@ -217,7 +217,7 @@ export function SportGroupBody({
                         </View>
                       ) : null}
                     </View>
-                    {m.profile?.flat ? <Text className="text-[12px] text-faint">Flat {m.profile.flat}</Text> : null}
+                    {m.profile?.flat ? <Text className="font-sans text-[12px] text-faint">Flat {m.profile.flat}</Text> : null}
                   </View>
                   {showMakeCaptain ? (
                     <Pressable onPress={() => onMakeCaptain(m)} hitSlop={6} className="h-8 w-8 items-center justify-center rounded-full bg-inset active:opacity-70">
@@ -235,7 +235,7 @@ export function SportGroupBody({
           </View>
         )}
         {managing ? (
-          <Text className="mt-3 text-center text-[11px] text-faint">
+          <Text className="font-sans mt-3 text-center text-[11px] text-faint">
             👑 Transfer captaincy &nbsp;·&nbsp; ✕ Remove from group
           </Text>
         ) : null}
@@ -258,7 +258,7 @@ export function SportGroupBody({
           ) : null}
         </View>
         {tournaments.length === 0 ? (
-          <Text className="py-2 text-[13px] text-muted">No tournaments scheduled.</Text>
+          <Text className="font-sans py-2 text-[13px] text-muted">No tournaments scheduled.</Text>
         ) : (
           <View className="gap-2.5">
             {tournaments.map((t) => (
@@ -272,8 +272,8 @@ export function SportGroupBody({
                 )}
                 <View className="flex-1">
                   <Text className="font-sans-sb text-[14px] text-ink">{t.title}</Text>
-                  <Text className="text-[12px] text-muted">{[t.event_date, t.location].filter(Boolean).join(' · ') || 'Date TBA'}</Text>
-                  {t.notes ? <Text className="mt-0.5 text-[12px] text-faint">{t.notes}</Text> : null}
+                  <Text className="font-sans text-[12px] text-muted">{[t.event_date, t.location].filter(Boolean).join(' · ') || 'Date TBA'}</Text>
+                  {t.notes ? <Text className="font-sans mt-0.5 text-[12px] text-faint">{t.notes}</Text> : null}
                 </View>
                 {canManage ? (
                   <View className="flex-row items-center gap-2.5">
@@ -396,7 +396,7 @@ function EditGroupSheet({
           <TextInput value={duration} onChangeText={setDuration} keyboardType="number-pad" placeholder="90" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
         </View>
       </View>
-      {!timeOk ? <Text className="mb-2 text-[11px] text-nonveg">Enter time as HH:MM (e.g. 18:00)</Text> : null}
+      {!timeOk ? <Text className="font-sans mb-2 text-[11px] text-nonveg">Enter time as HH:MM (e.g. 18:00)</Text> : null}
 
       <Text className={lbl}>Court / ground</Text>
       <TextInput value={location} onChangeText={setLocation} placeholder="e.g. Clubhouse court 1" placeholderTextColor={c.faint} className={`mb-1 ${input}`} style={{ outline: 'none' } as any} />
@@ -467,7 +467,7 @@ function AddMemberSheet({
       </View>
 
       {filtered.length === 0 ? (
-        <Text className="py-6 text-center text-[13px] text-muted">No residents found.</Text>
+        <Text className="font-sans py-6 text-center text-[13px] text-muted">No residents found.</Text>
       ) : (
         <View className="gap-1">
           {filtered.map((r) => {
@@ -479,7 +479,7 @@ function AddMemberSheet({
                 <Avatar name={r.name} size={34} />
                 <View className="flex-1">
                   <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{r.name}</Text>
-                  <Text className="text-[12px] text-faint">{[flatLabel(r) && `Flat ${flatLabel(r)}`, inGroup ? 'Already in group' : (!r.userId ? 'Not on Aangan' : null)].filter(Boolean).join(' · ')}</Text>
+                  <Text className="font-sans text-[12px] text-faint">{[flatLabel(r) && `Flat ${flatLabel(r)}`, inGroup ? 'Already in group' : (!r.userId ? 'Not on Aangan' : null)].filter(Boolean).join(' · ')}</Text>
                 </View>
                 {inGroup ? (
                   <Ionicons name="checkmark-circle" size={22} color={c.muted} />

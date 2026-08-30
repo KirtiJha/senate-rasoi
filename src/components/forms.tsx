@@ -14,7 +14,7 @@ export function SectionCard({
   return (
     <View className="mb-4 rounded-3xl border border-line bg-surface p-4">
       <Text className="font-display text-[17px] text-ink">{title}</Text>
-      {subtitle ? <Text className="mb-3 mt-0.5 text-[12px] text-faint">{subtitle}</Text> : <View className="mb-3" />}
+      {subtitle ? <Text className="font-sans mb-3 mt-0.5 text-[12px] text-faint">{subtitle}</Text> : <View className="mb-3" />}
       {children}
     </View>
   );
@@ -58,7 +58,7 @@ export function Field({ label, required, hint, prefix, style, multiline, ...inpu
           {...inputProps}
         />
       </View>
-      {hint ? <Text className="mt-1 text-[11px] text-faint">{hint}</Text> : null}
+      {hint ? <Text className="font-sans mt-1 text-[11px] text-faint">{hint}</Text> : null}
     </View>
   );
 }

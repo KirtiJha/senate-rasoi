@@ -98,7 +98,7 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
           <View className="items-center px-6 py-16">
             <Text style={{ fontSize: 34 }} className="mb-3">🍱</Text>
             <Text className="mb-1.5 font-display text-xl text-ink">No tiffins yet</Text>
-            <Text className="mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">
+            <Text className="font-sans mb-5 max-w-xs text-center text-[14px] leading-6 text-muted">
               Subscribe to a neighbour's daily tiffin from Discover, or post your own tiffin service.
             </Text>
             <View className="flex-row gap-2">
@@ -153,7 +153,7 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
                       </View>
                       <View className="mt-0.5 flex-row items-center gap-1.5">
                         <Avatar name={plan?.chef?.name ?? '?'} size={16} />
-                        <Text className="text-[12px] text-muted" numberOfLines={1}>
+                        <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>
                           {plan?.chef?.name ?? 'Chef'} · {plan ? `${SLOT_EMOJI[plan.slot]} ${daysLabel(plan.days_of_week)}` : ''}
                         </Text>
                       </View>
@@ -229,23 +229,23 @@ function TiffinPlanCard({
       </View>
 
       <TiffinEditSheet plan={plan} visible={showEdit} onClose={() => setShowEdit(false)} onSaved={() => { setShowEdit(false); onChanged(); }} />
-      <Text className="mt-0.5 text-[12px] text-faint">{daysLabel(plan.days_of_week)} · ₹{plan.price}/day · max {plan.max_per_day}</Text>
+      <Text className="font-sans mt-0.5 text-[12px] text-faint">{daysLabel(plan.days_of_week)} · ₹{plan.price}/day · max {plan.max_per_day}</Text>
 
       <View className="mt-3 rounded-2xl bg-inset px-3 py-2.5">
         <Text className="mb-1 text-[11px] font-sans-sb uppercase tracking-wider text-muted">
           {servesToday ? `Today · ${plates} plate${plates !== 1 ? 's' : ''} for ${rows.length} subscriber${rows.length !== 1 ? 's' : ''}` : 'Not served today'}
         </Text>
         {servesToday && rows.length === 0 ? (
-          <Text className="text-[13px] text-faint">No active subscribers today.</Text>
+          <Text className="font-sans text-[13px] text-faint">No active subscribers today.</Text>
         ) : (
           rows.map((r) => (
             <View key={r.subscription_id} className="flex-row items-center gap-2 py-1">
               <Avatar name={r.subscriber_name} size={22} />
-              <Text className="flex-1 text-[13px] text-ink" numberOfLines={1}>
+              <Text className="font-sans flex-1 text-[13px] text-ink" numberOfLines={1}>
                 {r.subscriber_name}
                 {r.subscriber_flat ? <Text className="text-faint"> · {r.subscriber_flat}</Text> : null}
               </Text>
-              <Text className="text-[12px] text-muted">{r.qty} plate{r.qty !== 1 ? 's' : ''}</Text>
+              <Text className="font-sans text-[12px] text-muted">{r.qty} plate{r.qty !== 1 ? 's' : ''}</Text>
             </View>
           ))
         )}

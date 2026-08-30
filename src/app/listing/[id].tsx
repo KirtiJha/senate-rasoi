@@ -163,7 +163,7 @@ export default function ListingDetailScreen() {
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="alert-circle-outline" size={48} color={c.faint} />
           <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Listing removed</Text>
-          <Text className="mt-1.5 text-center text-[13px] text-muted">This listing is no longer available — it may have been removed by the owner.</Text>
+          <Text className="font-sans mt-1.5 text-center text-[13px] text-muted">This listing is no longer available — it may have been removed by the owner.</Text>
           <Pressable onPress={goBack} className="mt-5 rounded-xl border border-line bg-surface px-5 py-2.5 active:bg-inset">
             <Text className="font-sans-sb text-[14px] text-ink">Go back</Text>
           </Pressable>
@@ -279,15 +279,15 @@ export default function ListingDetailScreen() {
                 <Text className="font-sans-bold text-[15px] text-ink">{ownerName}</Text>
                 {listing.is_referral ? (
                   listing.referral_phone ? (
-                    <Text className="text-[12px] text-muted">📞 {listing.referral_phone}</Text>
+                    <Text className="font-sans text-[12px] text-muted">📞 {listing.referral_phone}</Text>
                   ) : null
                 ) : (
                   listing.owner?.flat ? (
-                    <Text className="text-[12px] text-muted">Flat {listing.owner.flat}</Text>
+                    <Text className="font-sans text-[12px] text-muted">Flat {listing.owner.flat}</Text>
                   ) : null
                 )}
                 {listing.location && (
-                  <Text className="text-[12px] text-muted">📍 {listing.location}</Text>
+                  <Text className="font-sans text-[12px] text-muted">📍 {listing.location}</Text>
                 )}
               </View>
               <ModerationMenu

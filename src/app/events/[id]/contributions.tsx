@@ -181,12 +181,12 @@ export default function ContributionsScreen() {
           {/* Summary */}
           <View className="mb-4 rounded-2xl border border-line bg-surface p-4">
             <Text className="font-sans-bold text-[20px]" style={{ color: ACCENT }}>{rupees(totals.collected)}</Text>
-            <Text className="text-[12px] text-muted">
+            <Text className="font-sans text-[12px] text-muted">
               collected from {totals.flatsPaid} of {totals.flatsTotal} flats
               {totals.pending > 0 ? ` · ${rupees(totals.pending)} expected` : ''}
             </Text>
             {treasurer ? (
-              <Text className="mt-2 text-[12px] text-faint">
+              <Text className="font-sans mt-2 text-[12px] text-faint">
                 Collected by {treasurer.profile?.name ?? 'the treasurer'}
                 {treasurer.profile?.flat ? `, ${treasurer.profile.flat}` : ''}. Money goes directly to
                 them — Aangan only keeps the record.
@@ -198,7 +198,7 @@ export default function ContributionsScreen() {
             <View className="mb-4 flex-row items-start gap-2 rounded-2xl border px-3.5 py-3"
                   style={{ borderColor: '#0891B255', backgroundColor: '#0891B212' }}>
               <Ionicons name="lock-closed-outline" size={16} color="#0891B2" />
-              <Text className="flex-1 text-[12px] leading-[17px]" style={{ color: '#0E7490' }}>
+              <Text className="font-sans flex-1 text-[12px] leading-[17px]" style={{ color: '#0E7490' }}>
                 The accounts are published and closed. Contributions can no longer be changed.
               </Text>
             </View>
@@ -208,7 +208,7 @@ export default function ContributionsScreen() {
             <View className="items-center py-16">
               <Ionicons name="people-outline" size={40} color={c.faint} />
               <Text className="mt-3 font-sans-sb text-[15px] text-ink">No flats listed yet</Text>
-              <Text className="mt-1 max-w-xs text-center text-[13px] text-muted">
+              <Text className="font-sans mt-1 max-w-xs text-center text-[13px] text-muted">
                 Build the list from your resident directory, then mark each flat as it pays.
               </Text>
               {canManage && !locked ? (
@@ -251,7 +251,7 @@ export default function ContributionsScreen() {
                           <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: m.color + '20' }}>
                             <Text className="text-[10px] font-sans-sb" style={{ color: m.color }}>{m.label}</Text>
                           </View>
-                          {row.method ? <Text className="text-[11px] text-faint">{row.method}</Text> : null}
+                          {row.method ? <Text className="font-sans text-[11px] text-faint">{row.method}</Text> : null}
                         </View>
                       </View>
 
@@ -323,7 +323,7 @@ export default function ContributionsScreen() {
           className="rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink"
           style={{ minHeight: 60, outline: 'none' } as any}
         />
-        <Text className="mt-3 text-[12px] leading-[17px] text-faint">
+        <Text className="font-sans mt-3 text-[12px] leading-[17px] text-faint">
           "Waive" is for flats that aren't contributing — they're removed from the expected
           total instead of showing as unpaid forever.
         </Text>

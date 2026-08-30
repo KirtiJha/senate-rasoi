@@ -103,13 +103,13 @@ export default function NewEventScreen() {
             placeholder="1000" placeholderTextColor={c.faint}
             className={`mb-1.5 ${input}`} style={{ outline: 'none' } as any}
           />
-          <Text className="mb-5 text-[12px] leading-[17px] text-faint">
+          <Text className="font-sans mb-5 text-[12px] leading-[17px] text-faint">
             Just a default — the treasurer can set a different amount for any flat,
             or waive it entirely.
           </Text>
 
           <Button label="Create function" icon="checkmark" size="lg" fullWidth loading={saving} onPress={submit} />
-          <Text className="mt-3 text-center text-[12px] leading-[18px] text-faint">
+          <Text className="font-sans mt-3 text-center text-[12px] leading-[18px] text-faint">
             It starts as a draft, so nobody is notified yet. Add your core team,
             then open contributions when you're ready.
           </Text>

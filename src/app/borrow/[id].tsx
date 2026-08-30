@@ -127,7 +127,7 @@ export default function LendItemDetailScreen() {
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="alert-circle-outline" size={48} color={c.faint} />
           <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Item removed</Text>
-          <Text className="mt-1.5 text-center text-[13px] text-muted">This item is no longer listed — it may have been removed by the owner.</Text>
+          <Text className="font-sans mt-1.5 text-center text-[13px] text-muted">This item is no longer listed — it may have been removed by the owner.</Text>
           <Pressable onPress={goBack} className="mt-5 rounded-xl border border-line bg-surface px-5 py-2.5 active:bg-inset">
             <Text className="font-sans-sb text-[14px] text-ink">Go back</Text>
           </Pressable>
@@ -189,7 +189,7 @@ export default function LendItemDetailScreen() {
             <Avatar name={ownerName} size={40} />
             <View className="flex-1">
               <Text className="font-sans-bold text-[14px] text-ink">{ownerName}</Text>
-              <Text className="text-[12px] text-muted">{item.owner?.flat ? `Flat ${item.owner.flat}` : 'Neighbour'}</Text>
+              <Text className="font-sans text-[12px] text-muted">{item.owner?.flat ? `Flat ${item.owner.flat}` : 'Neighbour'}</Text>
             </View>
             {canManage ? (
               <Pressable onPress={openEdit} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: c.inset }}>
@@ -236,11 +236,11 @@ export default function LendItemDetailScreen() {
                           <Avatar name={r.requester?.name ?? '?'} size={26} />
                           <View className="flex-1">
                             <Text className="font-sans-bold text-[13px] text-ink">{r.requester?.name ?? 'A neighbour'}</Text>
-                            {r.requester?.flat ? <Text className="text-[11px] text-faint">Flat {r.requester.flat}</Text> : null}
+                            {r.requester?.flat ? <Text className="font-sans text-[11px] text-faint">Flat {r.requester.flat}</Text> : null}
                           </View>
                           <Text className="text-[11px] font-sans-sb" style={{ color: r.status === 'accepted' ? '#16A34A' : r.status === 'declined' ? '#EF4444' : r.status === 'returned' ? '#6B7280' : ACCENT }}>{r.status}</Text>
                         </View>
-                        {r.note ? <Text className="mt-1.5 text-[13px] text-ink">{r.note}</Text> : null}
+                        {r.note ? <Text className="font-sans mt-1.5 text-[13px] text-ink">{r.note}</Text> : null}
                         <View className="mt-2 flex-row flex-wrap gap-2">
                           {r.status === 'pending' ? (
                             <>
@@ -273,12 +273,12 @@ export default function LendItemDetailScreen() {
                     <Text className="mt-1 font-sans-bold text-[14px] text-ink">
                       {myRequest.status === 'pending' ? 'Request sent' : myRequest.status === 'accepted' ? 'Request accepted 🎉' : myRequest.status === 'declined' ? 'Request declined' : 'Returned'}
                     </Text>
-                    <Text className="text-[12px] text-muted">{myRequest.status === 'accepted' ? 'Coordinate pickup with the owner.' : 'The owner will respond soon.'}</Text>
+                    <Text className="font-sans text-[12px] text-muted">{myRequest.status === 'accepted' ? 'Coordinate pickup with the owner.' : 'The owner will respond soon.'}</Text>
                   </View>
                 ) : item.status === 'available' ? (
                   <Button label="Request to borrow" icon="hand-left-outline" size="lg" fullWidth onPress={() => setShowReq(true)} />
                 ) : (
-                  <Text className="text-center text-[13px] text-muted">Currently {item.status === 'lent' ? 'lent out' : 'unavailable'}.</Text>
+                  <Text className="font-sans text-center text-[13px] text-muted">Currently {item.status === 'lent' ? 'lent out' : 'unavailable'}.</Text>
                 )
               ) : (
                 /* kind='request' — owner needs to borrow; non-owner can offer to help */
@@ -301,7 +301,7 @@ export default function LendItemDetailScreen() {
 
       {/* Request to borrow sheet */}
       <Sheet visible={showReq} onClose={() => { setNote(''); setShowReq(false); }} title="Request to borrow">
-        <Text className="mb-3 text-[13px] leading-[19px] text-muted">Tell {ownerName} when you need it and for how long.</Text>
+        <Text className="font-sans mb-3 text-[13px] leading-[19px] text-muted">Tell {ownerName} when you need it and for how long.</Text>
         <TextInput value={note} onChangeText={setNote} placeholder="e.g. Need it this weekend for ~2 days" placeholderTextColor={c.faint} multiline className="mb-4 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ minHeight: 72, outline: 'none' } as any} />
         <Button label="Send request" icon="paper-plane" fullWidth onPress={async () => {
           if (!userId) return;

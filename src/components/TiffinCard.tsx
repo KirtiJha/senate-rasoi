@@ -54,9 +54,9 @@ function TiffinCardBase({ plan, subscribed, onPress, onEdit, width }: TiffinCard
         <T source="tiffin" id={plan.id} field="title" text={plan.title} showToggle={false} className="font-display text-[16px] text-ink" numberOfLines={1} />
         <View className="mt-1 flex-row items-center gap-1.5">
           <Avatar name={plan.chef?.name ?? '?'} size={16} />
-          <Text className="flex-1 text-[12px] text-muted" numberOfLines={1}>{plan.chef?.name ?? 'Chef'}</Text>
+          <Text className="font-sans flex-1 text-[12px] text-muted" numberOfLines={1}>{plan.chef?.name ?? 'Chef'}</Text>
         </View>
-        <Text className="mt-1 text-[12px] text-faint" numberOfLines={1}>
+        <Text className="font-sans mt-1 text-[12px] text-faint" numberOfLines={1}>
           {SLOT_EMOJI[plan.slot]} {plan.slot} · {daysLabel(plan.days_of_week)}
         </Text>
 

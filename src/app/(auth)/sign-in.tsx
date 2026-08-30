@@ -231,7 +231,7 @@ export default function SignInScreen() {
         <Container narrow>
           <View className="mb-7 items-center">
             <Brandfull />
-            <Text className="mt-3 text-center text-[14px] leading-5 text-muted">
+            <Text className="font-sans mt-3 text-center text-[14px] leading-5 text-muted">
               {mode === 'in'
                 ? 'Welcome back to your society hub 🏘️\nSign in with your phone & 6-digit code.'
                 : 'Your neighbourhood, all in one place 🏘️\nJoin with your phone & a 6-digit code.'}
@@ -263,7 +263,7 @@ export default function SignInScreen() {
           />
           {mode === 'in' ? (
             <Pressable onPress={openForgotPin} hitSlop={8} className="-mt-1 mb-3 self-end active:opacity-60">
-              <Text className="text-[12.5px] font-sans-sb text-accent">Forgot PIN?</Text>
+              <Text className="text-[12px] font-sans-sb text-accent">Forgot PIN?</Text>
             </Pressable>
           ) : null}
 
@@ -278,7 +278,7 @@ export default function SignInScreen() {
                       <Ionicons name="information-circle" size={20} color="#CA8A04" />
                       <View className="flex-1">
                         <Text className="font-sans-sb text-[14px] text-ink">{phoneMatch.name} already has an account</Text>
-                        <Text className="mt-0.5 text-[12px] text-muted">This number is registered in {phoneMatch.communityName}. Please sign in instead of creating a new account.</Text>
+                        <Text className="font-sans mt-0.5 text-[12px] text-muted">This number is registered in {phoneMatch.communityName}. Please sign in instead of creating a new account.</Text>
                       </View>
                     </View>
                     <Pressable onPress={goSignInWithPhone} className="mt-3 flex-row items-center justify-center gap-1.5 rounded-xl py-2.5 active:opacity-90" style={{ backgroundColor: c.accent }}>
@@ -287,7 +287,7 @@ export default function SignInScreen() {
                     </Pressable>
                   </View>
                   <Pressable onPress={dismissPhoneMatch} hitSlop={8} className="mt-1.5 self-center active:opacity-60">
-                    <Text className="text-[11px] text-faint">That's not me</Text>
+                    <Text className="font-sans text-[11px] text-faint">That's not me</Text>
                   </Pressable>
                 </View>
               ) : phoneMatch ? (
@@ -303,7 +303,7 @@ export default function SignInScreen() {
                     </View>
                     <View className="flex-1">
                       <Text className="font-sans-sb text-[14px] text-ink">{phoneMatch.name}</Text>
-                      <Text className="text-[12px] text-faint" numberOfLines={1}>
+                      <Text className="font-sans text-[12px] text-faint" numberOfLines={1}>
                         {[
                           phoneMatch.block ? `Block ${phoneMatch.block}` : null,
                           phoneMatch.flat ? `Flat ${phoneMatch.flat}` : null,
@@ -317,7 +317,7 @@ export default function SignInScreen() {
                     </View>
                   </Pressable>
                   <Pressable onPress={dismissPhoneMatch} hitSlop={8} className="mt-1.5 self-center active:opacity-60">
-                    <Text className="text-[11px] text-faint">That's not me</Text>
+                    <Text className="font-sans text-[11px] text-faint">That's not me</Text>
                   </Pressable>
                 </View>
               ) : null}
@@ -329,7 +329,7 @@ export default function SignInScreen() {
                   <Ionicons name="sparkles" size={18} color={c.accent} />
                   <View className="flex-1">
                     <Text className="font-sans-sb text-[14px] text-ink">{newCommunity.name}</Text>
-                    <Text className="text-[12px] text-faint">New society — you'll be the admin</Text>
+                    <Text className="font-sans text-[12px] text-faint">New society — you'll be the admin</Text>
                   </View>
                 </View>
               ) : (
@@ -343,11 +343,11 @@ export default function SignInScreen() {
                       <>
                         <Text className="font-sans-sb text-[14px] text-ink">{selectedCommunity.name}</Text>
                         {selectedCommunity.address ? (
-                          <Text className="text-[12px] text-faint" numberOfLines={1}>{selectedCommunity.address}</Text>
+                          <Text className="font-sans text-[12px] text-faint" numberOfLines={1}>{selectedCommunity.address}</Text>
                         ) : null}
                       </>
                     ) : (
-                      <Text className="text-[14px] text-faint">Select your society…</Text>
+                      <Text className="font-sans text-[14px] text-faint">Select your society…</Text>
                     )}
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={c.faint} />
@@ -355,7 +355,7 @@ export default function SignInScreen() {
               )}
               {!newCommunity ? (
                 <Pressable onPress={() => router.push('/onboard' as any)} className="mb-4 -mt-1 self-start active:opacity-60">
-                  <Text className="text-[12.5px] font-sans-sb text-accent">Don't see your society? Find &amp; onboard it →</Text>
+                  <Text className="text-[12px] font-sans-sb text-accent">Don't see your society? Find &amp; onboard it →</Text>
                 </Pressable>
               ) : null}
 
@@ -415,7 +415,7 @@ export default function SignInScreen() {
           />
 
           {mode === 'up' ? (
-            <Text className="mt-3 text-center text-[12px] leading-[18px] text-faint">
+            <Text className="font-sans mt-3 text-center text-[12px] leading-[18px] text-faint">
               By creating an account, you agree to Aangan's{' '}
               <Text className="font-sans-sb text-muted" onPress={() => router.push('/legal' as any)}>Terms</Text>
               {' '}&amp;{' '}
@@ -424,7 +424,7 @@ export default function SignInScreen() {
           ) : null}
 
           <Pressable onPress={() => setMode(mode === 'in' ? 'up' : 'in')} className="mt-4">
-            <Text className="text-center text-[13px] text-muted">
+            <Text className="font-sans text-center text-[13px] text-muted">
               {mode === 'in' ? 'New here? ' : 'Already have an account? '}
               <Text className="font-sans-sb text-accent">{mode === 'in' ? 'Create an account' : 'Sign in'}</Text>
             </Text>
@@ -468,7 +468,7 @@ export default function SignInScreen() {
                 <Ionicons name="business-outline" size={20} color={selectedCommunity?.id === comm.id ? c.accent : c.muted} />
                 <View className="flex-1">
                   <Text className="font-sans-sb text-[14px] text-ink">{comm.name}</Text>
-                  {comm.address ? <Text className="text-[12px] text-faint" numberOfLines={1}>{comm.address}</Text> : null}
+                  {comm.address ? <Text className="font-sans text-[12px] text-faint" numberOfLines={1}>{comm.address}</Text> : null}
                 </View>
                 {selectedCommunity?.id === comm.id ? (
                   <Ionicons name="checkmark-circle" size={20} color={c.accent} />
@@ -477,7 +477,7 @@ export default function SignInScreen() {
             ))}
 
             {filteredCommunities.length === 0 && communitySearch.length > 0 ? (
-              <Text className="py-6 text-center text-[14px] text-muted">No society found for "{communitySearch}"</Text>
+              <Text className="font-sans py-6 text-center text-[14px] text-muted">No society found for "{communitySearch}"</Text>
             ) : null}
 
             {/* Request to add society */}
@@ -494,7 +494,7 @@ export default function SignInScreen() {
                 <Text className="mb-3 font-sans-sb text-[15px] text-ink">Request to Add Society</Text>
                 <Field label="Society / Building name" required placeholder="Green Meadows CHS" value={jrSocietyName} onChangeText={setJrSocietyName} />
                 <Field label="Address" required placeholder="Sector 12, Andheri West, Mumbai" value={jrSocietyAddress} onChangeText={setJrSocietyAddress} />
-                <Text className="mb-3 text-[12px] text-faint">We'll use your name and phone from the sign-up form to contact you.</Text>
+                <Text className="font-sans mb-3 text-[12px] text-faint">We'll use your name and phone from the sign-up form to contact you.</Text>
                 <View className="flex-row gap-2">
                   <View className="flex-1">
                     <Button label="Cancel" variant="outline" size="sm" onPress={() => setShowJoinRequest(false)} />
@@ -514,7 +514,7 @@ export default function SignInScreen() {
         <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: '#0008' }}>
           <View style={{ width: '100%', maxWidth: 380, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}>
             <Text className="font-display-x text-[19px] text-ink">You're already in the directory</Text>
-            <Text className="mt-2 text-[14px] leading-[20px] text-muted">
+            <Text className="font-sans mt-2 text-[14px] leading-[20px] text-muted">
               <Text className="font-sans-sb text-ink">{reconcile?.name}</Text>
               {reconcile?.flat ? ` (Flat ${[reconcile?.block, reconcile?.flat].filter(Boolean).join('-')})` : ''} is listed with the number{' '}
               <Text className="font-sans-sb text-ink">{reconcile?.phone ?? '—'}</Text>. You signed up with a different number.
@@ -541,7 +541,7 @@ export default function SignInScreen() {
                   </View>
                 </View>
                 <Text className="text-center font-display-x text-[19px] text-ink">PIN reset!</Text>
-                <Text className="mt-2 text-center text-[14px] leading-5 text-muted">
+                <Text className="font-sans mt-2 text-center text-[14px] leading-5 text-muted">
                   Your PIN has been updated. Sign in with your new PIN.
                 </Text>
                 <View className="mt-5">
@@ -551,7 +551,7 @@ export default function SignInScreen() {
             ) : (
               <>
                 <Text className="font-display-x text-[19px] text-ink">Reset PIN</Text>
-                <Text className="mt-1.5 mb-4 text-[13px] leading-5 text-muted">
+                <Text className="font-sans mt-1.5 mb-4 text-[13px] leading-5 text-muted">
                   Enter your registered phone and choose a new 6-digit PIN.
                 </Text>
                 <Field
@@ -582,7 +582,7 @@ export default function SignInScreen() {
                   value={resetConfirmPin}
                   onChangeText={(t) => setResetConfirmPin(t.replace(/\D/g, ''))}
                 />
-                <Text className="mb-4 text-[11px] leading-4 text-faint">
+                <Text className="font-sans mb-4 text-[11px] leading-4 text-faint">
                   Can't reset? Ask your society admin to set a temporary PIN for you. You can then sign in and change it from your profile.
                 </Text>
                 <View className="flex-row gap-2">
