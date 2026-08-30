@@ -169,7 +169,7 @@ function DesktopShell() {
           <Stack.Screen name="onboard" />
           <Stack.Screen name="admin" />
           <Stack.Screen name="about" />
-          <Stack.Screen name="settings" options={{ animation: 'fade_from_bottom' }} />
+          <Stack.Screen name="settings" />
           <Stack.Screen name="directory" />
           <Stack.Screen name="food" />
           <Stack.Screen name="post" options={{ animation: 'fade_from_bottom' }} />
