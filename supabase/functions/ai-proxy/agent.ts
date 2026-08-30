@@ -40,8 +40,14 @@
  * says "none" when there is something — a worse failure than showing a weak
  * result, because the resident has no way to tell it was wrong. Too low and we
  * are back to four unrelated documents being called results.
+ *
+ * THIS NUMBER IS PER EMBEDDING MODEL. It was 0.45 for gemini-embedding-001 and
+ * moved to 0.3 for text-embedding-3-small, which scores related short texts
+ * noticeably lower. Cosine similarities are not comparable across models, so
+ * changing the embedding model without revisiting this silently breaks recall —
+ * which is exactly what happened on the provider swap.
  */
-const RELEVANCE_FLOOR = 0.45;
+const RELEVANCE_FLOOR = 0.3;
 
 /** How many tool round-trips before we force an answer. */
 const MAX_STEPS = 6;
@@ -306,8 +312,34 @@ async function runReadTool(
     // confident non-answers. Returning them anyway invites the model to
     // stretch for a connection that is not there.
     if (!kept.length) {
+      // Two very different failures look identical from the outside: the index
+      // is still re-embedding after a provider change, or the floor is tuned
+      // for the wrong embedding model. Log enough to tell them apart — this
+      // goes to the function logs, not to the resident.
+      const best = scored.length ? scored[0].sim.toFixed(3) : 'n/a';
+      const { count: ready } = await d.admin
+        .from('search_documents')
+        .select('source', { count: 'exact', head: true })
+        .eq('community_id', d.communityId)
+        .not('embedding', 'is', null);
+      const { count: pending } = await d.admin
+        .from('search_documents')
+        .select('source', { count: 'exact', head: true })
+        .eq('community_id', d.communityId)
+        .is('embedding', null);
+      console.log(
+        `[saathi] no match for ${JSON.stringify(query)} — best=${best} ` +
+        `floor=${RELEVANCE_FLOOR} candidates=${scored.length} embedded=${ready ?? '?'} pending=${pending ?? '?'}`,
+      );
+
       return {
-        payload: { results: [], note: 'Nothing in this society matched closely enough to be worth showing.' },
+        payload: {
+          results: [],
+          note:
+            (pending ?? 0) > 0
+              ? 'Nothing matched. Some of this society is still being indexed, so try rephrasing.'
+              : 'Nothing in this society matched closely enough to be worth showing.',
+        },
         summary: scored.length
           ? `searched "${query}" — nothing close enough`
           : `searched "${query}" — nothing found`,
