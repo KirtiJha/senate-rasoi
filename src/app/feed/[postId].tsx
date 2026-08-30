@@ -42,6 +42,7 @@ export default function PostThreadScreen() {
   const [retrying, setRetrying] = useState(false);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [reactions, setReactions] = useState<ReactionMap>({});
+  const [pickingFor, setPickingFor] = useState<string | null>(null);
   const { filterBlocked } = useBlocks();
   const visibleComments = useMemo(
     () => filterBlocked(comments, (cm) => cm.author_id),
@@ -250,7 +251,21 @@ export default function PostThreadScreen() {
         </View>
       </View>
 
-      <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={{ padding: 16, paddingBottom: 20 }}
+        showsVerticalScrollIndicator={false}
+        // Scrolling is a clear "I am done with that", and leaving a popover
+        // anchored to a comment that has moved up the screen looks broken.
+        onScrollBeginDrag={() => setPickingFor(null)}
+      >
+        {/* Tap-anywhere-to-dismiss, as a wrapper rather than a backdrop.
+            A backdrop laid over the screen would also cover the picker it is
+            meant to protect, so choosing an emoji would hit the backdrop
+            instead. Wrapping the content means real controls still win the
+            touch — including the picker's own buttons — while a tap on any
+            empty space falls through to here and closes it. */}
+        <Pressable accessible={false} accessibilityRole="none" onPress={() => setPickingFor(null)}>
         <Container narrow>
           {/* Post body */}
           <View className="mb-6">
@@ -307,11 +322,14 @@ export default function PostThreadScreen() {
             </Text>
             <View className="gap-3">
               {visibleComments.map((comment) => (
-                <CommentBubble key={comment.id} comment={comment} userId={userId} isAdmin={!!isAdmin} onDelete={() => handleDeleteComment(comment.id)} onChanged={loadPost} reactions={reactions[comment.id] ?? []} onReact={toggleReaction} c={c} />
+                <CommentBubble key={comment.id} comment={comment} userId={userId} isAdmin={!!isAdmin} onDelete={() => handleDeleteComment(comment.id)} onChanged={loadPost} reactions={reactions[comment.id] ?? []} onReact={toggleReaction}
+                  picking={pickingFor === comment.id}
+                  onPicking={(open: boolean) => setPickingFor(open ? comment.id : null)} c={c} />
               ))}
             </View>
           </View>
         </Container>
+        </Pressable>
       </ScrollView>
 
       {/* Reply bar */}
@@ -344,6 +362,7 @@ export default function PostThreadScreen() {
             <TextInput
               value={commentBody}
               onChangeText={setCommentBody}
+              onFocus={() => setPickingFor(null)}
               placeholder="Add a comment…"
               placeholderTextColor={c.faint}
               multiline
@@ -412,13 +431,14 @@ const QUICK_EMOJI = ['🙏', '👍', '❤️', '😂', '🎉', '👏', '🔥', '
  */
 const REACTION_CHOICES = ['👍', '🙏', '❤️', '😂', '🎉', '👏', '😮', '😢'];
 
-function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, reactions, onReact, c }: {
+function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, reactions, onReact, picking, onPicking, c }: {
   comment: CommentRow; userId: string | null; isAdmin: boolean; onDelete: () => void; onChanged: () => void;
   reactions: { emoji: string; userIds: string[] }[];
   onReact: (commentId: string, emoji: string) => void;
+  picking: boolean;
+  onPicking: (open: boolean) => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
-  const [picking, setPicking] = useState(false);
   const toast = useToast();
   const isOwn = comment.author_id === userId;
   const [editing, setEditing] = useState(false);
@@ -493,7 +513,7 @@ function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, reaction
               accessibilityRole="button"
               accessibilityLabel="React to this comment"
               accessibilityState={{ expanded: picking }}
-              onPress={() => { haptics.select(); setPicking((v) => !v); }}
+              onPress={() => { haptics.select(); onPicking(!picking); }}
               hitSlop={6}
               className="flex-row items-center gap-1 rounded-full px-2 py-0.5"
               style={{ backgroundColor: picking ? c.accentSoft : 'transparent' }}
@@ -522,7 +542,7 @@ function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, reaction
                 key={e}
                 accessibilityRole="button"
                 accessibilityLabel={`React with ${e}`}
-                onPress={() => { onReact(comment.id, e); setPicking(false); }}
+                onPress={() => { onReact(comment.id, e); onPicking(false); }}
                 hitSlop={2}
                 style={{ paddingHorizontal: 5, paddingVertical: 3 }}
               >
