@@ -6,7 +6,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useState } from 'react';
-import { Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, Share, Text, View } from 'react-native';
 import Animated, {
   Extrapolation, interpolate, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue,
 } from 'react-native-reanimated';
@@ -16,6 +16,7 @@ import { T } from '../../components/T';
 import { Avatar, Container, ErrorRow, ModuleTile, Rise, Touchable, useResponsive, VegMark } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
+import { buildDigest } from '../../lib/digest';
 import { useUnreadDms } from '../../context/unread';
 import { fetchSocietyDigest, SocietyDigest } from '../../lib/ai';
 import { AScrollView, dur, ease } from '../../lib/motion';
@@ -175,7 +176,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { profile, communityId, userId } = useAuth();
+  const { profile, communityId, userId, community } = useAuth();
   const c = useThemeColors();
   const toast = useToast();
   const unread = useUnreadDms();
@@ -557,6 +558,18 @@ export default function HomeScreen() {
           </Rise>
         ) : null}
 
+        {/* ── 4b. Take it to the group ─────────────────────────────────
+            The society's conversation lives in WhatsApp and isn't moving.
+            Rather than compete with the group, post into it. */}
+        <ShareTodayRow
+          societyName={community?.name}
+          dishes={dishes}
+          listings={recent}
+          borrow={recentBorrow}
+          lostFound={recentLostFound}
+          c={c}
+        />
+
         {/* ── 5. All of Aangan ────────────────────────────────────────── */}
         <SectionHead label="All of Aangan" c={c} />
         <View className="flex-row flex-wrap" style={{ marginHorizontal: -5 }}>
@@ -811,4 +824,68 @@ function getGreeting() {
   if (h >= 12 && h < 17) return 'Good afternoon';
   if (h >= 17 && h < 21) return 'Good evening';
   return 'Good night';
+}
+
+
+/**
+ * "Share today" — turns the day's activity into a WhatsApp message.
+ *
+ * Built from what Home already has in memory, so the sheet opens instantly.
+ * Hidden entirely when there is nothing worth posting: a digest that says
+ * "nothing happened today" trains people to ignore the next one.
+ */
+function ShareTodayRow({
+  societyName, dishes, listings, borrow, lostFound, c,
+}: {
+  societyName?: string | null;
+  dishes: DishRow[];
+  listings: ListingRow[];
+  borrow: LendItem[];
+  lostFound: LostFoundItem[];
+  c: ReturnType<typeof useThemeColors>;
+}) {
+  const toast = useToast();
+  const message = buildDigest({ societyName, dishes, listings, borrow, lostFound });
+  if (!message) return null;
+
+  const share = async () => {
+    try {
+      if (Platform.OS === 'web') {
+        const nav = globalThis.navigator as Navigator | undefined;
+        if (nav && typeof nav.share === 'function') {
+          await nav.share({ text: message });
+          return;
+        }
+        await nav?.clipboard?.writeText(message);
+        toast.show('Digest copied — paste it into your society group');
+        return;
+      }
+      await Share.share({ message });
+    } catch {
+      /* the user dismissed the sheet — not an error */
+    }
+  };
+
+  return (
+    <Pressable
+      onPress={share}
+      accessibilityRole="button"
+      accessibilityLabel="Share today's update to your society WhatsApp group"
+      className="mb-8 flex-row items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3.5 active:opacity-80"
+    >
+      <View
+        className="h-9 w-9 items-center justify-center rounded-xl"
+        style={{ backgroundColor: '#25D36618' }}
+      >
+        <Ionicons name="logo-whatsapp" size={19} color="#25D366" />
+      </View>
+      <View className="min-w-0 flex-1">
+        <Text className="font-sans-sb text-[14px] text-ink">Share today to your group</Text>
+        <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>
+          Post what&rsquo;s happening into the society WhatsApp group
+        </Text>
+      </View>
+      <Ionicons name="chevron-forward" size={16} color={c.faint} />
+    </Pressable>
+  );
 }

@@ -167,6 +167,7 @@ function DesktopShell() {
           <Stack.Screen name="legal" />
           <Stack.Screen name="delete-account" />
           <Stack.Screen name="child-safety" />
+          <Stack.Screen name="open" />
           <Stack.Screen name="onboard" />
           <Stack.Screen name="admin" />
           <Stack.Screen name="about" />
