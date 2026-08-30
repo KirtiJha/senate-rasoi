@@ -120,7 +120,7 @@ export default function LandingScreen() {
                   <BrandMark size={20} id="vs-mark" />
                   <Text className="font-sans-bold" style={{ fontSize: 15, color: P.ink }}>With Aangan</Text>
                 </View>
-                {['A live food board with reserve & pay', 'Owner/tenant directory with one-tap contact', 'Real polls with instant results', 'A searchable marketplace & services', 'A payment ledger both sides confirm', 'Ask Aangan — your society’s own assistant'].map((t) => (
+                {['A live food board with reserve & pay', 'Owner/tenant directory with one-tap contact', 'Real polls with instant results', 'A searchable marketplace & services', 'A payment ledger both sides confirm', 'Saathi — your society’s own assistant'].map((t) => (
                   <View key={t} className="mb-2 flex-row items-center gap-2">
                     <Ionicons name="checkmark" size={15} color="#16A34A" />
                     <Text className="font-sans-md" style={{ fontSize: 14, color: P.ink }}>{t}</Text>
@@ -140,13 +140,13 @@ export default function LandingScreen() {
             and personal phone numbers are never sent.
           </Text>
 
-          {/* Ask Aangan showcase */}
+          {/* Saathi showcase */}
           <View className="mt-9 overflow-hidden rounded-3xl p-[1.5px]" style={{ backgroundColor: P.accent }}>
             <View className={`rounded-[22px] p-6 ${isWide ? 'flex-row items-center gap-10' : ''}`} style={{ backgroundColor: P.surface }}>
               <View className="flex-1">
                 <View className="mb-3 flex-row items-center gap-2">
                   <BrandMark size={30} id="ai-mark" />
-                  <Text className="font-display" style={{ fontSize: 21, color: P.ink }}>Ask Aangan</Text>
+                  <Text className="font-display" style={{ fontSize: 21, color: P.ink }}>Saathi</Text>
                 </View>
                 <Text className="font-sans-md" style={{ fontSize: 15, lineHeight: 23, color: P.muted }}>
                   A friendly chat that answers anything about your society — food, flats to rent, things to
@@ -296,7 +296,7 @@ function LogoLockup({ emblem = 94 }: { emblem?: number }) {
   );
 }
 
-// ── Ask Aangan mini-chat preview (for the AI section) ───────────────
+// ── Saathi mini-chat preview (for the AI section) ──────────────────
 function AskPreview() {
   return (
     <View className="w-full max-w-[340px] rounded-[24px] p-3.5" style={{ borderWidth: 1, borderColor: P.line, backgroundColor: P.bg, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 24, shadowOffset: { width: 0, height: 12 } }}>
@@ -326,7 +326,7 @@ function AskPreview() {
 // ── Hero visual: a stacked "app preview" card ───────────────────────
 function HeroCard() {
   const rows = [
-    { icon: 'sparkles', color: '#0F6E56', title: '“Any veg tiffin today?”', sub: 'Ask Aangan · 2 matches found' },
+    { icon: 'sparkles', color: '#0F6E56', title: '“Any veg tiffin today?”', sub: 'Saathi · 2 matches found' },
     { icon: 'restaurant', color: '#E8650A', title: 'Aalu parwal sabji', sub: 'Pratibha · 3 plates left · ₹80' },
     { icon: 'pricetags', color: '#14B8A6', title: 'Maths tuition (Class 9–10)', sub: 'Flat C-204 · ₹4,000/mo' },
     { icon: 'stats-chart', color: '#6366F1', title: 'New gym equipment?', sub: 'Poll · 28 votes' },

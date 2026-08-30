@@ -406,7 +406,7 @@ export default function HomeScreen() {
             haptic={null}
             onPress={() => router.push('/ask' as any)}
             accessibilityRole="button"
-            accessibilityLabel="Ask or search Aangan"
+            accessibilityLabel="Ask Saathi, or search"
           >
             <View
               style={{
@@ -427,7 +427,7 @@ export default function HomeScreen() {
                 style={{ flex: 1, minWidth: 0, marginLeft: 10 }}
                 numberOfLines={1}
               >
-                Ask or search Aangan
+                Ask Saathi, or search
               </Text>
               <Ionicons name="arrow-forward" size={16} color={c.accent} />
             </View>
@@ -480,7 +480,7 @@ export default function HomeScreen() {
           >
             <BrandMark size={24} />
             <Text className="min-w-0 flex-1 text-[15px] font-sans-md text-subtle" numberOfLines={1}>
-              Ask or search Aangan
+              Ask Saathi, or search
             </Text>
             <Ionicons name="arrow-forward" size={17} color={c.accent} />
           </View>

@@ -229,7 +229,7 @@ export default function SearchScreen() {
                   <BrandMark size={38} />
                 </View>
                 <View className="flex-1 py-3">
-                  <Text className="font-sans-bold text-[14px] text-ink">Ask Aangan a question</Text>
+                  <Text className="font-sans-bold text-[14px] text-ink">Ask Saathi a question</Text>
                   <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>“Any veg tiffin?” · “2 BHK for rent?” · “Borrow a drill?”</Text>
                 </View>
                 <Ionicons name="arrow-forward" size={16} color={c.accent} style={{ marginRight: 14 }} />

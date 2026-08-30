@@ -55,7 +55,7 @@ export default function AskScreen() {
       haptics.success();
     } catch (e) {
       const why = (e instanceof AIError ? e.message : '').trim();
-      persist([...withUser, { role: 'assistant', text: why || 'Ask Aangan is unavailable right now.' }]);
+      persist([...withUser, { role: 'assistant', text: why || 'Saathi is unavailable right now.' }]);
     } finally {
       setLoading(false);
       scrollDown();
@@ -70,7 +70,7 @@ export default function AskScreen() {
     <KeyboardAvoider style={{ overflow: 'hidden', backgroundColor: c.bg }}>
       <ScreenHeader
         iconNode={<BrandMark size={26} />}
-        title="Ask Aangan"
+        title="Saathi"
         showBack
         right={!empty ? (
           <Pressable onPress={newChat} hitSlop={8} className="flex-row items-center gap-1 rounded-full bg-inset px-3 py-1.5">
@@ -168,7 +168,7 @@ export default function AskScreen() {
             <TextInput
               value={input}
               onChangeText={setInput}
-              placeholder="Ask Aangan anything…"
+              placeholder="Ask Saathi anything…"
               placeholderTextColor={c.faint}
               returnKeyType="send"
               onSubmitEditing={() => send(input)}
