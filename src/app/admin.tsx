@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, Platform, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Avatar, Button, Container, ScreenHeader } from '../components/ui';
+import { Avatar, Button, Container, ScreenHeader, Segmented, type SegmentedItem } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
@@ -17,6 +17,14 @@ import { DbProfile } from '../lib/types';
 import { useThemeColors } from '../theme';
 
 type AdminTab = 'members' | 'requests' | 'reports';
+
+/** The pending count rides in the label rather than as a floating badge, so
+ *  the three tabs stay the same shape whether or not anything is waiting. */
+const ADMIN_TABS = (pending: number): readonly SegmentedItem<AdminTab>[] => [
+  { key: 'members', label: 'Members', icon: 'people-outline' },
+  { key: 'requests', label: 'Requests', icon: 'mail-open-outline', count: pending },
+  { key: 'reports', label: 'Reports', icon: 'flag-outline' },
+];
 
 interface JoinRequest {
   id: string;
@@ -212,7 +220,7 @@ export default function AdminScreen() {
   return (
     <View className="flex-1 bg-bg">
       <ScreenHeader icon="shield-checkmark-outline" title="Admin" showBack />
-      <View className="border-b border-line bg-bg px-4 pb-3 pt-3">
+      <View className="bg-bg px-4 pb-0 pt-3">
         <Container>
           {/* Stats row */}
           <View className="flex-row gap-2 mb-3">
@@ -229,34 +237,11 @@ export default function AdminScreen() {
             ))}
           </View>
 
-          {/* Tab switcher */}
-          <View className="flex-row rounded-2xl bg-inset p-1">
-            <Pressable
-              onPress={() => setActiveTab('members')}
-              className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2 ${activeTab === 'members' ? 'bg-surface' : ''}`}
-            >
-              <Ionicons name="people-outline" size={15} color={activeTab === 'members' ? c.accent : c.muted} />
-              <Text className={`text-[13px] ${activeTab === 'members' ? 'font-sans-sb text-ink' : 'font-sans-md text-muted'}`}>Members</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setActiveTab('requests')}
-              className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2 ${activeTab === 'requests' ? 'bg-surface' : ''}`}
-            >
-              <Ionicons name="mail-open-outline" size={15} color={activeTab === 'requests' ? c.accent : c.muted} />
-              <Text className={`text-[13px] ${activeTab === 'requests' ? 'font-sans-sb text-ink' : 'font-sans-md text-muted'}`}>
-                Requests{pendingCount > 0 ? ` (${pendingCount})` : ''}
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setActiveTab('reports')}
-              className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2 ${activeTab === 'reports' ? 'bg-surface' : ''}`}
-            >
-              <Ionicons name="flag-outline" size={15} color={activeTab === 'reports' ? c.accent : c.muted} />
-              <Text className={`text-[13px] ${activeTab === 'reports' ? 'font-sans-sb text-ink' : 'font-sans-md text-muted'}`}>
-                Reports
-              </Text>
-            </Pressable>
-          </View>
+          <Segmented
+            items={ADMIN_TABS(pendingCount)}
+            value={activeTab}
+            onChange={setActiveTab}
+          />
         </Container>
       </View>
 
@@ -408,12 +393,14 @@ export default function AdminScreen() {
   );
 }
 
-const REPORT_STATUS_COLOR: Record<ReportStatus, string> = {
-  open: '#EF4444',
-  reviewing: '#F59E0B',
-  actioned: '#16A34A',
-  dismissed: '#6B7280',
-};
+const reportStatusColor = (
+  status: ReportStatus,
+  c: ReturnType<typeof useThemeColors>,
+): string =>
+  status === 'open' ? c.danger
+    : status === 'reviewing' ? c.highlight
+      : status === 'actioned' ? c.accent
+        : c.muted;
 
 /**
  * The moderation queue. App Store Guideline 1.2 expects reported content to be
@@ -499,7 +486,7 @@ function ReportsTab({
         <View className="gap-3">
           {visible.map((r) => {
             const route = routeFor(r);
-            const color = REPORT_STATUS_COLOR[r.status];
+            const color = reportStatusColor(r.status, c);
             return (
               <View key={r.id} className="card p-3.5">
                 <View className="mb-1.5 flex-row flex-wrap items-center gap-1.5">
@@ -509,8 +496,8 @@ function ReportsTab({
                   <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.inset }}>
                     <Text className="text-[10px] font-sans-sb text-muted">{r.target_type}</Text>
                   </View>
-                  <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#EF444418' }}>
-                    <Text className="text-[10px] font-sans-sb text-nonveg">{r.reason}</Text>
+                  <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.dangerSoft }}>
+                    <Text className="text-[10px] font-sans-sb" style={{ color: c.danger }}>{r.reason}</Text>
                   </View>
                 </View>
 
@@ -565,7 +552,7 @@ function ActionBtn({
   danger?: boolean;
   disabled?: boolean;
 }) {
-  const color = danger ? '#EF4444' : active ? c.accent : c.muted;
+  const color = danger ? c.danger : active ? c.accent : c.muted;
   return (
     <Pressable
       onPress={onPress}
@@ -586,7 +573,7 @@ function JoinRequestCard({
   onUpdate: (id: string, status: 'approved' | 'rejected', note?: string) => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
-  const statusColor = req.status === 'pending' ? '#F59E0B' : req.status === 'approved' ? '#10B981' : '#EF4444';
+  const statusColor = req.status === 'pending' ? c.highlight : req.status === 'approved' ? c.accent : c.danger;
   const statusLabel = req.status === 'pending' ? 'Pending' : req.status === 'approved' ? 'Approved' : 'Rejected';
 
   return (

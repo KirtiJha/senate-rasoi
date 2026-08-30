@@ -1,18 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { LayoutChangeEvent, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { useState } from 'react';
+import { Text, View } from 'react-native';
 
 import { MyListingsSection } from '../../components/MyListingsSection';
 import { SavedSection } from '../../components/SavedSection';
-import { Avatar, Container, Rise, Touchable, useResponsive } from '../../components/ui';
+import { Avatar, Container, Rise, Segmented, Touchable, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
-import { haptics } from '../../lib/haptics';
-import { spring } from '../../lib/motion';
 import { useThemeColors } from '../../theme';
 
 type Tab = 'listings' | 'saved';
+
+const TABS = [
+  { key: 'listings', label: 'My listings' },
+  { key: 'saved', label: 'Saved' },
+] as const;
 
 /**
  * Your corner of the society.
@@ -35,27 +37,6 @@ export default function YouScreen() {
   const { profile, isAdmin } = useAuth();
 
   const [tab, setTab] = useState<Tab>('listings');
-  const [tabWidth, setTabWidth] = useState(0);
-
-  // The indicator slides rather than cuts, so the eye follows the selection
-  // instead of re-finding it.
-  const slide = useSharedValue(0);
-  useEffect(() => {
-    slide.set(withSpring(tab === 'listings' ? 0 : 1, spring.card));
-  }, [tab, slide]);
-
-  const indicator = useAnimatedStyle(() => ({
-    transform: [{ translateX: slide.get() * tabWidth }],
-    width: tabWidth,
-  }));
-
-  const onTabsLayout = (e: LayoutChangeEvent) => setTabWidth(e.nativeEvent.layout.width / 2);
-
-  const pick = (next: Tab) => {
-    if (next === tab) return;
-    haptics.select();
-    setTab(next);
-  };
 
   return (
     <View className="flex-1 bg-bg">
@@ -115,21 +96,7 @@ export default function YouScreen() {
 
           {/* ── What you have ────────────────────────────────────── */}
           <Rise index={2} style={{ marginTop: 22 }}>
-            <View onLayout={onTabsLayout}>
-              <View style={{ flexDirection: 'row' }}>
-                <View style={{ flex: 1 }}>
-                  <TabButton label="My listings" active={tab === 'listings'} onPress={() => pick('listings')} c={c} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <TabButton label="Saved" active={tab === 'saved'} onPress={() => pick('saved')} c={c} />
-                </View>
-              </View>
-              <View style={{ height: 2, backgroundColor: c.line, borderRadius: 1 }}>
-                <Animated.View
-                  style={[indicator, { height: 2, borderRadius: 1, backgroundColor: c.accent }]}
-                />
-              </View>
-            </View>
+            <Segmented items={TABS} value={tab} onChange={setTab} />
           </Rise>
         </Container>
       </View>
@@ -169,37 +136,6 @@ function ActionTile({
           <Ionicons name={icon} size={18} color={c.accent} />
         </View>
         <Text className="mt-2 text-[12px] font-sans-sb text-ink" numberOfLines={1}>
-          {label}
-        </Text>
-      </View>
-    </Touchable>
-  );
-}
-
-function TabButton({
-  label, active, onPress, c,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  c: ReturnType<typeof useThemeColors>;
-}) {
-  return (
-    <Touchable
-      haptic={null}
-      onPress={onPress}
-      accessibilityRole="tab"
-      accessibilityState={{ selected: active }}
-      accessibilityLabel={label}
-    >
-      <View style={{ alignItems: 'center', paddingVertical: 11 }}>
-        <Text
-          className="text-[14px]"
-          style={{
-            color: active ? c.ink : c.muted,
-            fontFamily: active ? 'HankenGrotesk_600SemiBold' : 'HankenGrotesk_500Medium',
-          }}
-        >
           {label}
         </Text>
       </View>

@@ -13,6 +13,8 @@ export { Touchable } from './Touchable';
 export { Txt, type TxtVariant, type TxtTone } from './Txt';
 export { Card } from './Card';
 export { Chip } from './Chip';
+export { Segmented } from './Segmented';
+export type { SegmentedItem } from './Segmented';
 export { ListRow } from './ListRow';
 export { Rise } from './Rise';
 export { ParallaxHero } from './ParallaxHero';

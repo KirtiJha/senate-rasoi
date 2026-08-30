@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Field, SectionCard } from '../../components/forms';
 import { Avatar, Button, Container, ScreenHeader } from '../../components/ui';
@@ -122,39 +122,44 @@ export default function ProfileScreen() {
     }
   };
 
+  const isAdminRole = !!profile?.roles.includes('admin');
+
   return (
     <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScreenHeader icon="person-circle-outline" title="My Profile" showBack hideSociety />
+      <ScreenHeader icon="person-circle-outline" title="My Profile" showBack />
       <ScrollView
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 60, paddingHorizontal: 16 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         <Container>
-          {/* Avatar + Identity */}
-          <View className="mb-6 items-center">
-            <View className="mb-3">
-              <Avatar name={profile?.name ?? 'Me'} size={72} />
-            </View>
-            <Text className="font-display-x text-[22px] text-ink">{profile?.name ?? '—'}</Text>
-            {profile?.flat ? <Text className="font-sans text-[13px] text-muted">Flat {profile.flat}</Text> : null}
-
-            {/* Role chip */}
-            <View className="mt-2 flex-row flex-wrap justify-center gap-1.5">
-              <View className="rounded-full border border-line bg-surface px-3 py-1">
-                <Text className="text-[11px] font-sans-sb text-muted">
-                  {profile?.roles.includes('admin') ? 'Admin' : 'Member'}
-                </Text>
+          {/* Who you are — the same row shape as the You screen. */}
+          <View className="mb-6 flex-row items-center">
+            <Avatar name={profile?.name ?? 'Me'} size={60} />
+            <View className="min-w-0 flex-1" style={{ marginLeft: 14 }}>
+              <Text className="font-display-x text-[23px] leading-[28px] text-ink" numberOfLines={1}>
+                {profile?.name ?? '—'}
+              </Text>
+              <View className="mt-1 flex-row items-center gap-2">
+                <View
+                  className="flex-row items-center gap-1 rounded-full px-2.5 py-1"
+                  style={{ backgroundColor: isAdminRole ? c.accentSoft : c.inset }}
+                >
+                  {isAdminRole ? <Ionicons name="shield-checkmark" size={11} color={c.accent} /> : null}
+                  <Text
+                    className="text-[11px] font-sans-sb"
+                    style={{ color: isAdminRole ? c.accent : c.muted }}
+                  >
+                    {isAdminRole ? 'Admin' : 'Member'}
+                  </Text>
+                </View>
+                {profile?.flat ? (
+                  <Text className="text-[13px] font-sans-md text-subtle" numberOfLines={1}>
+                    Flat {profile.flat}
+                  </Text>
+                ) : null}
               </View>
             </View>
-
-            {/* Society badge */}
-            {community ? (
-              <View className="mt-2 flex-row items-center gap-1.5 rounded-full px-3 py-1.5" style={{ backgroundColor: '#0D948822', borderWidth: 1, borderColor: '#0D948855' }}>
-                <Ionicons name="business" size={12} color="#0D9488" />
-                <Text className="text-[12px] font-sans-sb" style={{ color: '#0D9488' }}>{community.name}</Text>
-              </View>
-            ) : null}
           </View>
 
           {/* Edit profile */}
@@ -196,33 +201,34 @@ export default function ProfileScreen() {
             <Field label="Profession" hint="Shown in the resident directory" placeholder="e.g. Doctor, CA, Teacher" value={profession} onChangeText={setProfession} />
             <Field label="Vehicle number" hint="Optional — shown in the directory" autoCapitalize="characters" placeholder="MH 12 AB 1234" value={vehicleNo} onChangeText={setVehicleNo} />
 
-            <Pressable
-              onPress={() => setShowInDirectory((v) => !v)}
-              className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-inset px-4 py-3"
-            >
+            <View className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-inset px-4 py-3">
               <Ionicons name={showInDirectory ? 'call-outline' : 'eye-off-outline'} size={18} color={showInDirectory ? c.accent : c.muted} />
-              <View className="flex-1">
+              <View className="min-w-0 flex-1">
                 <Text className="font-sans-sb text-[14px] text-ink">Show my phone number in the directory</Text>
                 <Text className="font-sans text-[12px] text-muted">{showInDirectory ? 'Neighbours can call & WhatsApp you' : "You're still listed — but your number is hidden"}</Text>
               </View>
-              <View className={`h-6 w-10 rounded-full p-0.5 ${showInDirectory ? 'bg-accent' : 'bg-line'}`}>
-                <View className={`h-5 w-5 rounded-full bg-surface ${showInDirectory ? 'self-end' : 'self-start'}`} />
-              </View>
-            </Pressable>
+              <Switch
+                value={showInDirectory}
+                onValueChange={() => setShowInDirectory((v) => !v)}
+                trackColor={{ false: c.line, true: c.accentSoft }}
+                thumbColor={showInDirectory ? c.accent : c.subtle}
+              />
+            </View>
 
-            <Pressable
-              onPress={() => setMovedIn((v) => !v)}
-              className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-inset px-4 py-3"
-            >
+            <View className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-inset px-4 py-3">
               <Ionicons name={movedIn ? 'home' : 'home-outline'} size={18} color={movedIn ? c.accent : c.muted} />
-              <View className="flex-1">
+              <View className="min-w-0 flex-1">
                 <Text className="font-sans-sb text-[14px] text-ink">I've moved into the society</Text>
                 <Text className="font-sans text-[12px] text-muted">{movedIn ? 'Shown as living here' : 'Shown as not moved in yet'}</Text>
               </View>
-              <View className={`h-6 w-10 rounded-full p-0.5 ${movedIn ? 'bg-accent' : 'bg-line'}`}>
-                <View className={`h-5 w-5 rounded-full bg-surface ${movedIn ? 'self-end' : 'self-start'}`} />
-              </View>
-            </Pressable>
+              <Switch
+                value={movedIn}
+                onValueChange={() => setMovedIn((v) => !v)}
+                trackColor={{ false: c.line, true: c.accentSoft }}
+                thumbColor={movedIn ? c.accent : c.subtle}
+              />
+            </View>
+
             <Button label={savingProfile ? 'Saving…' : 'Save Changes'} loading={savingProfile} onPress={handleSaveProfile} fullWidth />
           </SectionCard>
 
