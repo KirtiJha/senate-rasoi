@@ -160,7 +160,12 @@ export async function visionAutofill<K extends AutofillKind>(
 
 // ── Ask Aangan (Phase 2) ──────────────────────────────────────────────
 
-export type AskSource = 'dish' | 'tiffin' | 'listing' | 'property' | 'recommend' | 'borrow' | 'post' | 'document' | 'sport' | 'emergency';
+export type AskSource =
+  | 'dish' | 'tiffin' | 'listing' | 'property' | 'recommend' | 'borrow'
+  | 'post' | 'document' | 'sport' | 'emergency'
+  // Added with migration 0076, which brought the rest of the app into the
+  // semantic index.
+  | 'event' | 'place' | 'lostfound' | 'poll' | 'comment' | 'recoanswer';
 
 export interface AskResultItem {
   source: AskSource;
@@ -219,6 +224,21 @@ export function askResultRoute(item: AskResultItem): string {
       return '/documents';
     case 'emergency':
       return '/emergency';
+    case 'event':
+      return `/events/${item.id}`;
+    case 'place':
+      return `/place/${item.id}`;
+    case 'lostfound':
+      return `/lost-found/${item.id}`;
+    case 'poll':
+      return '/feed';
+    // A comment and a recommendation answer are both replies: the useful
+    // destination is the thing they are replying to, which the id alone does
+    // not name. Sending someone to the parent list beats a dead end.
+    case 'comment':
+      return '/feed';
+    case 'recoanswer':
+      return '/recommend';
     default:
       return '/';
   }
@@ -235,6 +255,12 @@ const SOURCE_META: Record<AskSource, { label: string; icon: string; color: strin
   document: { label: 'Document', icon: 'document-text', color: '#64748B' },
   sport: { label: 'Sports', icon: 'basketball', color: '#16A34A' },
   emergency: { label: 'Contact', icon: 'call', color: '#DC2626' },
+  event: { label: 'Function', icon: 'sparkles', color: '#DB2777' },
+  place: { label: 'Nearby', icon: 'location', color: '#0D9488' },
+  lostfound: { label: 'Lost & found', icon: 'search', color: '#9333EA' },
+  poll: { label: 'Poll', icon: 'stats-chart', color: '#6366F1' },
+  comment: { label: 'Comment', icon: 'chatbubble-ellipses', color: '#2563EB' },
+  recoanswer: { label: 'Recommended', icon: 'star', color: '#CA8A04' },
 };
 export function askSourceMeta(source: AskSource) {
   return SOURCE_META[source] ?? { label: 'Result', icon: 'ellipse', color: '#0F6E56' };

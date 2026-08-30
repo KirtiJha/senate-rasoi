@@ -227,6 +227,11 @@ type SourceDef = {
   map: (r: any) => { title: string; info: string };
   // deno-lint-ignore no-explicit-any
   fresh?: (q: any, today: string) => any; // status/date filter so stale rows never surface
+  // Comments and recommendation answers carry no community_id of their own —
+  // theirs lives on the parent post/question. They can still be hydrated by id
+  // (vector rows are already community-scoped) but must sit out the recent
+  // fallback, which filters on that column.
+  noCommunityCol?: boolean;
 };
 
 // One definition per Ask Aangan source — used both for the recent-catalog
@@ -283,6 +288,40 @@ const SOURCES: Record<string, SourceDef> = {
     cols: 'id,name,sport,description,practice_location,created_at',
     map: (r) => ({ title: String(r.name), info: `${r.sport} group${r.practice_location ? ` · ${r.practice_location}` : ''}${r.description ? ` · ${r.description}` : ''}` }),
   },
+  event: {
+    table: 'society_events',
+    cols: 'id,title,description,event_date,venue,status,created_at',
+    map: (r) => ({ title: String(r.title), info: `Function${r.event_date ? ` · ${r.event_date}` : ''}${r.venue ? ` · ${r.venue}` : ''} · ${r.status}${r.description ? ` · ${r.description}` : ''}` }),
+    fresh: (q) => q.neq('status', 'cancelled'),
+  },
+  place: {
+    table: 'places',
+    cols: 'id,name,place_type,description,address,hours,created_at', // no phone — PII stays out of the model input
+    map: (r) => ({ title: String(r.name), info: `${r.place_type}${r.address ? ` · ${r.address}` : ''}${r.hours ? ` · ${r.hours}` : ''}${r.description ? ` · ${r.description}` : ''} · tap for details` }),
+  },
+  lostfound: {
+    table: 'lost_found_items',
+    cols: 'id,kind,title,description,category,status,created_at',
+    map: (r) => ({ title: String(r.title), info: `${r.kind === 'found' ? 'Found' : 'Lost'}${r.category ? ` · ${r.category}` : ''}${r.description ? ` · ${r.description}` : ''}` }),
+    fresh: (q) => q.eq('status', 'open'),
+  },
+  poll: {
+    table: 'polls',
+    cols: 'id,question,is_closed,created_at',
+    map: (r) => ({ title: String(r.question), info: `Poll · ${r.is_closed ? 'closed' : 'open'} · tap to see results` }),
+  },
+  comment: {
+    table: 'post_comments',
+    cols: 'id,post_id,body,created_at',
+    map: (r) => ({ title: String(r.body ?? '').slice(0, 60), info: `Comment on a post · ${String(r.body ?? '').slice(0, 160)}` }),
+    noCommunityCol: true,
+  },
+  recoanswer: {
+    table: 'reco_answers',
+    cols: 'id,question_id,body,provider_name,vote_count,created_at',
+    map: (r) => ({ title: String(r.provider_name || String(r.body ?? '').slice(0, 50)), info: `Recommended by a neighbour${r.vote_count ? ` · ${r.vote_count} votes` : ''} · ${String(r.body ?? '').slice(0, 160)}` }),
+    noCommunityCol: true,
+  },
   emergency: {
     table: 'emergency_contacts',
     cols: 'id,name,category,role,created_at', // no phone — PII stays out of the model input
@@ -297,6 +336,7 @@ const todayStr = () => new Date().toISOString().slice(0, 10);
 async function buildCatalog(admin: any, communityId: string): Promise<CatalogItem[]> {
   const out: CatalogItem[] = [];
   await Promise.all(Object.entries(SOURCES).map(async ([source, def]) => {
+    if (def.noCommunityCol) return; // hydrate-by-id only; see noCommunityCol
     let q = admin.from(def.table).select(def.cols).eq('community_id', communityId)
       .order('created_at', { ascending: false }).limit(40);
     if (def.fresh) q = def.fresh(q, todayStr());
