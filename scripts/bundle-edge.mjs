@@ -53,10 +53,26 @@ const out =
   inlined;
 
 // Cheap guards against shipping something that cannot possibly work.
-const required = ['Deno.serve', 'runAgent', "action === 'agent'", 'AGENT_MODEL'];
+// What a working bundle must contain. AGENT_MODEL was here until the provider
+// swap removed it, and this guard is the reason a half-migrated bundle never
+// reached the dashboard.
+const required = [
+  'Deno.serve',
+  'runAgent',
+  "action === 'agent'",
+  'api.openai.com/v1/chat/completions',
+  'api.openai.com/v1/embeddings',
+  'OPENAI_MODEL',
+];
 const missing = required.filter((r) => !out.includes(r));
 if (missing.length) {
   console.error('✗ bundle is missing: ' + missing.join(', '));
+  process.exit(1);
+}
+// The provider swap is the kind of migration that half-lands: one file moved,
+// one not, and the result deploys green while every AI call 404s.
+if (out.includes('generativelanguage.googleapis.com')) {
+  console.error('✗ bundle still calls the old provider (generativelanguage.googleapis.com)');
   process.exit(1);
 }
 const stray = out.match(/from '\.\/[^']*'/g);

@@ -1,0 +1,32 @@
+-- ════════════════════════════════════════════════════════════════════
+-- Aangan — migration 0077: re-embed everything for the new provider
+-- Run AFTER 0001–0076, and AFTER deploying the OpenAI version of ai-proxy.
+--
+-- WHY THIS IS NOT OPTIONAL
+-- Embeddings from two different models are not comparable. They are points in
+-- different spaces that happen to have the same number of dimensions, so
+-- nothing errors — cosine distance still returns a number, the index still
+-- returns rows, and every one of them is noise. Search would not break
+-- loudly; it would quietly start answering the wrong questions.
+--
+-- So every vector is dropped. `embedding is null` is the flag the Edge
+-- Function already uses to find rows needing work, and it refills them lazily
+-- in bounded batches on each Ask (see EMBED_BACKFILL_BUDGET_MS). Nothing is
+-- re-embedded here, because doing thousands of API calls inside a migration is
+-- how a migration times out halfway.
+--
+-- EXPECT DEGRADED SEARCH FOR A FEW MINUTES. Until a row is re-embedded it
+-- cannot be found semantically. Saathi falls back to the recent-items catalog
+-- meanwhile, so it still answers — just less precisely. Ask it a few questions
+-- to drive the backfill, or wait for normal use to do it.
+--
+-- Ordering matters: run this AFTER the new function is live. Run it before,
+-- and the old Gemini function immediately refills the rows with Gemini vectors
+-- and you are back where you started.
+-- ════════════════════════════════════════════════════════════════════
+
+update public.search_documents set embedding = null;
+
+-- The cached translations are the model's output, not a vector, and stay
+-- valid — they are keyed by a hash of the source text, so anything whose
+-- original changed will re-translate on its own.

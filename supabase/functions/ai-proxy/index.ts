@@ -1,23 +1,25 @@
 // ════════════════════════════════════════════════════════════════════
 // Aangan — ai-proxy Edge Function
 //
-// The ONLY place the Gemini API key lives. A PWA ships its JS to the browser,
+// The ONLY place the OpenAI API key lives. A PWA ships its JS to the browser,
 // so the key can never be in the app bundle — every AI call is routed through
 // here. This function:
 //   1. verifies the caller's Supabase JWT (must be a signed-in resident),
 //   2. meters usage per user per day (free-tier guard) via an RPC,
-//   3. strips/avoids PII before calling Gemini (free tier may train on input),
-//   4. calls Gemini with a structured-output JSON schema and returns the result.
+//   3. strips/avoids PII before calling the model (phone numbers never leave),
+//   4. calls the model with a JSON output contract and returns the result.
 //
 // Deploy:   supabase functions deploy ai-proxy
-// Secret:   supabase secrets set GEMINI_API_KEY=...   (from aistudio.google.com)
+// Secrets:  OPENAI_API_KEY  (platform.openai.com)
+//           OPENAI_MODEL    the chat model id, e.g. the one you use in the playground
+//           OPENAI_EMBED_MODEL  optional; defaults to text-embedding-3-small
 // (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are injected automatically.)
 // ════════════════════════════════════════════════════════════════════
 
 import { runAgent } from './agent.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY') ?? '';
+const OPENAI_KEY = Deno.env.get('OPENAI_API_KEY') ?? '';
 
 // How long a single Ask may spend backfilling embeddings before it must get on
 // with answering. Deliberately well inside the Edge Function execution limit.
@@ -25,8 +27,11 @@ const EMBED_BACKFILL_BUDGET_MS = 8_000;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-const MODEL = 'gemini-2.5-flash';
-const EMBED_MODEL = 'gemini-embedding-001'; // current GA embedding model (text-embedding-004 is retired)
+// The chat model is a SECRET, not a constant. Model names move faster than
+// deploys, and a wrong one fails at runtime with an unhelpful 404 — so it is
+// set once in the dashboard and can be changed without touching this file.
+const OPENAI_MODEL = Deno.env.get('OPENAI_MODEL') ?? '';
+const EMBED_MODEL = Deno.env.get('OPENAI_EMBED_MODEL') ?? 'text-embedding-3-small';
 const EMBED_DIM = 768; // request 768-dim output so it fits the vector(768) column
 const DAILY_LIMIT = 40; // AI actions per user per day
 const MAX_IMAGE_CHARS = 8_000_000; // ~6 MB of base64 — a comfortably large photo
@@ -44,7 +49,7 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-// ── Per-kind output contracts (the only fields we ever ask Gemini for) ──
+// ── Per-kind output contracts (the only fields we ever ask the model for) ──
 type Kind = 'dish' | 'listing' | 'borrow';
 
 const SCHEMAS: Record<Kind, { instruction: string; schema: Record<string, unknown> }> = {
@@ -102,16 +107,19 @@ const SCHEMAS: Record<Kind, { instruction: string; schema: Record<string, unknow
   },
 };
 
-// Low-level Gemini call → parsed structured JSON. `parts` may mix text + image.
+// Low-level model call → parsed structured JSON. `parts` may mix text + image.
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** POST with retry/backoff on transient Gemini errors (429 rate-limit, 503 overload). */
+/** POST with retry/backoff on transient upstream errors (429 rate-limit, 503 overload). */
 async function postWithRetry(url: string, body: unknown, label: string, tries = 4): Promise<Response> {
   let last = '';
   for (let i = 0; i < tries; i++) {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENAI_KEY}`,
+      },
       body: JSON.stringify(body),
     });
     if (res.ok) return res;
@@ -123,51 +131,84 @@ async function postWithRetry(url: string, body: unknown, label: string, tries = 
   throw new Error(`${label} ${last}`);
 }
 
-async function geminiJSON(
+/**
+ * Structured JSON from the model. `parts` may mix text and one image.
+ *
+ * OpenAI's json_schema response format is strict in ways the old Gemini
+ * schemas are not — it requires additionalProperties:false and every property
+ * listed in `required`. Rather than rewrite five schemas to satisfy that, we
+ * ask for a JSON object and hand the schema to the model as part of the
+ * instruction. The schemas here are small and the models are reliable at this;
+ * the parse below is what actually enforces it.
+ */
+async function llmJSON(
   parts: unknown[],
   schema: Record<string, unknown>,
   temperature: number,
 ): Promise<Record<string, unknown>> {
+  // Gemini's part shape → OpenAI's content shape.
+  const content = (parts as Record<string, unknown>[]).map((p) => {
+    if (typeof p.text === 'string') return { type: 'text', text: p.text };
+    const inline = p.inline_data as { mime_type?: string; data?: string } | undefined;
+    if (inline?.data) {
+      return {
+        type: 'image_url',
+        image_url: { url: `data:${inline.mime_type ?? 'image/jpeg'};base64,${inline.data}` },
+      };
+    }
+    return { type: 'text', text: '' };
+  });
+
+  content.push({
+    type: 'text',
+    text:
+      'Reply with a single JSON object and nothing else — no prose, no code fence. ' +
+      'It must match this JSON Schema:\n' + JSON.stringify(schema),
+  });
+
   const res = await postWithRetry(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_KEY}`,
+    'https://api.openai.com/v1/chat/completions',
     {
-      contents: [{ role: 'user', parts }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: schema,
-        temperature,
-        thinkingConfig: { thinkingBudget: 0 }, // fast + cheap
-      },
+      model: OPENAI_MODEL,
+      messages: [{ role: 'user', content }],
+      response_format: { type: 'json_object' },
+      temperature,
     },
-    'Gemini',
+    'OpenAI',
   );
   const data = await res.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Gemini returned no content');
+  const text = data?.choices?.[0]?.message?.content;
+  if (!text) throw new Error('OpenAI returned no content');
   return JSON.parse(text);
 }
 
-// Embed texts → 768-dim vectors. taskType tunes for documents vs the query.
+/**
+ * Embed texts → 768-dim vectors.
+ *
+ * `dimensions: 768` is load-bearing: it keeps the existing vector(768) column
+ * and its HNSW index usable. Without it text-embedding-3-small returns 1536
+ * and every insert fails on a dimension mismatch.
+ *
+ * The taskType argument is kept for call-site compatibility and ignored —
+ * Gemini tunes document vs query embeddings, OpenAI does not distinguish them.
+ */
 async function embedTexts(
   texts: string[],
-  taskType: 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY',
+  _taskType: 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY',
 ): Promise<number[][]> {
   if (!texts.length) return [];
   const res = await postWithRetry(
-    `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:batchEmbedContents?key=${GEMINI_KEY}`,
+    'https://api.openai.com/v1/embeddings',
     {
-      requests: texts.map((t) => ({
-        model: `models/${EMBED_MODEL}`,
-        content: { parts: [{ text: t.slice(0, 2000) }] },
-        taskType,
-        outputDimensionality: EMBED_DIM,
-      })),
+      model: EMBED_MODEL,
+      input: texts.map((t) => t.slice(0, 2000)),
+      dimensions: EMBED_DIM,
     },
     'Embed',
   );
   const data = await res.json();
   // deno-lint-ignore no-explicit-any
-  return (data.embeddings ?? []).map((e: any) => e.values as number[]);
+  return (data.data ?? []).map((e: any) => e.embedding as number[]);
 }
 
 const toVec = (v: number[]) => `[${v.join(',')}]`;
@@ -183,7 +224,7 @@ function callAutofill(
     `${instruction}\n\n` +
     (note ? `The resident added this hint: "${note}".\n\n` : '') +
     'Respond ONLY with the JSON described by the schema. Keep it truthful to the photo — never guess prices or personal details.';
-  return geminiJSON(
+  return llmJSON(
     [{ text: prompt }, { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } }],
     schema,
     0.4,
@@ -193,7 +234,7 @@ function callAutofill(
 // ════════════════════════════════════════════════════════════════════
 // "Ask Aangan" (Phase 2) — answer a natural-language question over the
 // society's own catalog. We fetch a small, community-scoped, PII-free
-// catalog and let Gemini pick the items that answer the question. No
+// catalog and let the model pick the items that answer the question. No
 // embeddings/pgvector: at pilot scale the whole catalog fits in context.
 // ════════════════════════════════════════════════════════════════════
 
@@ -440,7 +481,7 @@ async function callAsk(question: string, catalog: CatalogItem[], facts: string, 
     (facts ? `Society info:\n${facts}\n\n` : '') +
     `Catalog (source:id — title — details):\n${lines || '(no listings right now)'}\n\n` +
     'In results, copy the source and id exactly from the matching catalog lines. Society-info or follow-up answers often have no new result cards.';
-  return geminiJSON([{ text: prompt }], ASK_SCHEMA, 0.3);
+  return llmJSON([{ text: prompt }], ASK_SCHEMA, 0.3);
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -508,7 +549,7 @@ async function handleTranslate(
     'Return a JSON object {"translations": [...]} with one translated string per input, in the same order.\n\n' +
     numbered;
 
-  const out = await geminiJSON([{ text: prompt }], TRANSLATE_SCHEMA, 0.2);
+  const out = await llmJSON([{ text: prompt }], TRANSLATE_SCHEMA, 0.2);
   const arr = (out.translations as string[]) ?? [];
 
   // 4. Store + return.
@@ -594,7 +635,7 @@ async function handleDigest(
     return quiet;
   }
 
-  // 3. Summarise with Gemini.
+  // 3. Summarise with the model.
   const activity = groups.filter((g) => g.count > 0)
     .map((g) => `- ${g.count} ${g.label}${g.titles.length ? `: ${g.titles.join('; ')}` : ''}`).join('\n');
   const prompt =
@@ -603,7 +644,7 @@ async function handleDigest(
     '(mention real items by name where useful). Encouraging and neighbourly; never invent anything not listed.\n\n' +
     `This week's activity:\n${activity}`;
 
-  const out = await geminiJSON([{ text: prompt }], DIGEST_SCHEMA, 0.5);
+  const out = await llmJSON([{ text: prompt }], DIGEST_SCHEMA, 0.5);
   const digest: Digest = {
     summary: String(out.summary ?? ''),
     highlights: Array.isArray(out.highlights) ? (out.highlights as string[]).slice(0, 4) : [],
@@ -615,7 +656,10 @@ async function handleDigest(
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
-  if (!GEMINI_KEY) return json({ error: 'AI is not configured' }, 503);
+  if (!OPENAI_KEY) return json({ error: 'AI is not configured' }, 503);
+  // A missing model name is the one misconfiguration that looks like a model
+  // failure rather than a setup failure, so it gets its own message.
+  if (!OPENAI_MODEL) return json({ error: 'AI model is not set — add the OPENAI_MODEL secret' }, 503);
 
   // ── 1. Authenticate the caller ──
   const authHeader = req.headers.get('Authorization') ?? '';
@@ -732,7 +776,8 @@ Deno.serve(async (req) => {
         },
         question,
         history,
-        GEMINI_KEY,
+        OPENAI_KEY,
+        OPENAI_MODEL,
       );
       return json({ result: out });
     } catch (e) {

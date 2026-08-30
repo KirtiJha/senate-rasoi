@@ -33,10 +33,6 @@
 // a human declines. That is the whole point.
 // ════════════════════════════════════════════════════════════════════
 
-// Named distinctly from index.ts MODEL so the two files can also be pasted
-// into the dashboard as one bundle without colliding.
-const AGENT_MODEL = 'gemini-2.5-flash';
-
 /**
  * Minimum cosine similarity for a search hit to count as a match.
  *
@@ -418,21 +414,23 @@ export async function runAgent(
   d: Deps,
   question: string,
   history: { role: 'user' | 'assistant'; text: string }[],
-  geminiKey: string,
+  apiKey: string,
+  model: string,
 ): Promise<AgentResult> {
+  // OpenAI carries the system prompt as a message, not a separate field.
   // deno-lint-ignore no-explicit-any
-  const contents: any[] = [];
+  const messages: any[] = [{ role: 'system', content: PREAMBLE }];
   for (const h of history.slice(-8)) {
-    contents.push({ role: h.role === 'user' ? 'user' : 'model', parts: [{ text: h.text }] });
+    messages.push({ role: h.role === 'user' ? 'user' : 'assistant', content: h.text });
   }
-  contents.push({ role: 'user', parts: [{ text: question }] });
+  messages.push({ role: 'user', content: question });
 
-  const tools = [{ functionDeclarations: [...READ_TOOLS, ...FINISH_TOOLS] }];
+  // OpenAI wraps each declaration in { type: 'function', function: … }.
+  const tools = [...READ_TOOLS, ...FINISH_TOOLS].map((t) => ({ type: 'function', function: t }));
+
   const steps: { tool: string; summary: string }[] = [];
-  // handle → the real item. Sequential across the whole conversation turn, so
-  // "3" means the same thing however many searches it took to find it.
   const cardIndex = new Map<string, { source: string; id: string }>();
-  const seen = new Map<string, string>(); // "source:id" → handle, so repeats reuse one
+  const seen = new Map<string, string>();
   const withHandles: Deps = {
     ...d,
     handle: (source, id) => {
@@ -447,59 +445,64 @@ export async function runAgent(
   };
 
   for (let step = 0; step < MAX_STEPS; step++) {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${AGENT_MODEL}:generateContent?key=${geminiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents,
-          tools,
-          systemInstruction: { parts: [{ text: PREAMBLE }] },
-          generationConfig: { temperature: 0.3 },
-          // On the last step, take away every tool except respond, so the loop
-          // always terminates with an answer rather than another lookup.
-          ...(step === MAX_STEPS - 1
-            ? { toolConfig: { functionCallingConfig: { mode: 'ANY', allowedFunctionNames: ['respond'] } } }
-            : {}),
-        }),
-      },
-    );
-    if (!res.ok) throw new Error(`Gemini ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model,
+        messages,
+        tools,
+        // On the last step every tool but `respond` is withdrawn, so the loop
+        // always ends with an answer rather than another lookup.
+        tool_choice:
+          step === MAX_STEPS - 1
+            ? { type: 'function', function: { name: 'respond' } }
+            : 'auto',
+      }),
+    });
+    if (!res.ok) throw new Error(`OpenAI ${res.status}: ${(await res.text()).slice(0, 200)}`);
     const data = await res.json();
 
-    const parts = data?.candidates?.[0]?.content?.parts ?? [];
-    const call = parts.find((p: any) => p.functionCall)?.functionCall;
+    const msg = data?.choices?.[0]?.message;
+    const calls = msg?.tool_calls ?? [];
 
-    if (!call) {
-      // Model answered in prose instead of calling respond. Take it rather
-      // than failing — a good answer in the wrong shape is still a good answer.
-      const text = parts.map((p: any) => p.text).filter(Boolean).join('\n').trim();
+    if (!calls.length) {
+      // Answered in prose instead of calling respond. Take it rather than
+      // failing — a good answer in the wrong shape is still a good answer.
+      const text = String(msg?.content ?? '').trim();
       return { answer: text || 'Sorry — I could not work that one out.', results: [], steps };
     }
 
-    const name = String(call.name);
-    const args = (call.args ?? {}) as Record<string, unknown>;
+    // Arguments arrive as a JSON *string*, unlike Gemini's parsed object.
+    const parseArgs = (raw: unknown): Record<string, unknown> => {
+      try { return JSON.parse(String(raw ?? '{}')); } catch { return {}; }
+    };
 
-    if (name === 'respond') {
-      // Belt and braces. The model can no longer see a UUID, but it can still
-      // narrate its own handles ("Lokesh - ref: 1"), which is plumbing leaking
-      // into prose. The instructions reduce that; this removes it.
-      const clean = (t: string) =>
-        t
-          .replace(/\s*[-—(\[]?\s*\bref:\s*\S+?\s*[\])]?(?=\s|$)/gi, '')
-          .replace(/[ \t]{2,}/g, ' ')
-          .replace(/[ \t]+([.,;:])/g, '$1')
-          .trim();
+    const terminal = calls.find((c: { function?: { name?: string } }) =>
+      c.function?.name === 'respond' || PROPOSAL_NAMES.has(String(c.function?.name)));
 
-      const refs = Array.isArray(args.result_refs) ? (args.result_refs as string[]) : [];
-      const results = refs
-        .map((r) => cardIndex.get(r))
-        .filter((x): x is { source: string; id: string } => !!x);
-      return { answer: clean(String(args.answer ?? '')), results, steps };
-    }
+    if (terminal) {
+      const name = String(terminal.function.name);
+      const args = parseArgs(terminal.function.arguments);
 
-    if (PROPOSAL_NAMES.has(name)) {
+      if (name === 'respond') {
+        // Belt and braces. The model can no longer see a UUID, but it can still
+        // narrate its own handles ("Lokesh - ref: 1"), which is plumbing
+        // leaking into prose. The instructions reduce that; this removes it.
+        const clean = (t: string) =>
+          t
+            .replace(/\s*[-—(\[]?\s*\bref:\s*\S+?\s*[\])]?(?=\s|$)/gi, '')
+            .replace(/[ \t]{2,}/g, ' ')
+            .replace(/[ \t]+([.,;:])/g, '$1')
+            .trim();
+
+        const refs = Array.isArray(args.result_refs) ? (args.result_refs as string[]) : [];
+        const results = refs
+          .map((r) => cardIndex.get(String(r)))
+          .filter((x): x is { source: string; id: string } => !!x);
+        return { answer: clean(String(args.answer ?? '')), results, steps };
+      }
+
       const { message, ...rest } = args as { message?: string };
       return {
         answer: String(message ?? '').trim(),
@@ -509,13 +512,21 @@ export async function runAgent(
       };
     }
 
-    // A read tool: run it, hand the result back, go round again.
-    // handle() has already registered every card it returned.
-    const { payload, summary } = await runReadTool(name, args, withHandles);
-    steps.push({ tool: name, summary });
-
-    contents.push({ role: 'model', parts: [{ functionCall: call }] });
-    contents.push({ role: 'user', parts: [{ functionResponse: { name, response: payload } }] });
+    // Read tools. OpenAI may ask for several at once; run them together and
+    // answer every one — a tool_call left without a matching tool message is a
+    // 400 on the next request, not a soft failure.
+    messages.push(msg);
+    const results = await Promise.all(
+      calls.map(async (call: { id: string; function: { name: string; arguments: string } }) => {
+        const name = String(call.function.name);
+        const { payload, summary } = await runReadTool(name, parseArgs(call.function.arguments), withHandles);
+        return { id: call.id, name, payload, summary };
+      }),
+    );
+    for (const r of results) {
+      steps.push({ tool: r.name, summary: r.summary });
+      messages.push({ role: 'tool', tool_call_id: r.id, content: JSON.stringify(r.payload) });
+    }
   }
 
   return { answer: 'I could not work that one out — try asking a different way.', results: [], steps };
