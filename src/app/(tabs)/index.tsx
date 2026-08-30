@@ -387,24 +387,35 @@ export default function HomeScreen() {
     <View className="flex-1 bg-bg">
       {/* Compact header — fades in as the hero leaves, so the screen always
           says whose society you are in without a permanent bar. */}
-      <Animated.View
+      <View
         pointerEvents="none"
-        style={[
-          compactStyle,
-          { position: 'absolute', top: 8, left: 20, right: 20, zIndex: 10 },
-        ]}
+        style={{ position: 'absolute', top: 8, left: 20, right: 20, zIndex: 10 }}
       >
-        <View
-          className="flex-row items-center gap-2.5 rounded-full px-3 py-2"
-          style={{ backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, boxShadow: c.shadowBar } as any}
-        >
-          <Avatar name={profile?.name ?? 'You'} size={26} />
-          <Text className="min-w-0 flex-1 font-sans-sb text-[15px] text-ink" numberOfLines={1}>
-            {profile?.name ? profile.name.split(' ')[0] : greeting}
-          </Text>
-          <Ionicons name="chevron-down" size={14} color={c.subtle} />
-        </View>
-      </Animated.View>
+        <Animated.View style={compactStyle}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 999,
+              backgroundColor: c.surface,
+              borderWidth: 1,
+              borderColor: c.line,
+              boxShadow: c.shadowBar,
+            } as any}
+          >
+            <Avatar name={profile?.name ?? 'You'} size={26} />
+            <Text
+              className="font-sans-sb text-[15px] text-ink"
+              style={{ flex: 1, minWidth: 0, marginLeft: 10 }}
+              numberOfLines={1}
+            >
+              {profile?.name ? profile.name.split(' ')[0] : greeting}
+            </Text>
+          </View>
+        </Animated.View>
+      </View>
 
     <AScrollView
       className="flex-1 bg-bg"
