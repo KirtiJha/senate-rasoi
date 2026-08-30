@@ -17,3 +17,4 @@ export { ListRow } from './ListRow';
 export { Rise } from './Rise';
 export { ParallaxHero } from './ParallaxHero';
 export { Gallery } from './Gallery';
+export { ModuleTile } from './ModuleTile';

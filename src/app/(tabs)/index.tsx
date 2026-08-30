@@ -13,7 +13,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '../../components/BrandMark';
 import { T } from '../../components/T';
-import { Avatar, Container, ErrorRow, Rise, Touchable, useResponsive, VegMark } from '../../components/ui';
+import { Avatar, Container, ErrorRow, ModuleTile, Rise, Touchable, useResponsive, VegMark } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useUnreadDms } from '../../context/unread';
@@ -548,9 +548,7 @@ export default function HomeScreen() {
               icon={cat.icon as any}
               label={cat.label}
               blurb={cat.blurb}
-              badge={0}
               onPress={() => handleCategoryPress(cat)}
-              c={c}
             />
           ))}
           {COMMUNITY_TILES.map((tile) => (
@@ -566,7 +564,6 @@ export default function HomeScreen() {
                       : (tileCounts[tile.key] ?? 0)
               }
               onPress={() => router.push(tile.href as any)}
-              c={c}
             />
           ))}
         </View>
@@ -655,57 +652,6 @@ function SectionHead({
   );
 }
 
-/**
- * A module in the index.
- *
- * Blurbs are gone: "Posts, announcements & issues" under a tile called Feed is
- * instruction, not design — it doubled the tile height and halved the density.
- * So is the coloured strip along the top. What remains is a glyph, a name, and
- * a count only when the count is something you have to act on — not a vanity
- * total of how many hospitals exist nearby.
- */
-function ModuleTile({
-  icon, label, blurb, badge, onPress, c,
-}: {
-  icon: any;
-  label: string;
-  blurb?: string;
-  badge: number;
-  onPress: () => void;
-  c: ReturnType<typeof useThemeColors>;
-}) {
-  return (
-    <View style={{ width: '50%', padding: 5 }}>
-      <Touchable haptic={null} onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
-        <View className="overflow-hidden card">
-          <View style={{ height: 3, backgroundColor: c.accent }} />
-          <View className="p-3.5">
-            <View
-              className="mb-2.5 h-10 w-10 items-center justify-center rounded-xl"
-              style={{ backgroundColor: c.accentSoft }}
-            >
-              <Ionicons name={icon} size={20} color={c.accent} />
-            </View>
-            <Text className="font-sans-bold text-[13px] text-ink" numberOfLines={1}>{label}</Text>
-            {blurb ? (
-              <Text className="mt-0.5 text-[11px] font-sans-md text-muted" numberOfLines={2}>{blurb}</Text>
-            ) : null}
-          </View>
-          {badge > 0 ? (
-            <View
-              className="absolute items-center justify-center rounded-full px-1.5"
-              style={{ top: 12, right: 12, minWidth: 20, height: 20, backgroundColor: c.highlight }}
-            >
-              <Text className="font-sans-bold text-[11px]" style={{ color: c.ink }}>
-                {badge > 99 ? '99+' : badge}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-      </Touchable>
-    </View>
-  );
-}
 
 
 
