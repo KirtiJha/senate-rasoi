@@ -37,6 +37,7 @@ export default function ListingDetailScreen() {
   const [listing, setListing] = useState<ListingRow | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [inquiryListing, setInquiryListing] = useState<ListingRow | null>(null);
   const [saved, setSaved] = useState(false);
@@ -80,7 +81,8 @@ export default function ListingDetailScreen() {
   }, [userId, id]);
 
   const toggleSave = async () => {
-    if (!userId || !id) return;
+    if (!userId || !id || busy) return;
+    setBusy(true);
     try {
       if (saved) {
         await unsaveListing(userId, id);
@@ -93,6 +95,7 @@ export default function ListingDetailScreen() {
         toast.show('Saved to bookmarks');
       }
     } catch { toast.show('Could not update bookmark'); }
+    finally { setBusy(false); }
   };
 
   const handleInquiryConfirm = async (l: ListingRow, message: string) => {
@@ -120,10 +123,17 @@ export default function ListingDetailScreen() {
   };
 
   const handleMarkSold = async () => {
-    if (!listing) return;
-    await setListingStatus(listing.id, listing.status === 'sold' ? 'active' : 'sold');
-    await load();
-    toast.show(listing.status === 'sold' ? 'Marked as active' : 'Marked as sold ✅');
+    if (!listing || busy) return;
+    setBusy(true);
+    try {
+      await setListingStatus(listing.id, listing.status === 'sold' ? 'active' : 'sold');
+      await load();
+      toast.show(listing.status === 'sold' ? 'Marked as active' : 'Marked as sold');
+    } catch {
+      toast.show('Could not update this listing');
+    } finally {
+      setBusy(false);
+    }
   };
 
   // Must sit above every early return: hooks run unconditionally or React

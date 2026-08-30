@@ -26,6 +26,7 @@ export default function PollsScreen() {
   const [polls, setPolls] = useState<PollRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [votingOn, setVotingOn] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
 
@@ -52,7 +53,8 @@ export default function PollsScreen() {
 
   const handleVote = async (poll: PollRow, optionId: string) => {
     if (!userId) { toast.show('Sign in to vote'); return; }
-    if (poll.my_vote || poll.is_closed) return;
+    if (poll.my_vote || poll.is_closed || votingOn) return;
+    setVotingOn(poll.id);
     try {
       await votePoll(poll.id, optionId, userId);
       setPolls((prev: PollRow[]) =>
@@ -68,6 +70,7 @@ export default function PollsScreen() {
         )
       );
     } catch { toast.show('Could not record vote'); }
+    finally { setVotingOn(null); }
   };
 
   const handleDelete = async (poll: PollRow) => {
@@ -80,6 +83,13 @@ export default function PollsScreen() {
   };
 
   const handleClose = async (poll: PollRow) => {
+    const ok = await confirm({
+      title: 'Close this poll?',
+      message: `"${poll.question}" stops accepting votes. This cannot be undone.`,
+      confirmLabel: 'Close poll',
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       await closePoll(poll.id);
       setPolls((prev: PollRow[]) =>

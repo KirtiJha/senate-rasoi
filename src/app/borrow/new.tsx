@@ -20,7 +20,9 @@ export default function NewLendItemScreen() {
   const router = useRouter();
   const { userId, profile, communityId } = useAuth();
   const { kind: kindParam } = useLocalSearchParams<{ kind?: string }>();
-  const kind: LendKind = kindParam === 'request' ? 'request' : 'offer';
+  // Seeded from the route, then owned locally: switching modes must not
+  // remount the screen and take the half-filled form with it.
+  const [kind, setKind] = useState<LendKind>(kindParam === 'request' ? 'request' : 'offer');
   const isOffer = kind === 'offer';
 
   const [title, setTitle] = useState('');
@@ -88,7 +90,7 @@ export default function NewLendItemScreen() {
             {([['offer', '🤝 I\'m lending this'], ['request', '🙏 I need to borrow']] as [LendKind, string][]).map(([k, lbl]) => (
               <Pressable
                 key={k}
-                onPress={() => router.replace((`/borrow/new?kind=${k}`) as any)}
+                onPress={() => setKind(k)}
                 className="flex-1 items-center rounded-xl py-2"
                 style={{ backgroundColor: kind === k ? c.bg : 'transparent' }}
               >

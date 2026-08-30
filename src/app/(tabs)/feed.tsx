@@ -14,6 +14,7 @@ import { T } from '../../components/T';
 import { Avatar, Button, ErrorState, ScreenHeader, useResponsive } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
+import { useConfirm } from '../../context/confirm';
 import { useBlocks } from '../../context/blocks';
 import { useToast } from '../../context/toast';
 import {
@@ -337,6 +338,19 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
   const [posting, setPosting] = useState(false);
   const bodyRef = useRef<TextInput>(null);
   const modalInsets = useSafeAreaInsets();
+  const confirm = useConfirm();
+
+  const closeWithGuard = async () => {
+    const hasWork = title.trim() || body.trim() || photos.length > 0;
+    if (!hasWork) return onClose();
+    const discard = await confirm({
+      title: 'Discard this post?',
+      message: "What you've written will be lost.",
+      confirmLabel: 'Discard',
+      destructive: true,
+    });
+    if (discard) onClose();
+  };
   const MAX_PHOTOS = 4;
 
   const pickPhotos = async () => {
@@ -358,11 +372,11 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={closeWithGuard}>
       <KeyboardAvoidingView className="flex-1 bg-bg" style={{ paddingTop: modalInsets.top }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* Header — close + title only, no post button here */}
         <View className="flex-row items-center justify-between border-b border-line px-4 py-4">
-          <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={10}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={closeWithGuard} hitSlop={10}>
             <Ionicons name="close" size={24} color={c.muted} />
           </Pressable>
           <Text className="font-sans-sb text-[16px] text-ink">New Post</Text>
