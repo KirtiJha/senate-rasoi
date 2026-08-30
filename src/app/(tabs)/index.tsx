@@ -366,10 +366,10 @@ export default function HomeScreen() {
   const heroStyle = useAnimatedStyle(() => {
     const y = scrollY.get();
     return {
-      opacity: interpolate(y, [0, 52], [1, 0], Extrapolation.CLAMP),
+      opacity: interpolate(y, [0, 36], [1, 0], Extrapolation.CLAMP),
       transform: [
-        { translateY: interpolate(y, [0, 80], [0, -14], Extrapolation.CLAMP) },
-        { scale: interpolate(y, [0, 80], [1, 0.95], Extrapolation.CLAMP) },
+        { translateY: interpolate(y, [0, 60], [0, -12], Extrapolation.CLAMP) },
+        { scale: interpolate(y, [0, 60], [1, 0.96], Extrapolation.CLAMP) },
       ],
     };
   });
@@ -377,8 +377,8 @@ export default function HomeScreen() {
   const compactStyle = useAnimatedStyle(() => {
     const y = scrollY.get();
     return {
-      opacity: interpolate(y, [44, 82], [0, 1], Extrapolation.CLAMP),
-      transform: [{ translateY: interpolate(y, [44, 82], [-10, 0], Extrapolation.CLAMP) }],
+      opacity: interpolate(y, [30, 62], [0, 1], Extrapolation.CLAMP),
+      transform: [{ translateY: interpolate(y, [30, 62], [-10, 0], Extrapolation.CLAMP) }],
     };
   });
 
@@ -403,9 +403,7 @@ export default function HomeScreen() {
           <Text className="min-w-0 flex-1 font-sans-sb text-[15px] text-ink" numberOfLines={1}>
             {profile?.name ? profile.name.split(' ')[0] : greeting}
           </Text>
-          <Text className="text-[11px] font-sans-sb uppercase tracking-[0.06em] text-subtle" numberOfLines={1}>
-            {todayLabel}
-          </Text>
+          <Ionicons name="chevron-down" size={14} color={c.subtle} />
         </View>
       </Animated.View>
 
@@ -413,7 +411,7 @@ export default function HomeScreen() {
       className="flex-1 bg-bg"
       onScroll={onScroll}
       scrollEventThrottle={16}
-      contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 8, paddingBottom: 40, paddingHorizontal: 20 }}
+      contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 24 : 12, paddingBottom: 40, paddingHorizontal: 20 }}
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={c.muted} colors={[c.accent]} />}
     >
@@ -426,19 +424,13 @@ export default function HomeScreen() {
             Society identity appears here, once, rather than in a pill
             hardcoded above twenty screens. */}
         <Animated.View style={heroStyle} className="flex-row items-center gap-3">
-          <Avatar name={profile?.name ?? 'You'} size={48} />
-          <View className="min-w-0 flex-1">
-            <Text className="text-[11px] font-sans-sb uppercase tracking-[0.06em] text-subtle" numberOfLines={1}>
-              {greeting} · {todayLabel}
+          <Avatar name={profile?.name ?? 'You'} size={42} />
+          <Text className="min-w-0 flex-1 font-display-x text-[22px] leading-[27px] text-ink" numberOfLines={1}>
+            {greeting},{' '}
+            <Text style={{ color: c.accent }}>
+              {profile?.name ? profile.name.split(' ')[0] : 'neighbour'}
             </Text>
-            <Text
-              className="mt-0.5 font-display-x text-[32px] leading-[36px]"
-              style={{ color: c.accent }}
-              numberOfLines={1}
-            >
-              {profile?.name ? profile.name.split(' ')[0] : 'Neighbour'}
-            </Text>
-          </View>
+          </Text>
         </Animated.View>
 
         {/* The ask-or-search bar takes hero position because it answers the

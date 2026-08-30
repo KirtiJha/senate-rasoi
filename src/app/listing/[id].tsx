@@ -3,17 +3,19 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { InquiryModal } from '../../components/listings/InquiryModal';
 import { ListingChat } from '../../components/listings/ListingChat';
 import { PayButton } from '../../components/PayButton';
 import { T } from '../../components/T';
-import { Avatar, Badge, Button, Container, ErrorState, useResponsive } from '../../components/ui';
+import { Avatar, Badge, Button, Container, ErrorState, ParallaxHero, useResponsive } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
 import { haptics } from '../../lib/haptics';
+import { AScrollView } from '../../lib/motion';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { sendInquiry } from '../../lib/inquiries';
 import { buildInquiryWhatsAppLink, deleteListing, fetchListingById, setListingStatus } from '../../lib/listings';
@@ -173,6 +175,11 @@ export default function ListingDetailScreen() {
   }
 
   const cat = getService(listing.category);
+
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.set(e.contentOffset.y);
+  });
   const photo = listing.photos[0];
   const isOwner = !!userId && listing.owner_user_id === userId;
   const ownerName = listing.is_referral
@@ -181,14 +188,20 @@ export default function ListingDetailScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScrollView
+      <AScrollView
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         contentContainerStyle={{ paddingBottom: 96 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Hero image or colour block */}
         {photo ? (
           <View style={{ height: 280 }}>
-            <Image source={{ uri: photo }} style={{ width: '100%', height: 280 }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
+              <ParallaxHero scrollY={scrollY} height={280}>
+                <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+              </ParallaxHero>
+            </View>
             {/* Back button overlaid on photo */}
             <Pressable
               onPress={goBack}
@@ -389,7 +402,7 @@ export default function ListingDetailScreen() {
             />
           </Container>
         </View>
-      </ScrollView>
+      </AScrollView>
 
       <InquiryModal
         listing={inquiryListing}

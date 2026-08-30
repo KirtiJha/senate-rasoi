@@ -20,7 +20,7 @@ export function TopBar({ live = false }: { live?: boolean }) {
 
   return (
     <View className="border-b border-line bg-bg" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center justify-between px-4 py-2.5">
+      <View className="flex-row items-center justify-between px-4" style={{ paddingTop: 6, paddingBottom: 6 }}>
         <Link href="/" asChild>
           <Pressable hitSlop={6} accessibilityLabel="Go to Home" className="active:opacity-70">
             <Wordmark size={20} />
@@ -30,10 +30,10 @@ export function TopBar({ live = false }: { live?: boolean }) {
           {community ? (
             <View
               className="flex-row items-center gap-1 rounded-full px-2.5 py-1"
-              style={{ backgroundColor: '#0D948822', borderWidth: 1, borderColor: '#0D948855', maxWidth: 150 }}
+              style={{ backgroundColor: c.accentSoft, borderWidth: 1, borderColor: c.accentLine, maxWidth: 150 }}
             >
-              <Ionicons name="business" size={11} color="#0D9488" />
-              <Text className="text-[11px] font-sans-sb" numberOfLines={1} style={{ color: '#0D9488' }}>{community.name}</Text>
+              <Ionicons name="business" size={11} color={c.accent} />
+              <Text className="text-[11px] font-sans-sb" numberOfLines={1} style={{ color: c.accent }}>{community.name}</Text>
             </View>
           ) : null}
           {live ? (
