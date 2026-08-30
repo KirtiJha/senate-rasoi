@@ -48,9 +48,9 @@ export function ListRow({
         {leading ?? (icon ? (
           <View
             className="items-center justify-center rounded-xl"
-            style={{ width: 40, height: 40, backgroundColor: danger ? c.dangerSoft : c.inset }}
+            style={{ width: 40, height: 40, backgroundColor: danger ? c.dangerSoft : c.accentSoft }}
           >
-            <Ionicons name={icon} size={19} color={danger ? c.danger : c.muted} />
+            <Ionicons name={icon} size={19} color={danger ? c.danger : c.accent} />
           </View>
         ) : null)}
 

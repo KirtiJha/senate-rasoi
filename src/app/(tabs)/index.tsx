@@ -547,6 +547,7 @@ export default function HomeScreen() {
               key={cat.key}
               icon={cat.icon as any}
               label={cat.label}
+              blurb={cat.blurb}
               badge={0}
               onPress={() => handleCategoryPress(cat)}
               c={c}
@@ -557,6 +558,7 @@ export default function HomeScreen() {
               key={tile.key}
               icon={tile.icon as any}
               label={tile.label}
+              blurb={tile.blurb}
               badge={
                 tile.key === 'messages' ? unread
                   : tile.key === 'borrow' ? borrowCount
@@ -606,9 +608,9 @@ function AroundRow({
           ) : (
             <View
               className="items-center justify-center"
-              style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: c.inset }}
+              style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: c.accentSoft }}
             >
-              <Ionicons name={item.icon} size={20} color={c.muted} />
+              <Ionicons name={item.icon} size={20} color={c.accent} />
             </View>
           )}
 
@@ -663,10 +665,11 @@ function SectionHead({
  * total of how many hospitals exist nearby.
  */
 function ModuleTile({
-  icon, label, badge, onPress, c,
+  icon, label, blurb, badge, onPress, c,
 }: {
   icon: any;
   label: string;
+  blurb?: string;
   badge: number;
   onPress: () => void;
   c: ReturnType<typeof useThemeColors>;
@@ -674,31 +677,30 @@ function ModuleTile({
   return (
     <View style={{ width: '50%', padding: 5 }}>
       <Touchable haptic={null} onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
-        <View
-          className="justify-between p-3.5"
-          style={{
-            height: 96,
-            backgroundColor: c.inset,
-            borderTopLeftRadius: 22,
-            borderTopRightRadius: 22,
-            borderBottomLeftRadius: 14,
-            borderBottomRightRadius: 14,
-          }}
-        >
-          <View className="flex-row items-start justify-between">
-            <Ionicons name={icon} size={24} color={c.ink} />
-            {badge > 0 ? (
-              <View
-                className="items-center justify-center rounded-full px-1.5"
-                style={{ minWidth: 20, height: 20, backgroundColor: c.highlight }}
-              >
-                <Text className="font-sans-bold text-[11px]" style={{ color: c.ink }}>
-                  {badge > 99 ? '99+' : badge}
-                </Text>
-              </View>
+        <View className="overflow-hidden card">
+          <View style={{ height: 3, backgroundColor: c.accent }} />
+          <View className="p-3.5">
+            <View
+              className="mb-2.5 h-10 w-10 items-center justify-center rounded-xl"
+              style={{ backgroundColor: c.accentSoft }}
+            >
+              <Ionicons name={icon} size={20} color={c.accent} />
+            </View>
+            <Text className="font-sans-bold text-[13px] text-ink" numberOfLines={1}>{label}</Text>
+            {blurb ? (
+              <Text className="mt-0.5 text-[11px] font-sans-md text-muted" numberOfLines={2}>{blurb}</Text>
             ) : null}
           </View>
-          <Text className="font-sans-sb text-[15px] text-ink" numberOfLines={1}>{label}</Text>
+          {badge > 0 ? (
+            <View
+              className="absolute items-center justify-center rounded-full px-1.5"
+              style={{ top: 12, right: 12, minWidth: 20, height: 20, backgroundColor: c.highlight }}
+            >
+              <Text className="font-sans-bold text-[11px]" style={{ color: c.ink }}>
+                {badge > 99 ? '99+' : badge}
+              </Text>
+            </View>
+          ) : null}
         </View>
       </Touchable>
     </View>

@@ -160,10 +160,10 @@ function MyItemRow({
           style={{
             width: 40, height: 40, borderRadius: 14,
             alignItems: 'center', justifyContent: 'center',
-            backgroundColor: c.inset,
+            backgroundColor: c.accentSoft,
           }}
         >
-          <Ionicons name={icon as any} size={19} color={c.muted} />
+          <Ionicons name={icon as any} size={19} color={c.accent} />
         </View>
 
         <View className="flex-1" style={{ minWidth: 0 }}>
