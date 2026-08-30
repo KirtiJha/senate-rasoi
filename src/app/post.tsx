@@ -1,30 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { openPhotoPicker } from '../../lib/photo';
+import { openPhotoPicker } from '../lib/photo';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Empty } from '../../components/Empty';
-import { Field, Label, SectionCard } from '../../components/forms';
-import { CreateListingForm } from '../../components/listings/CreateListingForm';
-import { Avatar, Button, ChoiceTiles, Container, ModuleTile, Stepper, useResponsive, VegMark } from '../../components/ui';
-import { useAuth } from '../../context/auth';
-import { useProfile } from '../../context/profile';
-import { useToast } from '../../context/toast';
-import { AIError, visionAutofill } from '../../lib/ai';
-import { fetchMyRecentDishes, postDish } from '../../lib/dishes';
-import { clearDraft, getDraft, setDraft } from '../../lib/draft';
-import { haptics } from '../../lib/haptics';
-import { SERVICES, getService } from '../../lib/services';
-import { isSupabaseConfigured } from '../../lib/supabase';
-import { createTiffinPlan } from '../../lib/tiffin';
-import { slotOrderBy } from '../../lib/time';
-import { DishRow, DOW_LABELS, SLOTS, Slot, VEG_TYPES, VegType, SLOT_EMOJI } from '../../lib/types';
-import { useThemeColors } from '../../theme';
+import { Empty } from '../components/Empty';
+import { Field, Label, SectionCard } from '../components/forms';
+import { CreateListingForm } from '../components/listings/CreateListingForm';
+import { Avatar, Button, ChoiceTiles, Container, ModuleTile, Stepper, useResponsive, VegMark } from '../components/ui';
+import { useAuth } from '../context/auth';
+import { useProfile } from '../context/profile';
+import { useToast } from '../context/toast';
+import { AIError, visionAutofill } from '../lib/ai';
+import { fetchMyRecentDishes, postDish } from '../lib/dishes';
+import { clearDraft, getDraft, setDraft } from '../lib/draft';
+import { haptics } from '../lib/haptics';
+import { SERVICES, getService } from '../lib/services';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { createTiffinPlan } from '../lib/tiffin';
+import { slotOrderBy } from '../lib/time';
+import { DishRow, DOW_LABELS, SLOTS, Slot, VEG_TYPES, VegType, SLOT_EMOJI } from '../lib/types';
+import { useThemeColors } from '../theme';
 
 const SLOT_HINTS: Record<Slot, string> = {
   Breakfast: '7 – 10 AM',

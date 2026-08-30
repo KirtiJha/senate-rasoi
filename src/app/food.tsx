@@ -23,7 +23,7 @@ import { SetupBanner } from '../components/SetupBanner';
 import { SubscribeModal } from '../components/SubscribeModal';
 import { TiffinCard } from '../components/TiffinCard';
 import { TiffinEditSheet } from '../components/TiffinEditSheet';
-import PostScreen from './(tabs)/post';
+import PostScreen from './post';
 import { Container, DishCardSkeleton, LiveDot, ScreenHeader, useResponsive } from '../components/ui';
 import { useThemeColors } from '../theme';
 import { useAuth } from '../context/auth';
