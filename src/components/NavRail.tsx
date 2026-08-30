@@ -8,6 +8,7 @@ import { useNotifications } from '../context/notifications';
 import { useThemePreference } from '../context/theme';
 import { useUnreadDms } from '../context/unread';
 import { useThemeColors } from '../theme';
+import { SaathiMark } from './SaathiMark';
 import { BrandMark } from './BrandMark';
 import { Wordmark } from './Brand';
 import { Avatar } from './ui';
@@ -27,6 +28,8 @@ const PRIMARY_ITEMS: NavItem[] = [
   { href: '/', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
   { href: '/feed', label: 'Feed', icon: 'chatbubbles-outline', activeIcon: 'chatbubbles' },
   { href: '/search', label: 'Search', icon: 'search-outline', activeIcon: 'search' },
+  // The icon fields are unused for this row — NavRail draws SaathiMark for
+  // /ask instead. They stay because NavItem requires them.
   { href: '/ask', label: 'Saathi', icon: 'sparkles-outline', activeIcon: 'sparkles', color: '#0F6E56' },
   { href: '/listings', label: 'Listings', icon: 'pricetags-outline', activeIcon: 'pricetags' },
   { href: '/messages', label: 'Messages', icon: 'mail-outline', activeIcon: 'mail' },
@@ -112,7 +115,7 @@ function NavItemRow({
         >
           <View>
             {item.href === '/ask' ? (
-              <BrandMark size={22} />
+              <SaathiMark size={22} filled={active} color={iconColor} />
             ) : (
               <Ionicons
                 name={active ? item.activeIcon : item.icon}

@@ -11,6 +11,7 @@ import Animated, {
   Extrapolation, interpolate, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SaathiMark } from '../../components/SaathiMark';
 import { BrandMark } from '../../components/BrandMark';
 import { T } from '../../components/T';
 import { Avatar, Container, ErrorRow, ModuleTile, Rise, Touchable, useResponsive, VegMark } from '../../components/ui';
@@ -478,7 +479,7 @@ export default function HomeScreen() {
             className="flex-row items-center gap-3 rounded-full px-4"
             style={{ height: 52, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, boxShadow: c.shadowCard } as any}
           >
-            <BrandMark size={24} />
+            <SaathiMark size={24} />
             <Text className="min-w-0 flex-1 text-[15px] font-sans-md text-subtle" numberOfLines={1}>
               Ask Saathi, or search
             </Text>

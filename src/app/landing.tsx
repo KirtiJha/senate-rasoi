@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Ellipse, G } from 'react-native-svg';
 import { BrandMark } from '../components/BrandMark';
 import { DiversityEmblem, LOGO_PETALS } from '../components/Brand';
+import { SaathiMark } from '../components/SaathiMark';
 import { PhoneWelcome } from '../components/PhoneWelcome';
 import { useResponsive } from '../components/ui';
 
@@ -145,16 +146,19 @@ export default function LandingScreen() {
             <View className={`rounded-[22px] p-6 ${isWide ? 'flex-row items-center gap-10' : ''}`} style={{ backgroundColor: P.surface }}>
               <View className="flex-1">
                 <View className="mb-3 flex-row items-center gap-2">
-                  <BrandMark size={30} id="ai-mark" />
+                  <SaathiMark size={30} />
                   <Text className="font-display" style={{ fontSize: 21, color: P.ink }}>Saathi</Text>
                 </View>
                 <Text className="font-sans-md" style={{ fontSize: 15, lineHeight: 23, color: P.muted }}>
-                  A friendly chat that answers anything about your society — food, flats to rent, things to
-                  borrow, trusted services, who lives where, announcements and more. Just ask the way you'd ask
-                  a neighbour, follow-up questions and all.
+                  Saathi knows your society — food, flats, things to borrow, trusted services, who lives where,
+                  every notice and every reply under it. Ask the way you'd ask a neighbour, follow-ups and all.
+                </Text>
+                <Text className="font-sans-md mt-3" style={{ fontSize: 15, lineHeight: 23, color: P.muted }}>
+                  It can also do things for you: draft the notice, open the poll, put the item on the
+                  marketplace. It shows you exactly what it wrote and nothing is posted until you tap Confirm.
                 </Text>
                 <View className="mt-4 flex-row flex-wrap gap-2">
-                  {['Any veg tiffin for lunch?', '2 BHK for rent?', 'Is there a doctor here?', 'Where can I borrow a drill?'].map((q) => (
+                  {['Any veg tiffin for lunch?', 'Is there a plumber?', 'Post a notice about the water tanker', 'Start a poll about the gate timings'].map((q) => (
                     <View key={q} className="rounded-full px-3 py-1.5" style={{ borderWidth: 1, borderColor: P.line, backgroundColor: P.bg }}>
                       <Text className="font-sans-md" style={{ fontSize: 12.5, color: P.muted }}>{q}</Text>
                     </View>

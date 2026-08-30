@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
-import { BrandMark } from '../components/BrandMark';
+import { SaathiMark } from '../components/SaathiMark';
 import { KeyboardAvoider, ScreenHeader } from '../components/ui';
 import { useToast } from '../context/toast';
 import { ProposalCard, StepsTrail } from '../components/saathi/ProposalCard';
@@ -145,7 +145,7 @@ export default function AskScreen() {
   return (
     <KeyboardAvoider style={{ overflow: 'hidden', backgroundColor: c.bg }}>
       <ScreenHeader
-        iconNode={<BrandMark size={26} />}
+        iconNode={<SaathiMark size={26} />}
         title="Saathi"
         showBack
         right={
@@ -206,7 +206,7 @@ export default function AskScreen() {
             // sizes the same tree from the text, which is why web looked fine.
             <View key={i} className="mb-4 w-[92%]">
               <View className="flex-row items-end gap-2">
-                <BrandMark size={24} />
+                <SaathiMark size={24} />
                 <View className="flex-shrink rounded-2xl rounded-bl-md border border-line bg-surface px-3.5 py-2.5">
                   {m.text ? (
                     <RichText text={m.text} />
