@@ -13,10 +13,8 @@ import { getService } from '../lib/services';
 import { deleteTiffinPlan, listMyTiffinPlans } from '../lib/tiffin';
 import { DishRow, ListingRow, TiffinPlan } from '../lib/types';
 import { useThemeColors } from '../theme';
-import { Button, Container, RowSkeleton } from './ui';
+import { Button, Container, RowSkeleton, Touchable } from './ui';
 
-const FOOD_COLOR = '#E8650A';
-const TIFFIN_COLOR = '#F59E0B';
 
 type MyItem =
   | { kind: 'listing'; id: string; raw: ListingRow }
@@ -133,62 +131,85 @@ function MyItemRow({
   onDelete: () => void;
   onToggleSold?: () => void;
 }) {
-  let title: string, catLabel: string, color: string, icon: string, price: string | null, status: { text: string; good: boolean } | null;
+  let title: string, catLabel: string, icon: string, price: string | null, status: { text: string; good: boolean } | null;
 
   if (item.kind === 'dish') {
     const d = item.raw;
-    title = d.dish_name; catLabel = 'Home Food'; color = FOOD_COLOR; icon = 'restaurant';
+    title = d.dish_name; catLabel = 'Home Food'; icon = 'restaurant';
     price = `₹${d.price}`; status = { text: `${d.plates_left} left`, good: d.plates_left > 0 };
   } else if (item.kind === 'tiffin') {
     const t = item.raw;
-    title = t.title; catLabel = 'Tiffin'; color = TIFFIN_COLOR; icon = 'repeat';
+    title = t.title; catLabel = 'Tiffin'; icon = 'repeat';
     price = `₹${t.price}/day`; status = { text: t.active ? 'active' : 'paused', good: !!t.active };
   } else {
     const l = item.raw; const cat = getService(l.category);
-    title = l.title; catLabel = cat?.label ?? l.category; color = c.accent; icon = (cat?.icon as string) ?? 'grid-outline';
+    title = l.title; catLabel = cat?.label ?? l.category; icon = (cat?.icon as string) ?? 'grid-outline';
     price = l.price != null ? `₹${l.price.toLocaleString('en-IN')}` : null;
     status = { text: l.status, good: l.status === 'active' };
   }
 
+  // The row carried a coloured strip along its top, a tinted glyph plate, a
+  // green "ACTIVE" pill, a delete button in a filled pink box and a chevron —
+  // five competing signals for what is one line of text and two actions. The
+  // strip and the pink box go; status becomes a word next to the category,
+  // where you read it as part of the sentence rather than as an alarm.
   return (
-    <Pressable onPress={onOpen} className="mb-3 overflow-hidden rounded-2xl bg-surface active:opacity-90" style={{ borderWidth: 1, borderColor: c.line }}>
-      <View style={{ height: 3, backgroundColor: color }} />
-      <View className="flex-row items-center gap-3 p-3.5">
-        <View className="h-10 w-10 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: color + '20' }}>
-          <Ionicons name={icon as any} size={20} color={color} />
+    <Touchable haptic={null} onPress={onOpen} accessibilityRole="button" accessibilityLabel={title} style={{ marginBottom: 10 }}>
+      <View className="flex-row items-center gap-3 card px-3.5 py-3">
+        <View
+          style={{
+            width: 40, height: 40, borderRadius: 14,
+            alignItems: 'center', justifyContent: 'center',
+            backgroundColor: c.inset,
+          }}
+        >
+          <Ionicons name={icon as any} size={19} color={c.muted} />
         </View>
 
         <View className="flex-1" style={{ minWidth: 0 }}>
-          <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{title}</Text>
-          <View className="mt-0.5 flex-row items-center gap-2 flex-wrap">
-            <Text className="text-[11px] font-sans-md text-muted">{catLabel}</Text>
-            {price ? <Text className="text-[11px] font-sans-sb text-accent">{price}</Text> : null}
-            {status ? (
-              <View className={`rounded-full px-1.5 py-0.5 ${status.good ? 'bg-[#E4F5EC]' : 'bg-inset'}`}>
-                <Text className={`text-[10px] font-sans-sb uppercase ${status.good ? 'text-[#27AE60]' : 'text-muted'}`}>{status.text}</Text>
-              </View>
+          <Text className="font-sans-sb text-[15px] text-ink" numberOfLines={1}>{title}</Text>
+          <View className="mt-0.5 flex-row items-center" style={{ flexWrap: 'wrap' }}>
+            <Text className="text-[12px] font-sans-md text-subtle">{catLabel}</Text>
+            {price ? (
+              <Text className="text-[12px] font-sans-sb text-ink">{'  ·  ' + price}</Text>
+            ) : null}
+            {status && !status.good ? (
+              <Text className="text-[12px] font-sans-sb" style={{ color: c.subtle }}>
+                {'  ·  ' + status.text}
+              </Text>
             ) : null}
             {inquiries > 0 ? (
-              <View className="flex-row items-center gap-1 rounded-full px-1.5 py-0.5" style={{ backgroundColor: c.accent + '1A' }}>
-                <Ionicons name="people" size={10} color={c.accent} />
-                <Text className="text-[10px] font-sans-sb" style={{ color: c.accent }}>{inquiries} interested</Text>
-              </View>
+              <Text className="text-[12px] font-sans-sb" style={{ color: c.accent }}>
+                {'  ·  ' + inquiries + ' interested'}
+              </Text>
             ) : null}
           </View>
         </View>
 
-        <View className="flex-row items-center gap-1.5">
-          {onToggleSold ? (
-            <Pressable onPress={onToggleSold} hitSlop={4} className="items-center justify-center rounded-xl border border-line px-2.5 py-1.5 active:opacity-70">
-              <Text className="font-sans-sb text-[11px] text-muted">{item.kind === 'listing' && item.raw.status === 'sold' ? 'Unsell' : 'Sold'}</Text>
-            </Pressable>
-          ) : null}
-          <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={onDelete} hitSlop={4} className="items-center justify-center rounded-xl bg-[#FEEAEA] px-2.5 py-1.5 active:opacity-70">
-            <Ionicons name="trash-outline" size={14} color="#E0322B" />
+        {onToggleSold ? (
+          <Pressable
+            onPress={onToggleSold}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel={item.kind === 'listing' && item.raw.status === 'sold' ? 'Mark as available' : 'Mark as sold'}
+            className="rounded-full border border-line px-2.5 py-1 active:opacity-70"
+          >
+            <Text className="font-sans-sb text-[11px] text-muted">
+              {item.kind === 'listing' && item.raw.status === 'sold' ? 'Unsell' : 'Sold'}
+            </Text>
           </Pressable>
-          <Ionicons name="chevron-forward" size={16} color={c.faint} />
-        </View>
+        ) : null}
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Delete ${title}`}
+          onPress={onDelete}
+          hitSlop={8}
+          className="active:opacity-60"
+        >
+          <Ionicons name="trash-outline" size={17} color={c.subtle} />
+        </Pressable>
       </View>
-    </Pressable>
+    </Touchable>
   );
 }
