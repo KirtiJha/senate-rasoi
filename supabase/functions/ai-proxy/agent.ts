@@ -452,6 +452,18 @@ export async function runAgent(
         model,
         messages,
         tools,
+        // Required, not optional. On /v1/chat/completions this model refuses
+        // function tools together with reasoning:
+        //   "Function tools with reasoning_effort are not supported for
+        //    gpt-5.6-luna in /v1/chat/completions. To use function tools, use
+        //    /v1/responses or set reasoning_effort to 'none'."
+        // Losing reasoning matters less here than it would for a single-shot
+        // answer: the loop already supplies the structure that reasoning would
+        // otherwise provide — look, read the result, decide, look again — and
+        // it is markedly faster across six sequential calls. /v1/responses is
+        // the upgrade if the planning turns out to need more depth, and that
+        // is the same move streaming will want.
+        reasoning_effort: 'none',
         // On the last step every tool but `respond` is withdrawn, so the loop
         // always ends with an answer rather than another lookup.
         tool_choice:
