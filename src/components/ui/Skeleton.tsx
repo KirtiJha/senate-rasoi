@@ -20,18 +20,17 @@ export function Skeleton({ style, radius = 8 }: { style?: ViewStyle; radius?: nu
   return <Animated.View style={[{ opacity, backgroundColor: c.inset, borderRadius: radius }, style]} />;
 }
 
+/** Mirrors ListingCard exactly — 232 tall, 140 of it media. */
 export function ListingCardSkeleton() {
   return (
-    <View className="overflow-hidden card">
+    <View className="overflow-hidden card" style={{ height: 232 }}>
       <Skeleton style={{ height: 140 }} radius={0} />
-      <View className="p-3" style={{ gap: 8 }}>
-        <Skeleton style={{ width: '80%', height: 14 }} />
-        <Skeleton style={{ width: '40%', height: 12 }} />
+      <View style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 8, justifyContent: 'space-between' }}>
+        <Skeleton style={{ width: '45%', height: 18 }} />
         <View className="flex-row items-center gap-1.5">
           <Skeleton style={{ width: 18, height: 18 }} radius={9} />
-          <Skeleton style={{ width: '55%', height: 10 }} />
+          <Skeleton style={{ width: '55%', height: 11 }} />
         </View>
-        <Skeleton style={{ height: 30, marginTop: 2 }} radius={12} />
       </View>
     </View>
   );
