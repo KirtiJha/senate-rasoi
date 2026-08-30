@@ -75,16 +75,27 @@ export function Button({
     </>
   );
 
+  // Layout on the Touchable, paint on a plain child.
+  //
+  // Touchable is cssInterop-registered AND sets its own animated `style`, so a
+  // className carrying a background on it puts the two in contention for the
+  // same prop — and the background loses. That is why "Remove" was invisible in
+  // dark mode: bg-danger never painted, leaving near-black label text on the
+  // near-black page. It was silently affecting every variant.
   return (
     <Touchable
       onPress={onPress}
       disabled={isDisabled}
       haptic={isDisabled ? null : variant === 'danger' ? 'warning' : 'tap'}
-      className={`flex-row items-center justify-center gap-2 ${BG[variant]} ${PAD[size]} ${
-        fullWidth ? 'w-full' : ''
-      } ${isDisabled ? 'opacity-50' : ''} ${className}`}
+      className={fullWidth ? 'w-full' : ''}
     >
-      {content}
+      <View
+        className={`flex-row items-center justify-center gap-2 ${BG[variant]} ${PAD[size]} ${
+          fullWidth ? 'w-full' : ''
+        } ${isDisabled ? 'opacity-50' : ''} ${className}`}
+      >
+        {content}
+      </View>
     </Touchable>
   );
 }

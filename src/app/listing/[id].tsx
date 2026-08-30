@@ -182,7 +182,7 @@ export default function ListingDetailScreen() {
   return (
     <View className="flex-1 bg-bg">
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: 96 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Hero image or colour block */}
@@ -327,9 +327,33 @@ export default function ListingDetailScreen() {
               </View>
             )}
 
-            {/* Owner / admin actions */}
-            {(isOwner || isAdmin) && (
-              <View className="mb-4 flex-row flex-wrap gap-2">
+            {/* Actions — the contact CTA sits with the owner controls rather
+                than pinned to the bottom, where it stacked over the tab bar and
+                cost ~190px of a phone screen between them. */}
+            {(isOwner || isAdmin || (listing.status === 'active' && cat)) && (
+              <View className="mb-4 flex-row flex-wrap items-center gap-2">
+                {!isOwner && listing.status === 'active' && cat ? (
+                  <Button
+                    label={cat.ctaLabel}
+                    icon="logo-whatsapp"
+                    variant="whatsapp"
+                    size="sm"
+                    onPress={() => setInquiryListing(listing)}
+                  />
+                ) : null}
+                {!isOwner && listing.price != null && listing.owner?.upi ? (
+                  <PayButton
+                    payee={{ id: listing.owner_user_id, name: ownerName, upi: listing.owner.upi }}
+                    amount={listing.price}
+                    note={listing.title}
+                    context={{ type: 'listing', id: listing.id }}
+                    label={`Pay ₹${listing.price.toLocaleString('en-IN')}`}
+                    variant="outline"
+                    size="sm"
+                  />
+                ) : null}
+                {(isOwner || isAdmin) ? (
+                <>
                 <Button
                   label="Edit"
                   variant="outline"
@@ -351,6 +375,8 @@ export default function ListingDetailScreen() {
                   size="sm"
                   onPress={handleDelete}
                 />
+                </>
+                ) : null}
               </View>
             )}
 
@@ -364,49 +390,6 @@ export default function ListingDetailScreen() {
           </Container>
         </View>
       </ScrollView>
-
-      {/* Sticky CTA */}
-      {!isOwner && listing.status === 'active' && cat && (
-        <View
-          className="absolute bottom-0 left-0 right-0 flex-row items-center gap-2.5 px-4 pt-3"
-          style={{
-            paddingBottom: insets.bottom + 10,
-            backgroundColor: c.surface,
-            borderTopWidth: 1,
-            borderTopColor: c.line,
-            boxShadow: c.shadowBar,
-          } as any}
-        >
-          {/* Actions sit side by side rather than stacked, and at `md` rather
-              than `lg` — one row of 44px instead of two of 52px. The bar is
-              `surface`, not `bg`: on a dark ground a bar the same colour as
-              the page has no edge, so it read as text floating over content. */}
-          {listing.price != null && listing.owner?.upi ? (
-            <View className="flex-1">
-              <PayButton
-                payee={{ id: listing.owner_user_id, name: ownerName, upi: listing.owner.upi }}
-                amount={listing.price}
-                note={listing.title}
-                context={{ type: 'listing', id: listing.id }}
-                label={`Pay ₹${listing.price.toLocaleString('en-IN')}`}
-                variant="outline"
-                size="md"
-                fullWidth
-              />
-            </View>
-          ) : null}
-          <View className="flex-1">
-            <Button
-              label={cat.ctaLabel}
-              icon="logo-whatsapp"
-              variant="whatsapp"
-              size="md"
-              fullWidth
-              onPress={() => setInquiryListing(listing)}
-            />
-          </View>
-        </View>
-      )}
 
       <InquiryModal
         listing={inquiryListing}

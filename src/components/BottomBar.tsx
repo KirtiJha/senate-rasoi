@@ -61,11 +61,8 @@ export function BottomBar() {
   const insets = useSafeAreaInsets();
   const unread = useUnreadDms();
 
-  // Keep the bar out of focused flows, and off detail screens that pin their
-  // own action to the bottom — otherwise the two stack and eat ~190px of a
-  // phone screen between them.
-  const OWNS_ITS_BOTTOM = ['/messages/', '/listing/', '/dish/', '/property/', '/borrow/', '/lost-found/', '/place/'];
-  if (OWNS_ITS_BOTTOM.some((p) => pathname.startsWith(p))) return null;
+  // Keep the bar out of focused, input-heavy flows only.
+  if (pathname.startsWith('/messages/')) return null;
 
   const isWeb = Platform.OS === 'web';
   const liftBottom = (isWeb ? 8 : insets.bottom) + 12;
