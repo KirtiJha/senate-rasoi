@@ -73,27 +73,34 @@ export function BottomBar() {
   return (
     <View style={{ paddingHorizontal: 12, paddingBottom: liftBottom, backgroundColor: 'transparent' }}>
       <View
-        className="flex-row items-center justify-around rounded-[28px] border border-line bg-surface"
+        className="flex-row items-start justify-around rounded-[28px] border border-line bg-surface"
         style={{ paddingTop: 8, paddingBottom: 6, boxShadow: c.shadowBar } as any}
       >
         {ITEMS.map((it) => {
           const active = activeFor(it.route);
 
+          // The FAB shares the other columns' structure exactly — same slot
+          // width, same indicator gutter, same label — so the five items line
+          // up. The circle is 52 but the negative margins above and below net
+          // it back to 23, the icon height, which is what keeps every label on
+          // one baseline while the circle still rises out of the bar.
           if (it.fab) {
             return (
               <Touchable
                 key={it.route}
                 feel="icon"
                 onPress={() => router.navigate(it.route as any)}
-                style={{ width: 56, alignItems: 'center' }}
+                className="flex-1 items-center"
                 accessibilityRole="button"
                 accessibilityLabel="Post something"
               >
+                <View style={{ width: 26, height: 3, marginBottom: 5 }} />
                 <View
                   style={{
                     width: 52,
                     height: 52,
                     marginTop: -22,
+                    marginBottom: -7,
                     borderRadius: 26,
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -105,6 +112,13 @@ export function BottomBar() {
                 >
                   <Ionicons name="add" size={28} color={c.onAccent} />
                 </View>
+                <Text
+                  className="mt-1 font-sans-sb"
+                  style={{ fontSize: 10.5, lineHeight: 14, color: c.muted }}
+                  numberOfLines={1}
+                >
+                  {it.label}
+                </Text>
               </Touchable>
             );
           }
