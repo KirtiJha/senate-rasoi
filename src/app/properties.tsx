@@ -4,7 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { T } from '../components/T';
-import { Container, ScreenHeader } from '../components/ui';
+import { Chip, Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { IMAGE_CACHE_PROPS } from '../lib/image';
 import { ListingType, PropertyRow, fetchProperties, propertySubtitle, subscribeProperties } from '../lib/properties';
@@ -55,12 +55,12 @@ export default function PropertiesScreen() {
         subBar={
           <View className="flex-row items-center gap-2">
             {([['all', 'All'], ['sale', 'For sale'], ['rent', 'For rent']] as [Filter, string][]).map(([f, label]) => (
-              <Chip key={f} active={filter === f} label={label} onPress={() => setFilter(f)} accent={ACCENT} c={c} />
+              <Chip key={f} selected={filter === f} label={label} onPress={() => setFilter(f)} />
             ))}
             <View style={{ width: 1, height: 18, backgroundColor: c.line, marginHorizontal: 2 }} />
-            <Chip active={mine} label="Mine" icon="person-outline" onPress={() => setMine((m) => !m)} accent={ACCENT} c={c} />
+            <Chip selected={mine} label="Mine" icon="person-outline" onPress={() => setMine((m) => !m)} />
             {!mine ? (
-              <Chip active={availableOnly} label="Available" onPress={() => setAvailableOnly((v) => !v)} accent={ACCENT} c={c} />
+              <Chip selected={availableOnly} label="Available" onPress={() => setAvailableOnly((v) => !v)} />
             ) : null}
           </View>
         }
@@ -97,14 +97,6 @@ export default function PropertiesScreen() {
   );
 }
 
-function Chip({ active, label, icon, onPress, accent, c }: { active: boolean; label: string; icon?: keyof typeof Ionicons.glyphMap; onPress: () => void; accent: string; c: ReturnType<typeof useThemeColors> }) {
-  return (
-    <Pressable onPress={onPress} className="flex-row items-center gap-1 rounded-full px-3 py-1.5" style={{ backgroundColor: active ? accent : c.inset }}>
-      {icon ? <Ionicons name={icon} size={12} color={active ? '#fff' : c.muted} /> : null}
-      <Text className="text-[12px] font-sans-sb" style={{ color: active ? '#fff' : c.muted }}>{label}</Text>
-    </Pressable>
-  );
-}
 
 function PropertyCard({ p, onPress, c }: { p: PropertyRow; onPress: () => void; c: ReturnType<typeof useThemeColors> }) {
   const status = STATUS_META[p.status] ?? STATUS_META.available;

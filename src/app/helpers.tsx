@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
-import { Avatar, Button, Container, ErrorState, ScreenHeader } from '../components/ui';
+import { Avatar, Button, Chip, Container, ErrorState, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { BLOOD_GROUPS, HELPER_SKILLS, RegistryPerson, fetchRegistry, updateHelperProfile } from '../lib/donors';
@@ -103,9 +103,12 @@ export default function HelpersScreen() {
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 10 }}>
             {(['all', ...BLOOD_GROUPS]).map((g) => (
-              <Pressable key={g} onPress={() => setBloodFilter(g)} className="rounded-full px-3 py-1.5" style={{ backgroundColor: bloodFilter === g ? ACCENT : c.inset }}>
-                <Text className="text-[12px] font-sans-bold" style={{ color: bloodFilter === g ? '#fff' : c.muted }}>{g === 'all' ? 'All' : g}</Text>
-              </Pressable>
+              <Chip
+                  key={g}
+                  label={g === 'all' ? 'All' : g}
+                  selected={bloodFilter === g}
+                  onPress={() => setBloodFilter(g)}
+                />
             ))}
           </ScrollView>
           {loadFailed ? (

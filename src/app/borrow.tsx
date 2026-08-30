@@ -4,7 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { T } from '../components/T';
-import { Container, ScreenHeader } from '../components/ui';
+import { Chip, Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { BORROW_CATEGORIES, LendItem, LendKind, fetchItems, subscribeItems } from '../lib/borrow';
 import { IMAGE_CACHE_PROPS } from '../lib/image';
@@ -80,14 +80,19 @@ export default function BorrowScreen() {
             {/* Category + Mine filter */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               {([['all', 'All'] as const, ...BORROW_CATEGORIES.map((b) => [b.key, b.label] as const)]).map(([k, label]) => (
-                <Pressable key={k} onPress={() => setCat(k)} className="rounded-full px-3 py-1.5" style={{ backgroundColor: cat === k ? ACCENT : c.inset }}>
-                  <Text className="text-[12px] font-sans-sb" style={{ color: cat === k ? '#fff' : c.muted }}>{label}</Text>
-                </Pressable>
+                <Chip
+                  key={k}
+                  label={label}
+                  selected={cat === k}
+                  onPress={() => setCat(k)}
+                />
               ))}
               <View style={{ width: 1, height: 18, backgroundColor: c.line, alignSelf: 'center' }} />
-              <Pressable onPress={() => setMine((m) => !m)} className="rounded-full px-3 py-1.5" style={{ backgroundColor: mine ? ACCENT : c.inset }}>
-                <Text className="text-[12px] font-sans-sb" style={{ color: mine ? '#fff' : c.muted }}>Mine</Text>
-              </Pressable>
+              <Chip
+                  label={"Mine"}
+                  selected={mine}
+                  onPress={() => setMine((m) => !m)}
+                />
             </ScrollView>
           </View>
         }

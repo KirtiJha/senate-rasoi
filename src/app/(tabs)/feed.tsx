@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
-import { Avatar, Button, ErrorState, ScreenHeader, useResponsive } from '../../components/ui';
+import { Avatar, Button, Chip, ErrorState, ScreenHeader, useResponsive } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useConfirm } from '../../context/confirm';
@@ -124,13 +124,12 @@ export default function FeedScreen() {
         subBar={
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-4 px-4" contentContainerStyle={{ gap: 6 }}>
             {FILTER_TABS.map((tab) => (
-              <Pressable
+              <Chip
                 key={tab.key}
+                label={tab.label}
+                selected={activeFilter === tab.key}
                 onPress={() => setActiveFilter(tab.key)}
-                className={`rounded-full px-3.5 py-1.5 ${activeFilter === tab.key ? 'bg-accent' : 'bg-inset'}`}
-              >
-                <Text className={`text-[13px] font-sans-sb ${activeFilter === tab.key ? 'text-on-accent' : 'text-muted'}`}>{tab.label}</Text>
-              </Pressable>
+              />
             ))}
           </ScrollView>
         }

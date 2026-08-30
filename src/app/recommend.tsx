@@ -6,7 +6,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../components/T';
-import { Avatar, Button, Container, ScreenHeader, Sheet } from '../components/ui';
+import { Avatar, Button, Chip, Container, ScreenHeader, Sheet } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { RECO_CATEGORIES, RecoQuestion, askQuestion, fetchQuestions, recoCategory, subscribeQuestions } from '../lib/recommend';
@@ -46,9 +46,12 @@ export default function RecommendScreen() {
         subBar={
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
             {([['all', 'All'] as const, ...RECO_CATEGORIES.map((r) => [r.key, r.label] as const)]).map(([k, label]) => (
-              <Pressable key={k} onPress={() => setCat(k)} className="rounded-full px-3 py-1.5" style={{ backgroundColor: cat === k ? ACCENT : c.inset }}>
-                <Text className="text-[12px] font-sans-sb" style={{ color: cat === k ? '#fff' : c.muted }}>{label}</Text>
-              </Pressable>
+              <Chip
+                  key={k}
+                  label={label}
+                  selected={cat === k}
+                  onPress={() => setCat(k)}
+                />
             ))}
           </ScrollView>
         }

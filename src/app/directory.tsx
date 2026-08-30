@@ -3,7 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { ReactNode, useCallback, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Button, ErrorState, RowSkeleton, ScreenHeader, Sheet, useResponsive } from '../components/ui';
+import { Avatar, Button, Chip, ErrorState, RowSkeleton, ScreenHeader, Sheet, useResponsive } from '../components/ui';
 import { Field } from '../components/forms';
 import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
@@ -178,29 +178,29 @@ export default function DirectoryScreen() {
   const filterBody = (
     <>
       <FilterGroup label="Sort by">
-        <ChipBtn label="Flat" on={sort === 'flat'} onPress={() => setSort('flat')} c={c} />
-        <ChipBtn label="Name (A–Z)" on={sort === 'name'} onPress={() => setSort('name')} c={c} />
+        <Chip label="Flat" selected={sort === 'flat'} onPress={() => setSort('flat')} />
+        <Chip label="Name (A–Z)" selected={sort === 'name'} onPress={() => setSort('name')} />
       </FilterGroup>
       {blocks.length > 1 ? (
         <FilterGroup label="Block">
-          <ChipBtn label="All" on={!block} onPress={() => setBlock(null)} c={c} />
-          {blocks.map((b) => <ChipBtn key={b} label={b} on={block === b} onPress={() => setBlock(block === b ? null : b)} c={c} />)}
+          <Chip label="All" selected={!block} onPress={() => setBlock(null)} />
+          {blocks.map((b) => <Chip key={b} label={b} selected={block === b} onPress={() => setBlock(block === b ? null : b)} />)}
         </FilterGroup>
       ) : null}
       {floors.length > 1 ? (
         <FilterGroup label="Floor">
-          <ChipBtn label="All" on={!floor} onPress={() => setFloor(null)} c={c} />
-          {floors.map((f) => <ChipBtn key={f} label={f === '0' ? 'G' : f} on={floor === f} onPress={() => setFloor(floor === f ? null : f)} c={c} />)}
+          <Chip label="All" selected={!floor} onPress={() => setFloor(null)} />
+          {floors.map((f) => <Chip key={f} label={f === '0' ? 'G' : f} selected={floor === f} onPress={() => setFloor(floor === f ? null : f)} />)}
         </FilterGroup>
       ) : null}
       <FilterGroup label="Registration">
         {([['all', 'All'], ['done', 'Registered'], ['pending', 'Pending']] as const).map(([k, lbl]) => (
-          <ChipBtn key={k} label={lbl} on={reg === k} onPress={() => setReg(k)} c={c} />
+          <Chip key={k} label={lbl} selected={reg === k} onPress={() => setReg(k)} />
         ))}
       </FilterGroup>
       <FilterGroup label="Occupancy" last>
         {([['all', 'All'], ['yes', 'Living here'], ['no', 'Not moved in']] as const).map(([k, lbl]) => (
-          <ChipBtn key={k} label={lbl} on={shf === k} onPress={() => setShf(k)} c={c} />
+          <Chip key={k} label={lbl} selected={shf === k} onPress={() => setShf(k)} />
         ))}
       </FilterGroup>
       {activeFilters > 0 ? (
@@ -386,13 +386,6 @@ function FilterGroup({ label, children, last }: { label: string; children: React
   );
 }
 
-function ChipBtn({ label, on, onPress, c }: { label: string; on: boolean; onPress: () => void; c: ReturnType<typeof useThemeColors> }) {
-  return (
-    <Pressable onPress={onPress} className={`min-w-[44px] items-center rounded-full border px-3.5 py-1.5 ${on ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
-      <Text className={`text-[13px] font-sans-sb ${on ? 'text-accent' : 'text-muted'}`}>{label}</Text>
-    </Pressable>
-  );
-}
 
 function ResidentDetailSheet({
   r, onClose, c, isAdmin, onCall, onWhatsApp, onMessage, onInvite, onProfile, onRemove, onToggleMovedIn,

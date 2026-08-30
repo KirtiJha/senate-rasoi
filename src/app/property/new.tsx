@@ -5,7 +5,7 @@ import { openPhotoPicker } from '../../lib/photo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Button, Container, ScreenHeader } from '../../components/ui';
+import { Button, Chip, Container, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import {
@@ -178,7 +178,7 @@ export default function NewPropertyScreen() {
 
           {/* Config */}
           <Text className={label}>Configuration</Text>
-          <Chips options={CONFIG_OPTIONS} value={config} onPick={setConfig} c={c} className="mb-4" />
+          <Chips options={CONFIG_OPTIONS} value={config} onPick={setConfig} className="mb-4" />
 
           {/* Area / floor */}
           <View className="mb-3 flex-row gap-3">
@@ -189,7 +189,7 @@ export default function NewPropertyScreen() {
 
           {/* Furnishing */}
           <Text className={label}>Furnishing</Text>
-          <Chips options={FURNISHING_OPTIONS.map((f) => f.label)} value={furnishing ? FURNISHING_OPTIONS.find((f) => f.value === furnishing)?.label ?? null : null} onPick={(l) => setFurnishing(FURNISHING_OPTIONS.find((f) => f.label === l)?.value ?? null)} c={c} className="mb-4" />
+          <Chips options={FURNISHING_OPTIONS.map((f) => f.label)} value={furnishing ? FURNISHING_OPTIONS.find((f) => f.value === furnishing)?.label ?? null : null} onPick={(l) => setFurnishing(FURNISHING_OPTIONS.find((f) => f.label === l)?.value ?? null)} className="mb-4" />
 
           {/* Bathrooms / balconies / facing / parking */}
           <View className="mb-3 flex-row gap-3">
@@ -197,9 +197,9 @@ export default function NewPropertyScreen() {
             <View className="flex-1"><Text className={label}>Balconies</Text><TextInput value={balconies} onChangeText={setBalconies} keyboardType="number-pad" placeholder="1" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} /></View>
           </View>
           <Text className={label}>Facing</Text>
-          <Chips options={FACING_OPTIONS} value={facing} onPick={setFacing} c={c} className="mb-4" />
+          <Chips options={FACING_OPTIONS} value={facing} onPick={setFacing} className="mb-4" />
           <Text className={label}>Parking</Text>
-          <Chips options={PARKING_OPTIONS.map((p) => p.label)} value={parking ? PARKING_OPTIONS.find((p) => p.value === parking)?.label ?? null : null} onPick={(l) => setParking(PARKING_OPTIONS.find((p) => p.label === l)?.value ?? null)} c={c} className="mb-4" />
+          <Chips options={PARKING_OPTIONS.map((p) => p.label)} value={parking ? PARKING_OPTIONS.find((p) => p.value === parking)?.label ?? null : null} onPick={(l) => setParking(PARKING_OPTIONS.find((p) => p.label === l)?.value ?? null)} className="mb-4" />
 
           {/* Tower / flat / availability */}
           <View className="mb-3 flex-row gap-3">
@@ -238,17 +238,17 @@ export default function NewPropertyScreen() {
   );
 }
 
-function Chips({ options, value, onPick, c, className = '' }: { options: string[]; value: string | null; onPick: (v: string) => void; c: ReturnType<typeof useThemeColors>; className?: string }) {
+/**
+ * A row of single-choice chips. The group is worth keeping — it owns the
+ * wrapping and the "one of these" semantics — but the chip inside it is the
+ * shared one, so it can no longer drift from every other filter row.
+ */
+function Chips({ options, value, onPick, className = '' }: { options: string[]; value: string | null; onPick: (v: string) => void; className?: string }) {
   return (
     <View className={`flex-row flex-wrap gap-2 ${className}`}>
-      {options.map((o) => {
-        const on = value === o;
-        return (
-          <Pressable key={o} onPress={() => onPick(o)} className="rounded-full border px-3.5 py-1.5" style={{ borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : c.surface }}>
-            <Text className="text-[12px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{o}</Text>
-          </Pressable>
-        );
-      })}
+      {options.map((o) => (
+        <Chip key={o} label={o} selected={value === o} onPress={() => onPick(o)} />
+      ))}
     </View>
   );
 }

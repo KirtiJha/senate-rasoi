@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { Container, ScreenHeader } from '../components/ui';
+import { Chip, Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import {
   LOST_FOUND_CATEGORIES,
@@ -79,20 +79,8 @@ export default function LostFoundScreen() {
               ))}
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-              <Pressable
-                onPress={() => setMine(false)}
-                className="rounded-full px-3 py-1.5"
-                style={{ backgroundColor: !mine ? ACCENT : c.inset }}
-              >
-                <Text className="text-[12px] font-sans-sb" style={{ color: !mine ? '#fff' : c.muted }}>All open</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setMine(true)}
-                className="rounded-full px-3 py-1.5"
-                style={{ backgroundColor: mine ? ACCENT : c.inset }}
-              >
-                <Text className="text-[12px] font-sans-sb" style={{ color: mine ? '#fff' : c.muted }}>My posts</Text>
-              </Pressable>
+              <Chip label="All" selected={!mine} onPress={() => setMine(false)} />
+              <Chip label="Mine" selected={mine} onPress={() => setMine(true)} />
             </ScrollView>
           </View>
         }
