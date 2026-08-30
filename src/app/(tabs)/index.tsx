@@ -313,7 +313,7 @@ export default function HomeScreen() {
   ]
     .filter((x) => x.title)
     .sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''))
-    .slice(0, 8);
+    .slice(0, 5);
 
   // ── Zone 2 data ──────────────────────────────────────────────────────
   // Four separately-styled banners become one mechanism — and, critically,
@@ -596,39 +596,33 @@ function AroundRow({
   return (
     <Touchable haptic={null} onPress={onPress} accessibilityRole="button" accessibilityLabel={item.title}>
       <View>
-        <View className="flex-row items-center gap-3 px-4" style={{ minHeight: 68, paddingVertical: 12 }}>
+        <View className="flex-row items-center gap-3 px-4" style={{ minHeight: 58, paddingVertical: 9 }}>
           {item.photo ? (
             <Image
               source={{ uri: item.photo }}
-              style={{ width: 44, height: 44, borderRadius: 14 }}
+              style={{ width: 40, height: 40, borderRadius: 13 }}
               contentFit="cover"
               {...IMAGE_CACHE_PROPS}
             />
           ) : (
             <View
               className="items-center justify-center"
-              style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: c.accentSoft }}
+              style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: c.accentSoft }}
             >
-              <Ionicons name={item.icon} size={20} color={c.accent} />
+              <Ionicons name={item.icon} size={19} color={c.accent} />
             </View>
           )}
 
           <View className="min-w-0 flex-1">
             <Text className="font-sans-sb text-[15px] text-ink" numberOfLines={1}>{item.title}</Text>
-            <View className="mt-0.5 flex-row items-center gap-1.5">
-              <Text className="text-[12px] font-sans-sb" style={{ color: c.accent }} numberOfLines={1}>
-                {item.where}
-              </Text>
-              <Text className="text-[12px] text-subtle">·</Text>
-              <Text className="text-[12px] font-sans-md text-subtle" numberOfLines={1}>
-                {timeAgo(item.at)}
-              </Text>
-            </View>
+            <Text className="mt-0.5 text-[12px] font-sans-md text-subtle" numberOfLines={1}>
+              <Text style={{ color: c.accent }} className="font-sans-sb">{item.where}</Text>
+              {'  ·  ' + timeAgo(item.at)}
+            </Text>
           </View>
 
-          <Ionicons name="chevron-forward" size={16} color={c.subtle} />
         </View>
-        {!last ? <View style={{ height: 1, marginLeft: 71, backgroundColor: c.line }} /> : null}
+        {!last ? <View style={{ height: 1, marginLeft: 67, backgroundColor: c.line }} /> : null}
       </View>
     </Touchable>
   );
