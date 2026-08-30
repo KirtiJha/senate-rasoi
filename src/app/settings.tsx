@@ -1,14 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 import { Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
+import { useToast } from '../context/toast';
 import { ThemePreference, useThemePreference } from '../context/theme';
 import { updateProfile } from '../lib/auth';
+import { MUTABLE_CATEGORIES, fetchMutedTypes, setMuted } from '../lib/notificationPrefs';
 import { supportMailto } from '../lib/support';
 import { SUPPORTED_LANGS, langByCode } from '../lib/translate';
 import { useThemeColors } from '../theme';
@@ -45,12 +47,50 @@ export default function SettingsScreen() {
   const router = useRouter();
   const confirm = useConfirm();
   const { signOut, userId, profile, refreshProfile } = useAuth();
+  const toast = useToast();
   const [savingLang, setSavingLang] = useState<string | null>(null);
+  const [muted, setMutedState] = useState<Set<string> | null>(null);
+  const [pendingMute, setPendingMute] = useState<string | null>(null);
   const { preference, setPreference } = useThemePreference();
 
   const version = Constants.expoConfig?.version ?? '—';
 
   const activeLang = profile?.preferred_lang ?? 'en';
+
+  useEffect(() => {
+    if (!userId) return;
+    let alive = true;
+    fetchMutedTypes(userId)
+      .then((s) => { if (alive) setMutedState(s); })
+      // A failure here must not blank the switches: an unknown state shown as
+      // "on" would tell the resident they are subscribed when they may not be.
+      .catch(() => { if (alive) setMutedState(new Set()); });
+    return () => { alive = false; };
+  }, [userId]);
+
+  const toggleMute = useCallback(async (type: string) => {
+    if (!userId || !muted || pendingMute) return;
+    const next = !muted.has(type);
+    setPendingMute(type);
+    // Optimistic: a switch that waits for a round-trip feels broken.
+    setMutedState((prev) => {
+      const s = new Set(prev ?? []);
+      if (next) s.add(type); else s.delete(type);
+      return s;
+    });
+    try {
+      await setMuted(userId, type, next);
+    } catch {
+      setMutedState((prev) => {
+        const s = new Set(prev ?? []);
+        if (next) s.delete(type); else s.add(type);
+        return s;
+      });
+      toast.show('Could not save that — try again');
+    } finally {
+      setPendingMute(null);
+    }
+  }, [userId, muted, pendingMute, toast]);
 
   const pickLang = async (code: string) => {
     if (!userId || savingLang) return;
@@ -110,6 +150,44 @@ export default function SettingsScreen() {
               })}
             </View>
           </View>
+
+          {/* ── Notifications ──────────────────────────────────── */}
+          <SectionLabel>Notifications</SectionLabel>
+          <Card>
+            {MUTABLE_CATEGORIES.map((cat, i) => {
+              const on = !muted?.has(cat.type);
+              return (
+                <View key={cat.type}>
+                  <Pressable
+                    onPress={() => toggleMute(cat.type)}
+                    disabled={!muted}
+                    accessibilityRole="switch"
+                    accessibilityState={{ checked: on, disabled: !muted }}
+                    accessibilityLabel={cat.label}
+                    accessibilityHint={cat.blurb}
+                    className="flex-row items-center gap-3 px-4 py-3 active:bg-inset"
+                  >
+                    <View className="min-w-0 flex-1">
+                      <Text className="font-sans-md text-[15px] text-ink">{cat.label}</Text>
+                      <Text className="mt-0.5 text-[12px] text-subtle" numberOfLines={1}>{cat.blurb}</Text>
+                    </View>
+                    <Switch
+                      value={on}
+                      onValueChange={() => toggleMute(cat.type)}
+                      disabled={!muted || pendingMute === cat.type}
+                      trackColor={{ false: c.line, true: c.accentSoft }}
+                      thumbColor={on ? c.accent : c.subtle}
+                    />
+                  </Pressable>
+                  {i < MUTABLE_CATEGORIES.length - 1 ? <Divider /> : null}
+                </View>
+              );
+            })}
+          </Card>
+          <Text className="mb-6 -mt-3 px-1 text-[12px] leading-5 text-subtle">
+            Messages sent to you, orders on your dishes and emergencies always
+            come through — these switches only quiet society-wide updates.
+          </Text>
 
           {/* ── Language ───────────────────────────────────────── */}
           <SectionLabel>Language</SectionLabel>
