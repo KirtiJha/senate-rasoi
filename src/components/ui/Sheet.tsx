@@ -61,6 +61,9 @@ export function Sheet({
     </View>
   );
 
+  // Above the isDesktop branch: hooks must not be skipped on one path.
+  const panel = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.get() }] }));
+
   if (isDesktop) {
     return (
       <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -100,8 +103,6 @@ export function Sheet({
         translateY.set(withSpring(0, spring.sheet));
       }
     });
-
-  const panel = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.get() }] }));
 
   return (
     // animationType="none": Reanimated owns the motion now, not the Modal.

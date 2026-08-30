@@ -87,6 +87,22 @@ export default function AdminScreen() {
     }
   }, [isAdmin, loadMembers, loadRequests]);
 
+  // Above the redirect: a hook that runs only for admins changes the hook
+  // count between renders.
+  const stats = useMemo(() => ({
+    total: members.length,
+    admins: members.filter((m) => m.roles.includes('admin')).length,
+    blocked: members.filter((m) => m.blocked).length,
+  }), [members]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return members;
+    return members.filter(
+      (m) => m.name?.toLowerCase().includes(q) || m.phone?.includes(q) || m.flat?.toLowerCase().includes(q),
+    );
+  }, [members, query]);
+
   if (ready && !isAdmin) return <Redirect href="/" />;
 
   const onRefresh = async () => {
@@ -190,20 +206,6 @@ export default function AdminScreen() {
       toast.show('Could not update request');
     }
   };
-
-  const stats = useMemo(() => ({
-    total: members.length,
-    admins: members.filter((m) => m.roles.includes('admin')).length,
-    blocked: members.filter((m) => m.blocked).length,
-  }), [members]);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return members;
-    return members.filter(
-      (m) => m.name?.toLowerCase().includes(q) || m.phone?.includes(q) || m.flat?.toLowerCase().includes(q),
-    );
-  }, [members, query]);
 
   const pendingCount = requests.filter((r) => r.status === 'pending').length;
 
