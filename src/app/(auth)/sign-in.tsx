@@ -1,4 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
+import * as Updates from 'expo-updates';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -36,6 +38,20 @@ export default function SignInScreen() {
   const [reconcile, setReconcile] = useState<DirectoryEntry | null>(null);
   const [phoneMatch, setPhoneMatch] = useState<PhoneDirectoryMatch | null>(null);
   const phoneMatchDismissed = useRef(false);
+
+  // Sign-in failures were reported only through the toast: a message that
+  // appears 96px off the bottom for 2.8s and then erases itself. If it is
+  // missed — covered by the keyboard, glanced away from, or simply too brief —
+  // a wrong PIN and a dropped request are indistinguishable from a button that
+  // does nothing. A form error belongs on the form, where it stays until the
+  // next attempt.
+  const [error, setError] = useState<string | null>(null);
+
+  /** Report a failure both ways: transient toast, persistent inline text. */
+  const fail = (msg: string) => {
+    setError(msg);
+    toast.show(msg);
+  };
 
   // Forgot PIN flow
   const [showForgotPin, setShowForgotPin] = useState(false);
@@ -151,13 +167,14 @@ export default function SignInScreen() {
   );
 
   const submit = async () => {
+    setError(null);
     if (!isSupabaseConfigured) {
-      toast.show("Supabase isn't configured yet ⚙️");
+      fail("Supabase isn't configured yet ⚙️");
       return;
     }
     const digits = phone.replace(/\D/g, '');
-    if (digits.length < 10) return toast.show('Enter a valid phone number');
-    if (!/^\d{6}$/.test(code)) return toast.show('Your code must be exactly 6 digits');
+    if (digits.length < 10) return fail('Enter a valid phone number');
+    if (!/^\d{6}$/.test(code)) return fail('Your code must be exactly 6 digits');
 
     setBusy(true);
     try {
@@ -186,7 +203,7 @@ export default function SignInScreen() {
       }
       await refreshProfile();
     } catch (e) {
-      toast.show(e instanceof Error ? e.message : 'Something went wrong');
+      fail(e instanceof Error ? e.message : 'Something went wrong');
     } finally {
       setBusy(false);
     }
@@ -414,6 +431,18 @@ export default function SignInScreen() {
             onPress={submit}
           />
 
+          {error ? (
+            <View
+              className="mt-3 flex-row items-start gap-2 rounded-2xl px-3.5 py-3"
+              style={{ backgroundColor: c.dangerSoft }}
+            >
+              <Ionicons name="alert-circle" size={16} color={c.danger} style={{ marginTop: 1 }} />
+              <Text className="flex-1 text-[13px] leading-[19px] font-sans-md" style={{ color: c.danger }}>
+                {error}
+              </Text>
+            </View>
+          ) : null}
+
           {mode === 'up' ? (
             <Text className="font-sans mt-3 text-center text-[12px] leading-[18px] text-faint">
               By creating an account, you agree to Aangan's{' '}
@@ -429,6 +458,17 @@ export default function SignInScreen() {
               <Text className="font-sans-sb text-accent">{mode === 'in' ? 'Create an account' : 'Sign in'}</Text>
             </Text>
           </Pressable>
+
+          {/* Which bundle is this?
+              A closed beta ships two things that look identical on the
+              phone: the binary from the Play track and whatever JS update
+              has since been applied on top of it. When a tester says
+              "it does nothing", the first question is which of those they
+              are looking at, and there was no way to answer it from the
+              device. Embedded means the update has not applied yet. */}
+          <Text className="mt-6 text-center text-[10px] font-sans text-subtle" selectable>
+            v{Constants.expoConfig?.version ?? '?'} · {Updates.isEmbeddedLaunch ? 'embedded' : (Updates.updateId ?? 'no-update').slice(0, 8)}
+          </Text>
         </Container>
       </ScrollView>
 
