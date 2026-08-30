@@ -5,13 +5,13 @@ import { openPhotoPicker } from '../lib/photo';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Empty } from '../components/Empty';
 import { Field, Label, SectionCard } from '../components/forms';
 import { CreateListingForm } from '../components/listings/CreateListingForm';
-import { Avatar, Button, ChoiceTiles, Container, ModuleTile, Stepper, useResponsive, VegMark } from '../components/ui';
+import { Avatar, Button, ChoiceTiles, Container, KeyboardAvoider, ModuleTile, Stepper, useResponsive, VegMark } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useProfile } from '../context/profile';
 import { useToast } from '../context/toast';
@@ -327,7 +327,7 @@ export default function PostScreen({
   }
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoider>
       <ScrollView
         contentContainerStyle={{ paddingTop: embedded ? 14 : isDesktop ? insets.top + 18 : 18, paddingHorizontal: 16, paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
@@ -579,7 +579,7 @@ export default function PostScreen({
           </Text>
         </Container>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }
 

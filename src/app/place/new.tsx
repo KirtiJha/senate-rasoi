@@ -4,8 +4,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { openPhotoPicker } from '../../lib/photo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Button, Container, ScreenHeader } from '../../components/ui';
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Button, Container, KeyboardAvoider, ScreenHeader } from '../../components/ui';
 import { MapPreview } from '../../components/MapPreview';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -163,7 +163,7 @@ export default function PlaceFormScreen() {
   }
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoider>
       <ScreenHeader icon="location-outline" title={isEdit ? 'Edit place' : 'Add a nearby place'} showBack hideSociety />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>
@@ -264,6 +264,6 @@ export default function PlaceFormScreen() {
           </Text>
         </Container>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }

@@ -5,7 +5,7 @@ import { openPhotoPicker } from '../../lib/photo';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -17,7 +17,7 @@ import { AttrField, ServiceCategory } from '../../lib/services';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useThemeColors } from '../../theme';
 import { Field, Label, SectionCard } from '../forms';
-import { Avatar, Button, ChoiceTiles, Container, useResponsive } from '../ui';
+import { Avatar, Button, ChoiceTiles, Container, KeyboardAvoider, useResponsive } from '../ui';
 
 interface Props {
   cat: ServiceCategory;
@@ -181,7 +181,7 @@ export function CreateListingForm({ cat, onBack, existing }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoider>
       <ScrollView
         contentContainerStyle={{ paddingTop: isDesktop ? insets.top + 18 : 18, paddingHorizontal: 16, paddingBottom: 48 }}
         keyboardShouldPersistTaps="handled"
@@ -350,7 +350,7 @@ export function CreateListingForm({ cat, onBack, existing }: Props) {
           </Text>
         </Container>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }
 

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
-import { useEffect } from 'react';
-import { Platform, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Keyboard, Platform, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming,
@@ -54,15 +54,35 @@ const ITEMS: Item[] = [
  * off the bottom, so the app reads as sitting on the ground rather than
  * running into it.
  */
+/**
+ * True while the software keyboard is on screen.
+ *
+ * Android only ever fires the "did" events, so both platforms use those — the
+ * iOS "will" events would desync the two.
+ */
+function useKeyboardVisible() {
+  const [up, setUp] = useState(false);
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setUp(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setUp(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
+  return up;
+}
+
 export function BottomBar() {
   const router = useRouter();
   const pathname = usePathname();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const unread = useUnreadDms();
+  const keyboardUp = useKeyboardVisible();
 
   // Keep the bar out of focused, input-heavy flows only.
   if (pathname.startsWith('/messages/')) return null;
+  // And out of the way of the keyboard: under it the bar cannot be tapped,
+  // and its presence would make KeyboardAvoider overshoot by its own height.
+  if (keyboardUp) return null;
 
   const isWeb = Platform.OS === 'web';
   const liftBottom = (isWeb ? 8 : insets.bottom) + 12;

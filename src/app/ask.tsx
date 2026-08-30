@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { BrandMark } from '../components/BrandMark';
-import { ScreenHeader } from '../components/ui';
+import { KeyboardAvoider, ScreenHeader } from '../components/ui';
 import { useToast } from '../context/toast';
 import { AIError, askAangan, askResultRoute, askSourceMeta, type ChatTurn } from '../lib/ai';
 import { AskMessage, clearAskConversation, getAskConversation, setAskConversation } from '../lib/askStore';
@@ -67,7 +67,7 @@ export default function AskScreen() {
   const empty = messages.length === 0;
 
   return (
-    <KeyboardAvoidingView className="flex-1 overflow-hidden bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoider style={{ overflow: 'hidden', backgroundColor: c.bg }}>
       <ScreenHeader
         iconNode={<BrandMark size={26} />}
         title="Ask Aangan"
@@ -191,6 +191,6 @@ export default function AskScreen() {
           </Pressable>
         </View>
       </View>
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }

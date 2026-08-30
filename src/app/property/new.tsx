@@ -4,8 +4,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { openPhotoPicker } from '../../lib/photo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Button, Chip, Container, ScreenHeader } from '../../components/ui';
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Button, Chip, Container, KeyboardAvoider, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import {
@@ -138,7 +138,7 @@ export default function NewPropertyScreen() {
   }
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoider>
       <ScreenHeader icon="key-outline" title={isEdit ? 'Edit flat listing' : 'Post your flat'} showBack hideSociety />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Container narrow>
@@ -234,7 +234,7 @@ export default function NewPropertyScreen() {
           </Text>
         </Container>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }
 

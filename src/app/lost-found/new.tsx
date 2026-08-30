@@ -4,8 +4,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { openPhotoPicker } from '../../lib/photo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Button, Container, ScreenHeader } from '../../components/ui';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Button, Container, KeyboardAvoider, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { LOST_FOUND_CATEGORIES, LostFoundKind, postLostFoundItem } from '../../lib/lostFound';
@@ -62,7 +62,7 @@ export default function NewLostFoundScreen() {
   const labelCls = 'mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted';
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoider>
       <ScreenHeader
         icon="search-outline"
         title={isLost ? 'Report lost item' : 'Report found item'}
@@ -172,6 +172,6 @@ export default function NewLostFoundScreen() {
           </Text>
         </Container>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }

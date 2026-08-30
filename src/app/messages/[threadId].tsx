@@ -1,12 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator, KeyboardAvoidingView, Platform, Pressable,
-  ScrollView, Text, TextInput, View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, ErrorState } from '../../components/ui';
+import { Avatar, ErrorState, KeyboardAvoider } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useBlocks } from '../../context/blocks';
@@ -97,7 +94,7 @@ export default function DmThreadScreen() {
   }
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoider>
       {/* Header */}
       <View style={{ paddingTop: insets.top + 8 }} className="border-b border-line bg-bg px-4 pb-3">
         <View className="flex-row items-center gap-2">
@@ -191,7 +188,7 @@ export default function DmThreadScreen() {
         </View>
       </View>
       )}
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }
 

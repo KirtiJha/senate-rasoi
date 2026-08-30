@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Field, SectionCard } from '../../components/forms';
-import { Avatar, Button, Container, ScreenHeader } from '../../components/ui';
+import { Avatar, Button, Container, KeyboardAvoider, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
@@ -125,7 +125,7 @@ export default function ProfileScreen() {
   const isAdminRole = !!profile?.roles.includes('admin');
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoider>
       <ScreenHeader icon="person-circle-outline" title="My Profile" showBack />
       <ScrollView
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 60, paddingHorizontal: 16 }}
@@ -318,7 +318,7 @@ export default function ProfileScreen() {
           </View>
         </Container>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }
 

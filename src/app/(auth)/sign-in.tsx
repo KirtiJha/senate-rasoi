@@ -3,11 +3,11 @@ import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { DiversityEmblem } from '../../components/Brand';
 import { Field } from '../../components/forms';
-import { Button, Container, PinInput, Segmented } from '../../components/ui';
+import { Button, Container, KeyboardAvoider, PinInput, Segmented } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { selfResetPin, signIn, signUp } from '../../lib/auth';
@@ -248,7 +248,7 @@ export default function SignInScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoider>
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }} keyboardShouldPersistTaps="handled">
         <Container narrow>
           {/* The old header stacked a full brand lockup, a tagline, an emoji
@@ -636,6 +636,6 @@ export default function SignInScreen() {
           </View>
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }

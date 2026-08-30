@@ -1,7 +1,7 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from 'react-native';
-import { Button, Container, ScreenHeader } from '../../components/ui';
+import { ScrollView, Text, TextInput, View } from 'react-native';
+import { Button, Container, KeyboardAvoider, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { createEvent } from '../../lib/events';
@@ -53,7 +53,7 @@ export default function NewEventScreen() {
   const label = 'mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted';
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoider>
       <ScreenHeader icon="sparkles-outline" title="Plan a function" showBack hideSociety />
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
@@ -115,6 +115,6 @@ export default function NewEventScreen() {
           </Text>
         </Container>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }
