@@ -9,6 +9,10 @@ export interface AskMessage {
   role: 'user' | 'assistant';
   text: string;
   results?: AskResultItem[];
+  /** What Saathi looked at before answering — see StepsTrail. */
+  steps?: { tool: string; summary: string }[];
+  /** A write awaiting confirmation. Never executed without a tap. */
+  proposal?: { type: string; message: string; args: Record<string, unknown> };
 }
 
 let conversation: AskMessage[] = [];

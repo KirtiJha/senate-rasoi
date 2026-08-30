@@ -6,8 +6,12 @@ import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, Vi
 import { BrandMark } from '../components/BrandMark';
 import { KeyboardAvoider, ScreenHeader } from '../components/ui';
 import { useToast } from '../context/toast';
-import { AIError, askAangan, askResultRoute, askSourceMeta, type ChatTurn } from '../lib/ai';
+import { ProposalCard, StepsTrail } from '../components/saathi/ProposalCard';
+import { useAuth } from '../context/auth';
+import { AIError, askResultRoute, askSourceMeta } from '../lib/ai';
+import { askAgent } from '../lib/agent';
 import { AskMessage, clearAskConversation, getAskConversation, setAskConversation } from '../lib/askStore';
+import { appendMessage, createSession } from '../lib/askSessions';
 import { haptics } from '../lib/haptics';
 import { useThemeColors } from '../theme';
 
@@ -31,6 +35,23 @@ export default function AskScreen() {
   const [messages, setMessages] = useState<AskMessage[]>(() => getAskConversation());
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const { userId, communityId } = useAuth();
+
+  // The conversation's row on the server. Created lazily on the first message,
+  // so opening Saathi and changing your mind does not litter the history with
+  // empty chats.
+  const sessionId = useRef<string | null>(null);
+
+  /**
+   * Persistence is deliberately best-effort and never awaited by the reply
+   * path. Saathi answering is the point; a chat that failed to save is a
+   * smaller problem than an answer withheld because saving failed.
+   */
+  const remember = (m: AskMessage) => {
+    const id = sessionId.current;
+    if (!id) return;
+    appendMessage(id, m).catch(() => {});
+  };
 
   const persist = (next: AskMessage[]) => { setMessages(next); setAskConversation(next); };
 
@@ -40,18 +61,38 @@ export default function AskScreen() {
     const q = raw.trim();
     if (!q || loading) return;
     haptics.tap();
-    const history: ChatTurn[] = messages.map((m) => ({ role: m.role, text: m.text }));
-    const withUser: AskMessage[] = [...messages, { role: 'user', text: q }];
+
+    const history = messages.map((m) => ({ role: m.role, text: m.text }));
+    const userMsg: AskMessage = { role: 'user', text: q };
+    const withUser: AskMessage[] = [...messages, userMsg];
     persist(withUser);
     setInput('');
     setLoading(true);
     scrollDown();
+
+    // Open a session on the first message of a new chat.
+    if (!sessionId.current && userId && communityId) {
+      createSession(userId, communityId)
+        .then((id) => { sessionId.current = id; remember(userMsg); })
+        .catch(() => {});
+    } else {
+      remember(userMsg);
+    }
+
     try {
-      const r = await askAangan(q, history);
-      // Trim before the fallback: a whitespace-only answer is truthy, and
+      const r = await askAgent(q, history);
+      // Trim before the fallback: a whitespace-only answer is truthy and
       // would render as an empty bubble.
       const answer = r.answer?.trim();
-      persist([...withUser, { role: 'assistant', text: answer || "I couldn't find anything on that.", results: r.results }]);
+      const reply: AskMessage = {
+        role: 'assistant',
+        text: answer || "I couldn't find anything on that.",
+        results: r.results,
+        steps: r.steps,
+        proposal: r.proposal,
+      };
+      persist([...withUser, reply]);
+      remember(reply);
       haptics.success();
     } catch (e) {
       const why = (e instanceof AIError ? e.message : '').trim();
@@ -62,7 +103,7 @@ export default function AskScreen() {
     }
   };
 
-  const newChat = () => { clearAskConversation(); setMessages([]); setInput(''); };
+  const newChat = () => { clearAskConversation(); setMessages([]); setInput(''); sessionId.current = null; };
 
   const empty = messages.length === 0;
 
@@ -145,6 +186,12 @@ export default function AskScreen() {
                       </Pressable>
                     );
                   })}
+                </View>
+              ) : null}
+              {m.steps?.length ? <StepsTrail steps={m.steps} /> : null}
+              {m.proposal ? (
+                <View className="ml-8">
+                  <ProposalCard proposal={m.proposal} onDone={() => {}} />
                 </View>
               ) : null}
             </View>
