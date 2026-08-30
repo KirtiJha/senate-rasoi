@@ -1,8 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
-import { Platform, Pressable, View } from 'react-native';
+import { useEffect } from 'react';
+import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming,
+} from 'react-native-reanimated';
+
+import { haptics } from '../lib/haptics';
+import { AView, dur, ease, spring } from '../lib/motion';
 import { useThemeColors } from '../theme';
+import { Touchable } from './ui';
 
 type Item = {
   route: string;
@@ -44,11 +52,55 @@ export function BottomBar() {
       {ITEMS.map((it) => {
         const active = activeFor(it.route);
         return (
-          <Pressable key={it.route} onPress={() => router.navigate(it.route as any)} hitSlop={6} className="flex-1 items-center pb-1.5" accessibilityLabel={it.label}>
-            <Ionicons name={active ? it.activeIcon : it.icon} size={25} color={active ? c.accent : c.faint} />
-          </Pressable>
+          <Touchable
+            key={it.route}
+            feel="icon"
+            haptic={null}
+            onPress={() => { if (!active) haptics.select(); router.navigate(it.route as any); }}
+            hitSlop={6}
+            className="flex-1 items-center pb-1.5"
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+            accessibilityLabel={it.label}
+          >
+            <TabIcon active={active} icon={active ? it.activeIcon : it.icon} color={active ? c.accent : c.muted} />
+          </Touchable>
         );
       })}
     </View>
+  );
+}
+
+/**
+ * A single overshoot when a tab becomes active: 1 → 1.18 → 1.
+ *
+ * The colour change alone reads as a state report; the pop is what makes the
+ * bar feel like it responded to you. Inactive tabs also move from `faint`
+ * (2.45:1 — a contrast failure on the app's primary navigation) to `muted`.
+ */
+function TabIcon({
+  active, icon, color,
+}: {
+  active: boolean;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+}) {
+  const scale = useSharedValue(1);
+  const reduced = useReducedMotion();
+
+  useEffect(() => {
+    if (!active || reduced) return;
+    scale.set(withSequence(
+      withTiming(1.18, { duration: dur.instant, easing: ease.emphasized }),
+      withSpring(1, spring.press),
+    ));
+  }, [active, reduced, scale]);
+
+  const anim = useAnimatedStyle(() => ({ transform: [{ scale: scale.get() }] }));
+
+  return (
+    <AView style={anim}>
+      <Ionicons name={icon} size={25} color={color} />
+    </AView>
   );
 }

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { fixed, gradients, useThemeColors } from '../../theme';
+import { Touchable } from './Touchable';
 
 type Variant = 'primary' | 'whatsapp' | 'outline' | 'ghost' | 'danger' | 'success';
 type Size = 'sm' | 'md' | 'lg';
@@ -76,9 +77,10 @@ export function Button({
 
   if (variant === 'primary') {
     return (
-      <Pressable
+      <Touchable
         onPress={onPress}
         disabled={isDisabled}
+        haptic={isDisabled ? null : 'tap'}
         className={`overflow-hidden ${PAD[size]} ${fullWidth ? 'w-full' : 'self-center'} ${isDisabled ? 'opacity-50' : ''} ${className}`}
       >
         <LinearGradient
@@ -88,20 +90,21 @@ export function Button({
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
         />
         <View className="flex-row items-center justify-center gap-2">{content}</View>
-      </Pressable>
+      </Touchable>
     );
   }
 
   return (
-    <Pressable
+    <Touchable
       onPress={onPress}
       disabled={isDisabled}
+      haptic={isDisabled ? null : variant === 'danger' ? 'warning' : 'tap'}
       className={`flex-row items-center justify-center gap-2 ${BG[variant]} ${PAD[size]} ${
         fullWidth ? 'w-full' : ''
       } ${isDisabled ? 'opacity-50' : ''} ${className}`}
     >
       {content}
-    </Pressable>
+    </Touchable>
   );
 }
 

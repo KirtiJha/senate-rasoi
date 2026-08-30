@@ -9,3 +9,4 @@ export { Skeleton, DishCardSkeleton, ListingCardSkeleton, RowSkeleton } from './
 export { Stepper } from './Stepper';
 export { VegMark } from './VegMark';
 export { ErrorState, ErrorRow } from './ErrorState';
+export { Touchable } from './Touchable';

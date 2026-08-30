@@ -11,6 +11,6 @@ export const BLURHASH = 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
 /** Spread onto an <Image> for cached, smoothly-faded-in remote photos. */
 export const IMAGE_CACHE_PROPS = {
   cachePolicy: 'memory-disk',
-  transition: 200,
+  transition: { duration: 300, timing: 'ease-out', effect: 'cross-dissolve' },
   placeholder: { blurhash: BLURHASH },
 } as const;

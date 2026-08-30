@@ -150,7 +150,16 @@ function DesktopShell() {
     >
       {showRail ? <NavRail /> : null}
       <View style={{ flex: 1, backgroundColor: c.bg }}>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: c.bg },
+            // slide_from_right is Android-only and resolves to the native push
+            // on iOS — one value, correct on both platforms.
+            animation: 'slide_from_right',
+            gestureEnabled: true,
+          }}
+        >
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="landing" />
@@ -160,13 +169,13 @@ function DesktopShell() {
           <Stack.Screen name="onboard" />
           <Stack.Screen name="admin" />
           <Stack.Screen name="about" />
-          <Stack.Screen name="settings" />
+          <Stack.Screen name="settings" options={{ animation: 'fade_from_bottom' }} />
           <Stack.Screen name="directory" />
           <Stack.Screen name="profile/me" />
           <Stack.Screen name="profile/[userId]" />
           <Stack.Screen name="feed/[postId]" />
           <Stack.Screen name="listing/[id]" />
-          <Stack.Screen name="listing/edit" />
+          <Stack.Screen name="listing/edit" options={{ animation: 'fade_from_bottom' }} />
           <Stack.Screen name="dish/[id]" />
           <Stack.Screen name="emergency" />
           <Stack.Screen name="polls" />
@@ -177,17 +186,17 @@ function DesktopShell() {
           <Stack.Screen name="payments" />
           <Stack.Screen name="properties" />
           <Stack.Screen name="property/[id]" />
-          <Stack.Screen name="property/new" />
+          <Stack.Screen name="property/new" options={{ animation: 'fade_from_bottom' }} />
           <Stack.Screen name="recommend" />
           <Stack.Screen name="recommend/[id]" />
           <Stack.Screen name="borrow" />
-          <Stack.Screen name="borrow/new" />
+          <Stack.Screen name="borrow/new" options={{ animation: 'fade_from_bottom' }} />
           <Stack.Screen name="borrow/[id]" />
           <Stack.Screen name="places" />
-          <Stack.Screen name="place/new" />
+          <Stack.Screen name="place/new" options={{ animation: 'fade_from_bottom' }} />
           <Stack.Screen name="place/[id]" />
           <Stack.Screen name="helpers" />
-          <Stack.Screen name="ask" />
+          <Stack.Screen name="ask" options={{ animation: 'fade_from_bottom' }} />
           <Stack.Screen name="messages/index" />
           <Stack.Screen name="messages/new" />
           <Stack.Screen name="messages/[threadId]" />
