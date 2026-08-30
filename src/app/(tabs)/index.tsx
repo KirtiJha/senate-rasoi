@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import Animated, {
-  Extrapolation, interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue,
+  Extrapolation, interpolate, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '../../components/BrandMark';
@@ -359,8 +359,16 @@ export default function HomeScreen() {
   // the first 90px while a compact bar takes its place. Two states of one
   // header rather than a title that just scrolls away.
   const scrollY = useSharedValue(0);
+  const pastThreshold = useSharedValue(false);
+  const [floatingVisible, setFloatingVisible] = useState(false);
+
   const onScroll = useAnimatedScrollHandler((e) => {
     scrollY.set(e.contentOffset.y);
+    const past = e.contentOffset.y > 56;
+    if (past !== pastThreshold.get()) {
+      pastThreshold.set(past);
+      runOnJS(setFloatingVisible)(past);
+    }
   });
 
   const heroStyle = useAnimatedStyle(() => {
@@ -387,33 +395,43 @@ export default function HomeScreen() {
     <View className="flex-1 bg-bg">
       {/* Compact header — fades in as the hero leaves, so the screen always
           says whose society you are in without a permanent bar. */}
+      {/* Only interactive once it is actually visible — an invisible bar that
+          still swallows taps is worse than no bar. */}
       <View
-        pointerEvents="none"
+        pointerEvents={floatingVisible ? 'box-none' : 'none'}
         style={{ position: 'absolute', top: 8, left: 20, right: 20, zIndex: 10 }}
       >
         <Animated.View style={compactStyle}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              borderRadius: 999,
-              backgroundColor: c.surface,
-              borderWidth: 1,
-              borderColor: c.line,
-              boxShadow: c.shadowBar,
-            } as any}
+          <Touchable
+            haptic={null}
+            onPress={() => router.push('/ask' as any)}
+            accessibilityRole="button"
+            accessibilityLabel="Ask or search Aangan"
           >
-            <Avatar name={profile?.name ?? 'You'} size={26} />
-            <Text
-              className="font-sans-sb text-[15px] text-ink"
-              style={{ flex: 1, minWidth: 0, marginLeft: 10 }}
-              numberOfLines={1}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 12,
+                paddingVertical: 9,
+                borderRadius: 999,
+                backgroundColor: c.surface,
+                borderWidth: 1,
+                borderColor: c.line,
+                boxShadow: c.shadowBar,
+              } as any}
             >
-              {profile?.name ? profile.name.split(' ')[0] : greeting}
-            </Text>
-          </View>
+              <BrandMark size={22} />
+              <Text
+                className="text-[14px] font-sans-md text-subtle"
+                style={{ flex: 1, minWidth: 0, marginLeft: 10 }}
+                numberOfLines={1}
+              >
+                Ask or search Aangan
+              </Text>
+              <Ionicons name="arrow-forward" size={16} color={c.accent} />
+            </View>
+          </Touchable>
         </Animated.View>
       </View>
 
