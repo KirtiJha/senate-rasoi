@@ -10,7 +10,7 @@ import { Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '../../components/BrandMark';
 import { T } from '../../components/T';
-import { Container, ErrorRow, useResponsive, VegMark } from '../../components/ui';
+import { Container, ErrorRow, Touchable, useResponsive, VegMark } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useUnreadDms } from '../../context/unread';
@@ -752,47 +752,90 @@ function FreshFoodStrip({ items, isDesktop }: { items: DishRow[]; isDesktop: boo
   const c = useThemeColors();
   if (!items.length) return null;
 
+  // 196 wide, not 152: at 152 a plate of home-cooked food is a postage stamp.
+  // The dish name sits ON the photo over a scrim — the single change that makes
+  // this strip read as a food app rather than a directory — and the meal slot
+  // becomes a plain uppercase word instead of a coloured emoji chip, because
+  // colour here means "you can act on this", not "this is lunch".
   const Card = ({ d }: { d: DishRow }) => {
-    const color = SLOT_COLOR[d.slot] ?? '#16A34A';
-    const [g1, g2] = SLOT_PLACEHOLDER[d.slot] ?? ['#CDEBC5', '#A6D89B'];
     const soldOut = d.plates_left <= 0;
     const serveLabel = freshServeLabel(d.serve_date);
+    const scarce = !soldOut && d.plates_left > 0 && d.plates_left <= 2;
     return (
-      <Pressable
+      <Touchable
+        feel="card"
+        haptic={null}
         onPress={() => router.push(`/dish/${d.id}` as any)}
-        className="overflow-hidden rounded-2xl bg-surface active:opacity-90"
-        style={{ width: 152, borderWidth: 1, borderColor: c.line }}
+        style={{ width: 196 }}
       >
-        <View style={{ height: 96 }} className="w-full">
-          {d.photo_url ? (
-            <Image source={{ uri: d.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
-          ) : (
-            <LinearGradient colors={[g1, g2]} style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 40 }}>{SLOT_EMOJI[d.slot] ?? '🍽️'}</Text>
-            </LinearGradient>
-          )}
-          <View className="absolute left-2 top-2 rounded-md bg-white/95 p-0.5">
-            <VegMark type={d.veg_type} size={13} />
-          </View>
-          {serveLabel ? (
-            <View className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-0.5">
-              <Text className="text-[10px] font-sans-sb text-white">{serveLabel}</Text>
+        <View
+          style={{
+            overflow: 'hidden',
+            borderTopLeftRadius: 22,
+            borderTopRightRadius: 22,
+            borderBottomLeftRadius: 14,
+            borderBottomRightRadius: 14,
+            backgroundColor: c.surface,
+            boxShadow: c.shadowCard,
+          } as any}
+        >
+          <View style={{ height: 140 }} className="w-full">
+            {d.photo_url ? (
+              <Image source={{ uri: d.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+            ) : (
+              <View style={{ width: '100%', height: '100%', backgroundColor: c.inset, alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="restaurant-outline" size={34} color={c.subtle} />
+              </View>
+            )}
+
+            {/* Scrim so the name stays legible on any photo. */}
+            <LinearGradient
+              colors={['transparent', 'rgba(8,14,10,0.72)']}
+              style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 74 }}
+            />
+
+            <View className="absolute left-2 top-2 rounded-md bg-white/95 p-0.5">
+              <VegMark type={d.veg_type} size={13} />
             </View>
-          ) : null}
-          {soldOut ? (
-            <View className="absolute inset-0 items-center justify-center bg-black/45">
-              <Text className="font-sans-bold text-[12px] uppercase tracking-wide text-white">Sold out</Text>
-            </View>
-          ) : null}
-        </View>
-        <View className="p-2.5">
-          <View className="mb-1 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: color + '20' }}>
-            <Text className="text-[10px] font-sans-sb" style={{ color }} numberOfLines={1}>{SLOT_EMOJI[d.slot] ?? '🍽️'} {d.slot}</Text>
+            {serveLabel ? (
+              <View className="absolute right-2 top-2 rounded-full px-2 py-0.5" style={{ backgroundColor: 'rgba(10,14,11,0.62)' }}>
+                <Text className="text-[10px] font-sans-sb text-white">{serveLabel}</Text>
+              </View>
+            ) : null}
+
+            <Text
+              className="absolute bottom-3 left-3 right-3 font-sans-sb text-[17px] text-white"
+              numberOfLines={1}
+            >
+              {d.dish_name}
+            </Text>
+
+            {soldOut ? (
+              <View className="absolute inset-0 items-center justify-center" style={{ backgroundColor: 'rgba(10,14,11,0.55)' }}>
+                <Text className="font-sans-bold text-[12px] uppercase tracking-wide text-white">Sold out</Text>
+              </View>
+            ) : null}
           </View>
-          <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{d.dish_name}</Text>
-          <Text className="text-[12px] font-sans-md text-muted">₹{d.price} · Flat {d.flat}</Text>
+
+          <View style={{ padding: 12 }}>
+            <View className="flex-row items-baseline gap-1.5">
+              <Text className="font-display-x text-[22px] text-ink">₹{d.price}</Text>
+              <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-subtle">
+                {d.slot}
+              </Text>
+            </View>
+            {/* Scarcity is the only marigold in the strip, so it genuinely pulls
+                the eye — nothing else nearby is warm. */}
+            <Text
+              className="mt-0.5 text-[12px] font-sans-md"
+              style={{ color: scarce ? c.highlightInk : c.muted }}
+              numberOfLines={1}
+            >
+              {scarce ? `Only ${d.plates_left} left` : `Flat ${d.flat}`}
+            </Text>
+          </View>
         </View>
-      </Pressable>
+      </Touchable>
     );
   };
 
