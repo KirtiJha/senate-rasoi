@@ -1,6 +1,7 @@
 import { Text, View } from 'react-native';
 import Svg, {
   Circle,
+  ClipPath,
   Defs,
   Ellipse,
   G,
@@ -162,24 +163,39 @@ export function DiversityEmblem({ size }: { size: number }) {
  * light one after another — which is what a real object does, and what makes
  * the same SVG suddenly look like it has a surface.
  *
+ * CLIPPED, and this matters. The first version painted its gradients across
+ * the full viewBox: the emblem's petals only reach r≈116 and leave the corners
+ * empty, so the highlight spilled past the object onto bare background and
+ * read as a patch of smoke hanging at the top-left rather than as light on a
+ * surface. Light needs something to land on. Clipping to just inside the petal
+ * tips keeps it on the flower.
+ *
+ * Kept faint for the same reason — a specular that competes with the artwork
+ * stops looking like light and starts looking like a smudge on the lens.
+ *
  * Purely decorative and always on top, so it never takes a touch.
  */
 export function EmblemGloss({ size }: { size: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 236 236" pointerEvents="none">
       <Defs>
-        <RadialGradient id="spec" cx="0.32" cy="0.24" r="0.55">
-          <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.5} />
-          <Stop offset="0.55" stopColor="#FFFFFF" stopOpacity={0.1} />
+        <ClipPath id="body">
+          <Circle cx={118} cy={118} r={112} />
+        </ClipPath>
+        <RadialGradient id="spec" cx="0.34" cy="0.26" r="0.5">
+          <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.26} />
+          <Stop offset="0.5" stopColor="#FFFFFF" stopOpacity={0.06} />
           <Stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
         </RadialGradient>
-        <RadialGradient id="occl" cx="0.72" cy="0.82" r="0.6">
-          <Stop offset="0" stopColor="#000000" stopOpacity={0.22} />
+        <RadialGradient id="occl" cx="0.72" cy="0.8" r="0.58">
+          <Stop offset="0" stopColor="#000000" stopOpacity={0.16} />
           <Stop offset="1" stopColor="#000000" stopOpacity={0} />
         </RadialGradient>
       </Defs>
-      <Circle cx={118} cy={118} r={118} fill="url(#occl)" />
-      <Circle cx={118} cy={118} r={118} fill="url(#spec)" />
+      <G clipPath="url(#body)">
+        <Circle cx={118} cy={118} r={112} fill="url(#occl)" />
+        <Circle cx={118} cy={118} r={112} fill="url(#spec)" />
+      </G>
     </Svg>
   );
 }
