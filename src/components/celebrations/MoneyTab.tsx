@@ -75,6 +75,10 @@ export function MoneyTab({
   useEffect(() => { load(); }, [load]);
 
   const estimated = (budget ?? []).reduce((s, b) => s + Number(b.estimated), 0);
+  // Completed means the accounts are published and closed — see 0069 and, for
+  // these tables specifically, 0091.
+  const locked = event.status === 'completed';
+  const canEdit = canManage && !locked;
   const plan = computeSplit(event, contributions, sponsors ?? []);
 
   if (budget === null || sponsors === null) {
@@ -103,7 +107,7 @@ export function MoneyTab({
                     <Text className="text-[11.5px] font-sans" style={{ color: c.subtle }}>{b.category}</Text>
                   </View>
                   <Text className="font-sans-sb text-[14px] text-ink">{rupees(Number(b.estimated))}</Text>
-                  {canManage ? (
+                  {canEdit ? (
                     <Touchable haptic={null} accessibilityRole="button" accessibilityLabel={`Remove ${b.title}`}
                       onPress={async () => {
                         setBudget((prev) => (prev ?? []).filter((x) => x.id !== b.id));
@@ -119,7 +123,7 @@ export function MoneyTab({
             ))}
           </View>
         )}
-        {canManage ? (
+        {canEdit ? (
           <View className="mt-2">
             <Button label="Add a line" icon="add" variant="outline" size="sm" onPress={() => setAddingBudget(true)} />
           </View>
@@ -127,13 +131,24 @@ export function MoneyTab({
       </View>
 
       {/* ── What we already have ──────────────────────────────── */}
-      {canManage ? (
+      {canEdit ? (
         <CarryForward event={event} onChanged={onChanged} />
       ) : Number(event.carry_in_used ?? 0) > 0 ? (
         <View className="card px-4 py-3">
           <Text className="text-[12.5px] font-sans" style={{ color: c.subtle }}>
             {rupees(Number(event.carry_in_used))} carried forward from a previous celebration
             {event.carry_in_note ? ` · ${event.carry_in_note}` : ''}
+          </Text>
+        </View>
+      ) : null}
+
+      {locked ? (
+        <View className="mb-4 flex-row items-start gap-2 rounded-2xl px-3.5 py-3"
+          style={{ borderWidth: 1, borderColor: c.accentLine, backgroundColor: c.accentSoft }}>
+          <Ionicons name="lock-closed-outline" size={16} color={c.accent} />
+          <Text className="font-sans flex-1 text-[12.5px] leading-[18px]" style={{ color: c.accent }}>
+            The accounts are published and closed. Nothing here can be changed —
+            reopen the celebration first if something is wrong.
           </Text>
         </View>
       ) : null}
@@ -197,7 +212,7 @@ export function MoneyTab({
                       {s.status === 'pledged' ? ' · pledged' : ''}
                     </Text>
                   </View>
-                  {canManage ? (
+                  {canEdit ? (
                     <Touchable haptic={null} accessibilityRole="button"
                       accessibilityLabel={s.status === 'pledged' ? 'Mark received' : 'Mark pledged'}
                       onPress={async () => {
@@ -213,7 +228,7 @@ export function MoneyTab({
                       </View>
                     </Touchable>
                   ) : null}
-                  {canManage ? (
+                  {canEdit ? (
                     <Touchable haptic={null} accessibilityRole="button" accessibilityLabel="Remove sponsorship"
                       onPress={async () => {
                         setSponsors((prev) => (prev ?? []).filter((x) => x.id !== s.id));
@@ -229,7 +244,7 @@ export function MoneyTab({
             ))}
           </View>
         )}
-        {canManage ? (
+        {canEdit ? (
           <View className="mt-2">
             <Button label="Record a sponsorship" icon="add" variant="outline" size="sm" onPress={() => setAddingSponsor(true)} />
           </View>
