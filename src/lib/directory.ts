@@ -172,6 +172,41 @@ export async function addDirectoryEntry(input: NewDirectoryEntry): Promise<void>
   }
 }
 
+/**
+ * Correct a manually-added neighbour.
+ *
+ * 0029's own policy comment says "the adder or a society admin can edit /
+ * remove an entry" — the update half was written and never called, so fixing a
+ * typo'd phone number meant deleting the row and retyping the profession,
+ * vehicle, native place and alternate number from scratch.
+ */
+export async function updateDirectoryEntry(
+  id: string,
+  patch: Partial<{
+    name: string; block: string | null; flat: string | null; phone: string | null;
+    resident_type: string; profession: string | null; vehicle_no: string | null;
+    native: string | null; alt_phone: string | null; email: string | null;
+  }>,
+): Promise<void> {
+  const clean: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(patch)) {
+    if (v === undefined) continue;
+    if (typeof v !== 'string') { clean[k] = v; continue; }
+    // Same normalisation the insert applies, so an edited row cannot end up in
+    // a different shape than a created one.
+    if (k === 'phone' || k === 'alt_phone') clean[k] = norm(v) || null;
+    else if (k === 'block') clean[k] = v.trim().toUpperCase() || null;
+    else clean[k] = v.trim() || null;
+  }
+  if (typeof patch.name === 'string') clean.name = patch.name.trim();
+
+  const { error } = await supabase.from('directory_entries').update(clean).eq('id', id);
+  if (error) {
+    if (error.code === '23505') throw new Error('duplicate');
+    throw error;
+  }
+}
+
 export async function deleteDirectoryEntry(id: string): Promise<void> {
   const { error } = await supabase.from('directory_entries').delete().eq('id', id);
   if (error) throw error;
