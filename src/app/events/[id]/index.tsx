@@ -272,7 +272,7 @@ export default function EventDetailScreen() {
 
             {totals.flatsTotal > 0 ? (
               <Text className="font-sans mt-3 text-[12px] text-muted">
-                {totals.flatsPaid} of {totals.flatsTotal} flats have contributed
+                {totals.flatsPaid} flat{totals.flatsPaid === 1 ? '' : 's'} have contributed
                 {totals.pending > 0 ? ` · ${rupees(totals.pending)} still expected` : ''}
               </Text>
             ) : null}

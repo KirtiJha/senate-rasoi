@@ -241,7 +241,7 @@ export function MoneyTab({
         <LedgerLink
           icon="wallet-outline"
           title="Collection"
-          detail={`${totals.flatsPaid} of ${totals.flatsTotal} flats · ${rupees(totals.fromFlats)} in`}
+          detail={`${totals.flatsPaid} flat${totals.flatsPaid === 1 ? '' : 's'} · ${rupees(totals.fromFlats)} in`}
           onPress={() => router.push(`/events/${event.id}/contributions` as never)}
         />
         <LedgerLink

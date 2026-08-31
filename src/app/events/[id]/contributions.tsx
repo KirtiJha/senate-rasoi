@@ -1,15 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Button, Container, ScreenHeader, Sheet } from '../../../components/ui';
+import { Button, Container, PhotoViewer, ScreenHeader, Sheet, Touchable } from '../../../components/ui';
 import { useAuth } from '../../../context/auth';
 import { useToast } from '../../../context/toast';
-import { fetchDirectory } from '../../../lib/directory';
+import { openPhotoPicker } from '../../../lib/photo';
+import { uploadContentPhoto } from '../../../lib/photoUpload';
 import {
   Contribution, ContributionStatus, EventTeamMember, PayMethod, SocietyEvent,
   computeTotals, fetchContributions, fetchEvent, fetchTeam, generateRoster, rupees,
-  setContributionFacts, setContributionStatus, subscribeEvent, upsertContribution,
+  setContributionFacts, setContributionReceipt, setContributionStatus, subscribeEvent,
+  upsertContribution,
 } from '../../../lib/events';
 import { useThemeColors } from '../../../theme';
 
@@ -47,6 +50,8 @@ export default function ContributionsScreen() {
   const [addingNew, setAddingNew] = useState(false);
   const [editHeads, setEditHeads] = useState('');
   const [editOptedOut, setEditOptedOut] = useState(false);
+  const [editReceipt, setEditReceipt] = useState<string | null>(null);
+  const [viewingReceipt, setViewingReceipt] = useState<string[] | null>(null);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -91,6 +96,7 @@ export default function ContributionsScreen() {
     setEditFlat(row.flat);
     setEditHeads(row.head_count ? String(row.head_count) : '');
     setEditOptedOut(!!row.opted_out);
+    setEditReceipt(row.receipt_url ?? null);
   };
 
   const openAdd = () => {
@@ -108,6 +114,7 @@ export default function ContributionsScreen() {
     setEditFlat('');
     setEditHeads('');
     setEditOptedOut(false);
+    setEditReceipt(null);
   };
 
   const saveEdit = async (status: ContributionStatus) => {
@@ -129,6 +136,12 @@ export default function ContributionsScreen() {
         recordedBy: userId,
       });
       const heads = editHeads.trim() ? Number(editHeads) : null;
+      if (editing.id && editReceipt && !/^https?:/.test(editReceipt)) {
+        try {
+          const url = await uploadContentPhoto(editReceipt, `events/${event.id}/pay-${editing.id}.jpg`);
+          await setContributionReceipt(editing.id, url);
+        } catch { toast.show('Saved, but the screenshot did not upload'); }
+      }
       if (editing.id) {
         await setContributionFacts(editing.id, {
           opted_out: editOptedOut,
@@ -193,7 +206,7 @@ export default function ContributionsScreen() {
           <View className="mb-4 card p-4">
             <Text className="font-sans-bold text-[20px]" style={{ color: ACCENT }}>{rupees(totals.collected)}</Text>
             <Text className="font-sans text-[12px] text-muted">
-              collected from {totals.flatsPaid} of {totals.flatsTotal} flats
+              collected from {totals.flatsPaid} flat{totals.flatsPaid === 1 ? '' : 's'}
               {totals.pending > 0 ? ` · ${rupees(totals.pending)} expected` : ''}
             </Text>
             {treasurer ? (
@@ -262,6 +275,9 @@ export default function ContributionsScreen() {
                             <Text className="text-[10px] font-sans-sb" style={{ color: c.accent }}>{m.label}</Text>
                           </View>
                           {row.method ? <Text className="font-sans text-[11px] text-faint">{row.method}</Text> : null}
+                          {row.receipt_url ? (
+                            <Ionicons name="image-outline" size={12} color={c.faint} />
+                          ) : null}
                         </View>
                       </View>
 
@@ -281,6 +297,8 @@ export default function ContributionsScreen() {
           )}
         </Container>
       </ScrollView>
+
+      <PhotoViewer photos={viewingReceipt} onClose={() => setViewingReceipt(null)} />
 
       {/* Edit one flat */}
       <Sheet
@@ -366,6 +384,47 @@ export default function ContributionsScreen() {
               </Text>
             </Pressable>
           ))}
+        </View>
+
+        {/* Proof of payment. A UPI screenshot is what a neighbour actually
+            has, and what settles a disagreement three weeks later. */}
+        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">
+          Payment screenshot (optional)
+        </Text>
+        <View className="mb-3 flex-row items-center gap-2">
+          {editReceipt ? (
+            <>
+              <Touchable
+                onPress={() => (/^https?:/.test(editReceipt) ? setViewingReceipt([editReceipt]) : undefined)}
+                accessibilityRole="button"
+                accessibilityLabel="Open the screenshot"
+              >
+                <View pointerEvents="none">
+                  <Image
+                    source={{ uri: editReceipt }}
+                    style={{ width: 66, height: 66, borderRadius: 10, backgroundColor: c.inset }}
+                    contentFit="cover"
+                  />
+                </View>
+              </Touchable>
+              <View style={{ flex: 1 }}>
+                <Button label="Remove" variant="ghost" size="sm" onPress={() => setEditReceipt(null)} />
+              </View>
+            </>
+          ) : (
+            <View style={{ flex: 1 }}>
+              <Button
+                label="Attach a screenshot"
+                icon="image-outline"
+                variant="outline"
+                size="sm"
+                onPress={async () => {
+                  const r = await openPhotoPicker({ mediaTypes: ['images'], quality: 0.8 });
+                  if (!r.canceled && r.assets?.[0]?.uri) setEditReceipt(r.assets[0].uri);
+                }}
+              />
+            </View>
+          )}
         </View>
 
         <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Note (optional)</Text>

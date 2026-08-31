@@ -214,7 +214,7 @@ export default function EventReportScreen() {
           {/* Who contributed */}
           <View className="mt-5">
             <Text className="mb-2 px-1 text-[11px] font-sans-sb uppercase tracking-wider text-muted">
-              Contributions ({t.flatsPaid} of {t.flatsTotal} flats)
+              Contributions ({t.flatsPaid} flat{t.flatsPaid === 1 ? '' : 's'})
             </Text>
             <View className="card p-4">
               {paid.length === 0 ? (
