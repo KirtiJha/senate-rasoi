@@ -20,7 +20,7 @@
 
 -- One row per society per slot per day. The unique key IS the guarantee that a
 -- retry, an overlap or a manual run cannot double-notify a whole building.
-create table public.food_nudges (
+create table if not exists public.food_nudges (
   community_id uuid not null references public.communities(id) on delete cascade,
   serve_date   date not null,
   slot         text not null,
