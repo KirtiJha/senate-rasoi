@@ -1,7 +1,7 @@
 import { isSupabaseConfigured, supabase } from './supabase';
 import type { InquiryRow } from './types';
 
-/** Record an in-app inquiry (best-effort — WhatsApp is the primary CTA). */
+/** Record an in-app inquiry. This is what notifies the owner (0089). */
 export async function sendInquiry(
   listingId: string,
   fromUserId: string,
@@ -15,11 +15,17 @@ export async function sendInquiry(
   if (error) throw error;
 }
 
-/** A user's own inquiry history. */
+/**
+ * A user's own inquiry history, with enough of the listing to show a row.
+ *
+ * The listing is joined rather than fetched separately because a request is
+ * meaningless without the thing it was about — "you asked to join" needs to
+ * say what.
+ */
 export async function fetchMyInquiries(userId: string): Promise<InquiryRow[]> {
   const { data, error } = await supabase
     .from('inquiries')
-    .select('*')
+    .select('*, listing:listings!inquiries_listing_id_fkey(id,title,category,status,photos)')
     .eq('from_user_id', userId)
     .order('created_at', { ascending: false });
   if (error) throw error;

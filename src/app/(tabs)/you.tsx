@@ -4,15 +4,17 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { MyListingsSection } from '../../components/MyListingsSection';
+import { MyRequestsSection } from '../../components/MyRequestsSection';
 import { SavedSection } from '../../components/SavedSection';
 import { Avatar, Container, Rise, Segmented, Touchable, useResponsive } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useThemeColors } from '../../theme';
 
-type Tab = 'listings' | 'saved';
+type Tab = 'listings' | 'requests' | 'saved';
 
 const TABS = [
   { key: 'listings', label: 'My listings' },
+  { key: 'requests', label: 'Requests' },
   { key: 'saved', label: 'Saved' },
 ] as const;
 
@@ -102,7 +104,9 @@ export default function YouScreen() {
       </View>
 
       <View style={{ flex: 1, marginTop: 8 }}>
-        {tab === 'saved' ? <SavedSection /> : <MyListingsSection />}
+        {tab === 'saved' ? <SavedSection />
+          : tab === 'requests' ? <MyRequestsSection />
+            : <MyListingsSection />}
       </View>
     </View>
   );

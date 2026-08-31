@@ -7,6 +7,7 @@ import { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimate
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { InquiryModal } from '../../components/listings/InquiryModal';
 import { ListingChat } from '../../components/listings/ListingChat';
+import { ListingRequests } from '../../components/listings/ListingRequests';
 import { PayButton } from '../../components/PayButton';
 import { T } from '../../components/T';
 import { Avatar, Badge, Button, Container, ErrorState, KeyboardAvoider, ParallaxHero, useResponsive } from '../../components/ui';
@@ -40,6 +41,7 @@ export default function ListingDetailScreen() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [inquiryListing, setInquiryListing] = useState<ListingRow | null>(null);
+  const [requestsKey, setRequestsKey] = useState(0);
   const [saved, setSaved] = useState(false);
 
   // On web, opening this route directly (or after a refresh) leaves an empty
@@ -106,7 +108,9 @@ export default function ListingDetailScreen() {
     haptics.success();
 
     if (userId) {
-      sendInquiry(l.id, userId, message || null).catch(console.error);
+      sendInquiry(l.id, userId, message || null)
+        .then(() => setRequestsKey((k) => k + 1))
+        .catch(console.error);
     }
 
     if (via === 'whatsapp') {
@@ -415,6 +419,14 @@ export default function ListingDetailScreen() {
                 ) : null}
               </View>
             )}
+
+            <ListingRequests
+              key={requestsKey}
+              listingId={listing.id}
+              category={listing.category}
+              isOwner={isOwner}
+              listingTitle={listing.title}
+            />
 
             {/* In-app chat thread (Phase 12a) */}
             <ListingChat

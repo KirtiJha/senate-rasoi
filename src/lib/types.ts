@@ -219,4 +219,6 @@ export interface InquiryRow {
   status: 'open' | 'closed';
   created_at: string;
   from_user?: { name: string; flat: string | null; whatsapp: string | null };
+  /** Joined when reading your own requests — see fetchMyInquiries. */
+  listing?: { id: string; title: string; category: string; status: string; photos: string[] | null };
 }
