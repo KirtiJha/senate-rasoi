@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Empty } from '../components/Empty';
 import { Field, Label, SectionCard } from '../components/forms';
 import { CreateListingForm } from '../components/listings/CreateListingForm';
-import { Avatar, Button, ChoiceTiles, Container, KeyboardAvoider, ModuleTile, Stepper, useResponsive, VegMark } from '../components/ui';
+import { Avatar, Button, ChoiceTiles, Container, KeyboardAvoider, ModuleTile, Stepper, TimeField, useResponsive, VegMark } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useProfile } from '../context/profile';
 import { useToast } from '../context/toast';
@@ -608,7 +608,17 @@ export default function PostScreen({
               </View>
             </View>
 
-            <Field label="Daily order cutoff" hint="Optional — e.g. 09:00 (subscribers lock for the day after this)" placeholder="HH:MM" value={tCutoff} onChangeText={setTCutoff} />
+            <View className="mb-4">
+              <TimeField
+                label="Daily order cutoff"
+                value={tCutoff || null}
+                onChange={(v) => setTCutoff(v ?? '')}
+                placeholder="No cut-off"
+              />
+              <Text className="font-sans mt-1.5 text-[12px] text-faint">
+                Optional — subscribers lock for the day after this.
+              </Text>
+            </View>
             <Field label="Description" hint="Optional — what's usually included" placeholder="2 sabzi, dal, 4 rotis, rice & salad" multiline value={tDesc} onChangeText={setTDesc} />
           </SectionCard>
           )}

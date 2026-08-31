@@ -5,7 +5,7 @@ import { openPhotoPicker } from '../lib/photo';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Button, Container, RowSkeleton, ScreenHeader, Sheet } from '../components/ui';
+import { Button, Container, RowSkeleton, ScreenHeader, Sheet, TimeField } from '../components/ui';
 import { SportGroupBody } from '../components/SportGroupBody';
 import { WeekdayChips } from '../components/WeekdayChips';
 import { useAuth } from '../context/auth';
@@ -234,8 +234,7 @@ function CreateGroupSheet({
       </View>
       <View className="mb-2 flex-row gap-2">
         <View className="flex-1">
-          <Text className={lbl}>Time</Text>
-          <TextInput value={time} onChangeText={setTime} placeholder="18:00" keyboardType="numbers-and-punctuation" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
+          <TimeField label="Time" value={time || null} onChange={(v) => setTime(v ?? '')} clearable={false} />
         </View>
         <View className="flex-1">
           <Text className={lbl}>Duration (min)</Text>

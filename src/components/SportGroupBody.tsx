@@ -21,7 +21,7 @@ import {
 import { useThemeColors } from '../theme';
 import { CourtBookings } from './CourtBookings';
 import { WeekdayChips } from './WeekdayChips';
-import { Avatar, Button, RowSkeleton, Sheet } from './ui';
+import { Avatar, Button, DateField, RowSkeleton, Sheet, TimeField } from './ui';
 
 /**
  * The full content of one sports group (badge, practice, members, tournaments,
@@ -389,7 +389,7 @@ function EditGroupSheet({
       <View className="mb-2 flex-row gap-2">
         <View className="flex-1">
           <Text className={lbl}>Time</Text>
-          <TextInput value={time} onChangeText={setTime} placeholder="18:00" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
+          <TimeField value={time || null} onChange={(v) => setTime(v ?? '')} clearable={false} />
         </View>
         <View className="flex-1">
           <Text className={lbl}>Duration (min)</Text>
@@ -543,7 +543,9 @@ function AddTournamentSheet({
       <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Title</Text>
       <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Society Summer Cup" placeholderTextColor={c.faint} className={`mb-3 ${input}`} style={{ outline: 'none' } as any} />
       <View className="mb-3 flex-row gap-2">
-        <TextInput value={date} onChangeText={setDate} placeholder="Date (2026-07-15)" placeholderTextColor={c.faint} className={`flex-1 ${input}`} style={{ outline: 'none' } as any} />
+        <View style={{ flex: 1 }}>
+          <DateField value={date || null} onChange={(v) => setDate(v ?? '')} placeholder="Date" clearable={false} />
+        </View>
         <TextInput value={location} onChangeText={setLocation} placeholder="Venue" placeholderTextColor={c.faint} className={`flex-1 ${input}`} style={{ outline: 'none' } as any} />
       </View>
       <TextInput value={notes} onChangeText={setNotes} placeholder="Notes (optional)" placeholderTextColor={c.faint} multiline className={input} style={{ minHeight: 56, outline: 'none' } as any} />

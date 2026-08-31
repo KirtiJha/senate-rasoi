@@ -1,7 +1,7 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
-import { Button, Container, KeyboardAvoider, ScreenHeader } from '../../components/ui';
+import { Button, Container, DateField, KeyboardAvoider, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { createEvent } from '../../lib/events';
@@ -80,12 +80,9 @@ export default function NewEventScreen() {
             className={`mb-3 ${input}`} style={{ minHeight: 80, outline: 'none' } as any}
           />
 
-          <Text className={label}>Date</Text>
-          <TextInput
-            value={date} onChangeText={setDate}
-            placeholder="2026-11-08" placeholderTextColor={c.faint}
-            className={`mb-3 ${input}`} style={{ outline: 'none' } as any}
-          />
+          <View className="mb-3">
+            <DateField label="Date" value={date || null} onChange={(v) => setDate(v ?? '')} />
+          </View>
 
           <Text className={label}>Venue</Text>
           <TextInput

@@ -7,7 +7,7 @@ import { haptics } from '../../../lib/haptics';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Button, Container, ScreenHeader, Sheet } from '../../../components/ui';
+import { Button, Container, DateField, ScreenHeader, Sheet } from '../../../components/ui';
 import { useAuth } from '../../../context/auth';
 import { useConfirm } from '../../../context/confirm';
 import { useToast } from '../../../context/toast';
@@ -109,7 +109,6 @@ export default function ExpensesScreen() {
     if (!title.trim()) return toast.show('What was the money spent on?');
     const amt = Number(amount);
     if (!amt || amt <= 0) return toast.show('Enter the amount');
-    if (spentOn && !/^\d{4}-\d{2}-\d{2}$/.test(spentOn)) return toast.show('Date must look like 2026-11-08');
 
     setSaving(true);
     try {
@@ -342,12 +341,10 @@ export default function ExpensesScreen() {
           style={{ outline: 'none' } as any}
         />
 
-        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Date (optional)</Text>
-        <TextInput
-          value={spentOn} onChangeText={setSpentOn}
-          placeholder="2026-11-08" placeholderTextColor={c.faint}
-          className="rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink"
-          style={{ outline: 'none' } as any}
+        <DateField
+          label="Date (optional)"
+          value={spentOn || null}
+          onChange={(v) => setSpentOn(v ?? '')}
         />
       </Sheet>
     </View>

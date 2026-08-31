@@ -22,3 +22,4 @@ export { Rise } from './Rise';
 export { ParallaxHero } from './ParallaxHero';
 export { Gallery } from './Gallery';
 export { ModuleTile } from './ModuleTile';
+export { DateField, TimeField, formatDateLabel, formatTimeLabel } from './DateField';

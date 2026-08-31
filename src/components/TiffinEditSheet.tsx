@@ -8,7 +8,7 @@ import { useToast } from '../context/toast';
 import { updateTiffinPlan } from '../lib/tiffin';
 import { SLOT_EMOJI, SLOTS, Slot, TiffinPlan, VEG_TYPES, VegType } from '../lib/types';
 import { useThemeColors } from '../theme';
-import { Button, Sheet } from './ui';
+import { Button, Sheet, TimeField } from './ui';
 
 const DAY_INITIALS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']; // 0 = Sunday … 6 = Saturday
 
@@ -105,7 +105,9 @@ export function TiffinEditSheet({ plan, visible, onClose, onSaved }: { plan: Tif
             </Pressable>); })}
         </View>
         <Text className={label}>Order cutoff (optional, e.g. 21:00)</Text>
-        <TextInput value={cutoff} onChangeText={setCutoff} placeholder="HH:MM" placeholderTextColor={c.faint} className={`mb-4 ${input}`} style={{ outline: 'none' } as any} />
+        <View className="mb-4">
+          <TimeField value={cutoff || null} onChange={(v) => setCutoff(v ?? '')} placeholder="No cut-off" />
+        </View>
         <Button label="Save changes" icon="checkmark" fullWidth loading={saving} onPress={save} />
       </ScrollView>
     </Sheet>
