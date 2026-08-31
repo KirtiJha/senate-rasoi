@@ -48,7 +48,7 @@ export default function SettingsScreen() {
   const c = useThemeColors();
   const router = useRouter();
   const confirm = useConfirm();
-  const { signOut, userId, profile, refreshProfile } = useAuth();
+  const { signOut, userId, profile, refreshProfile, isAdmin } = useAuth();
   const toast = useToast();
   const [savingLang, setSavingLang] = useState<string | null>(null);
   const [muted, setMutedState] = useState<Set<string> | null>(null);
@@ -304,6 +304,14 @@ export default function SettingsScreen() {
             <Row icon="shield-checkmark-outline" label="Child safety standards" c={c} onPress={() => router.push('/child-safety' as any)} />
             <Divider />
             <Row icon="mail-outline" label="Contact support" c={c} onPress={() => openUrl(supportMailto())} />
+            <Divider />
+            <Row icon="bulb-outline" label="Help us improve" c={c} onPress={() => router.push('/feedback' as any)} />
+            {isAdmin ? (
+              <>
+                <Divider />
+                <Row icon="clipboard-outline" label="Resident feedback" c={c} onPress={() => router.push('/admin/feedback' as any)} />
+              </>
+            ) : null}
           </Card>
 
           {/* ── Sign out / delete ──────────────────────────────── */}

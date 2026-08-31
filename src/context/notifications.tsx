@@ -42,6 +42,7 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   // than the colour of whatever kind of thing it happened to find.
   saathi_watch: { icon: 'notifications', color: '#0E6B4E' },
   food_daily: { icon: 'restaurant', color: '#E8650A' },
+  feedback: { icon: 'chatbox-ellipses', color: '#6366F1' },
 };
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
