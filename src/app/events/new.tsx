@@ -54,7 +54,7 @@ export default function NewEventScreen() {
 
   return (
     <KeyboardAvoider>
-      <ScreenHeader icon="sparkles-outline" title="Plan a function" showBack hideSociety />
+      <ScreenHeader icon="sparkles-outline" title="Plan a celebration" showBack hideSociety />
       <ScrollView
         // Fills the space the KeyboardAvoider gives it. Without this the
         // scroller sizes to its own content and overflows its parent, which
@@ -65,7 +65,7 @@ export default function NewEventScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Container narrow>
-          <Text className={label}>What is the function?</Text>
+          <Text className={label}>What are you celebrating?</Text>
           <TextInput
             value={title} onChangeText={setTitle}
             placeholder="e.g. Diwali 2026" placeholderTextColor={c.faint}
@@ -112,7 +112,7 @@ export default function NewEventScreen() {
             or waive it entirely.
           </Text>
 
-          <Button label="Create function" icon="checkmark" size="lg" fullWidth loading={saving} onPress={submit} />
+          <Button label="Create celebration" icon="checkmark" size="lg" fullWidth loading={saving} onPress={submit} />
           <Text className="font-sans mt-3 text-center text-[12px] leading-[18px] text-faint">
             It starts as a draft, so nobody is notified yet. Add your core team,
             then open contributions when you're ready.

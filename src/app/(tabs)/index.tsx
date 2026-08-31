@@ -131,7 +131,7 @@ const COMMUNITY_TILES: CommunityTile[] = [
   },
   {
     key: 'events',
-    label: 'Functions',
+    label: 'Celebrations',
     blurb: 'Plan festivals, collect & track every rupee',
     icon: 'sparkles',
     color: '#7C3AED',

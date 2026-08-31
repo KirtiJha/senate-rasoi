@@ -44,7 +44,7 @@ export default function EventsScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="sparkles-outline"
-        title="Functions"
+        title="Celebrations"
         showBack
         onAdd={isAdmin ? () => router.push('/events/new' as any) : undefined}
         addLabel="New"
@@ -68,7 +68,7 @@ export default function EventsScreen() {
                   className="mt-6 rounded-2xl px-5 py-3 active:opacity-80"
                   style={{ backgroundColor: ACCENT }}
                 >
-                  <Text className="font-sans-sb text-[14px] text-white">Plan a function</Text>
+                  <Text className="font-sans-sb text-[14px] text-white">Plan a celebration</Text>
                 </Pressable>
               ) : (
                 <Text className="font-sans mt-4 text-[12px] text-faint">Your society admin can start one.</Text>
