@@ -23,3 +23,4 @@ export { ParallaxHero } from './ParallaxHero';
 export { Gallery } from './Gallery';
 export { ModuleTile } from './ModuleTile';
 export { DateField, TimeField, formatDateLabel, formatTimeLabel } from './DateField';
+export { PhotoViewer } from './PhotoViewer';

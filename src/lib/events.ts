@@ -53,6 +53,9 @@ export interface SocietyEvent {
   carry_in_available?: number;
   carry_in_used?: number;
   carry_in_note?: string | null;
+  // Added in 0086 — a date alone never told anyone when to come down.
+  start_time?: string | null;
+  end_time?: string | null;
 }
 
 export interface EventTeamMember {
@@ -81,6 +84,14 @@ export interface Contribution {
   opted_out?: boolean;
   head_count?: number | null;
   receipt_url?: string | null;
+  /**
+   * The name written down at the time, added in 0086.
+   *
+   * Not derived from contributor_user_id: most flats have no Aangan account,
+   * so a lookup left the treasurer staring at a bare flat number while
+   * reconciling a pile of cash and handwritten notes.
+   */
+  contributor_name?: string | null;
 }
 
 export interface Expense {
@@ -151,7 +162,7 @@ export async function createEvent(input: {
 export async function updateEvent(id: string, patch: Partial<{
   title: string; description: string | null; event_date: string | null; venue: string | null;
   budget_amount: number | null; suggested_contribution: number | null; status: EventStatus;
-  cover_photo_url: string | null;
+  cover_photo_url: string | null; start_time: string | null; end_time: string | null;
 }>): Promise<void> {
   const { error } = await supabase.from('society_events').update(patch).eq('id', id);
   if (error) throw error;
@@ -236,12 +247,14 @@ export async function upsertContribution(input: {
   method: PayMethod | null;
   note: string | null;
   recordedBy: string;
+  contributorName?: string | null;
 }): Promise<void> {
   const { error } = await supabase.from('event_contributions').upsert({
     event_id: input.eventId,
     community_id: input.communityId ?? COMMUNITY_ID,
     flat: input.flat.trim(),
     contributor_user_id: input.contributorUserId,
+    contributor_name: input.contributorName?.trim() || null,
     amount: input.amount,
     status: input.status,
     method: input.method,
@@ -802,4 +815,157 @@ export async function deleteEventNote(id: string): Promise<void> {
  */
 export async function uploadNotePhoto(localUri: string, noteId: string, index: number): Promise<string> {
   return uploadContentPhoto(localUri, `event-note/${noteId}/${index}.jpg`);
+}
+
+// ── The programme: what happens, when, and who is taking part ────────
+//
+// A celebration is a timetable, not a single moment: rangoli for the children
+// at four, tug of war for the men at five, housie for everyone after the
+// aarti. Each carries its own time and its own sign-up sheet. See 0086.
+
+export type Audience = 'kids' | 'women' | 'men' | 'mixed' | 'all';
+
+export const AUDIENCES: { key: Audience; label: string; icon: string }[] = [
+  { key: 'all', label: 'Everyone', icon: 'people-outline' },
+  { key: 'kids', label: 'Children', icon: 'happy-outline' },
+  { key: 'women', label: 'Women', icon: 'woman-outline' },
+  { key: 'men', label: 'Men', icon: 'man-outline' },
+  { key: 'mixed', label: 'Mixed teams', icon: 'shuffle-outline' },
+];
+
+export interface EventActivity {
+  id: string;
+  event_id: string;
+  title: string;
+  description: string | null;
+  audience: Audience;
+  activity_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  venue: string | null;
+  max_participants: number | null;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface ActivityParticipant {
+  id: string;
+  activity_id: string;
+  added_by: string;
+  participant_name: string;
+  flat: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+export async function fetchActivities(eventId: string): Promise<EventActivity[]> {
+  const { data, error } = await supabase
+    .from('event_activities')
+    .select('*')
+    .eq('event_id', eventId)
+    .order('activity_date', { nullsFirst: true })
+    .order('start_time', { nullsFirst: false })
+    .order('sort_order');
+  if (error) throw error;
+  return (data ?? []) as EventActivity[];
+}
+
+/** Every entry across the programme, so one round trip fills the whole tab. */
+export async function fetchAllParticipants(activityIds: string[]): Promise<ActivityParticipant[]> {
+  if (!activityIds.length) return [];
+  const { data, error } = await supabase
+    .from('event_activity_participants')
+    .select('*')
+    .in('activity_id', activityIds)
+    .order('created_at');
+  if (error) throw error;
+  return (data ?? []) as ActivityParticipant[];
+}
+
+export async function addActivity(input: {
+  eventId: string;
+  communityId?: string;
+  createdBy: string;
+  title: string;
+  description?: string | null;
+  audience: Audience;
+  activityDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  venue?: string | null;
+  maxParticipants?: number | null;
+  sortOrder?: number;
+}): Promise<string> {
+  const { data, error } = await supabase
+    .from('event_activities')
+    .insert({
+      event_id: input.eventId,
+      community_id: input.communityId ?? COMMUNITY_ID,
+      created_by: input.createdBy,
+      title: input.title.trim(),
+      description: input.description?.trim() || null,
+      audience: input.audience,
+      activity_date: input.activityDate || null,
+      start_time: input.startTime || null,
+      end_time: input.endTime || null,
+      venue: input.venue?.trim() || null,
+      max_participants: input.maxParticipants ?? null,
+      sort_order: input.sortOrder ?? 0,
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return (data as { id: string }).id;
+}
+
+export async function updateActivity(
+  id: string,
+  patch: Partial<{
+    title: string; description: string | null; audience: Audience;
+    activity_date: string | null; start_time: string | null; end_time: string | null;
+    venue: string | null; max_participants: number | null;
+  }>,
+): Promise<void> {
+  const { error } = await supabase.from('event_activities').update(patch).eq('id', id);
+  if (error) throw error;
+}
+
+export async function deleteActivity(id: string): Promise<void> {
+  const { error } = await supabase.from('event_activities').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/**
+ * Enter somebody for an activity.
+ *
+ * The name is given rather than looked up, because the commonest entry is a
+ * parent signing up a child who has no account of their own. The capacity
+ * check lives in a trigger (0086), so two people racing for the last place
+ * cannot both win it.
+ */
+export async function joinActivity(input: {
+  activityId: string;
+  userId: string;
+  participantName: string;
+  flat?: string | null;
+  note?: string | null;
+}): Promise<void> {
+  const { error } = await supabase.from('event_activity_participants').insert({
+    activity_id: input.activityId,
+    added_by: input.userId,
+    participant_name: input.participantName.trim(),
+    flat: input.flat?.trim() || null,
+    note: input.note?.trim() || null,
+  });
+  if (error) throw error;
+}
+
+export async function leaveActivity(participantId: string): Promise<void> {
+  const { error } = await supabase.from('event_activity_participants').delete().eq('id', participantId);
+  if (error) throw error;
+}
+
+/** Upload the picture that heads the celebration. */
+export async function uploadEventCover(localUri: string, eventId: string): Promise<string> {
+  return uploadContentPhoto(localUri, `events/${eventId}/cover.jpg`);
 }

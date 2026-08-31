@@ -44,6 +44,9 @@ export default function ContributionsScreen() {
   const [editAmount, setEditAmount] = useState('');
   const [editMethod, setEditMethod] = useState<PayMethod>('upi');
   const [editNote, setEditNote] = useState('');
+  const [editName, setEditName] = useState('');
+  const [editFlat, setEditFlat] = useState('');
+  const [addingNew, setAddingNew] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -102,21 +105,42 @@ export default function ContributionsScreen() {
   };
 
   const openEdit = (row: Contribution) => {
+    setAddingNew(false);
     setEditing(row);
     setEditAmount(String(row.amount ?? ''));
     setEditMethod(row.method ?? 'upi');
     setEditNote(row.note ?? '');
+    setEditName(row.contributor_name ?? row.contributor?.name ?? '');
+    setEditFlat(row.flat);
+  };
+
+  const openAdd = () => {
+    if (!event) return;
+    setAddingNew(true);
+    setEditing({
+      id: '', event_id: event.id, community_id: event.community_id,
+      flat: '', contributor_user_id: null, amount: 0, status: 'pending',
+      method: null, note: null, recorded_by: null, created_at: '', received_at: null,
+    } as Contribution);
+    setEditAmount('');
+    setEditMethod('cash');
+    setEditNote('');
+    setEditName('');
+    setEditFlat('');
   };
 
   const saveEdit = async (status: ContributionStatus) => {
     if (!editing || !userId || !event || saving) return;
+    // A row is keyed by its flat, so a new one without a flat has nowhere to go.
+    if (!editFlat.trim() && !editing.flat) { toast.show('Which flat?'); return; }
     setSaving(true);
     try {
       await upsertContribution({
         eventId: event.id,
         communityId,
-        flat: editing.flat,
+        flat: (editFlat.trim() || editing.flat),
         contributorUserId: editing.contributor_user_id,
+        contributorName: editName || null,
         amount: Number(editAmount) || 0,
         status,
         method: status === 'received' ? editMethod : null,
@@ -211,11 +235,19 @@ export default function ContributionsScreen() {
                 Build the list from your resident directory, then mark each flat as it pays.
               </Text>
               {canManage && !locked ? (
-                <Button label="Build flat list" icon="people" size="md" loading={busy} onPress={buildRoster} />
+                <View className="mt-4 w-full gap-2 px-8">
+                  <Button label="Add a contribution" icon="add" size="md" onPress={openAdd} />
+                  <Button label="Build flat list from directory" variant="outline" size="md" loading={busy} onPress={buildRoster} />
+                </View>
               ) : null}
             </View>
           ) : (
             <>
+              {canManage && !locked ? (
+                <View className="mb-3">
+                  <Button label="Add a contribution" icon="add" variant="outline" size="sm" onPress={openAdd} />
+                </View>
+              ) : null}
               {canManage && !locked ? (
                 <Pressable
                   onPress={buildRoster}
@@ -243,8 +275,10 @@ export default function ContributionsScreen() {
 
                       <View className="min-w-0 flex-1">
                         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>
-                          {row.flat}
-                          {row.contributor?.name ? ` · ${row.contributor.name}` : ''}
+                          {row.contributor_name || row.contributor?.name || row.flat}
+                          {(row.contributor_name || row.contributor?.name) ? (
+                            <Text className="font-sans text-faint"> · {row.flat}</Text>
+                          ) : null}
                         </Text>
                         <View className="mt-0.5 flex-row items-center gap-1.5">
                           <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: c.accentSoft }}>
@@ -275,7 +309,7 @@ export default function ContributionsScreen() {
       <Sheet
         visible={!!editing}
         onClose={() => setEditing(null)}
-        title={editing ? `Flat ${editing.flat}` : 'Contribution'}
+        title={addingNew ? 'Add a contribution' : editing ? `Flat ${editing.flat}` : 'Contribution'}
         footer={
           <View className="gap-2">
             <Button label="Mark received" icon="checkmark" fullWidth loading={saving} onPress={() => saveEdit('received')} />
@@ -290,6 +324,25 @@ export default function ContributionsScreen() {
           </View>
         }
       >
+        {/* The name is written down, not looked up. Most flats have no Aangan
+            account, so deriving it left a treasurer reconciling cash against
+            bare flat numbers. */}
+        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Name</Text>
+        <TextInput
+          value={editName} onChangeText={setEditName}
+          placeholder="Who paid" placeholderTextColor={c.faint}
+          className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink"
+          style={{ outline: 'none' } as any}
+        />
+
+        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Flat</Text>
+        <TextInput
+          value={editFlat} onChangeText={setEditFlat}
+          placeholder="e.g. 149" placeholderTextColor={c.faint}
+          className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink"
+          style={{ outline: 'none' } as any}
+        />
+
         <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Amount</Text>
         <TextInput
           value={editAmount} onChangeText={setEditAmount} keyboardType="numeric"

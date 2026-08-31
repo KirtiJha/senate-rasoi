@@ -16,7 +16,7 @@ import {
 import { haptics } from '../../lib/haptics';
 import { openPhotoPicker } from '../../lib/photo';
 import { useThemeColors } from '../../theme';
-import { Button, Sheet, Touchable } from '../ui';
+import { Button, PhotoViewer, Sheet, Touchable } from '../ui';
 
 /**
  * The written half of a celebration: the schedule, what is still needed, who
@@ -38,6 +38,51 @@ import { Button, Sheet, Touchable } from '../ui';
 
 const MAX_PHOTOS = 4;
 
+/**
+ * Starting points, because a blank box is the reason a section never gets
+ * written. Each is a heading and a skeleton the committee edits down — the
+ * timings and amounts are theirs, the shape of the thing is not worth
+ * retyping for every celebration.
+ *
+ * "Blank" stays first-class: a society will want a section nobody predicted,
+ * and a template list that cannot be escaped is worse than no list.
+ */
+const TEMPLATES: { label: string; title: string; body: string }[] = [
+  {
+    label: 'Sponsors',
+    title: 'Thank you to our sponsors',
+    body: [
+      'Name & Family (flat) — what they sponsored',
+      '',
+      'Further sponsors are welcome — please speak to the committee.',
+    ].join('\n'),
+  },
+  {
+    label: 'What we need',
+    title: 'What is still needed',
+    body: [
+      'Item — estimated cost — who is arranging it',
+      '',
+      'If you can help with any of these, tell the committee.',
+    ].join('\n'),
+  },
+  {
+    label: 'Prasad',
+    title: 'Prasad contribution',
+    body: 'If you would like to prepare modak, laddoo or any other prasad, please confirm with the committee so we know the count.',
+  },
+  {
+    label: 'Rules',
+    title: 'Rules and instructions',
+    body: ['Age groups:', 'What to bring:', 'Where to gather:'].join('\n'),
+  },
+  {
+    label: 'Notice',
+    title: 'Please note',
+    body: '',
+  },
+];
+
 export function DetailsTab({
   eventId,
   communityId,
@@ -54,6 +99,7 @@ export function DetailsTab({
 
   const [notes, setNotes] = useState<EventNote[] | null>(null);
   const [editing, setEditing] = useState<EventNote | 'new' | null>(null);
+  const [viewing, setViewing] = useState<{ photos: string[]; index: number } | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -97,7 +143,7 @@ export function DetailsTab({
           <Text className="font-sans-sb mt-3 text-[15px] text-ink">Nothing written yet</Text>
           <Text className="font-sans mt-1 text-center text-[13px] leading-[19px]" style={{ color: c.subtle }}>
             {canManage
-              ? 'Add the schedule, what is still needed, or a thank-you to the sponsors — with photos if you have them.'
+              ? 'Sponsors, what is still needed, rules — anything that is words rather than a timetable. Timings go in Programme.'
               : 'The committee will put the schedule and details here.'}
           </Text>
         </View>
@@ -109,6 +155,7 @@ export function DetailsTab({
             canManage={canManage}
             onEdit={() => setEditing(n)}
             onDelete={() => remove(n)}
+            onOpenPhoto={(i) => setViewing({ photos: n.photo_urls, index: i })}
           />
         ))
       )}
@@ -129,6 +176,12 @@ export function DetailsTab({
         onClose={() => setEditing(null)}
         onSaved={() => { setEditing(null); load(); }}
       />
+
+      <PhotoViewer
+        photos={viewing?.photos ?? null}
+        index={viewing?.index ?? 0}
+        onClose={() => setViewing(null)}
+      />
     </View>
   );
 }
@@ -138,11 +191,13 @@ function NoteCard({
   canManage,
   onEdit,
   onDelete,
+  onOpenPhoto,
 }: {
   note: EventNote;
   canManage: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  onOpenPhoto: (index: number) => void;
 }) {
   const c = useThemeColors();
 
@@ -189,12 +244,16 @@ function NoteCard({
           className="mt-3"
           contentContainerStyle={{ gap: 8 }}
         >
-          {note.photo_urls.map((url) => (
-            <Image
-              key={url}
-              source={{ uri: url }}
-              style={{ width: 140, height: 140, borderRadius: 12, backgroundColor: c.inset }}
-            />
+          {note.photo_urls.map((url, i) => (
+            <Touchable key={url} onPress={() => onOpenPhoto(i)}
+              accessibilityRole="button" accessibilityLabel="Open photo">
+              <View pointerEvents="none">
+                <Image
+                  source={{ uri: url }}
+                  style={{ width: 140, height: 140, borderRadius: 12, backgroundColor: c.inset }}
+                />
+              </View>
+            </Touchable>
           ))}
         </ScrollView>
       ) : null}
@@ -299,10 +358,34 @@ function NoteEditor({
   return (
     <Sheet visible={open} onClose={onClose} title={note ? 'Edit section' : 'Add a section'}>
       <View className="gap-3">
+        {/* Only when creating: on an edit these would overwrite real words. */}
+        {!note ? (
+          <View>
+            <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">
+              Start from
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+              {TEMPLATES.map((t) => (
+                <Touchable
+                  key={t.label}
+                  onPress={() => { setTitle(t.title); setBody(t.body); }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Use the ${t.label} template`}
+                >
+                  <View pointerEvents="none" className="rounded-full px-3.5 py-2"
+                    style={{ backgroundColor: c.inset, borderWidth: 1, borderColor: c.line }}>
+                    <Text className="font-sans-sb text-[12.5px]" style={{ color: c.muted }}>{t.label}</Text>
+                  </View>
+                </Touchable>
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
+
         <TextInput
           value={title}
           onChangeText={setTitle}
-          placeholder="Heading — e.g. Celebration schedule"
+          placeholder="Heading — e.g. Please note"
           placeholderTextColor={c.faint}
           maxLength={80}
           className="rounded-xl px-3 py-2.5 text-[15px] text-ink"

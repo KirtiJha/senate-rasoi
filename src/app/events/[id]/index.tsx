@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
-import { Avatar, Button, Container, ScreenHeader, Segmented, Sheet } from '../../../components/ui';
+import { Avatar, Button, Container, ScreenHeader, Segmented, Sheet, Touchable, formatTimeLabel } from '../../../components/ui';
 import { DetailsTab } from '../../../components/celebrations/DetailsTab';
+import { ProgrammeTab } from '../../../components/celebrations/ProgrammeTab';
 import { MoneyTab } from '../../../components/celebrations/MoneyTab';
 import { TasksTab } from '../../../components/celebrations/TasksTab';
 import { useAuth } from '../../../context/auth';
@@ -21,6 +23,7 @@ import { useThemeColors } from '../../../theme';
 const TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'details', label: 'Details' },
+  { key: 'programme', label: 'Programme' },
   { key: 'tasks', label: 'Tasks' },
   { key: 'money', label: 'Money' },
 ] as const;
@@ -47,7 +50,7 @@ export default function EventDetailScreen() {
   const [loading, setLoading] = useState(true);
 
   const [showTeam, setShowTeam] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'details' | 'tasks' | 'money'>('overview');
+  const [tab, setTab] = useState<'overview' | 'details' | 'programme' | 'tasks' | 'money'>('overview');
   const [showStatus, setShowStatus] = useState(false);
   const [residents, setResidents] = useState<Resident[]>([]);
 
@@ -152,7 +155,21 @@ export default function EventDetailScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader icon="sparkles-outline" title={event.title} showBack hideSociety />
+      <ScreenHeader
+        icon="sparkles-outline"
+        title={event.title}
+        showBack
+        hideSociety
+        right={canManage ? (
+          <Touchable onPress={() => router.push(`/events/${event.id}/edit` as never)}
+            accessibilityRole="button" accessibilityLabel="Edit celebration">
+            <View pointerEvents="none" className="h-9 w-9 items-center justify-center rounded-full"
+              style={{ backgroundColor: c.inset }}>
+              <Ionicons name="pencil" size={15} color={c.muted} />
+            </View>
+          </Touchable>
+        ) : undefined}
+      />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
@@ -160,7 +177,14 @@ export default function EventDetailScreen() {
             <Segmented items={TABS} value={tab} onChange={setTab} />
           </View>
 
-          {tab === 'details' ? (
+          {tab === 'programme' ? (
+            <ProgrammeTab
+              eventId={event.id}
+              communityId={event.community_id}
+              eventDate={event.event_date}
+              canManage={canManage}
+            />
+          ) : tab === 'details' ? (
             <DetailsTab
               eventId={event.id}
               communityId={event.community_id}
@@ -183,6 +207,16 @@ export default function EventDetailScreen() {
             />
           ) : (
           <>
+          {event.cover_photo_url ? (
+            <View className="mb-4 overflow-hidden rounded-2xl" style={{ height: 180, backgroundColor: c.inset }}>
+              <Image
+                source={{ uri: event.cover_photo_url }}
+                style={{ width: '100%', height: '100%' }}
+                contentFit="cover"
+              />
+            </View>
+          ) : null}
+
           {/* Status + date */}
           <View className="flex-row flex-wrap items-center gap-1.5">
             <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.accentSoft }}>
@@ -191,6 +225,14 @@ export default function EventDetailScreen() {
             {event.event_date ? (
               <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.inset }}>
                 <Text className="text-[11px] font-sans-sb text-muted">{formatDate(event.event_date)}</Text>
+              </View>
+            ) : null}
+            {event.start_time ? (
+              <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.inset }}>
+                <Text className="text-[11px] font-sans-sb text-muted">
+                  🕐 {formatTimeLabel(event.start_time.slice(0, 5))}
+                  {event.end_time ? ` – ${formatTimeLabel(event.end_time.slice(0, 5))}` : ''}
+                </Text>
               </View>
             ) : null}
             {event.venue ? (
