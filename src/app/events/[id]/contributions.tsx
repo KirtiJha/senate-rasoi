@@ -4,7 +4,6 @@ import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Button, Container, ScreenHeader, Sheet } from '../../../components/ui';
 import { useAuth } from '../../../context/auth';
-import { useConfirm } from '../../../context/confirm';
 import { useToast } from '../../../context/toast';
 import { fetchDirectory } from '../../../lib/directory';
 import {
@@ -28,7 +27,6 @@ export default function ContributionsScreen() {
   const c = useThemeColors();
   const ACCENT = c.accent;
   const toast = useToast();
-  const confirm = useConfirm();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { userId, communityId, isAdmin } = useAuth();
 
@@ -77,34 +75,11 @@ export default function ContributionsScreen() {
     return rows;
   }, [rows, filter]);
 
-  // Seed one row per flat from the resident directory.
-  const buildRoster = async () => {
-    if (!event || !communityId || !userId) return;
-    const ok = await confirm({
-      title: 'Build the flat list?',
-      message: 'Adds every flat from the resident directory to this list. Flats already here are left untouched.',
-      confirmLabel: 'Build list',
-    });
-    if (!ok) return;
-    setBusy(true);
-    try {
-      const residents = await fetchDirectory(communityId, userId, !!isAdmin);
-      // One entry per flat; if two residents share a flat, the first with an
-      // account is used so the contribution can't be collected twice.
-      const byFlat = new Map<string, { flat: string; userId: string | null }>();
-      for (const r of residents) {
-        const flat = [r.block, r.flat].filter(Boolean).join('-').trim();
-        if (!flat) continue;
-        const existing = byFlat.get(flat);
-        if (!existing || (!existing.userId && r.userId)) byFlat.set(flat, { flat, userId: r.userId });
-      }
-      const added = await generateRoster(
-        event.id, communityId, [...byFlat.values()], event.suggested_contribution,
-      );
-      await load();
-      toast.show(added > 0 ? `Added ${added} flats` : 'Every flat is already listed');
-    } catch { toast.show('Could not build the list'); } finally { setBusy(false); }
-  };
+  // No roster is generated from the directory any more. With 244 flats, most
+  // of them still unoccupied, seeding a row per flat produced hundreds of
+  // entries for people who do not live here yet — and every one of them read
+  // as an unpaid debt. Contributions are added as they come in instead.
+  // `generateRoster` remains in the lib for a society where that fits.
 
   const openEdit = (row: Contribution) => {
     setAddingNew(false);
@@ -243,14 +218,13 @@ export default function ContributionsScreen() {
           {rows.length === 0 ? (
             <View className="items-center py-16">
               <Ionicons name="people-outline" size={40} color={c.faint} />
-              <Text className="mt-3 font-sans-sb text-[15px] text-ink">No flats listed yet</Text>
+              <Text className="mt-3 font-sans-sb text-[15px] text-ink">Nothing collected yet</Text>
               <Text className="font-sans mt-1 max-w-xs text-center text-[13px] text-muted">
-                Build the list from your resident directory, then mark each flat as it pays.
+                Add each contribution as it comes in — name, flat and amount.
               </Text>
               {canManage && !locked ? (
-                <View className="mt-4 w-full gap-2 px-8">
+                <View className="mt-4 w-full px-8">
                   <Button label="Add a contribution" icon="add" size="md" onPress={openAdd} />
-                  <Button label="Build flat list from directory" variant="outline" size="md" loading={busy} onPress={buildRoster} />
                 </View>
               ) : null}
             </View>
@@ -261,16 +235,6 @@ export default function ContributionsScreen() {
                   <Button label="Add a contribution" icon="add" variant="outline" size="sm" onPress={openAdd} />
                 </View>
               ) : null}
-              {canManage && !locked ? (
-                <Pressable
-                  onPress={buildRoster}
-                  className="mb-3 flex-row items-center justify-center gap-1.5 card py-2.5 active:opacity-70"
-                >
-                  <Ionicons name="refresh-outline" size={14} color={c.muted} />
-                  <Text className="text-[12px] font-sans-sb text-muted">Refresh flat list from directory</Text>
-                </Pressable>
-              ) : null}
-
               <View className="gap-2">
                 {visible.map((row) => {
                   const m = STATUS_META[row.status];
