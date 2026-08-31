@@ -31,6 +31,7 @@ import {
   uploadItemPhoto,
 } from '../../lib/borrow';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
+import { MessageNeighbour } from '../../components/MessageNeighbour';
 import { waLink } from '../../lib/listings';
 import { useThemeColors } from '../../theme';
 
@@ -303,17 +304,27 @@ export default function LendItemDetailScreen() {
                 )
               ) : (
                 /* kind='request' — owner needs to borrow; non-owner can offer to help */
-                <Button
-                  label="I can help! Message them"
-                  icon="logo-whatsapp"
-                  variant="whatsapp"
-                  size="lg"
-                  fullWidth
-                  onPress={() => wa ? openUrl(waLink(wa, `Hi ${ownerName}, I saw your request for "${item.title}" on Aangan — I have one you can borrow! 🤝`)) : null}
-                />
+                <>
+                  <MessageNeighbour userId={item.owner_user_id} label="I can help! Message them" />
+                  {wa ? (
+                    <Button
+                      label="Reply on WhatsApp"
+                      icon="logo-whatsapp"
+                      variant="whatsapp"
+                      size="lg"
+                      fullWidth
+                      onPress={() => openUrl(waLink(wa, `Hi ${ownerName}, I saw your request for "${item.title}" on Aangan — I have one you can borrow! 🤝`))}
+                    />
+                  ) : null}
+                </>
               )}
-              {wa && isOffer ? (
-                <Button label="Message the owner" icon="logo-whatsapp" variant="whatsapp" size="lg" fullWidth onPress={() => openUrl(waLink(wa, `Hi ${ownerName}, about your "${item.title}" on Aangan…`))} />
+              {isOffer ? (
+                <>
+                  <MessageNeighbour userId={item.owner_user_id} label="Message the owner" />
+                  {wa ? (
+                    <Button label="Ask on WhatsApp" icon="logo-whatsapp" variant="whatsapp" size="lg" fullWidth onPress={() => openUrl(waLink(wa, `Hi ${ownerName}, about your "${item.title}" on Aangan…`))} />
+                  ) : null}
+                </>
               ) : null}
             </View>
           )}

@@ -7,11 +7,25 @@ import { ListingRow } from '../../lib/types';
 import { useThemeColors } from '../../theme';
 import { Avatar, Button, IconButton } from '../ui';
 
+/**
+ * WHATSAPP IS A WAY TO REACH SOMEBODY, NOT THE ONLY ONE.
+ *
+ * This sheet used to end in a single green button. That made WhatsApp
+ * compulsory for every one of the fifteen listing categories — you could not
+ * join a carpool, ask about a tuition or answer a lost-and-found post without
+ * leaving the app, and a resident who does not use WhatsApp, or whose
+ * neighbour never added a number, simply had no way through at all.
+ *
+ * The in-app path already existed and was never offered: an inquiry row
+ * notifies the owner on its own. So sending in Aangan is the primary action
+ * and always works, and WhatsApp is an extra that appears only when there is
+ * actually a number to open it with.
+ */
 interface InquiryModalProps {
   listing: ListingRow | null;
   senderName: string;
   onClose: () => void;
-  onConfirm: (listing: ListingRow, message: string) => void;
+  onConfirm: (listing: ListingRow, message: string, via: 'app' | 'whatsapp') => void;
 }
 
 export function InquiryModal({ listing, senderName, onClose, onConfirm }: InquiryModalProps) {
@@ -26,6 +40,13 @@ export function InquiryModal({ listing, senderName, onClose, onConfirm }: Inquir
 
   const cat = getService(listing.category);
   const photo = listing.photos[0];
+  // Same resolution the link builder uses, so the button never appears
+  // pointing at a number that does not exist.
+  const hasWhatsApp = !!(
+    listing.is_referral
+      ? listing.referral_phone
+      : listing.contact_whatsapp ?? listing.owner?.whatsapp
+  );
   const ownerName = listing.is_referral
     ? listing.referral_name ?? listing.owner?.name ?? ''
     : listing.owner?.name ?? '';
@@ -97,15 +118,30 @@ export function InquiryModal({ listing, senderName, onClose, onConfirm }: Inquir
           </View>
 
           <Button
-            label={`${cat?.ctaLabel ?? 'Contact'} via WhatsApp`}
-            icon="logo-whatsapp"
-            variant="whatsapp"
+            label={cat?.ctaLabel ?? 'Send'}
+            icon="send"
             size="lg"
             fullWidth
-            onPress={() => onConfirm(listing, message)}
+            onPress={() => onConfirm(listing, message, 'app')}
           />
+
+          {hasWhatsApp ? (
+            <View className="mt-2">
+              <Button
+                label="Open WhatsApp instead"
+                icon="logo-whatsapp"
+                variant="whatsapp"
+                size="lg"
+                fullWidth
+                onPress={() => onConfirm(listing, message, 'whatsapp')}
+              />
+            </View>
+          ) : null}
+
           <Text className="font-sans mt-2.5 text-center text-[11px] leading-4 text-faint">
-            Opens WhatsApp and notifies {ownerName} on Aangan.
+            {hasWhatsApp
+              ? `Either way ${ownerName} is notified on Aangan.`
+              : `${ownerName} is notified on Aangan and can reply here.`}
           </Text>
         </Pressable>
       </KeyboardAvoidingView>

@@ -240,12 +240,16 @@ export default function PropertyDetailScreen() {
           {/* Actions */}
           <View className="mt-1 gap-2.5">
             {wa ? (
-              <Button label="Contact owner for price" icon="logo-whatsapp" variant="whatsapp" size="lg" fullWidth onPress={() => openUrl(waLink(wa, contactMsg))} />
-            ) : phone ? (
-              <Button label="Call owner for price" icon="call" size="lg" fullWidth onPress={() => openUrl(`tel:${phone}`)} />
-            ) : (
-              <Text className="font-sans text-center text-[12px] text-faint">The owner hasn't added a contact number.</Text>
-            )}
+              <Button label="Ask on WhatsApp" icon="logo-whatsapp" variant="whatsapp" size="lg" fullWidth onPress={() => openUrl(waLink(wa, contactMsg))} />
+            ) : null}
+            {phone ? (
+              <Button label="Call owner" icon="call" variant="outline" size="lg" fullWidth onPress={() => openUrl(`tel:${phone}`)} />
+            ) : null}
+            {!wa && !phone ? (
+              <Text className="font-sans text-center text-[12px] text-faint">
+                No phone number on this listing — use the chat above to ask the owner.
+              </Text>
+            ) : null}
             {!isOwner ? (
               <Button label="Recommend a buyer / tenant" icon="people-outline" variant="outline" size="lg" fullWidth onPress={() => setShowRefer(true)} />
             ) : null}

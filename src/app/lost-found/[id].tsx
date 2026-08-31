@@ -25,6 +25,7 @@ import {
   uploadLostFoundPhoto,
 } from '../../lib/lostFound';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
+import { MessageNeighbour } from '../../components/MessageNeighbour';
 import { waLink } from '../../lib/listings';
 import { useThemeColors } from '../../theme';
 
@@ -265,28 +266,32 @@ export default function LostFoundDetailScreen() {
                   </Text>
                   <Text className="font-sans text-[12px] text-muted">The owner has marked this as resolved.</Text>
                 </View>
-              ) : wa ? (
-                <Button
-                  label={isLost ? 'I think I saw it!' : 'Is this mine?'}
-                  icon="logo-whatsapp"
-                  variant="whatsapp"
-                  size="lg"
-                  fullWidth
-                  onPress={() => {
-                    const msg = isLost
-                      ? `Hi ${ownerName}, I saw your post on Aangan about a lost "${item.title}". I think I may have seen it!`
-                      : `Hi ${ownerName}, I saw your post on Aangan about a found "${item.title}". I think this might be mine!`;
-                    openUrl(waLink(wa, msg));
-                  }}
-                />
               ) : (
-                <View className="items-center card p-4">
-                  <Text className="font-sans text-[13px] text-muted">
-                    {isLost
-                      ? 'Keep an eye out and check back with the poster if you find it.'
-                      : 'Contact the poster through your society group if this is yours.'}
-                  </Text>
-                </View>
+                <>
+                  {/* Somebody who recognises a lost phone must be able to say so
+                      immediately. This used to require WhatsApp, and without a
+                      number it told them to go and use their society group —
+                      the group this app exists to replace. */}
+                  <MessageNeighbour
+                    userId={item.owner_user_id}
+                    label={isLost ? 'I think I saw it!' : 'Is this mine?'}
+                  />
+                  {wa ? (
+                    <Button
+                      label="Say it on WhatsApp"
+                      icon="logo-whatsapp"
+                      variant="whatsapp"
+                      size="lg"
+                      fullWidth
+                      onPress={() => {
+                        const msg = isLost
+                          ? `Hi ${ownerName}, I saw your post on Aangan about a lost "${item.title}". I think I may have seen it!`
+                          : `Hi ${ownerName}, I saw your post on Aangan about a found "${item.title}". I think this might be mine!`;
+                        openUrl(waLink(wa, msg));
+                      }}
+                    />
+                  ) : null}
+                </>
               )}
             </View>
           )}

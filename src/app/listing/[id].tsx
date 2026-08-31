@@ -98,17 +98,27 @@ export default function ListingDetailScreen() {
     finally { setBusy(false); }
   };
 
-  const handleInquiryConfirm = async (l: ListingRow, message: string) => {
+  // The inquiry is recorded either way — that is what notifies the owner and
+  // gives them somewhere to reply. WhatsApp is only an extra hop on top of it,
+  // taken when the resident asks for it.
+  const handleInquiryConfirm = async (l: ListingRow, message: string, via: 'app' | 'whatsapp') => {
     setInquiryListing(null);
     haptics.success();
-    const senderName = profile?.name ?? 'A neighbour';
-    const url = buildInquiryWhatsAppLink(l, senderName, message);
-    if (Platform.OS === 'web') window.open(url, '_blank');
-    else Linking.openURL(url);
+
     if (userId) {
       sendInquiry(l.id, userId, message || null).catch(console.error);
     }
-    toast.show('Opening WhatsApp 📲');
+
+    if (via === 'whatsapp') {
+      const senderName = profile?.name ?? 'A neighbour';
+      const url = buildInquiryWhatsAppLink(l, senderName, message);
+      if (Platform.OS === 'web') window.open(url, '_blank');
+      else Linking.openURL(url);
+      toast.show('Opening WhatsApp 📲');
+      return;
+    }
+
+    toast.show('Sent — they will see it in Aangan');
   };
 
   const handleDelete = () => {
