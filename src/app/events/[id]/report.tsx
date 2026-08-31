@@ -69,7 +69,7 @@ export default function EventReportScreen() {
         <ScreenHeader icon="stats-chart-outline" title="Accounts" showBack hideSociety />
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="alert-circle-outline" size={48} color={c.faint} />
-          <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Function removed</Text>
+          <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Celebration removed</Text>
         </View>
       </View>
     );

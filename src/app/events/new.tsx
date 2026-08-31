@@ -28,7 +28,7 @@ export default function NewEventScreen() {
 
   const submit = async () => {
     if (!userId) return;
-    if (!title.trim()) return toast.show('Give the function a name');
+    if (!title.trim()) return toast.show('Give the celebration a name');
     if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return toast.show('Date must look like 2026-11-08');
     setSaving(true);
     try {
@@ -42,7 +42,7 @@ export default function NewEventScreen() {
         budgetAmount: budget ? Number(budget) : null,
         suggestedContribution: perFlat ? Number(perFlat) : null,
       });
-      toast.show('Function created 🎉 — add your team next');
+      toast.show('Celebration created 🎉 — add your team next');
       router.replace(`/events/${ev.id}` as any);
     } catch (e) {
       toast.show(e instanceof Error ? e.message : 'Could not create');

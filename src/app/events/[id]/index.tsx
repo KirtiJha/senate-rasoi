@@ -2,7 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
-import { Avatar, Button, Container, ScreenHeader, Sheet } from '../../../components/ui';
+import { Avatar, Button, Container, ScreenHeader, Segmented, Sheet } from '../../../components/ui';
+import { MoneyTab } from '../../../components/celebrations/MoneyTab';
+import { TasksTab } from '../../../components/celebrations/TasksTab';
 import { useAuth } from '../../../context/auth';
 import { useConfirm } from '../../../context/confirm';
 import { useToast } from '../../../context/toast';
@@ -14,6 +16,12 @@ import {
 } from '../../../lib/events';
 import { useThemeColors } from '../../../theme';
 
+
+const TABS = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'tasks', label: 'Tasks' },
+  { key: 'money', label: 'Money' },
+] as const;
 
 const ROLE_LABEL: Record<TeamRole, string> = {
   lead: 'Lead',
@@ -37,6 +45,7 @@ export default function EventDetailScreen() {
   const [loading, setLoading] = useState(true);
 
   const [showTeam, setShowTeam] = useState(false);
+  const [tab, setTab] = useState<'overview' | 'tasks' | 'money'>('overview');
   const [showStatus, setShowStatus] = useState(false);
   const [residents, setResidents] = useState<Resident[]>([]);
 
@@ -63,6 +72,9 @@ export default function EventDetailScreen() {
 
   const myRole = team.find((t) => t.user_id === userId)?.role ?? null;
   const isLead = myRole === 'lead' || !!isAdmin;
+  // Mirrors can_manage_event() in 0082, so the UI never offers an action the
+  // database will refuse.
+  const canManage = !!myRole || !!isAdmin;
   const totals = computeTotals(event, contributions, expenses);
 
   const openTeamPicker = async () => {
@@ -96,7 +108,7 @@ export default function EventDetailScreen() {
     if (!event) return;
     const ok = await confirm({
       title: 'Delete function',
-      message: 'This removes the function and all its contributions and expenses. This cannot be undone.',
+      message: 'This removes the celebration and all its contributions and expenses. This cannot be undone.',
       confirmLabel: 'Delete', destructive: true,
     });
     if (!ok) return;
@@ -109,7 +121,7 @@ export default function EventDetailScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="sparkles-outline" title="Function" showBack hideSociety />
+        <ScreenHeader icon="sparkles-outline" title="Celebration" showBack hideSociety />
         <View className="flex-1 items-center justify-center"><ActivityIndicator color={c.muted} /></View>
       </View>
     );
@@ -119,10 +131,10 @@ export default function EventDetailScreen() {
     const goBack = () => router.canGoBack() ? router.back() : router.replace('/events' as any);
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="sparkles-outline" title="Function" showBack hideSociety />
+        <ScreenHeader icon="sparkles-outline" title="Celebration" showBack hideSociety />
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="alert-circle-outline" size={48} color={c.faint} />
-          <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Function removed</Text>
+          <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">Celebration removed</Text>
           <Pressable onPress={goBack} className="mt-5 rounded-xl border border-line bg-surface px-5 py-2.5 active:bg-inset">
             <Text className="font-sans-sb text-[14px] text-ink">Go back</Text>
           </Pressable>
@@ -142,6 +154,27 @@ export default function EventDetailScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
+          <View className="mb-4">
+            <Segmented items={TABS} value={tab} onChange={setTab} />
+          </View>
+
+          {tab === 'tasks' ? (
+            <TasksTab
+              eventId={event.id}
+              communityId={event.community_id}
+              team={team}
+              canManage={canManage}
+            />
+          ) : tab === 'money' ? (
+            <MoneyTab
+              event={event}
+              contributions={contributions}
+              totals={totals}
+              canManage={canManage}
+              onChanged={load}
+            />
+          ) : (
+          <>
           {/* Status + date */}
           <View className="flex-row flex-wrap items-center gap-1.5">
             <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.accentSoft }}>
@@ -195,22 +228,10 @@ export default function EventDetailScreen() {
             ) : null}
           </View>
 
-          {/* Where to go */}
-          <View className="mt-4 gap-2">
-            <NavRow
-              icon="wallet-outline" color={c.accent}
-              title="Contributions"
-              sub={totals.flatsTotal ? `${totals.flatsPaid}/${totals.flatsTotal} flats · ${rupees(totals.collected)}` : 'Not set up yet'}
-              onPress={() => router.push(`/events/${event.id}/contributions` as any)}
-              c={c}
-            />
-            <NavRow
-              icon="receipt-outline" color={c.danger}
-              title="Expenses & bills"
-              sub={expenses.length ? `${expenses.length} entries · ${rupees(totals.spent)}` : 'Nothing recorded yet'}
-              onPress={() => router.push(`/events/${event.id}/expenses` as any)}
-              c={c}
-            />
+          {/* The accounts report stays here: it is the thing a resident who is
+              not on the committee comes looking for, and making them go via a
+              Money tab they cannot edit would be strange. */}
+          <View className="mt-4">
             <NavRow
               icon="stats-chart-outline" color={ACCENT}
               title="Accounts report"
@@ -269,16 +290,18 @@ export default function EventDetailScreen() {
               {isAdmin ? (
                 <Pressable onPress={removeEvent} className="mt-2 flex-row items-center justify-center gap-1.5 py-2 active:opacity-60">
                   <Ionicons name="trash-outline" size={15} color={c.danger} />
-                  <Text className="text-[13px] font-sans-sb text-nonveg">Delete function</Text>
+                  <Text className="text-[13px] font-sans-sb text-nonveg">Delete celebration</Text>
                 </Pressable>
               ) : null}
             </View>
           ) : null}
+          </>
+          )}
         </Container>
       </ScrollView>
 
       {/* Status sheet */}
-      <Sheet visible={showStatus} onClose={() => setShowStatus(false)} title="Function status">
+      <Sheet visible={showStatus} onClose={() => setShowStatus(false)} title="Celebration status">
         <Text className="font-sans mb-3 text-[13px] leading-[19px] text-muted">
           Moving to <Text className="font-sans-sb">Collecting</Text> notifies everyone that
           contributions are open. <Text className="font-sans-sb">Completed</Text> publishes the
@@ -307,7 +330,7 @@ export default function EventDetailScreen() {
       {/* Team picker */}
       <Sheet visible={showTeam} onClose={() => setShowTeam(false)} title="Core team">
         <Text className="font-sans mb-3 text-[13px] leading-[19px] text-muted">
-          The <Text className="font-sans-sb">lead</Text> runs the function.
+          The <Text className="font-sans-sb">lead</Text> runs the celebration.
           The <Text className="font-sans-sb">treasurer</Text> is the only one who can confirm money received.
         </Text>
 
