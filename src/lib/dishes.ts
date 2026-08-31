@@ -38,6 +38,7 @@ export async function fetchDishes(communityId: string = COMMUNITY_ID): Promise<D
     .select('*')
     .eq('community_id', communityId)
     .gte('serve_date', today)
+    .is('withdrawn_at', null)
     .order('serve_date', { ascending: true })
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -236,11 +237,33 @@ export async function updateDish(
   return { photo_url };
 }
 
-// ── Remove your own dish (RLS: only owner or admin can delete) ──────
+/**
+ * Take a dish off the board.
+ *
+ * Deletes it outright when nobody has ordered — withdrawing an unsold dish is
+ * a normal thing to do and should be instant. Once someone has actually eaten,
+ * 0092 refuses the delete and this falls back to withdrawing: off the board,
+ * with the orders, payments and reviews kept.
+ *
+ * That guard exists because deleting a dish used to cascade through orders
+ * into dish_feedback, so a chef could raise their own rating by removing the
+ * dish that earned a bad one.
+ */
 export async function deleteDish(dishId: string): Promise<boolean> {
   const { data, error } = await supabase.from('dishes').delete().eq('id', dishId).select('id');
+  if (!error) return (data?.length ?? 0) > 0;
+
+  const blocked = /ordered|check_violation/i.test(error.message ?? '');
+  if (!blocked) throw error;
+
+  return withdrawDish(dishId);
+}
+
+/** Off the board, everything kept. */
+export async function withdrawDish(dishId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('withdraw_dish', { p_dish: dishId });
   if (error) throw error;
-  return (data?.length ?? 0) > 0;
+  return data === true;
 }
 
 // ── WhatsApp deep links (free "tap-to-notify") ──────────────────────

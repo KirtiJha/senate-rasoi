@@ -317,9 +317,12 @@ function ItemRow({
   c: ReturnType<typeof useThemeColors>;
 }) {
   const d = display(item);
+  const sold = item.kind === 'listing' && (item.raw as { status?: string }).status === 'sold';
 
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={onOpen} className="flex-row items-center gap-3 border-b border-line px-3 py-3 active:bg-inset">
+    <Pressable accessibilityRole="button" accessibilityLabel={d.title} onPress={onOpen}
+      className="flex-row items-center gap-3 border-b border-line px-3 py-3 active:bg-inset"
+      style={{ opacity: sold ? 0.55 : 1 }}>
       <View className="h-9 w-9 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: c.accentSoft }}>
         <Ionicons name={d.icon as any} size={18} color={c.accent} />
       </View>
@@ -338,16 +341,30 @@ function ItemRow({
       {isDesktop ? (
         <>
           <Text style={{ width: 130 }} className="text-[13px] font-sans-md text-muted" numberOfLines={1}>{d.catLabel}</Text>
-          <Text style={{ width: 100 }} className="text-[13px] font-sans-sb text-accent" numberOfLines={1}>{d.priceText}</Text>
-          <View className="flex-row justify-end gap-2" style={{ width: 186 }}>
+          <Text style={{ width: 100 }} className="text-[13px] font-sans-sb text-accent" numberOfLines={1}>
+            {sold ? '' : d.priceText}
+          </Text>
+          <View className="flex-row items-center justify-end gap-2" style={{ width: 186 }}>
+            {sold ? (
+              <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.inset }}>
+                <Text className="text-[11px] font-sans-sb uppercase" style={{ color: c.muted }}>Sold</Text>
+              </View>
+            ) : null}
             <RowBtn icon="open-outline" label={item.kind === 'dish' || item.kind === 'tiffin' ? 'Order' : 'View'} onPress={onOpen} c={c} />
-            <RowBtn icon="logo-whatsapp" label="Contact" onPress={onContact} c={c} whatsapp />
+            {sold ? null : <RowBtn icon="logo-whatsapp" label="Contact" onPress={onContact} c={c} whatsapp />}
           </View>
         </>
       ) : (
-        <Pressable onPress={onContact} hitSlop={8} className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: '#25D36618' }}>
-          <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
-        </Pressable>
+        sold ? (
+          <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.inset }}>
+            <Text className="text-[11px] font-sans-sb uppercase" style={{ color: c.muted }}>Sold</Text>
+          </View>
+        ) : (
+          <Pressable accessibilityRole="button" accessibilityLabel="Contact on WhatsApp" onPress={onContact} hitSlop={8}
+            className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: '#25D36618' }}>
+            <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
+          </Pressable>
+        )
       )}
     </Pressable>
   );
