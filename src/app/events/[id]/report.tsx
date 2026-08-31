@@ -6,7 +6,8 @@ import { Container, ScreenHeader } from '../../../components/ui';
 import { useAuth } from '../../../context/auth';
 import {
   Contribution, EVENT_STATUS_META, EXPENSE_CATEGORIES, EventTeamMember, Expense, SocietyEvent,
-  computeTotals, fetchContributions, fetchEvent, fetchExpenses, fetchTeam, rupees, subscribeEvent,
+  Sponsorship,
+  computeTotals, fetchContributions, fetchEvent, fetchExpenses, fetchSponsorships, fetchTeam, rupees, subscribeEvent,
 } from '../../../lib/events';
 import { useThemeColors } from '../../../theme';
 
@@ -33,19 +34,21 @@ export default function EventReportScreen() {
   const [team, setTeam] = useState<EventTeamMember[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [sponsors, setSponsors] = useState<Sponsorship[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAllFlats, setShowAllFlats] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
     try {
-      const [ev, t, cs, ex] = await Promise.all([
+      const [ev, t, cs, ex, sp] = await Promise.all([
         fetchEvent(id),
         fetchTeam(id).catch(() => []),
         fetchContributions(id).catch(() => []),
         fetchExpenses(id).catch(() => []),
+        fetchSponsorships(id).catch(() => []),
       ]);
-      setEvent(ev); setTeam(t); setContributions(cs); setExpenses(ex);
+      setEvent(ev); setTeam(t); setContributions(cs); setExpenses(ex); setSponsors(sp);
     } catch { /* keep */ } finally { setLoading(false); }
   }, [id]);
 
@@ -75,7 +78,7 @@ export default function EventReportScreen() {
     );
   }
 
-  const t = computeTotals(event, contributions, expenses);
+  const t = computeTotals(event, contributions, expenses, sponsors);
   const paid = contributions.filter((x) => x.status === 'received');
   const unpaid = contributions.filter((x) => x.status === 'pending' || x.status === 'initiated');
   const treasurer = team.find((x) => x.role === 'treasurer') ?? team.find((x) => x.role === 'lead');

@@ -14,7 +14,8 @@ import { useToast } from '../../../context/toast';
 import { Resident, fetchDirectory } from '../../../lib/directory';
 import {
   Contribution, EVENT_STATUS_META, EventStatus, EventTeamMember, Expense, SocietyEvent, TeamRole,
-  computeTotals, deleteEvent, fetchContributions, fetchEvent, fetchExpenses, fetchTeam,
+  Sponsorship,
+  computeTotals, deleteEvent, fetchContributions, fetchEvent, fetchExpenses, fetchSponsorships, fetchTeam,
   removeTeamMember, rupees, setTeamMember, subscribeEvent, updateEvent,
 } from '../../../lib/events';
 import { useThemeColors } from '../../../theme';
@@ -47,6 +48,7 @@ export default function EventDetailScreen() {
   const [team, setTeam] = useState<EventTeamMember[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [sponsors, setSponsors] = useState<Sponsorship[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [showTeam, setShowTeam] = useState(false);
@@ -60,12 +62,13 @@ export default function EventDetailScreen() {
       const ev = await fetchEvent(id);
       setEvent(ev);
       if (ev) {
-        const [t, cs, ex] = await Promise.all([
+        const [t, cs, ex, sp] = await Promise.all([
           fetchTeam(id).catch(() => []),
           fetchContributions(id).catch(() => []),
           fetchExpenses(id).catch(() => []),
+          fetchSponsorships(id).catch(() => []),
         ]);
-        setTeam(t); setContributions(cs); setExpenses(ex);
+        setTeam(t); setContributions(cs); setExpenses(ex); setSponsors(sp);
       }
     } catch { /* keep */ } finally { setLoading(false); }
   }, [id]);
@@ -80,7 +83,7 @@ export default function EventDetailScreen() {
   // Mirrors can_manage_event() in 0082, so the UI never offers an action the
   // database will refuse.
   const canManage = !!myRole || !!isAdmin;
-  const totals = computeTotals(event, contributions, expenses);
+  const totals = computeTotals(event, contributions, expenses, sponsors);
 
   const openTeamPicker = async () => {
     setShowTeam(true);

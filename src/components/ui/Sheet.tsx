@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn, FadeOut, SlideInDown, SlideOutDown,
@@ -12,6 +12,7 @@ import { haptics } from '../../lib/haptics';
 import { dur, ease, spring } from '../../lib/motion';
 import { useThemeColors } from '../../theme';
 import { useResponsive } from './Container';
+import { useKeyboardInset } from './KeyboardAvoider';
 
 /** Drag distance that commits to a close. */
 const DISMISS_PX = 110;
@@ -44,6 +45,10 @@ export function Sheet({
   const { isDesktop } = useResponsive();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
+  // Read from the JS Keyboard API rather than Reanimated: this sheet lives
+  // inside an RN Modal, which on Android is a separate native window where
+  // useAnimatedKeyboard reports nothing. See useKeyboardInset.
+  const kb = useKeyboardInset();
   const translateY = useSharedValue(0);
 
   const header = (
@@ -130,9 +135,7 @@ export function Sheet({
               },
             ]}
           >
-            <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            >
+            <View style={{ paddingBottom: kb }}>
               {/* The jaali rule stands in for a grab handle: the app's
                   signature appears at the exact moment of interaction, and it
                   is also the affordance that says this sheet can be dragged. */}
@@ -146,11 +149,12 @@ export function Sheet({
                 {children}
               </ScrollView>
               {footer ? (
-                <View className="border-t border-line px-4 pt-3" style={{ paddingBottom: insets.bottom + 8 }}>
+                <View className="border-t border-line px-4 pt-3"
+                  style={{ paddingBottom: kb > 0 ? 12 : insets.bottom + 8 }}>
                   {footer}
                 </View>
               ) : null}
-            </KeyboardAvoidingView>
+            </View>
           </Animated.View>
         </GestureDetector>
       </Animated.View>

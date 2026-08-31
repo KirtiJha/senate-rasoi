@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { ViewStyle } from 'react-native';
+import { ReactNode, useEffect, useState } from 'react';
+import { Keyboard, Platform, ViewStyle } from 'react-native';
 import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 
 import { useThemeColors } from '../../theme';
@@ -55,4 +55,34 @@ export function KeyboardAvoider({
       {children}
     </Animated.View>
   );
+}
+
+/**
+ * The keyboard's height, from the JS Keyboard API rather than Reanimated.
+ *
+ * WHY A SECOND MECHANISM EXISTS. `useAnimatedKeyboard` above reads the window
+ * insets of the root view, and an RN `Modal` on Android is a separate native
+ * window — so inside a Modal it reports nothing and the content never lifts.
+ * Every bottom sheet in this app is a Modal, which is why they were all still
+ * broken after the fifteen full screens were fixed.
+ *
+ * `Keyboard.addListener` does fire inside a Modal. The cost is that it arrives
+ * a frame or two late, so the lift is a small jump rather than a glide — worth
+ * it where the alternative is a submit button nobody can reach.
+ */
+export function useKeyboardInset(): number {
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    // `Will` events exist only on iOS and fire before the animation, which is
+    // smoother; Android has to use the `Did` pair.
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const show = Keyboard.addListener(showEvent, (e) => setHeight(e.endCoordinates?.height ?? 0));
+    const hide = Keyboard.addListener(hideEvent, () => setHeight(0));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
+
+  return height;
 }
