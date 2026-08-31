@@ -38,6 +38,10 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   lost_found: { icon: 'search', color: '#D97706' },
   report: { icon: 'flag', color: '#EF4444' },
   event: { icon: 'sparkles', color: '#7C3AED' },
+  // A watch firing is Saathi speaking, so it wears Saathi's green rather
+  // than the colour of whatever kind of thing it happened to find.
+  saathi_watch: { icon: 'notifications', color: '#0E6B4E' },
+  food_daily: { icon: 'restaurant', color: '#E8650A' },
 };
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {

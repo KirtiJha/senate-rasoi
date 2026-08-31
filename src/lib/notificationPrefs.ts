@@ -23,6 +23,7 @@ export const MUTABLE_CATEGORIES: MutableCategory[] = [
   { type: 'announcement', label: 'Announcements', blurb: 'Notices from your society admins' },
   { type: 'listing', label: 'Marketplace', blurb: 'New items and services listed' },
   { type: 'dish', label: 'Home food', blurb: 'New dishes and tiffins from neighbours' },
+  { type: 'food_daily', label: 'Today’s menu', blurb: 'One reminder before each meal, only when there is something up' },
   { type: 'property', label: 'Flats', blurb: 'New flats to rent or buy' },
   { type: 'borrow', label: 'Borrow', blurb: 'Things neighbours are lending or need' },
   { type: 'lost_found', label: 'Lost & found', blurb: 'Items lost or found nearby' },

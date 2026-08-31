@@ -2,7 +2,9 @@ import { isSupabaseConfigured, supabase } from './supabase';
 
 export type NotificationType =
   | 'post' | 'announcement' | 'listing' | 'poll' | 'message'
-  | 'dish' | 'tiffin' | 'sport' | 'document' | 'payment' | 'property' | 'recommend' | 'borrow' | 'court' | 'order' | 'place' | 'lost_found' | 'report' | 'event';
+  | 'dish' | 'tiffin' | 'sport' | 'document' | 'payment' | 'property' | 'recommend' | 'borrow' | 'court' | 'order' | 'place' | 'lost_found' | 'report' | 'event'
+  // Saathi watches (0078) and the daily menu nudge (0081).
+  | 'saathi_watch' | 'food_daily';
 
 export interface NotificationRow {
   id: string;

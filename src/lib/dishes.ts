@@ -274,3 +274,135 @@ export function statusMessageForFoodie(dishName: string, status: OrderStatus): s
   };
   return `Aangan: ${line[status]}`;
 }
+
+// ── Kitchen reputation ──────────────────────────────────────────────
+
+export interface ChefReputation {
+  chef_user_id: string;
+  total: number;
+  repeat_count: number;
+  /** False until five people have answered — see 0079. */
+  enough: boolean;
+}
+
+export interface PendingFeedback {
+  order_id: string;
+  dish_id: string;
+  dish_name: string;
+  chef_name: string;
+  delivered_at: string;
+}
+
+/**
+ * Reputation for a whole board in one round trip.
+ *
+ * Returns counts only — never a note, never who said what. In a building of
+ * forty flats, seeing individual answers would identify whoever left the
+ * single "no".
+ */
+export async function fetchChefReputations(chefIds: string[]): Promise<Map<string, ChefReputation>> {
+  const ids = [...new Set(chefIds.filter(Boolean))];
+  if (!ids.length) return new Map();
+  const { data, error } = await supabase.rpc('chef_reputations', { p_chefs: ids });
+  if (error) throw error;
+  return new Map((data as ChefReputation[] ?? []).map((r) => [r.chef_user_id, r]));
+}
+
+/** Delivered orders this person has not rated yet. Empty is the normal case. */
+export async function fetchPendingFeedback(): Promise<PendingFeedback[]> {
+  const { data, error } = await supabase.rpc('pending_feedback');
+  if (error) throw error;
+  return (data ?? []) as PendingFeedback[];
+}
+
+/**
+ * "Would you order again?" — plus an optional note the chef alone will read.
+ *
+ * Deliberately not a star rating: a score out of five for a neighbour you meet
+ * in the lift tomorrow gets answered politely rather than honestly.
+ */
+export async function leaveDishFeedback(
+  orderId: string,
+  wouldRepeat: boolean,
+  note?: string,
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc('leave_dish_feedback', {
+    p_order_id: orderId,
+    p_would_repeat: wouldRepeat,
+    p_note: note?.trim() || null,
+  });
+  if (error) throw error;
+  return data === true;
+}
+
+// ── Recurring dishes ────────────────────────────────────────────────
+
+export interface DishTemplate {
+  id: string;
+  dish_name: string;
+  slot: Slot;
+  veg_type: VegType;
+  price: number;
+  max_plates: number;
+  description: string | null;
+  photo_url: string | null;
+  days_of_week: number[];
+  active: boolean;
+  last_run_on: string | null;
+}
+
+export async function fetchDishTemplates(userId: string): Promise<DishTemplate[]> {
+  const { data, error } = await supabase
+    .from('dish_templates')
+    .select('id, dish_name, slot, veg_type, price, max_plates, description, photo_url, days_of_week, active, last_run_on')
+    .eq('chef_user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as DishTemplate[];
+}
+
+/**
+ * Turn a dish into a standing one.
+ *
+ * Takes the dish it was made from rather than a form of its own: a chef who
+ * has just posted idli should be able to say "every Tuesday" without typing it
+ * all again, which is the entire point of the feature.
+ */
+export async function createDishTemplate(
+  dish: DishRow,
+  daysOfWeek: number[],
+  ctx: { userId: string; communityId: string },
+): Promise<string> {
+  const { data, error } = await supabase
+    .from('dish_templates')
+    .insert({
+      community_id: ctx.communityId,
+      chef_user_id: ctx.userId,
+      dish_name: dish.dish_name,
+      slot: dish.slot,
+      veg_type: dish.veg_type,
+      price: dish.price,
+      max_plates: dish.max_plates,
+      description: dish.description,
+      photo_url: dish.photo_url,
+      chef_name: dish.chef_name,
+      flat: dish.flat,
+      whatsapp: dish.whatsapp,
+      upi: dish.upi ?? null,
+      days_of_week: [...new Set(daysOfWeek)].sort(),
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return (data as { id: string }).id;
+}
+
+export async function setDishTemplateActive(id: string, active: boolean): Promise<void> {
+  const { error } = await supabase.from('dish_templates').update({ active }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function deleteDishTemplate(id: string): Promise<void> {
+  const { error } = await supabase.from('dish_templates').delete().eq('id', id);
+  if (error) throw error;
+}
