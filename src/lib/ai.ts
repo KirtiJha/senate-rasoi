@@ -9,7 +9,7 @@ import { isSupabaseConfigured, supabase } from './supabase';
  * the photo, calls the function, and degrades gracefully when AI is unavailable.
  */
 
-export type AutofillKind = 'dish' | 'listing' | 'borrow';
+export type AutofillKind = 'dish' | 'listing' | 'borrow' | 'receipt';
 
 export interface DishAutofill {
   dish_name: string;
@@ -21,12 +21,28 @@ export interface ListingAutofill {
   title: string;
   description: string;
 }
+/**
+ * A bill photographed by a treasurer.
+ *
+ * Every field is optional in practice — a crumpled thermal receipt may show a
+ * total and nothing else, and half a reading still saves most of the typing.
+ * The form is prefilled, never submitted: the person who paid checks it.
+ */
+export interface ReceiptAutofill {
+  vendor: string;
+  amount: number;
+  spent_on: string;
+  category: 'decor' | 'food' | 'sound' | 'priest' | 'prizes' | 'venue' | 'gifts' | 'misc';
+  title: string;
+}
 export interface BorrowAutofill {
   item_name: string;
   description: string;
 }
 
-type AutofillResult<K> = K extends 'dish'
+type AutofillResult<K> = K extends 'receipt'
+  ? ReceiptAutofill
+  : K extends 'dish'
   ? DishAutofill
   : K extends 'listing'
     ? ListingAutofill

@@ -63,7 +63,7 @@ function json(body: unknown, status = 200): Response {
 }
 
 // ── Per-kind output contracts (the only fields we ever ask the model for) ──
-type Kind = 'dish' | 'listing' | 'borrow';
+type Kind = 'dish' | 'listing' | 'borrow' | 'receipt';
 
 const SCHEMAS: Record<Kind, { instruction: string; schema: Record<string, unknown> }> = {
   dish: {
@@ -98,6 +98,28 @@ const SCHEMAS: Record<Kind, { instruction: string; schema: Record<string, unknow
         is_relevant: { type: 'boolean', description: 'true ONLY if the photo shows a real physical item that could be sold' },
         title: { type: 'string', description: 'Concise item title, e.g. "Dell 24-inch monitor, like new" (empty if not an item)' },
         description: { type: 'string', description: '1–2 honest sentences (empty if not an item)' },
+      },
+      required: ['is_relevant'],
+    },
+  },
+  receipt: {
+    instruction:
+      'A society treasurer photographed a bill or payment receipt for a community celebration. ' +
+      'FIRST decide whether this really is a bill, invoice, or payment confirmation. If it is not, set ' +
+      'is_relevant=false and leave the rest empty. If it is, read what is actually printed: the vendor or ' +
+      'shop name, the TOTAL amount paid in rupees as a plain number, and the date in YYYY-MM-DD form. ' +
+      'Choose the closest category for a festival expense. Write a short title naming what was bought. ' +
+      'Never guess a number you cannot read — leave amount 0 rather than inventing one, because a wrong ' +
+      'figure in an account everyone can see is worse than a blank one.',
+    schema: {
+      type: 'object',
+      properties: {
+        is_relevant: { type: 'boolean', description: 'true ONLY if this is a bill, invoice or payment receipt' },
+        vendor: { type: 'string', description: 'Shop or vendor name as printed (empty if unreadable)' },
+        amount: { type: 'number', description: 'Total paid, in rupees. 0 if it cannot be read.' },
+        spent_on: { type: 'string', description: 'Date on the bill as YYYY-MM-DD (empty if absent)' },
+        category: { type: 'string', enum: ['decor', 'food', 'sound', 'priest', 'prizes', 'venue', 'gifts', 'misc'] },
+        title: { type: 'string', description: 'Short description of what was bought' },
       },
       required: ['is_relevant'],
     },
@@ -836,7 +858,7 @@ Deno.serve(async (req) => {
     if (image.length > MAX_IMAGE_CHARS) return json({ error: 'Photo is too large' }, 413);
     const note = (body.note ?? '').toString().slice(0, 200);
 
-    const NOUN: Record<Kind, string> = { dish: 'dish or food', listing: 'item to sell', borrow: 'item to lend' };
+    const NOUN: Record<Kind, string> = { dish: 'dish or food', listing: 'item to sell', borrow: 'item to lend', receipt: 'bill or receipt' };
     try {
       const result = await callAutofill(spec.instruction, spec.schema, note, image);
       if (result.is_relevant === false) {
@@ -1117,6 +1139,20 @@ const READ_TOOLS = [
         query: { type: 'string', description: 'A name, flat number, or profession.' },
       },
       required: ['query'],
+    },
+  },
+  {
+    name: 'celebration_status',
+    description:
+      'Where a celebration stands: budget, collected so far, spent, balance, how many flats have paid, ' +
+      'and what is still outstanding. Use for "how much have we collected for Ganesh?", "what is left?", ' +
+      '"who has not paid yet?". Names a celebration loosely — the closest current one is used.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Words from the celebration name. Omit for the most recent one.' },
+      },
+      required: [],
     },
   },
   {
@@ -1474,6 +1510,70 @@ async function runReadTool(
       })),
     ].filter((p) => p.name);
     return { payload: { people }, summary: `looked up "${query}" — ${people.length} match${people.length === 1 ? '' : 'es'}`, cards: [] };
+  }
+
+  if (name === 'celebration_status') {
+    const q = String(args.query ?? '').trim();
+    let eq = d.admin.from('society_events')
+      .select('id, title, status, event_date, budget_amount, carry_in_used')
+      .eq('community_id', d.communityId)
+      .neq('status', 'cancelled')
+      .order('event_date', { ascending: false, nullsFirst: false })
+      .limit(1);
+    if (q) eq = eq.ilike('title', `%${q}%`);
+    const { data: events } = await eq;
+    const ev = (events ?? [])[0];
+    if (!ev) {
+      return { payload: { found: false }, summary: 'looked for a celebration — none found', cards: [] };
+    }
+
+    const [{ data: contribs }, { data: sponsors }, { data: exps }] = await Promise.all([
+      d.admin.from('event_contributions').select('flat, amount, status, opted_out').eq('event_id', ev.id),
+      d.admin.from('event_sponsorships').select('kind, amount, status').eq('event_id', ev.id),
+      d.admin.from('event_expenses').select('amount').eq('event_id', ev.id),
+    ]);
+
+    // deno-lint-ignore no-explicit-any
+    const cs = (contribs ?? []) as any[];
+    // deno-lint-ignore no-explicit-any
+    const sp = (sponsors ?? []) as any[];
+    // deno-lint-ignore no-explicit-any
+    const ex = (exps ?? []) as any[];
+
+    const fromFlats = cs.filter((x) => x.status === 'received').reduce((n, x) => n + Number(x.amount || 0), 0);
+    const fromSponsors = sp.filter((x) => x.kind === 'money' && x.status === 'received')
+      .reduce((n, x) => n + Number(x.amount || 0), 0);
+    const carryIn = Number(ev.carry_in_used || 0);
+    const spent = ex.reduce((n, x) => n + Number(x.amount || 0), 0);
+    const collected = fromFlats + fromSponsors + carryIn;
+
+    // Opted-out flats are not debts and must never be reported as pending.
+    const outstanding = cs.filter((x) => !x.opted_out && (x.status === 'pending' || x.status === 'initiated'));
+
+    return {
+      payload: {
+        found: true,
+        celebration: ev.title,
+        status: ev.status,
+        date: ev.event_date,
+        budget: Number(ev.budget_amount || 0),
+        collected,
+        from_flats: fromFlats,
+        from_sponsors: fromSponsors,
+        carried_forward: carryIn,
+        spent,
+        balance: collected - spent,
+        flats_paid: cs.filter((x) => x.status === 'received').length,
+        flats_expected: cs.filter((x) => !x.opted_out && x.status !== 'waived').length,
+        opted_out: cs.filter((x) => x.opted_out).length,
+        // Flats, never people: naming who has not paid, to anyone who asks, is
+        // how a collection turns into a quarrel.
+        still_to_pay: outstanding.map((x) => x.flat).sort(),
+        still_to_pay_total: outstanding.reduce((n, x) => n + Number(x.amount || 0), 0),
+      },
+      summary: `read ${ev.title} — ${cs.filter((x) => x.status === 'received').length} of ${cs.filter((x) => !x.opted_out && x.status !== 'waived').length} flats paid`,
+      cards: [],
+    };
   }
 
   if (name === 'list_watches') {

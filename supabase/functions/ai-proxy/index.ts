@@ -53,7 +53,7 @@ function json(body: unknown, status = 200): Response {
 }
 
 // ── Per-kind output contracts (the only fields we ever ask the model for) ──
-type Kind = 'dish' | 'listing' | 'borrow';
+type Kind = 'dish' | 'listing' | 'borrow' | 'receipt';
 
 const SCHEMAS: Record<Kind, { instruction: string; schema: Record<string, unknown> }> = {
   dish: {
@@ -88,6 +88,28 @@ const SCHEMAS: Record<Kind, { instruction: string; schema: Record<string, unknow
         is_relevant: { type: 'boolean', description: 'true ONLY if the photo shows a real physical item that could be sold' },
         title: { type: 'string', description: 'Concise item title, e.g. "Dell 24-inch monitor, like new" (empty if not an item)' },
         description: { type: 'string', description: '1–2 honest sentences (empty if not an item)' },
+      },
+      required: ['is_relevant'],
+    },
+  },
+  receipt: {
+    instruction:
+      'A society treasurer photographed a bill or payment receipt for a community celebration. ' +
+      'FIRST decide whether this really is a bill, invoice, or payment confirmation. If it is not, set ' +
+      'is_relevant=false and leave the rest empty. If it is, read what is actually printed: the vendor or ' +
+      'shop name, the TOTAL amount paid in rupees as a plain number, and the date in YYYY-MM-DD form. ' +
+      'Choose the closest category for a festival expense. Write a short title naming what was bought. ' +
+      'Never guess a number you cannot read — leave amount 0 rather than inventing one, because a wrong ' +
+      'figure in an account everyone can see is worse than a blank one.',
+    schema: {
+      type: 'object',
+      properties: {
+        is_relevant: { type: 'boolean', description: 'true ONLY if this is a bill, invoice or payment receipt' },
+        vendor: { type: 'string', description: 'Shop or vendor name as printed (empty if unreadable)' },
+        amount: { type: 'number', description: 'Total paid, in rupees. 0 if it cannot be read.' },
+        spent_on: { type: 'string', description: 'Date on the bill as YYYY-MM-DD (empty if absent)' },
+        category: { type: 'string', enum: ['decor', 'food', 'sound', 'priest', 'prizes', 'venue', 'gifts', 'misc'] },
+        title: { type: 'string', description: 'Short description of what was bought' },
       },
       required: ['is_relevant'],
     },
@@ -826,7 +848,7 @@ Deno.serve(async (req) => {
     if (image.length > MAX_IMAGE_CHARS) return json({ error: 'Photo is too large' }, 413);
     const note = (body.note ?? '').toString().slice(0, 200);
 
-    const NOUN: Record<Kind, string> = { dish: 'dish or food', listing: 'item to sell', borrow: 'item to lend' };
+    const NOUN: Record<Kind, string> = { dish: 'dish or food', listing: 'item to sell', borrow: 'item to lend', receipt: 'bill or receipt' };
     try {
       const result = await callAutofill(spec.instruction, spec.schema, note, image);
       if (result.is_relevant === false) {

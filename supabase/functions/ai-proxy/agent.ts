@@ -125,6 +125,20 @@ const READ_TOOLS = [
     },
   },
   {
+    name: 'celebration_status',
+    description:
+      'Where a celebration stands: budget, collected so far, spent, balance, how many flats have paid, ' +
+      'and what is still outstanding. Use for "how much have we collected for Ganesh?", "what is left?", ' +
+      '"who has not paid yet?". Names a celebration loosely — the closest current one is used.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Words from the celebration name. Omit for the most recent one.' },
+      },
+      required: [],
+    },
+  },
+  {
     name: 'list_watches',
     description:
       'The standing watches this resident has set, and whether each is on. Use before offering a new watch, ' +
@@ -479,6 +493,70 @@ async function runReadTool(
       })),
     ].filter((p) => p.name);
     return { payload: { people }, summary: `looked up "${query}" — ${people.length} match${people.length === 1 ? '' : 'es'}`, cards: [] };
+  }
+
+  if (name === 'celebration_status') {
+    const q = String(args.query ?? '').trim();
+    let eq = d.admin.from('society_events')
+      .select('id, title, status, event_date, budget_amount, carry_in_used')
+      .eq('community_id', d.communityId)
+      .neq('status', 'cancelled')
+      .order('event_date', { ascending: false, nullsFirst: false })
+      .limit(1);
+    if (q) eq = eq.ilike('title', `%${q}%`);
+    const { data: events } = await eq;
+    const ev = (events ?? [])[0];
+    if (!ev) {
+      return { payload: { found: false }, summary: 'looked for a celebration — none found', cards: [] };
+    }
+
+    const [{ data: contribs }, { data: sponsors }, { data: exps }] = await Promise.all([
+      d.admin.from('event_contributions').select('flat, amount, status, opted_out').eq('event_id', ev.id),
+      d.admin.from('event_sponsorships').select('kind, amount, status').eq('event_id', ev.id),
+      d.admin.from('event_expenses').select('amount').eq('event_id', ev.id),
+    ]);
+
+    // deno-lint-ignore no-explicit-any
+    const cs = (contribs ?? []) as any[];
+    // deno-lint-ignore no-explicit-any
+    const sp = (sponsors ?? []) as any[];
+    // deno-lint-ignore no-explicit-any
+    const ex = (exps ?? []) as any[];
+
+    const fromFlats = cs.filter((x) => x.status === 'received').reduce((n, x) => n + Number(x.amount || 0), 0);
+    const fromSponsors = sp.filter((x) => x.kind === 'money' && x.status === 'received')
+      .reduce((n, x) => n + Number(x.amount || 0), 0);
+    const carryIn = Number(ev.carry_in_used || 0);
+    const spent = ex.reduce((n, x) => n + Number(x.amount || 0), 0);
+    const collected = fromFlats + fromSponsors + carryIn;
+
+    // Opted-out flats are not debts and must never be reported as pending.
+    const outstanding = cs.filter((x) => !x.opted_out && (x.status === 'pending' || x.status === 'initiated'));
+
+    return {
+      payload: {
+        found: true,
+        celebration: ev.title,
+        status: ev.status,
+        date: ev.event_date,
+        budget: Number(ev.budget_amount || 0),
+        collected,
+        from_flats: fromFlats,
+        from_sponsors: fromSponsors,
+        carried_forward: carryIn,
+        spent,
+        balance: collected - spent,
+        flats_paid: cs.filter((x) => x.status === 'received').length,
+        flats_expected: cs.filter((x) => !x.opted_out && x.status !== 'waived').length,
+        opted_out: cs.filter((x) => x.opted_out).length,
+        // Flats, never people: naming who has not paid, to anyone who asks, is
+        // how a collection turns into a quarrel.
+        still_to_pay: outstanding.map((x) => x.flat).sort(),
+        still_to_pay_total: outstanding.reduce((n, x) => n + Number(x.amount || 0), 0),
+      },
+      summary: `read ${ev.title} — ${cs.filter((x) => x.status === 'received').length} of ${cs.filter((x) => !x.opted_out && x.status !== 'waived').length} flats paid`,
+      cards: [],
+    };
   }
 
   if (name === 'list_watches') {

@@ -2,6 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { openPhotoPicker } from '../../../lib/photo';
+import { AIError, visionAutofill } from '../../../lib/ai';
+import { haptics } from '../../../lib/haptics';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -42,6 +44,7 @@ export default function ExpensesScreen() {
   const [vendor, setVendor] = useState('');
   const [spentOn, setSpentOn] = useState('');
   const [receipt, setReceipt] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -66,7 +69,35 @@ export default function ExpensesScreen() {
 
   const pickReceipt = async () => {
     const res = await openPhotoPicker({ mediaTypes: ['images'], quality: 0.9 });
-    if (!res.canceled) setReceipt(res.assets[0].uri);
+    if (res.canceled) return;
+    const uri = res.assets[0].uri;
+    setReceipt(uri);
+
+    // Read the bill while the treasurer is still looking at the form.
+    //
+    // Photographing twenty receipts and typing each one out is the most tedious
+    // job in running a celebration, and the one most likely to end with a
+    // shoebox instead of a ledger. Every field is prefilled and every field
+    // stays editable: this fills the form, it never submits it.
+    setScanning(true);
+    try {
+      const r = await visionAutofill('receipt', uri);
+      if (r.vendor) setVendor(r.vendor);
+      if (r.title) setTitle(r.title);
+      // A zero means it could not read the total, not that the bill was free.
+      if (r.amount > 0) setAmount(String(Math.round(r.amount)));
+      if (r.spent_on) setSpentOn(r.spent_on);
+      if (r.category) setCategory(r.category);
+      haptics.success();
+      toast.show('Read the bill — check the numbers');
+    } catch (e) {
+      // Never block the manual path on the clever one.
+      if (e instanceof AIError && e.code === 'not_relevant') {
+        toast.show('That does not look like a bill — fill it in below');
+      }
+    } finally {
+      setScanning(false);
+    }
   };
 
   const reset = () => {
@@ -245,11 +276,23 @@ export default function ExpensesScreen() {
           className="mb-1.5 h-28 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface active:opacity-70"
         >
           {receipt ? (
-            <Image source={{ uri: receipt }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+            <>
+              <Image source={{ uri: receipt }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+              {scanning ? (
+                <View
+                  className="absolute inset-0 items-center justify-center gap-1.5"
+                  style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
+                >
+                  <ActivityIndicator color="#fff" />
+                  <Text className="font-sans-sb text-[12px] text-white">Reading the bill…</Text>
+                </View>
+              ) : null}
+            </>
           ) : (
             <>
               <Ionicons name="camera-outline" size={24} color={ACCENT} />
               <Text className="font-sans mt-1 text-[12px] text-muted">Photograph the bill</Text>
+              <Text className="font-sans mt-0.5 text-[11px] text-faint">We will read the amount for you</Text>
             </>
           )}
         </Pressable>
