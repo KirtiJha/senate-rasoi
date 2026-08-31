@@ -9,7 +9,7 @@ import { InquiryModal } from '../../components/listings/InquiryModal';
 import { ListingChat } from '../../components/listings/ListingChat';
 import { PayButton } from '../../components/PayButton';
 import { T } from '../../components/T';
-import { Avatar, Badge, Button, Container, ErrorState, ParallaxHero, useResponsive } from '../../components/ui';
+import { Avatar, Badge, Button, Container, ErrorState, KeyboardAvoider, ParallaxHero, useResponsive } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -200,7 +200,7 @@ export default function ListingDetailScreen() {
     : listing.owner?.name ?? '';
 
   return (
-    <View className="flex-1 bg-bg">
+    <KeyboardAvoider>
       <AScrollView
         onScroll={onScroll}
         scrollEventThrottle={16}
@@ -423,6 +423,6 @@ export default function ListingDetailScreen() {
         onClose={() => setInquiryListing(null)}
         onConfirm={handleInquiryConfirm}
       />
-    </View>
+    </KeyboardAvoider>
   );
 }

@@ -11,6 +11,35 @@ import type { ListingRow, ListingStatus } from './types';
 
 const FEED_CACHE_PREFIX = 'aangan:listings-cache:';
 
+/**
+ * How long a sold item stays on the board after it sells.
+ *
+ * It stays at all because vanishing is worse: the buyer mid-conversation loses
+ * the thing they were discussing, and a marketplace where nothing is ever seen
+ * to sell reads as a marketplace where nothing sells. It does not stay forever
+ * because a year of sold sofas is a graveyard.
+ */
+const SOLD_VISIBLE_DAYS = 30;
+
+/** ISO cutoff before which a sold listing drops off the board. */
+function soldCutoff(): string {
+  return new Date(Date.now() - SOLD_VISIBLE_DAYS * 864e5).toISOString();
+}
+
+/**
+ * What the board shows: everything still available, plus anything sold
+ * recently enough to be worth seeing.
+ *
+ * PostgREST cannot express "active OR (sold AND recent)" as chained .eq()
+ * filters, so it goes through .or() with an embedded and(). Pair it with
+ * .order('status') at the call site: 'active' sorts before 'sold'
+ * alphabetically and no other status reaches this filter, so what is still
+ * available always ranks above what has gone.
+ */
+function boardFilter(): string {
+  return `status.eq.active,and(status.eq.sold,status_changed_at.gte.${soldCutoff()})`;
+}
+
 async function getCachedListings(category: string): Promise<ListingRow[]> {
   try {
     const raw = await AsyncStorage.getItem(FEED_CACHE_PREFIX + category);
@@ -39,7 +68,8 @@ export async function fetchListings(
     .select('*, owner:profiles!listings_owner_user_id_fkey(name,flat,whatsapp,phone,upi)')
     .eq('community_id', communityId)
     .eq('category', category)
-    .eq('status', 'active')
+    .or(boardFilter())
+    .order('status')
     .order('bump_at', { ascending: false })
     .range(offset, offset + limit - 1);
   if (error) throw error;
@@ -62,7 +92,7 @@ export async function searchListings(query: string, communityId: string = COMMUN
       .from('listings')
       .select(LISTING_SELECT)
       .eq('community_id', communityId)
-      .eq('status', 'active');
+      .or(boardFilter());
     if (category) b = b.eq('category', category);
     return b;
   };
@@ -133,7 +163,8 @@ export async function fetchAllListings(
     .from('listings')
     .select(LISTING_SELECT)
     .eq('community_id', communityId)
-    .eq('status', 'active')
+    .or(boardFilter())
+    .order('status')
     .order(sortBy, { ascending: false })
     .range(offset, offset + limit - 1);
   if (error) throw error;

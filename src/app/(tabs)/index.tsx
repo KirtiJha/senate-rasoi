@@ -320,7 +320,14 @@ export default function HomeScreen() {
   // this renders nothing when there is nothing. A calm society gets a calm
   // home; today a resident with no news still meets a digest card, an update
   // card and thirty tiles.
-  const needsYou: { key: string; eyebrow: string; title: string; onPress: () => void }[] = [];
+  const needsYou: {
+    key: string;
+    eyebrow: string;
+    title: string;
+    onPress: () => void;
+    /** Present when the card can be sent away rather than only opened. */
+    onDismiss?: () => void;
+  }[] = [];
   if (updateBanner && !bannerDismissed) {
     needsYou.push({
       key: 'update',
@@ -335,6 +342,7 @@ export default function HomeScreen() {
       eyebrow: 'Announcement',
       title: announcement.title || announcement.body,
       onPress: () => router.push(`/feed/${announcement.id}` as any),
+      onDismiss: dismissAnnouncement,
     });
   }
   if (unread > 0) {
@@ -492,7 +500,8 @@ export default function HomeScreen() {
           <Rise index={1} style={{ marginTop: 22 }}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 4 }}>
               {needsYou.map((n) => (
-                <Touchable key={n.key} haptic={null} onPress={n.onPress}>
+                <View key={n.key}>
+                <Touchable haptic={null} onPress={n.onPress}>
                   <View
                     style={{
                       flexDirection: 'row',
@@ -518,6 +527,31 @@ export default function HomeScreen() {
                     </View>
                   </View>
                 </Touchable>
+
+                {/* Layered over the card, not inside the Touchable: a nested
+                    press target loses the responder to its parent on Android. */}
+                {n.onDismiss ? (
+                  <Pressable
+                    onPress={n.onDismiss}
+                    hitSlop={10}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Dismiss ${n.eyebrow}`}
+                    style={{
+                      position: 'absolute',
+                      top: 6,
+                      right: 6,
+                      height: 24,
+                      width: 24,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 12,
+                      backgroundColor: c.inset,
+                    }}
+                  >
+                    <Ionicons name="close" size={13} color={c.muted} />
+                  </Pressable>
+                ) : null}
+                </View>
               ))}
             </ScrollView>
           </Rise>
