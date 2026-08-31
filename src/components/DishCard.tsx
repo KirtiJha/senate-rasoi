@@ -9,6 +9,8 @@ import { IMAGE_CACHE_PROPS } from '../lib/image';
 import { countdown } from '../lib/time';
 import { DishRow, SLOT_EMOJI } from '../lib/types';
 import { T } from './T';
+import { ChefStanding } from './food/FeedbackPrompt';
+import { ChefReputation } from '../lib/dishes';
 import { Avatar, Badge, Button, VegMark } from './ui';
 
 // Accent colour per meal slot — for the slot chip on the card.
@@ -48,9 +50,11 @@ interface DishCardProps {
   onOrder: (dish: DishRow) => void;
   onRemove: (dish: DishRow) => void;
   onShare: (dish: DishRow) => void;
+  /** Undefined until the board has fetched standings — see FoodBoard. */
+  reputation?: ChefReputation;
 }
 
-function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCardProps) {
+function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare, reputation }: DishCardProps) {
   const c = useThemeColors();
   const router = useRouter();
   const openDetail = () => router.push(`/dish/${dish.id}` as any);
@@ -134,10 +138,24 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare }: DishCar
 
         <View className="mt-3 flex-row items-center gap-2">
           <Avatar name={dish.chef_name} size={26} />
-          <Text className="font-sans flex-1 text-[12px] text-muted" numberOfLines={1}>
-            <Text className="font-sans-sb text-ink">{dish.chef_name}</Text> · Flat {dish.flat}
-            {dish.upi ? ` · UPI ${dish.upi}` : ''}
-          </Text>
+          <View className="min-w-0 flex-1">
+            <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>
+              <Text className="font-sans-sb text-ink">{dish.chef_name}</Text> · Flat {dish.flat}
+              {dish.upi ? ` · UPI ${dish.upi}` : ''}
+            </Text>
+            {/* Standing sits under the name, where you read it while deciding
+                whose kitchen this is — not as a badge somewhere else on the
+                card. Absent until the board has loaded it, rather than
+                flashing "new kitchen" at an established cook. */}
+            {reputation ? (
+              <ChefStanding
+                total={reputation.total}
+                repeatCount={reputation.repeat_count}
+                enough={reputation.enough}
+                compact
+              />
+            ) : null}
+          </View>
         </View>
 
         {!soldOut ? (

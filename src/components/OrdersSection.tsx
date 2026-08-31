@@ -7,6 +7,7 @@ import { Empty } from './Empty';
 import { PayButton } from './PayButton';
 import { Avatar, Badge, Button, Container } from './ui';
 import { useAuth } from '../context/auth';
+import { FeedbackPrompt } from './food/FeedbackPrompt';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
 import { waLink } from '../lib/dishes';
@@ -72,6 +73,11 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
       showsVerticalScrollIndicator={false}
     >
       <Container narrow>
+        {/* Above the list, not as a popup. A modal that ambushes you on open
+            gets dismissed reflexively, and a dismissed prompt never returns.
+            It renders nothing when there is nothing to ask about. */}
+        <FeedbackPrompt />
+
         {orders.length === 0 ? (
           <Empty
             icon="basket-outline"

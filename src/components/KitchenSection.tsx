@@ -6,6 +6,7 @@ import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } 
 import { Empty } from './Empty';
 import { Avatar, Badge, Button, Container, VegMark } from './ui';
 import { useAuth } from '../context/auth';
+import { RepeatList } from './food/RepeatDish';
 import { useToast } from '../context/toast';
 import { fetchDishes, listChefOrders, setOrderStatus, statusMessageForFoodie, waLink } from '../lib/dishes';
 import { haptics } from '../lib/haptics';
@@ -84,6 +85,11 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
       showsVerticalScrollIndicator={false}
     >
       <Container narrow>
+        {/* Standing dishes first: they are the ones a chef manages rather than
+            watches, and burying them under today's orders means nobody
+            remembers they exist. Renders nothing until there is one. */}
+        <RepeatList />
+
         {loading ? null : dishes.length === 0 ? (
           <Empty
             icon="flame-outline"

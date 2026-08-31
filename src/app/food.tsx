@@ -29,15 +29,7 @@ import { useThemeColors } from '../theme';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
-import {
-  buildWhatsAppOrderLink,
-  deleteDish,
-  fetchDishes,
-  getCachedDishes,
-  placeOrder,
-  subscribeToDishes,
-  waLink,
-} from '../lib/dishes';
+import { buildWhatsAppOrderLink, ChefReputation, deleteDish, fetchChefReputations, fetchDishes, getCachedDishes, placeOrder, subscribeToDishes, waLink } from '../lib/dishes';
 import { haptics } from '../lib/haptics';
 import { shareDish } from '../lib/share';
 import { isSupabaseConfigured } from '../lib/supabase';
@@ -65,6 +57,7 @@ export default function FoodScreen() {
   const [tab, setTab] = useState<FoodTab>('discover');
   const [posting, setPosting] = useState<'dish' | 'tiffin' | null>(null);
   const [dishes, setDishes] = useState<DishRow[]>([]);
+  const [reputations, setReputations] = useState<Map<string, ChefReputation>>(new Map());
   const [filter, setFilter] = useState<'All' | Slot>('All');
   const [vegOnly, setVegOnly] = useState(false);
   const [when, setWhen] = useState<'today' | 'upcoming'>('today');
@@ -90,6 +83,13 @@ export default function FoodScreen() {
       setDishes(rows);
       setPlans(planRows);
       setSubIds(ids);
+
+      // Standings load after the board, not with it. They are decoration on a
+      // dish you can already see and order — blocking the food on them, or
+      // failing the load because they failed, would trade the thing that
+      // matters for the thing that helps.
+      const chefs = rows.map((d) => d.chef_user_id).filter(Boolean) as string[];
+      fetchChefReputations(chefs).then(setReputations).catch(() => {});
     } catch (e) {
       console.error(e);
       toast.show('Could not load the board — check your connection');
@@ -200,6 +200,7 @@ export default function FoodScreen() {
       onOrder={setOrderDish}
       onRemove={handleRemove}
       onShare={handleShare}
+      reputation={dish.chef_user_id ? reputations.get(dish.chef_user_id) : undefined}
     />
   );
 

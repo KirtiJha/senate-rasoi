@@ -24,6 +24,7 @@ import { isSupabaseConfigured } from '../lib/supabase';
 import { createTiffinPlan } from '../lib/tiffin';
 import { slotOrderBy } from '../lib/time';
 import { DishRow, DOW_LABELS, SLOTS, Slot, VEG_TYPES, VegType, SLOT_EMOJI } from '../lib/types';
+import { RepeatDish } from '../components/food/RepeatDish';
 import { useThemeColors } from '../theme';
 
 const SLOT_HINTS: Record<Slot, string> = {
@@ -53,6 +54,9 @@ export default function PostScreen({
   const params = useLocalSearchParams<{ category?: string; kind?: string }>();
   const finishOrHome = () => (onDone ? onDone() : router.push('/'));
   const [selectedCategory, setSelectedCategory] = useState<string | null>(forceCategory ?? null);
+  // Set after a dish posts, to offer "every week" at the only moment the
+  // answer is obvious — you have just decided to cook it.
+  const [justPosted, setJustPosted] = useState<DishRow | null>(null);
   const [mode, setMode] = useState<'dish' | 'tiffin'>(forceKind === 'tiffin' ? 'tiffin' : 'dish');
 
   const [chefName, setChefName] = useState('');
@@ -221,7 +225,10 @@ export default function PostScreen({
       toast.show(hadPhoto && !dish.photo_url
         ? 'Dish posted ✅ — but the photo could not upload'
         : 'Your dish is live on the board! 🎉');
-      finishOrHome();
+      // Offer the repeat here rather than navigating away. Asked later, from a
+      // settings screen, it needs the dish described all over again — which is
+      // the friction the feature exists to remove.
+      setJustPosted(dish);
     } catch (e) {
       console.error(e);
       toast.show(e instanceof Error && e.message ? `Could not post: ${e.message}` : 'Could not post — check your connection');
@@ -323,6 +330,43 @@ export default function PostScreen({
           </View>
         </Container>
       </ScrollView>
+    );
+  }
+
+  // The dish is already posted and on the board. This is an offer, not a step:
+  // "Done" is a complete answer and leaves everything as it is.
+  if (justPosted) {
+    return (
+      <KeyboardAvoider>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingTop: embedded ? 14 : 18 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Container narrow>
+            <View className="mb-4 items-center">
+              <Ionicons name="checkmark-circle" size={40} color={c.accent} />
+              <Text className="font-display-x mt-2 text-center text-[22px] text-ink">
+                {justPosted.dish_name} is live
+              </Text>
+              <Text className="font-sans mt-1 text-center text-[13.5px] leading-5 text-subtle">
+                Neighbours can order it now.
+              </Text>
+            </View>
+
+            <RepeatDish dish={justPosted} onDone={() => { setJustPosted(null); finishOrHome(); }} />
+
+            <View className="mt-3">
+              <Button
+                label="Done"
+                variant="ghost"
+                fullWidth
+                onPress={() => { setJustPosted(null); finishOrHome(); }}
+              />
+            </View>
+          </Container>
+        </ScrollView>
+      </KeyboardAvoider>
     );
   }
 
