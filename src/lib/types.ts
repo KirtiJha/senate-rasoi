@@ -51,9 +51,18 @@ export interface Order {
   buyer_flat: string | null;
   qty: number;
   status: OrderStatus;
-  cancelled_by: 'orderer' | 'chef' | null;
+  cancelled_by: 'orderer' | 'chef' | 'system' | null;
   created_at: string;
   status_updated_at: string;
+  /**
+   * What one plate cost when the order was placed (0094).
+   *
+   * Stamped at insert and frozen afterwards. Totals used to be recomputed from
+   * the dish's current price, so a chef editing it changed what buyers with
+   * existing orders were shown and asked to pay. Optional on the type because
+   * rows selected before 0094 will not carry it.
+   */
+  unit_price?: number | null;
 }
 
 /** Order joined with its dish — the foodie's "My Orders" view. */

@@ -429,3 +429,42 @@ export async function deleteDishTemplate(id: string): Promise<void> {
   const { error } = await supabase.from('dish_templates').delete().eq('id', id);
   if (error) throw error;
 }
+
+/**
+ * Every order still waiting on this chef, whatever the dish's date.
+ *
+ * The Kitchen tab builds its list from `fetchDishes`, which hides anything
+ * before today. So an order placed at 9pm and not acted on disappeared from
+ * the chef's screen at midnight — permanently, still holding a reserved plate,
+ * while the buyer sat past the self-cancel window on "waiting for chef".
+ *
+ * Backed by an RPC (0094) rather than a client join, because orders are not
+ * directly readable: everything on that table goes through SECURITY DEFINER.
+ */
+export interface OpenOrder {
+  order_id: string;
+  dish_id: string;
+  dish_name: string;
+  serve_date: string;
+  buyer_name: string;
+  buyer_flat: string | null;
+  qty: number;
+  unit_price: number | null;
+  status: OrderStatus;
+  created_at: string;
+}
+
+export async function fetchChefOpenOrders(): Promise<OpenOrder[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase.rpc('chef_open_orders');
+  if (error) throw error;
+  return (data ?? []) as OpenOrder[];
+}
+
+/** What a line of an order actually costs — the agreed price, not today's. */
+export function orderTotal(
+  order: { qty: number; unit_price?: number | null },
+  dishPrice: number,
+): number {
+  return order.qty * (order.unit_price ?? dishPrice);
+}

@@ -8,7 +8,7 @@ import { Avatar, Badge, Button, Container, VegMark } from './ui';
 import { useAuth } from '../context/auth';
 import { RepeatList } from './food/RepeatDish';
 import { useToast } from '../context/toast';
-import { fetchDishes, listChefOrders, setOrderStatus, statusMessageForFoodie, waLink } from '../lib/dishes';
+import { fetchDishes, listChefOrders, orderTotal, setOrderStatus, statusMessageForFoodie, waLink } from '../lib/dishes';
 import { haptics } from '../lib/haptics';
 import { subscribeToOrders } from '../lib/orders';
 import { countdown } from '../lib/time';
@@ -139,7 +139,8 @@ function KitchenDishCard({
   // Plates reserved = max − left (set_order_status / place_order keep plates_left
   // accurate); this avoids depending on the orders array being fully loaded.
   const platesOrdered = Math.max(0, dish.max_plates - dish.plates_left);
-  const revenue = orders.filter((o) => EARN.includes(o.status)).reduce((s, o) => s + o.qty * dish.price, 0);
+  const revenue = orders.filter((o) => EARN.includes(o.status))
+    .reduce((s, o) => s + orderTotal(o, dish.price), 0);
   const cd = countdown(dish.order_by);
 
   return (
@@ -173,7 +174,7 @@ function KitchenDishCard({
                     {o.buyer_flat ? <Text className="font-sans text-faint"> · {o.buyer_flat}</Text> : null}
                   </Text>
                   <Text className="font-sans text-[12px] text-muted">
-                    {o.qty} plate{o.qty !== 1 ? 's' : ''} · ₹{o.qty * dish.price}
+                    {o.qty} plate{o.qty !== 1 ? 's' : ''} · ₹{orderTotal(o, dish.price)}
                   </Text>
                 </View>
 
@@ -198,15 +199,33 @@ function KitchenDishCard({
                     </Pressable>
                   </View>
                 ) : o.status === 'accepted' ? (
-                  <Pressable onPress={() => onAct(o.id, 'cooking', 'Cooking started 🍳')} className="h-9 flex-row items-center gap-1 rounded-full bg-accent px-3 active:bg-accent-press">
-                    <Ionicons name="flame-outline" size={15} color={c.onAccent} />
-                    <Text className="font-sans-sb text-[12px] text-on-accent">Cook</Text>
-                  </Pressable>
+                  /* Accepting used to be one-way here. set_order_status has
+                     always allowed cancelling from any active state; the only
+                     escape the UI offered was WhatsApp, or deleting the whole
+                     dish — which took every other buyer's order with it. */
+                  <View className="flex-row items-center gap-1.5">
+                    <Pressable accessibilityRole="button" accessibilityLabel="Cancel this order"
+                      onPress={() => onAct(o.id, 'cancelled', 'Cancelled — plates released', wa, dish.dish_name)}
+                      className="h-9 w-9 items-center justify-center rounded-full border border-line active:bg-inset">
+                      <Ionicons name="close" size={18} color={c.muted} />
+                    </Pressable>
+                    <Pressable onPress={() => onAct(o.id, 'cooking', 'Cooking started 🍳')} className="h-9 flex-row items-center gap-1 rounded-full bg-accent px-3 active:bg-accent-press">
+                      <Ionicons name="flame-outline" size={15} color={c.onAccent} />
+                      <Text className="font-sans-sb text-[12px] text-on-accent">Cook</Text>
+                    </Pressable>
+                  </View>
                 ) : o.status === 'cooking' ? (
-                  <Pressable onPress={() => onAct(o.id, 'delivered', 'Marked delivered 🍽️')} className="h-9 flex-row items-center gap-1 rounded-full bg-success px-3 active:opacity-90">
-                    <Ionicons name="bag-check-outline" size={15} color="#fff" />
-                    <Text className="font-sans-sb text-[12px] text-white">Delivered</Text>
-                  </Pressable>
+                  <View className="flex-row items-center gap-1.5">
+                    <Pressable accessibilityRole="button" accessibilityLabel="Cancel this order"
+                      onPress={() => onAct(o.id, 'cancelled', 'Cancelled — plates released', wa, dish.dish_name)}
+                      className="h-9 w-9 items-center justify-center rounded-full border border-line active:bg-inset">
+                      <Ionicons name="close" size={18} color={c.muted} />
+                    </Pressable>
+                    <Pressable onPress={() => onAct(o.id, 'delivered', 'Marked delivered 🍽️')} className="h-9 flex-row items-center gap-1 rounded-full bg-success px-3 active:opacity-90">
+                      <Ionicons name="bag-check-outline" size={15} color="#fff" />
+                      <Text className="font-sans-sb text-[12px] text-white">Delivered</Text>
+                    </Pressable>
+                  </View>
                 ) : (
                   <Badge label={STATUS_LABEL[o.status]} tone={STATUS_TONE[o.status]} />
                 )}

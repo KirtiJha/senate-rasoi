@@ -10,7 +10,7 @@ import { useAuth } from '../context/auth';
 import { FeedbackPrompt } from './food/FeedbackPrompt';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
-import { waLink } from '../lib/dishes';
+import { orderTotal, waLink } from '../lib/dishes';
 import { cancelOrder, canSelfCancel, listMyOrders, subscribeToOrders } from '../lib/orders';
 import { MyOrder, OrderStatus, SLOT_EMOJI } from '../lib/types';
 import { useThemeColors } from '../theme';
@@ -108,7 +108,7 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
                       </Text>
                     </View>
                   </View>
-                  <Text className="font-display text-[18px] text-ink">₹{(o.dish?.price ?? 0) * o.qty}</Text>
+                  <Text className="font-display text-[18px] text-ink">₹{orderTotal(o, o.dish?.price ?? 0)}</Text>
                 </View>
 
                 <View className="mt-2.5 flex-row items-center justify-between border-t border-line pt-2.5">
@@ -117,7 +117,7 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
                     {active && o.dish?.chef_user_id ? (
                       <PayButton
                         payee={{ id: o.dish.chef_user_id, name: o.dish.chef_name, upi: o.dish.upi }}
-                        amount={(o.dish.price ?? 0) * o.qty}
+                        amount={orderTotal(o, o.dish.price ?? 0)}
                         note={`${o.dish.dish_name} × ${o.qty}`}
                         context={{ type: 'dish', id: o.id }}
                         label="Pay"
