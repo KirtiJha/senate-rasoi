@@ -227,7 +227,11 @@ export default function EventReportScreen() {
                   <View key={row.id} className="mb-2 flex-row items-center gap-2 last:mb-0">
                     <Text className="w-16 text-[12px] font-sans-sb text-ink">{row.flat}</Text>
                     <Text className="font-sans flex-1 text-[12px] text-muted" numberOfLines={1}>
-                      {row.contributor?.name ?? '—'}
+                      {/* The written-down name first. Deriving it from a linked
+                          profile only works for the few flats that have an
+                          Aangan account, which left the published accounts
+                          showing a column of dashes. */}
+                      {row.contributor_name || row.contributor?.name || '—'}
                       {row.method ? ` · ${row.method}` : ''}
                     </Text>
                     <Text className="text-[12px] font-sans-sb" style={{ color: '#16A34A' }}>
