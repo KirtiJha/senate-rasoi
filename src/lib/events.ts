@@ -1,3 +1,4 @@
+import { uploadContentPhoto } from './photoUpload';
 import { COMMUNITY_ID, isSupabaseConfigured, supabase } from './supabase';
 
 // Society functions (Diwali, Ganesh Chaturthi, Holi…) with two ledgers:
@@ -724,4 +725,81 @@ export async function setContributionReceipt(id: string, receiptUrl: string): Pr
     .update({ receipt_url: receiptUrl })
     .eq('id', id);
   if (error) throw error;
+}
+
+// ── Details: schedule, requirements, thank-yous ──────────────────────
+//
+// The free-form half of a celebration. See 0083 for why this is a list of
+// notes rather than fixed columns on the event.
+
+export interface EventNote {
+  id: string;
+  title: string | null;
+  body: string | null;
+  photo_urls: string[];
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function fetchEventNotes(eventId: string): Promise<EventNote[]> {
+  const { data, error } = await supabase
+    .from('event_notes')
+    .select('id, title, body, photo_urls, sort_order, created_at, updated_at')
+    .eq('event_id', eventId)
+    .order('sort_order')
+    .order('created_at');
+  if (error) throw error;
+  return (data ?? []).map((n) => ({
+    ...(n as EventNote),
+    // Postgres gives back null for an array column that was never written.
+    photo_urls: (n as EventNote).photo_urls ?? [],
+  }));
+}
+
+export async function addEventNote(input: {
+  eventId: string;
+  title?: string | null;
+  body?: string | null;
+  photoUrls?: string[];
+  sortOrder?: number;
+  userId: string;
+  communityId?: string;
+}): Promise<string> {
+  const { data, error } = await supabase
+    .from('event_notes')
+    .insert({
+      event_id: input.eventId,
+      community_id: input.communityId ?? COMMUNITY_ID,
+      title: input.title?.trim() || null,
+      body: input.body?.trim() || null,
+      photo_urls: input.photoUrls ?? [],
+      sort_order: input.sortOrder ?? 0,
+      created_by: input.userId,
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return (data as { id: string }).id;
+}
+
+export async function updateEventNote(
+  id: string,
+  patch: Partial<{ title: string | null; body: string | null; photo_urls: string[]; sort_order: number }>,
+): Promise<void> {
+  const { error } = await supabase.from('event_notes').update(patch).eq('id', id);
+  if (error) throw error;
+}
+
+export async function deleteEventNote(id: string): Promise<void> {
+  const { error } = await supabase.from('event_notes').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/**
+ * Upload one photo for a note. Indexed by position so re-uploading the same
+ * slot replaces rather than accumulates, matching how posts and listings work.
+ */
+export async function uploadNotePhoto(localUri: string, noteId: string, index: number): Promise<string> {
+  return uploadContentPhoto(localUri, `event-note/${noteId}/${index}.jpg`);
 }

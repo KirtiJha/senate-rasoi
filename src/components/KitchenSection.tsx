@@ -12,10 +12,19 @@ import { fetchDishes, listChefOrders, setOrderStatus, statusMessageForFoodie, wa
 import { haptics } from '../lib/haptics';
 import { subscribeToOrders } from '../lib/orders';
 import { countdown } from '../lib/time';
-import { ACTIVE_STATUSES, ChefOrder, DishRow, OrderStatus, SLOT_EMOJI } from '../lib/types';
+import { ChefOrder, DishRow, OrderStatus, SLOT_EMOJI } from '../lib/types';
 import { useThemeColors } from '../theme';
 
 const EARN: OrderStatus[] = ['accepted', 'cooking', 'delivered'];
+
+// When a WhatsApp message still makes sense to send by hand.
+//
+// Deliberately NOT ACTIVE_STATUSES, which means "still holds reserved stock" —
+// the two lists overlapped by coincidence, and that coincidence ended at
+// 'delivered': stock is settled, but "enjoy your dinner" is exactly the message
+// a chef wants to send. Declined and cancelled are absent because those get
+// their message automatically at the moment they happen.
+const CAN_MESSAGE: OrderStatus[] = ['placed', 'accepted', 'cooking', 'delivered'];
 const STATUS_TONE: Record<OrderStatus, 'accent' | 'success' | 'neutral'> = {
   placed: 'accent', accepted: 'success', cooking: 'accent', delivered: 'success', rejected: 'neutral', cancelled: 'neutral',
 };
@@ -168,7 +177,7 @@ function KitchenDishCard({
                   </Text>
                 </View>
 
-                {wa && ACTIVE_STATUSES.includes(o.status) ? (
+                {wa && CAN_MESSAGE.includes(o.status) ? (
                   <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp"
                     onPress={() => openUrl(waLink(wa, statusMessageForFoodie(dish.dish_name, o.status)))}
                     hitSlop={6}
@@ -180,7 +189,7 @@ function KitchenDishCard({
 
                 {o.status === 'placed' ? (
                   <View className="flex-row items-center gap-1.5">
-                    <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => onAct(o.id, 'rejected', 'Declined — plates released')} className="h-9 w-9 items-center justify-center rounded-full border border-line active:bg-inset">
+                    <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => onAct(o.id, 'rejected', 'Declined — plates released', wa, dish.dish_name)} className="h-9 w-9 items-center justify-center rounded-full border border-line active:bg-inset">
                       <Ionicons name="close" size={18} color={c.muted} />
                     </Pressable>
                     <Pressable onPress={() => onAct(o.id, 'accepted', 'Order confirmed ✓', wa, dish.dish_name)} className="h-9 flex-row items-center gap-1 rounded-full bg-success px-3 active:opacity-90">

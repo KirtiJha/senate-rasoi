@@ -3,6 +3,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { Avatar, Button, Container, ScreenHeader, Segmented, Sheet } from '../../../components/ui';
+import { DetailsTab } from '../../../components/celebrations/DetailsTab';
 import { MoneyTab } from '../../../components/celebrations/MoneyTab';
 import { TasksTab } from '../../../components/celebrations/TasksTab';
 import { useAuth } from '../../../context/auth';
@@ -19,6 +20,7 @@ import { useThemeColors } from '../../../theme';
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
+  { key: 'details', label: 'Details' },
   { key: 'tasks', label: 'Tasks' },
   { key: 'money', label: 'Money' },
 ] as const;
@@ -45,7 +47,7 @@ export default function EventDetailScreen() {
   const [loading, setLoading] = useState(true);
 
   const [showTeam, setShowTeam] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'tasks' | 'money'>('overview');
+  const [tab, setTab] = useState<'overview' | 'details' | 'tasks' | 'money'>('overview');
   const [showStatus, setShowStatus] = useState(false);
   const [residents, setResidents] = useState<Resident[]>([]);
 
@@ -158,7 +160,13 @@ export default function EventDetailScreen() {
             <Segmented items={TABS} value={tab} onChange={setTab} />
           </View>
 
-          {tab === 'tasks' ? (
+          {tab === 'details' ? (
+            <DetailsTab
+              eventId={event.id}
+              communityId={event.community_id}
+              canManage={canManage}
+            />
+          ) : tab === 'tasks' ? (
             <TasksTab
               eventId={event.id}
               communityId={event.community_id}
