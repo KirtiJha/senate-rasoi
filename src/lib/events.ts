@@ -969,3 +969,24 @@ export async function leaveActivity(participantId: string): Promise<void> {
 export async function uploadEventCover(localUri: string, eventId: string): Promise<string> {
   return uploadContentPhoto(localUri, `events/${eventId}/cover.jpg`);
 }
+
+/**
+ * The two things a flat itself knows: whether it is taking part, and how many
+ * people live there.
+ *
+ * Written separately from the amount because they are facts about the flat
+ * rather than about a payment, and because 0087 lets a resident set exactly
+ * these two on their own row while the treasurer keeps the ledger.
+ *
+ * Opting out zeroes the amount as well as setting the flag — a flat that owes
+ * nothing must not sit in the shortfall inventing one.
+ */
+export async function setContributionFacts(
+  id: string,
+  facts: { opted_out?: boolean; head_count?: number | null },
+): Promise<void> {
+  const patch: Record<string, unknown> = { ...facts };
+  if (facts.opted_out === true) patch.amount = 0;
+  const { error } = await supabase.from('event_contributions').update(patch).eq('id', id);
+  if (error) throw error;
+}

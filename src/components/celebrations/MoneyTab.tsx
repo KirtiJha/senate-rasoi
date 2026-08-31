@@ -9,14 +9,12 @@ import { useToast } from '../../context/toast';
 import {
   BudgetItem,
   Contribution,
-  ContributionBasis,
   EventTotals,
   ExpenseCategory,
   SocietyEvent,
   Sponsorship,
   addBudgetItem,
   addSponsorship,
-  applySplit,
   computeSplit,
   deleteBudgetItem,
   deleteSponsorship,
@@ -78,35 +76,6 @@ export function MoneyTab({
 
   const estimated = (budget ?? []).reduce((s, b) => s + Number(b.estimated), 0);
   const plan = computeSplit(event, contributions, sponsors ?? []);
-  const basis: ContributionBasis = event.contribution_basis ?? 'flat';
-
-  const setBasis = async (next: ContributionBasis) => {
-    if (busy) return;
-    haptics.select();
-    setBusy(true);
-    try { await updateEvent(event.id, { contribution_basis: next } as never); onChanged(); }
-    catch { toast.show('Could not change that'); }
-    finally { setBusy(false); }
-  };
-
-  const apply = async () => {
-    const ok = await confirm({
-      title: `Ask ${rupees(plan.perUnit)} per ${basis === 'person' ? 'person' : 'flat'}?`,
-      message:
-        `${plan.units} ${basis === 'person' ? 'people' : 'flats'} taking part. ` +
-        'Flats that have already paid are left exactly as they are.',
-      confirmLabel: 'Set amounts',
-    });
-    if (!ok) return;
-    setBusy(true);
-    try {
-      const n = await applySplit(plan, contributions);
-      haptics.success();
-      toast.show(n ? `Updated ${n} flats` : 'Nothing to update — everyone has paid');
-      onChanged();
-    } catch { toast.show('Could not apply that'); }
-    finally { setBusy(false); }
-  };
 
   if (budget === null || sponsors === null) {
     return <View className="items-center py-10"><ActivityIndicator color={c.accent} /></View>;
@@ -169,60 +138,32 @@ export function MoneyTab({
         </View>
       ) : null}
 
-      {/* ── What each flat is asked for ───────────────────────── */}
+      {/* ── Where the money stands ────────────────────────────── */}
       <View>
-        <SectionHead title="How we split it" hint="Everything already in hand is deducted first" />
+        <SectionHead title="Where it stands" hint="Amounts are set flat by flat, not divided automatically" />
         <View className="card p-4">
-          {canManage ? (
-            <View className="mb-3 flex-row gap-2">
-              {(['flat', 'person'] as ContributionBasis[]).map((b) => {
-                const on = basis === b;
-                return (
-                  <View key={b} style={{ flex: 1 }}>
-                    <Touchable haptic={null} onPress={() => setBasis(b)} disabled={busy}
-                      accessibilityRole="button" accessibilityState={{ selected: on }}
-                      accessibilityLabel={b === 'flat' ? 'Split per flat' : 'Split per person'}>
-                      <View pointerEvents="none" className="items-center rounded-xl py-2.5"
-                        style={{ backgroundColor: on ? c.accent : c.inset }}>
-                        <Text className="text-[13px] font-sans-sb" style={{ color: on ? c.onAccent : c.muted }}>
-                          {b === 'flat' ? 'Per flat' : 'Per person'}
-                        </Text>
-                      </View>
-                    </Touchable>
-                  </View>
-                );
-              })}
-            </View>
-          ) : null}
-
-          <Row label="Budget" value={rupees(Number(event.budget_amount ?? 0))} />
+          <Row label="Budget (approximate)" value={rupees(Number(event.budget_amount ?? 0))} />
           {totals.carryIn > 0 ? <Row label="Carried forward" value={`− ${rupees(totals.carryIn)}`} tone="accent" /> : null}
           {totals.fromSponsors > 0 ? <Row label="Sponsored" value={`− ${rupees(totals.fromSponsors)}`} tone="accent" /> : null}
           <View className="my-2 h-px" style={{ backgroundColor: c.line }} />
           <Row label="To raise from residents" value={rupees(plan.target)} bold />
-          <Row
-            label={basis === 'person' ? `Across ${plan.units} people` : `Across ${plan.units} flats`}
-            value={`${rupees(plan.perUnit)} each`}
-            bold
-            tone="accent"
-          />
+          <Row label="Collected so far" value={rupees(totals.fromFlats)} bold tone="accent" />
+          {plan.target - totals.fromFlats > 0 ? (
+            <Row label="Still short" value={rupees(plan.target - totals.fromFlats)} bold />
+          ) : plan.target > 0 ? (
+            <Row label="Over by" value={rupees(totals.fromFlats - plan.target)} bold tone="accent" />
+          ) : null}
+
           {totals.optedOut > 0 ? (
             <Text className="font-sans mt-2 text-[12px]" style={{ color: c.subtle }}>
               {totals.optedOut} flat{totals.optedOut === 1 ? '' : 's'} opted out and owe nothing.
             </Text>
           ) : null}
 
-          {canManage ? (
-            <View className="mt-3">
-              <Button
-                label={`Set ${rupees(plan.perUnit)} for everyone unpaid`}
-                size="sm"
-                fullWidth
-                loading={busy}
-                onPress={apply}
-              />
-            </View>
-          ) : null}
+          <Text className="font-sans mt-2 text-[12px] leading-[18px]" style={{ color: c.faint }}>
+            The budget is a working figure — edit it from the pencil at the top.
+            Each flat&apos;s amount is entered on the Collection screen as it is agreed.
+          </Text>
         </View>
       </View>
 

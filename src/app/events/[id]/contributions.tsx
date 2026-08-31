@@ -10,7 +10,7 @@ import { fetchDirectory } from '../../../lib/directory';
 import {
   Contribution, ContributionStatus, EventTeamMember, PayMethod, SocietyEvent,
   computeTotals, fetchContributions, fetchEvent, fetchTeam, generateRoster, rupees,
-  setContributionStatus, subscribeEvent, upsertContribution,
+  setContributionFacts, setContributionStatus, subscribeEvent, upsertContribution,
 } from '../../../lib/events';
 import { useThemeColors } from '../../../theme';
 
@@ -47,6 +47,8 @@ export default function ContributionsScreen() {
   const [editName, setEditName] = useState('');
   const [editFlat, setEditFlat] = useState('');
   const [addingNew, setAddingNew] = useState(false);
+  const [editHeads, setEditHeads] = useState('');
+  const [editOptedOut, setEditOptedOut] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -112,6 +114,8 @@ export default function ContributionsScreen() {
     setEditNote(row.note ?? '');
     setEditName(row.contributor_name ?? row.contributor?.name ?? '');
     setEditFlat(row.flat);
+    setEditHeads(row.head_count ? String(row.head_count) : '');
+    setEditOptedOut(!!row.opted_out);
   };
 
   const openAdd = () => {
@@ -127,6 +131,8 @@ export default function ContributionsScreen() {
     setEditNote('');
     setEditName('');
     setEditFlat('');
+    setEditHeads('');
+    setEditOptedOut(false);
   };
 
   const saveEdit = async (status: ContributionStatus) => {
@@ -141,12 +147,19 @@ export default function ContributionsScreen() {
         flat: (editFlat.trim() || editing.flat),
         contributorUserId: editing.contributor_user_id,
         contributorName: editName || null,
-        amount: Number(editAmount) || 0,
+        amount: editOptedOut ? 0 : (Number(editAmount) || 0),
         status,
         method: status === 'received' ? editMethod : null,
         note: editNote || null,
         recordedBy: userId,
       });
+      const heads = editHeads.trim() ? Number(editHeads) : null;
+      if (editing.id) {
+        await setContributionFacts(editing.id, {
+          opted_out: editOptedOut,
+          head_count: heads && heads > 0 ? heads : null,
+        });
+      }
       setEditing(null);
       await load();
       toast.show(status === 'received' ? 'Recorded ✓' : 'Updated');
@@ -350,6 +363,30 @@ export default function ContributionsScreen() {
           className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink"
           style={{ outline: 'none' } as any}
         />
+
+        <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">
+          People in this flat (optional)
+        </Text>
+        <TextInput
+          value={editHeads} onChangeText={setEditHeads} keyboardType="number-pad"
+          placeholder="e.g. 4" placeholderTextColor={c.faint}
+          className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink"
+          style={{ outline: 'none' } as any}
+        />
+
+        {/* Opting out zeroes the amount as well as setting the flag: a flat
+            that owes nothing must not sit in the shortfall. */}
+        <Pressable
+          onPress={() => setEditOptedOut((v) => !v)}
+          className="mb-3 flex-row items-center gap-2.5 rounded-2xl border border-line bg-inset px-3.5 py-3"
+        >
+          <Ionicons
+            name={editOptedOut ? 'checkbox' : 'square-outline'}
+            size={19}
+            color={editOptedOut ? ACCENT : c.faint}
+          />
+          <Text className="flex-1 font-sans text-[14px] text-ink">Not taking part this time</Text>
+        </Pressable>
 
         <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">How did they pay?</Text>
         <View className="mb-3 flex-row gap-2">
