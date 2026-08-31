@@ -5,7 +5,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { PropertyChat } from '../../components/PropertyChat';
 import { T } from '../../components/T';
-import { Avatar, Button, Container, Gallery, ScreenHeader, Sheet } from '../../components/ui';
+import { Avatar, Button, Container, Gallery, KeyboardAvoider, ScreenHeader, Sheet } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -121,7 +121,7 @@ export default function PropertyDetailScreen() {
   };
 
   return (
-    <View className="flex-1 bg-bg">
+    <KeyboardAvoider>
       <ScreenHeader icon="key-outline" title={isRent ? 'Flat for rent' : 'Flat for sale'} showBack hideSociety right={<ModerationMenu targetType="property" targetId={p.id} targetOwnerId={p.owner_user_id} targetOwnerName={p.owner?.name} />} />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
@@ -272,7 +272,7 @@ export default function PropertyDetailScreen() {
         defaultName={profile?.name ?? ''}
         c={c}
       />
-    </View>
+    </KeyboardAvoider>
   );
 }
 

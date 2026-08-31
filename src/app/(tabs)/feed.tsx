@@ -6,12 +6,12 @@ import { openPhotoPicker } from '../../lib/photo';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Animated, KeyboardAvoidingView, Modal, Platform, Pressable,
+  ActivityIndicator, Animated, Modal, Platform, Pressable,
   RefreshControl, ScrollView, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
-import { Avatar, Button, Chip, ErrorState, ScreenHeader, useResponsive } from '../../components/ui';
+import { Avatar, Button, Chip, ErrorState, ScreenHeader, useKeyboardInset, useResponsive } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useConfirm } from '../../context/confirm';
@@ -341,6 +341,8 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
   const [posting, setPosting] = useState(false);
   const bodyRef = useRef<TextInput>(null);
   const modalInsets = useSafeAreaInsets();
+  // Inside an RN Modal, so the JS Keyboard API rather than Reanimated.
+  const composeKb = useKeyboardInset();
   const confirm = useConfirm();
 
   const closeWithGuard = async () => {
@@ -376,7 +378,7 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={closeWithGuard}>
-      <KeyboardAvoidingView className="flex-1 bg-bg" style={{ paddingTop: modalInsets.top }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View className="flex-1 bg-bg" style={{ paddingTop: modalInsets.top, paddingBottom: composeKb }}>
         {/* Header — close + title only, no post button here */}
         <View className="flex-row items-center justify-between border-b border-line px-4 py-4">
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={closeWithGuard} hitSlop={10}>
@@ -488,7 +490,7 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
             />
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }

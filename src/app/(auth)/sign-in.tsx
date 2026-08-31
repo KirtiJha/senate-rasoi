@@ -7,7 +7,7 @@ import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-nativ
 
 import { DiversityEmblem } from '../../components/Brand';
 import { Field } from '../../components/forms';
-import { Button, Container, KeyboardAvoider, PinInput, Segmented } from '../../components/ui';
+import { Button, Container, KeyboardAvoider, PinInput, Segmented, useKeyboardInset } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { selfResetPin, signIn, signUp } from '../../lib/auth';
@@ -60,6 +60,7 @@ export default function SignInScreen() {
 
   // Forgot PIN flow
   const [showForgotPin, setShowForgotPin] = useState(false);
+  const pinKb = useKeyboardInset();
   const [resetPhone, setResetPhone] = useState('');
   const [resetNewPin, setResetNewPin] = useState('');
   const [resetConfirmPin, setResetConfirmPin] = useState('');
@@ -577,7 +578,10 @@ export default function SignInScreen() {
       </Modal>
       {/* Forgot PIN modal */}
       <Modal visible={showForgotPin} transparent animationType="fade" onRequestClose={() => setShowForgotPin(false)}>
-        <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: '#0008' }}>
+        {/* Nested Modals get their own native window on Android, so the
+            screen's KeyboardAvoider does not reach in here. */}
+        <View className="flex-1 items-center justify-center px-6"
+          style={{ backgroundColor: '#0008', paddingBottom: pinKb }}>
           <View style={{ width: '100%', maxWidth: 380, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}>
             {resetDone ? (
               <>

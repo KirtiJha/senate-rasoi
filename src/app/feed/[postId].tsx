@@ -5,12 +5,12 @@ import { openPhotoPicker } from '../../lib/photo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView, Modal, Platform, Pressable,
+  Modal, Platform, Pressable,
   ScrollView, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
-import { Avatar, Container, ErrorState, KeyboardAvoider } from '../../components/ui';
+import { Avatar, Container, ErrorState, KeyboardAvoider, useKeyboardInset } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useBlocks } from '../../context/blocks';
@@ -604,6 +604,7 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
 }) {
   const toast = useToast();
   const insets = useSafeAreaInsets();
+  const editKb = useKeyboardInset();
   const [category, setCategory] = useState<PostCategory>(post.category);
   const [title, setTitle] = useState(post.title ?? '');
   const [body, setBody] = useState(post.body);
@@ -648,7 +649,7 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View className="flex-1 justify-end" style={{ backgroundColor: '#00000066' }}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={{ paddingBottom: editKb }}>
           <View className="rounded-t-3xl bg-bg px-4 pt-3" style={{ paddingBottom: insets.bottom + 16 }}>
             <View className="mb-3 flex-row items-center justify-between">
               <Text className="font-display-x text-[18px] text-ink">Edit post</Text>
@@ -695,7 +696,7 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
               <Text className="font-sans-sb text-[15px]" style={{ color: c.onAccent }}>{saving ? 'Saving…' : 'Save changes'}</Text>
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       </View>
     </Modal>
   );

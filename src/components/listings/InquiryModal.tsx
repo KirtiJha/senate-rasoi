@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, Text, TextInput, View } from 'react-native';
 import { getService } from '../../lib/services';
 import { ListingRow } from '../../lib/types';
 import { useThemeColors } from '../../theme';
-import { Avatar, Button, IconButton } from '../ui';
+import { Avatar, Button, IconButton, useKeyboardInset } from '../ui';
 
 /**
  * WHATSAPP IS A WAY TO REACH SOMEBODY, NOT THE ONLY ONE.
@@ -31,6 +31,8 @@ interface InquiryModalProps {
 export function InquiryModal({ listing, senderName, onClose, onConfirm }: InquiryModalProps) {
   const c = useThemeColors();
   const [message, setMessage] = useState('');
+  // Inside an RN Modal — Reanimated's keyboard hook reports nothing there.
+  const kb = useKeyboardInset();
 
   useEffect(() => {
     setMessage('');
@@ -53,10 +55,7 @@ export function InquiryModal({ listing, senderName, onClose, onConfirm }: Inquir
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        className="flex-1 justify-end"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <View className="flex-1 justify-end" style={{ paddingBottom: kb }}>
         <Pressable className="flex-1 bg-black/55" onPress={onClose} />
         <Pressable
           onPress={(e) => e.stopPropagation()}
@@ -144,7 +143,7 @@ export function InquiryModal({ listing, senderName, onClose, onConfirm }: Inquir
               : `${ownerName} is notified on Aangan and can reply here.`}
           </Text>
         </Pressable>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
