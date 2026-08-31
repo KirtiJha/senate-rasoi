@@ -12,7 +12,7 @@ import {
   fetchMyFeedback,
 } from '../../lib/feedback';
 import { useThemeColors } from '../../theme';
-import { Badge, Button, Container, ScreenHeader, Touchable } from '../../components/ui';
+import { Badge, Container, ScreenHeader, Touchable } from '../../components/ui';
 
 /**
  * What this resident has reported, and what came of it.
@@ -25,7 +25,7 @@ import { Badge, Button, Container, ScreenHeader, Touchable } from '../../compone
 export default function MyFeedbackScreen() {
   const c = useThemeColors();
   const router = useRouter();
-  const { userId } = useAuth();
+  const { userId, isAdmin } = useAuth();
 
   const [items, setItems] = useState<FeedbackItem[] | null>(null);
 
@@ -75,6 +75,28 @@ export default function MyFeedbackScreen() {
               </Touchable>
             ))}
           </View>
+
+          {isAdmin ? (
+            <View className="mb-5">
+              <Touchable
+                onPress={() => router.push('/admin/feedback' as never)}
+                accessibilityRole="button"
+                accessibilityLabel="Open the reports queue"
+              >
+                <View
+                  pointerEvents="none"
+                  className="flex-row items-center gap-3 rounded-2xl px-4 py-3.5"
+                  style={{ backgroundColor: c.accentSoft, borderWidth: 1, borderColor: c.accentLine }}
+                >
+                  <Ionicons name="clipboard-outline" size={17} color={c.accent} />
+                  <Text className="flex-1 font-sans-sb text-[14px]" style={{ color: c.accent }}>
+                    Everything residents have reported
+                  </Text>
+                  <Ionicons name="chevron-forward" size={16} color={c.accent} />
+                </View>
+              </Touchable>
+            </View>
+          ) : null}
 
           <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">
             What you have sent

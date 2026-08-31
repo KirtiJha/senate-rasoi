@@ -169,6 +169,18 @@ const COMMUNITY_TILES: CommunityTile[] = [
     color: '#EF4444',
     href: '/emergency',
   },
+  // Last on purpose: a way to report a problem with Aangan itself belongs
+  // after everything Aangan actually does.
+  {
+    key: 'feedback',
+    label: 'Feedback',
+    blurb: 'Report a bug or ask for a feature',
+    icon: 'bulb',
+    // Slate rather than another bright hue: this is the one tile that is about
+    // Aangan itself rather than about the society, and it should read that way.
+    color: '#64748B',
+    href: '/feedback',
+  },
 ];
 
 export default function HomeScreen() {
