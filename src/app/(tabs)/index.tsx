@@ -169,6 +169,14 @@ const COMMUNITY_TILES: CommunityTile[] = [
     color: '#EF4444',
     href: '/emergency',
   },
+  {
+    key: 'rides',
+    label: 'Rides',
+    blurb: 'Share a lift with neighbours going your way',
+    icon: 'car',
+    color: '#0EA5E9',
+    href: '/rides',
+  },
   // Last on purpose: a way to report a problem with Aangan itself belongs
   // after everything Aangan actually does.
   {

@@ -304,6 +304,9 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     key: 'carpooling',
     label: 'Carpooling',
     blurb: 'Share rides and split costs with neighbours going your way',
+    // Superseded by the Rides feature (0098), which can actually take a
+    // booking. Kept so existing listings still render; disabled so no new
+    // one is created down a path that has no accept button.
     icon: 'car-outline',
     color: '#0EA5E9',
     kind: 'listing',
@@ -319,7 +322,11 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
       { key: 'seats', label: 'Seats available', type: 'number', placeholder: '2' },
       { key: 'preference', label: 'Preference', type: 'select', options: ['All welcome', 'Women only', 'Men only'] },
     ],
-    enabled: true,
+    // Retired in favour of Rides (0098), which can take an actual booking.
+    // getService() still resolves it, so listings already posted keep their
+    // label and icon; SERVICES filters on this, so no new one can be created
+    // down a path with no accept button.
+    enabled: false,
     order: 14,
   },
 ];
