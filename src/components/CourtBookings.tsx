@@ -37,7 +37,7 @@ export function CourtBookings({
   const c = useThemeColors();
   const toast = useToast();
   const router = useRouter();
-  const { userId } = useAuth();
+  const { userId, isAdmin } = useAuth();
   const confirm = useConfirm();
 
   const [sessions, setSessions] = useState<SessionView[]>([]);
@@ -122,14 +122,14 @@ export function CourtBookings({
       ) : (
         <View className="gap-2.5">
           {upcoming.map((s) => (
-            <SessionCard key={s.id} s={s} userId={userId} accent={accent} c={c} busy={busy === s.id}
+            <SessionCard key={s.id} s={s} userId={userId} canManage={!!isAdmin} accent={accent} c={c} busy={busy === s.id}
               onRespond={respond} onCancel={onCancelSession} onManage={setManageSession} onEdit={setEditSession} />
           ))}
           {recent.length ? (
             <>
               <Text className="mt-1 text-[10px] font-sans-sb uppercase tracking-wider text-faint">Recent</Text>
               {recent.map((s) => (
-                <SessionCard key={s.id} s={s} userId={userId} accent={accent} c={c} busy={busy === s.id}
+                <SessionCard key={s.id} s={s} userId={userId} canManage={!!isAdmin} accent={accent} c={c} busy={busy === s.id}
                   onRespond={respond} onCancel={onCancelSession} onManage={setManageSession} onEdit={setEditSession} />
               ))}
             </>
@@ -182,13 +182,16 @@ export function CourtBookings({
 }
 
 function SessionCard({
-  s, userId, accent, c, busy, onRespond, onCancel, onManage, onEdit,
+  s, userId, canManage, accent, c, busy, onRespond, onCancel, onManage, onEdit,
 }: {
-  s: SessionView; userId: string | null; accent: string; c: ReturnType<typeof useThemeColors>;
+  s: SessionView; userId: string | null; canManage: boolean; accent: string; c: ReturnType<typeof useThemeColors>;
   busy: boolean; onRespond: (s: SessionView, status: 'confirmed' | 'declined') => void; onCancel: (s: SessionView) => void;
   onManage: (s: SessionView) => void; onEdit: (s: SessionView) => void;
 }) {
-  const isBooker = s.booker_user_id === userId;
+  // The booker runs their own slot; an admin is the escape hatch for when
+  // that person is gone. Mirrors the RLS in 0043 so the UI never offers an
+  // action the database would refuse, or withholds one it would allow.
+  const isBooker = s.booker_user_id === userId || canManage;
   const time = s.start_time ? formatTime(s.start_time) : '';
   const locked = rsvpLocked(s.session_date, s.start_time ?? '');
   return (

@@ -13,6 +13,7 @@ import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
 import { waLink } from '../lib/dishes';
+import { SkipDays } from './food/SkipDays';
 import {
   cancelSubscription, chefTiffinForDate, deleteTiffinPlan, listMySubscriptions,
   listMyTiffinPlans, setPlanActive, setSubscriptionPaused, todayStr, updateTiffinPlan,
@@ -40,6 +41,7 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
   const [subs, setSubs] = useState<SubscriptionWithPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [skipping, setSkipping] = useState<SubscriptionWithPlan | null>(null);
 
   const load = useCallback(async () => {
     if (!userId) { setLoading(false); return; }
@@ -179,6 +181,13 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
                           <Ionicons name="logo-whatsapp" size={18} color={c.success} />
                         </Pressable>
                       ) : null}
+                      {/* Pausing stops everything until you remember to
+                          resume; skipping is the thing people actually mean
+                          when they are away for a day. */}
+                      <Pressable accessibilityRole="button" accessibilityLabel="Choose days to skip"
+                        onPress={() => setSkipping(s)} hitSlop={6}>
+                        <Text className="text-[12px] font-sans-sb text-accent">Skip days</Text>
+                      </Pressable>
                       <Pressable onPress={() => togglePause(s)} hitSlop={6}>
                         <Text className="text-[12px] font-sans-sb text-accent">{s.paused ? 'Resume' : 'Pause'}</Text>
                       </Pressable>
@@ -193,6 +202,14 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
           </>
         )}
       </Container>
+
+      <SkipDays
+        visible={skipping !== null}
+        subscriptionId={skipping?.id ?? null}
+        daysOfWeek={skipping?.plan?.days_of_week ?? []}
+        planTitle={skipping?.plan?.title ?? 'this tiffin'}
+        onClose={() => setSkipping(null)}
+      />
     </ScrollView>
   );
 }

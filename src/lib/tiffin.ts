@@ -1,4 +1,4 @@
-import { COMMUNITY_ID, supabase } from './supabase';
+import { COMMUNITY_ID, isSupabaseConfigured, supabase } from './supabase';
 import { resolvePhoto, uploadContentPhoto } from './photoUpload';
 import type {
   Slot,
@@ -162,4 +162,41 @@ export async function chefTiffinForDate(dateStr: string): Promise<TiffinDayRow[]
 
 export function todayStr(): string {
   return new Date().toLocaleDateString('en-CA');
+}
+
+// ── Skipping a single day ───────────────────────────────────────────
+//
+// `subscription_skips` has existed since 0007 with per-subscriber RLS, and the
+// chef's daily roster already excludes skipped dates. Nothing in the app ever
+// referenced the table, so a subscriber going away for two days had to pause
+// the whole subscription and remember to resume it — or take delivery of food
+// they were not there to eat.
+
+/** The dates this subscription is skipping, from today forward. */
+export async function fetchSkips(subId: string): Promise<string[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase
+    .from('subscription_skips')
+    .select('skip_date')
+    .eq('subscription_id', subId)
+    .gte('skip_date', todayStr())
+    .order('skip_date');
+  if (error) throw error;
+  return (data ?? []).map((r: { skip_date: string }) => r.skip_date);
+}
+
+export async function setSkip(subId: string, date: string, skip: boolean): Promise<void> {
+  if (skip) {
+    const { error } = await supabase
+      .from('subscription_skips')
+      .upsert({ subscription_id: subId, skip_date: date }, { onConflict: 'subscription_id,skip_date' });
+    if (error) throw error;
+    return;
+  }
+  const { error } = await supabase
+    .from('subscription_skips')
+    .delete()
+    .eq('subscription_id', subId)
+    .eq('skip_date', date);
+  if (error) throw error;
 }
