@@ -184,7 +184,7 @@ export async function updateDirectoryEntry(
   id: string,
   patch: Partial<{
     name: string; block: string | null; flat: string | null; phone: string | null;
-    resident_type: string; profession: string | null; vehicle_no: string | null;
+    resident_type: string | null; profession: string | null; vehicle_no: string | null;
     native: string | null; alt_phone: string | null; email: string | null;
   }>,
 ): Promise<void> {

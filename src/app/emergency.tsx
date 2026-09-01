@@ -10,7 +10,7 @@ import { useConfirm } from '../context/confirm';
 import {
   ALL_EMERGENCY_ROLES, EMERGENCY_ROLE_COLORS, EMERGENCY_ROLE_ICONS, EMERGENCY_ROLE_LABELS,
   EmergencyContact, EmergencyRole,
-  addEmergencyContact, deleteEmergencyContact, fetchEmergencyContacts,
+  addEmergencyContact, deleteEmergencyContact, fetchEmergencyContacts, updateEmergencyContact,
 } from '../lib/emergency';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { useThemeColors } from '../theme';
@@ -27,6 +27,7 @@ export default function EmergencyScreen() {
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [editing, setEditing] = useState<EmergencyContact | null>(null);
 
   const load = useCallback(async () => {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
@@ -112,12 +113,20 @@ export default function EmergencyScreen() {
                           <Ionicons name="call" size={18} color={color} />
                         </Pressable>
                         {isAdmin ? (
-                          <Pressable accessibilityRole="button" accessibilityLabel="Delete"
-                            onPress={() => handleDelete(contact)}
-                            className="h-10 w-10 items-center justify-center rounded-full active:bg-inset"
-                          >
-                            <Ionicons name="trash-outline" size={16} color={c.faint} />
-                          </Pressable>
+                          <>
+                            <Pressable accessibilityRole="button" accessibilityLabel={`Edit ${contact.name}`}
+                              onPress={() => setEditing(contact)}
+                              className="h-10 w-10 items-center justify-center rounded-full active:bg-inset"
+                            >
+                              <Ionicons name="pencil" size={15} color={c.faint} />
+                            </Pressable>
+                            <Pressable accessibilityRole="button" accessibilityLabel={`Delete ${contact.name}`}
+                              onPress={() => handleDelete(contact)}
+                              className="h-10 w-10 items-center justify-center rounded-full active:bg-inset"
+                            >
+                              <Ionicons name="trash-outline" size={16} color={c.faint} />
+                            </Pressable>
+                          </>
                         ) : null}
                       </View>
                     </View>
@@ -142,18 +151,36 @@ export default function EmergencyScreen() {
           c={c}
         />
       ) : null}
+
+      {isAdmin ? (
+        <AddContactModal
+          visible={editing !== null}
+          existing={editing}
+          communityId={communityId ?? ''}
+          onClose={() => setEditing(null)}
+          onAdded={(contact: EmergencyContact) => {
+            setContacts((prev: EmergencyContact[]) =>
+              prev.map((x) => (x.id === contact.id ? contact : x)));
+            setEditing(null);
+            toast.show('Contact updated');
+          }}
+          c={c}
+        />
+      ) : null}
     </View>
   );
 }
 
 function AddContactModal({
-  visible, communityId, onClose, onAdded, c,
+  visible, communityId, onClose, onAdded, c, existing = null,
 }: {
   visible: boolean;
   communityId: string;
   onClose: () => void;
   onAdded: (contact: EmergencyContact) => void;
   c: ReturnType<typeof useThemeColors>;
+  /** Present when correcting a contact rather than adding one. */
+  existing?: EmergencyContact | null;
 }) {
   const insets = useSafeAreaInsets();
   const [name, setName] = useState('');
@@ -162,11 +189,25 @@ function AddContactModal({
   const [category, setCategory] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Load whatever is being corrected; clear when adding.
+  useEffect(() => {
+    if (!visible) return;
+    setName(existing?.name ?? '');
+    setPhone(existing?.phone ?? '');
+    setRole(existing?.role ?? 'security');
+    setCategory(existing?.category ?? '');
+  }, [visible, existing]);
+
   const save = async () => {
     if (!name.trim()) return;
     if (!phone.trim()) return;
     setSaving(true);
     try {
+      if (existing) {
+        await updateEmergencyContact(existing.id, { name, phone, role, category: category || null });
+        onAdded({ ...existing, name: name.trim(), phone: phone.trim(), role, category: category.trim() || null });
+        return;
+      }
       const contact = await addEmergencyContact({ communityId, name, phone, role, category: category || null });
       onAdded(contact);
       setName(''); setPhone(''); setRole('security'); setCategory('');
@@ -248,7 +289,7 @@ function AddContactModal({
             className={`items-center rounded-2xl py-3.5 ${saving || !name.trim() || !phone.trim() ? 'bg-inset' : 'bg-accent active:bg-accent-press'}`}
           >
             <Text className={`font-sans-sb text-[15px] ${saving || !name.trim() || !phone.trim() ? 'text-faint' : 'text-on-accent'}`}>
-              {saving ? 'Saving…' : 'Add Contact'}
+              {saving ? 'Saving…' : existing ? 'Save changes' : 'Add Contact'}
             </Text>
           </Pressable>
         </ScrollView>

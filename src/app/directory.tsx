@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { ReactNode, useCallback, useMemo, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, Chip, ErrorState, RowSkeleton, ScreenHeader, Sheet, useResponsive } from '../components/ui';
@@ -8,7 +8,7 @@ import { Field } from '../components/forms';
 import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
-import { Resident, addDirectoryEntry, adminSetDirectoryVisibility, adminSetMovedIn, deleteDirectoryEntry, fetchDirectory } from '../lib/directory';
+import { Resident, addDirectoryEntry, adminSetDirectoryVisibility, adminSetMovedIn, deleteDirectoryEntry, fetchDirectory, updateDirectoryEntry } from '../lib/directory';
 import { waLink } from '../lib/dishes';
 import { getOrCreateThread } from '../lib/dm';
 import { isSupabaseConfigured } from '../lib/supabase';
@@ -58,6 +58,9 @@ export default function DirectoryScreen() {
   const [sort, setSort] = useState<SortKey>('flat');
   const [showFilters, setShowFilters] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  // Only manually-added rows can be corrected; a registered member owns their
+  // own profile and edits it there.
+  const [editingEntry, setEditingEntry] = useState<Resident | null>(null);
   const [selected, setSelected] = useState<Resident | null>(null);
 
   // Distinct blocks / floors present (for the filter sheet).
@@ -334,8 +337,9 @@ export default function DirectoryScreen() {
       ) : null}
 
       <AddResidentModal
-        visible={showAdd}
-        onClose={() => setShowAdd(false)}
+        visible={showAdd || editingEntry !== null}
+        existing={editingEntry}
+        onClose={() => { setShowAdd(false); setEditingEntry(null); }}
         onAdd={async (fields) => {
           if (!communityId || !userId) return;
           const d = (fields.phone ?? '').replace(/\D/g, '');
@@ -344,6 +348,13 @@ export default function DirectoryScreen() {
             return toast.show('That person is already listed in this flat');
           }
           try {
+            if (editingEntry?.entryId) {
+              await updateDirectoryEntry(editingEntry.entryId, fields);
+              setEditingEntry(null);
+              toast.show('Resident updated ✅');
+              await load();
+              return;
+            }
             await addDirectoryEntry({ communityId, addedBy: userId, ...fields });
             setShowAdd(false);
             toast.show('Resident added ✅');
@@ -365,6 +376,7 @@ export default function DirectoryScreen() {
         onInvite={() => selected && invite(selected)}
         onProfile={() => { if (selected?.userId) { router.push(`/profile/${selected.userId}` as any); setSelected(null); } }}
         onRemove={() => { if (selected) { remove(selected); setSelected(null); } }}
+        onEdit={() => { if (selected) { setEditingEntry(selected); setSelected(null); } }}
         isAdmin={!!isAdmin}
         onToggleMovedIn={async () => {
           if (!selected?.userId) return;
@@ -387,10 +399,10 @@ function FilterGroup({ label, children, last }: { label: string; children: React
 
 
 function ResidentDetailSheet({
-  r, onClose, c, isAdmin, onCall, onWhatsApp, onMessage, onInvite, onProfile, onRemove, onToggleMovedIn,
+  r, onClose, c, isAdmin, onCall, onWhatsApp, onMessage, onInvite, onProfile, onRemove, onEdit, onToggleMovedIn,
 }: {
   r: Resident | null; onClose: () => void; c: ReturnType<typeof useThemeColors>; isAdmin: boolean;
-  onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onProfile: () => void; onRemove: () => void; onToggleMovedIn: () => void;
+  onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onProfile: () => void; onRemove: () => void; onEdit: () => void; onToggleMovedIn: () => void;
 }) {
   const typeColor = r?.resident_type === 'owner' ? '#0D9488' : '#7C3AED';
   return (
@@ -424,6 +436,7 @@ function ResidentDetailSheet({
             {r.onboarded ? <Button label="Message" icon="chatbubble-ellipses-outline" variant="outline" onPress={onMessage} /> : (r.phone ? <Button label="Invite" icon="paper-plane-outline" onPress={onInvite} /> : null)}
             {r.onboarded ? <Button label="View profile" variant="ghost" onPress={onProfile} /> : null}
             {isAdmin && r.onboarded ? <Button label={r.shifted ? 'Mark not moved in' : 'Mark moved in'} icon="home-outline" variant="ghost" onPress={onToggleMovedIn} /> : null}
+            {r.removeKind === 'entry' ? <Button label="Edit" icon="pencil" variant="outline" onPress={onEdit} /> : null}
             {r.removeKind ? <Button label={r.removeKind === 'hide' ? 'Hide from directory' : 'Remove'} icon="trash-outline" variant="danger" onPress={onRemove} /> : null}
           </View>
         </View>
@@ -526,9 +539,11 @@ function IconBtn({ icon, label, onPress, bg, color }: { icon: keyof typeof Ionic
 }
 
 function AddResidentModal({
-  visible, onClose, onAdd, c,
+  visible, onClose, onAdd, c, existing = null,
 }: {
   visible: boolean;
+  /** Present when correcting a manually-added neighbour. */
+  existing?: Resident | null;
   onClose: () => void;
   onAdd: (f: { name: string; block: string | null; flat: string | null; phone: string | null; resident_type: 'owner' | 'tenant' | null; profession: string | null; vehicle_no: string | null; native: string | null; alt_phone: string | null; email: string | null; registration_status: 'pending' | 'done'; shifted: boolean }) => void;
   c: ReturnType<typeof useThemeColors>;
@@ -547,6 +562,20 @@ function AddResidentModal({
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    if (!visible) return;
+    setName(existing?.name ?? '');
+    setBlock(existing?.block ?? '');
+    setFlat(existing?.flat ?? '');
+    setPhone(existing?.phone ?? '');
+    setType((existing?.resident_type as 'owner' | 'tenant' | null) ?? null);
+    setProfession(existing?.profession ?? '');
+    setVehicle(existing?.vehicle_no ?? '');
+    setNative(existing?.native ?? '');
+    setAltPhone(existing?.alt_phone ?? '');
+    setEmail(existing?.email ?? '');
+  }, [visible, existing]);
+
   const submit = () => {
     if (!name.trim()) return;
     setBusy(true);
@@ -558,8 +587,8 @@ function AddResidentModal({
     <Sheet
       visible={visible}
       onClose={onClose}
-      title="Add a resident"
-      footer={<Button label={busy ? 'Adding…' : 'Add resident'} loading={busy} fullWidth disabled={!name.trim()} onPress={submit} />}
+      title={existing ? 'Edit resident' : 'Add a resident'}
+      footer={<Button label={busy ? 'Saving…' : existing ? 'Save changes' : 'Add resident'} loading={busy} fullWidth disabled={!name.trim()} onPress={submit} />}
     >
       <Text className="font-sans mb-4 text-[13px] text-muted">Add a neighbour to the directory. If they're not on Aangan yet, you can invite them after.</Text>
       <Field label="Name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} />
