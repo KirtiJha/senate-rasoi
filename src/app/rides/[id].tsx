@@ -18,11 +18,20 @@ import {
   fetchMyRideRequests,
   formatRideDate,
   formatRideTime,
+  RideStanding,
+  StandingSkip,
+  answerStanding,
+  fetchMyStanding,
+  fetchStanding,
+  fetchStandingSkips,
   requestSeat,
+  requestStanding,
   routeUrl,
-  seatsTaken,
+  seatsTakenOn,
+  setStandingSkip,
   upcomingDates,
   withdrawRequest,
+  withdrawStanding,
 } from '../../lib/rides';
 import { useThemeColors } from '../../theme';
 import {
@@ -53,6 +62,9 @@ export default function RideDetailScreen() {
   const [ride, setRide] = useState<Ride | null | 'missing'>(null);
   const [requests, setRequests] = useState<RideRequest[]>([]);
   const [myReqs, setMyReqs] = useState<RideRequest[]>([]);
+  const [standing, setStanding] = useState<RideStanding[]>([]);
+  const [myStanding, setMyStanding] = useState<RideStanding | null>(null);
+  const [skips, setSkips] = useState<StandingSkip[]>([]);
   const [date, setDate] = useState<string | null>(null);
   const [seats, setSeats] = useState(1);
   const [note, setNote] = useState('');
@@ -67,12 +79,23 @@ export default function RideDetailScreen() {
 
       const isDriver = r.driver_user_id === userId;
       // A rider may only read their own requests; the driver reads all of them.
-      const [all, mine] = await Promise.all([
+      const [all, mine, allStanding, myStand] = await Promise.all([
         isDriver ? fetchRideRequests(id) : Promise.resolve([]),
         userId ? fetchMyRideRequests(userId) : Promise.resolve([]),
+        isDriver ? fetchStanding(id) : Promise.resolve([]),
+        userId ? fetchMyStanding(userId) : Promise.resolve([]),
       ]);
       setRequests(all);
       setMyReqs(mine.filter((x) => x.ride_id === id));
+      setStanding(allStanding);
+
+      const own = myStand.find((x) => x.ride_id === id) ?? null;
+      setMyStanding(own);
+
+      // Seats-left has to know who is not coming, so the driver needs every
+      // arrangement's skips; a rider only ever needs their own.
+      const ids = isDriver ? allStanding.map((x) => x.id) : own ? [own.id] : [];
+      setSkips(ids.length ? await fetchStandingSkips(ids) : []);
 
       setDate((d) => d ?? upcomingDates(r)[0] ?? null);
     } catch {
@@ -100,7 +123,7 @@ export default function RideDetailScreen() {
 
   // The driver's own view already knows every request; a rider only ever sees
   // their own, so seats-left is shown to the driver and to nobody else.
-  const takenForDate = date ? seatsTaken(requests, date) : 0;
+  const takenForDate = date ? seatsTakenOn(date, requests, standing, skips) : 0;
   const left = ride.seats_total - takenForDate;
 
   const ask = async () => {
@@ -132,6 +155,47 @@ export default function RideDetailScreen() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const askStanding = async () => {
+    if (!userId || busy) return;
+    setBusy(true);
+    try {
+      await requestStanding({ rideId: ride.id, riderUserId: userId, seats, note });
+      haptics.success();
+      toast.show('Asked — the driver will confirm your regular seat');
+      setNote('');
+      await load();
+    } catch (e) {
+      const m = String((e as { message?: string })?.message ?? '');
+      toast.show(/seat|week/i.test(m) ? m : 'Could not ask — try again');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const answerStandingReq = async (r: RideStanding, status: 'accepted' | 'declined') => {
+    setBusy(true);
+    try {
+      await answerStanding(r.id, status);
+      haptics.success();
+      await load();
+    } catch (e) {
+      const m = String((e as { message?: string })?.message ?? '');
+      toast.show(/seat|week/i.test(m) ? m : 'Could not update');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggleSkip = async (d: string) => {
+    if (!myStanding || busy) return;
+    const on = skips.some((k) => k.standing_id === myStanding.id && k.skip_date === d);
+    setBusy(true);
+    haptics.select();
+    try { await setStandingSkip(myStanding.id, d, !on); await load(); }
+    catch { toast.show('Could not save that'); }
+    finally { setBusy(false); }
   };
 
   const removeRide = async () => {
@@ -226,24 +290,44 @@ export default function RideDetailScreen() {
           ) : (
             <View className="mt-5">
               <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">
-                {isDriver ? 'Journeys' : 'Pick a day'}
+                {isDriver ? 'Journeys'
+                  : myStanding?.status === 'accepted' ? 'Your days — tap one you are missing'
+                    : 'Pick a day'}
               </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                 {dates.map((d) => {
                   const on = d === date;
                   const asked = myReqs.find((r) => r.ride_date === d && r.status !== 'cancelled');
+                  // For a standing rider the day is already booked, so the only
+                  // question is whether they are coming — tapping toggles the
+                  // skip rather than selecting the day.
+                  const regular = !isDriver && myStanding?.status === 'accepted';
+                  const away = !!regular && skips.some((k) => k.standing_id === myStanding?.id && k.skip_date === d);
+                  const mark = away ? ' ✕' : regular ? ' ✓' : asked ? (asked.status === 'accepted' ? ' ✓' : ' ·') : '';
                   return (
-                    <Touchable key={d} onPress={() => setDate(d)} accessibilityRole="button"
-                      accessibilityState={{ selected: on }} accessibilityLabel={formatRideDate(d)}>
+                    <Touchable
+                      key={d}
+                      onPress={() => (regular ? toggleSkip(d) : setDate(d))}
+                      disabled={busy}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: on }}
+                      accessibilityLabel={regular
+                        ? `${away ? 'Take' : 'Skip'} ${formatRideDate(d)}`
+                        : formatRideDate(d)}
+                    >
                       <View pointerEvents="none" className="rounded-full px-3.5 py-2"
                         style={{
-                          backgroundColor: on ? c.accent : c.inset,
+                          backgroundColor: !away && on ? c.accent : c.inset,
                           borderWidth: 1,
-                          borderColor: on ? c.accent : c.line,
+                          borderColor: !away && on ? c.accent : c.line,
+                          opacity: away ? 0.6 : 1,
                         }}>
-                        <Text className="font-sans-sb text-[12.5px]" style={{ color: on ? c.onAccent : c.muted }}>
-                          {formatRideDate(d)}
-                          {asked ? (asked.status === 'accepted' ? ' ✓' : ' ·') : ''}
+                        <Text className="font-sans-sb text-[12.5px]"
+                          style={{
+                            color: !away && on ? c.onAccent : c.muted,
+                            textDecorationLine: away ? 'line-through' : 'none',
+                          }}>
+                          {formatRideDate(d)}{mark}
                         </Text>
                       </View>
                     </Touchable>
@@ -252,6 +336,61 @@ export default function RideDetailScreen() {
               </ScrollView>
             </View>
           )}
+
+          {/* ── A regular seat ───────────────────────────────────── */}
+          {!isDriver && ride.days_of_week.length > 0 ? (
+            <View className="mt-4 card p-4">
+              {myStanding && myStanding.status !== 'cancelled' ? (
+                <>
+                  <View className="flex-row items-center gap-2">
+                    <Ionicons name="repeat" size={15} color={c.accent} />
+                    <Text className="flex-1 font-sans-sb text-[14.5px] text-ink">
+                      {myStanding.status === 'accepted' ? 'You have a regular seat'
+                        : myStanding.status === 'declined' ? 'No regular seat on this ride'
+                          : 'Regular seat requested'}
+                    </Text>
+                    <Badge
+                      label={myStanding.status === 'accepted' ? 'Every week'
+                        : myStanding.status === 'declined' ? 'Declined' : 'Pending'}
+                      tone={myStanding.status === 'accepted' ? 'success' : 'neutral'}
+                    />
+                  </View>
+                  <Text className="font-sans mt-1 text-[12.5px]" style={{ color: c.subtle }}>
+                    {myStanding.seats} seat{myStanding.seats === 1 ? '' : 's'}
+                    {myStanding.status === 'accepted'
+                      ? ' · tap a day below to skip it'
+                      : ''}
+                  </Text>
+                  {myStanding.status !== 'declined' ? (
+                    <View className="mt-3">
+                      <Button label="Give up the regular seat" variant="ghost" size="sm" disabled={busy}
+                        onPress={async () => {
+                          setBusy(true);
+                          try { await withdrawStanding(myStanding.id); await load(); toast.show('Given up'); }
+                          catch { toast.show('Could not update'); }
+                          finally { setBusy(false); }
+                        }} />
+                    </View>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <View className="flex-row items-center gap-2">
+                    <Ionicons name="repeat-outline" size={15} color={c.accent} />
+                    <Text className="flex-1 font-sans-sb text-[14.5px] text-ink">Travel this way every week?</Text>
+                  </View>
+                  <Text className="font-sans mt-1 text-[13px] leading-[19px]" style={{ color: c.subtle }}>
+                    Agree it once and the seat is yours on every one of these days.
+                    Skip any day you are away — asking twenty times a month is not a commute.
+                  </Text>
+                  <View className="mt-3">
+                    <Button label="Ask for a regular seat" icon="repeat" variant="outline" size="sm"
+                      disabled={busy} onPress={askStanding} />
+                  </View>
+                </>
+              )}
+            </View>
+          ) : null}
 
           {/* ── Asking, or answering ─────────────────────────────── */}
           {!isDriver && date ? (
@@ -309,6 +448,55 @@ export default function RideDetailScreen() {
                   </Text>
                 </>
               )}
+            </View>
+          ) : null}
+
+          {isDriver && standing.filter((r) => r.status !== 'cancelled').length ? (
+            <View className="mt-5">
+              <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">
+                Regulars
+              </Text>
+              {standing.filter((r) => r.status !== 'cancelled').map((r) => {
+                const away = date && skips.some((k) => k.standing_id === r.id && k.skip_date === date);
+                return (
+                  <View key={r.id} className="mb-2 card p-3.5">
+                    <View className="flex-row items-center gap-2.5">
+                      <Avatar name={r.rider?.name ?? '?'} size={32} />
+                      <View style={{ flex: 1 }}>
+                        <Text className="font-sans-sb text-[14px] text-ink">
+                          {r.rider?.name ?? 'A neighbour'}
+                          {r.rider?.flat ? <Text className="font-sans text-faint"> · {r.rider.flat}</Text> : null}
+                        </Text>
+                        <Text className="font-sans text-[12px]" style={{ color: c.subtle }}>
+                          {r.seats} seat{r.seats === 1 ? '' : 's'} every week
+                          {away ? ' · not coming this day' : ''}
+                        </Text>
+                      </View>
+                      {r.status !== 'pending' ? (
+                        <Badge label={r.status === 'accepted' ? 'Confirmed' : 'Declined'}
+                          tone={r.status === 'accepted' ? 'success' : 'neutral'} />
+                      ) : null}
+                    </View>
+
+                    {r.note ? (
+                      <Text className="font-sans mt-2 text-[13px] leading-[19px] text-ink">{r.note}</Text>
+                    ) : null}
+
+                    {r.status === 'pending' ? (
+                      <View className="mt-3 flex-row gap-2">
+                        <View style={{ flex: 1 }}>
+                          <Button label="Confirm" size="sm" disabled={busy}
+                            onPress={() => answerStandingReq(r, 'accepted')} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Button label="Can't fit" variant="outline" size="sm" disabled={busy}
+                            onPress={() => answerStandingReq(r, 'declined')} />
+                        </View>
+                      </View>
+                    ) : null}
+                  </View>
+                );
+              })}
             </View>
           ) : null}
 

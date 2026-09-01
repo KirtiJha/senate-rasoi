@@ -270,3 +270,136 @@ export async function withdrawRequest(id: string): Promise<void> {
   const { error } = await supabase.from('ride_requests').update({ status: 'cancelled' }).eq('id', id);
   if (error) throw error;
 }
+
+// ── Standing seats ──────────────────────────────────────────────────
+//
+// The same four people going to the same office every weekday is what
+// carpooling exists for, and asking twenty times a month is a chore rather
+// than a commute. A standing seat is agreed once; see 0099 for why it is
+// reserved capacity rather than a weekly re-application.
+
+export interface RideStanding {
+  id: string;
+  ride_id: string;
+  rider_user_id: string;
+  seats: number;
+  status: RideRequestStatus;
+  note: string | null;
+  created_at: string;
+  rider?: { name: string; flat: string | null; whatsapp: string | null } | null;
+  ride?: Ride | null;
+}
+
+/** Standing arrangements on one ride — the driver's view. */
+export async function fetchStanding(rideId: string): Promise<RideStanding[]> {
+  const { data, error } = await supabase
+    .from('ride_standing')
+    .select('*, rider:profiles!ride_standing_rider_user_id_fkey(name,flat,whatsapp)')
+    .eq('ride_id', rideId)
+    .order('created_at');
+  if (error) throw error;
+  return (data ?? []) as RideStanding[];
+}
+
+/** This resident's own standing arrangements, across every ride. */
+export async function fetchMyStanding(userId: string): Promise<RideStanding[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase
+    .from('ride_standing')
+    .select(`*, ride:rides!ride_standing_ride_id_fkey(${'*, driver:profiles!rides_driver_user_id_fkey(name,flat,whatsapp)'})`)
+    .eq('rider_user_id', userId)
+    .in('status', ['pending', 'accepted'])
+    .order('created_at');
+  if (error) throw error;
+  return (data ?? []) as RideStanding[];
+}
+
+export async function requestStanding(input: {
+  rideId: string;
+  riderUserId: string;
+  seats: number;
+  note?: string | null;
+}): Promise<void> {
+  const { error } = await supabase.from('ride_standing').upsert({
+    ride_id: input.rideId,
+    rider_user_id: input.riderUserId,
+    seats: input.seats,
+    note: input.note?.trim() || null,
+    status: 'pending',
+  }, { onConflict: 'ride_id,rider_user_id' });
+  if (error) throw error;
+}
+
+/** 0099 refuses an acceptance the car cannot hold, so "full" arrives as a throw. */
+export async function answerStanding(id: string, status: 'accepted' | 'declined'): Promise<void> {
+  const { error } = await supabase.from('ride_standing').update({ status }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function withdrawStanding(id: string): Promise<void> {
+  const { error } = await supabase.from('ride_standing').update({ status: 'cancelled' }).eq('id', id);
+  if (error) throw error;
+}
+
+// ── Skipping a day of a standing seat ───────────────────────────────
+
+export interface StandingSkip {
+  standing_id: string;
+  skip_date: string;
+}
+
+/** Skips for the given arrangements, from today forward. */
+export async function fetchStandingSkips(standingIds: string[]): Promise<StandingSkip[]> {
+  if (!standingIds.length) return [];
+  const { data, error } = await supabase
+    .from('ride_standing_skips')
+    .select('standing_id, skip_date')
+    .in('standing_id', standingIds)
+    .gte('skip_date', todayIso());
+  if (error) throw error;
+  return (data ?? []) as StandingSkip[];
+}
+
+export async function setStandingSkip(standingId: string, date: string, skip: boolean): Promise<void> {
+  if (skip) {
+    const { error } = await supabase
+      .from('ride_standing_skips')
+      .upsert({ standing_id: standingId, skip_date: date }, { onConflict: 'standing_id,skip_date' });
+    if (error) throw error;
+    return;
+  }
+  const { error } = await supabase
+    .from('ride_standing_skips')
+    .delete()
+    .eq('standing_id', standingId)
+    .eq('skip_date', date);
+  if (error) throw error;
+}
+
+/**
+ * How full the car is on one date.
+ *
+ * MIRRORS `ride_seats_taken` in 0099 exactly — dated acceptances, plus every
+ * accepted standing arrangement not skipping that day. The database is the
+ * authority and will refuse an overbooking regardless; this exists so the
+ * screen can show "2 of 4 free" without a round trip per date. If one changes,
+ * change the other, or a screen will offer a seat the database then refuses.
+ */
+export function seatsTakenOn(
+  date: string,
+  requests: RideRequest[],
+  standing: RideStanding[],
+  skips: StandingSkip[],
+): number {
+  const dated = requests
+    .filter((r) => r.ride_date === date && r.status === 'accepted')
+    .reduce((s, r) => s + r.seats, 0);
+
+  const skipped = new Set(skips.filter((k) => k.skip_date === date).map((k) => k.standing_id));
+
+  const regular = standing
+    .filter((s) => s.status === 'accepted' && !skipped.has(s.id))
+    .reduce((s, x) => s + x.seats, 0);
+
+  return dated + regular;
+}

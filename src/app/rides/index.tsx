@@ -8,7 +8,9 @@ import {
   PREFERENCE_LABELS,
   Ride,
   RideRequest,
+  RideStanding,
   fetchMyRideRequests,
+  fetchMyStanding,
   fetchRides,
   formatRideDate,
   formatRideTime,
@@ -37,16 +39,19 @@ export default function RidesScreen() {
 
   const [rides, setRides] = useState<Ride[] | null>(null);
   const [mine, setMine] = useState<RideRequest[]>([]);
+  const [standing, setStanding] = useState<RideStanding[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [all, reqs] = await Promise.all([
+      const [all, reqs, stand] = await Promise.all([
         fetchRides(communityId ?? undefined),
         userId ? fetchMyRideRequests(userId) : Promise.resolve([]),
+        userId ? fetchMyStanding(userId) : Promise.resolve([]),
       ]);
       setRides(all);
       setMine(reqs.filter((r) => r.status !== 'cancelled'));
+      setStanding(stand);
     } catch {
       setRides([]);
     }
@@ -84,11 +89,33 @@ export default function RidesScreen() {
           ) : (
             <>
               {/* ── What you asked for ───────────────────────────── */}
-              {mine.length ? (
+              {mine.length || standing.length ? (
                 <View className="mb-5">
                   <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">
                     Your seats
                   </Text>
+                  {standing.map((r) => (
+                    <Touchable key={r.id} onPress={() => router.push(`/rides/${r.ride_id}` as never)}
+                      accessibilityRole="button" accessibilityLabel="Your regular seat">
+                      <View pointerEvents="none" className="mb-2 card p-3.5">
+                        <View className="flex-row items-center gap-2">
+                          <View style={{ flex: 1 }}>
+                            <Text className="font-sans-sb text-[14.5px] text-ink" numberOfLines={1}>
+                              {r.ride?.from_text} → {r.ride?.to_text}
+                            </Text>
+                            <Text className="font-sans mt-0.5 text-[12.5px]" style={{ color: c.subtle }}>
+                              Every week · {formatRideTime(r.ride?.depart_time)}
+                              {r.seats > 1 ? ` · ${r.seats} seats` : ''}
+                            </Text>
+                          </View>
+                          <Badge
+                            label={r.status === 'accepted' ? 'Regular' : 'Pending'}
+                            tone={r.status === 'accepted' ? 'success' : 'neutral'}
+                          />
+                        </View>
+                      </View>
+                    </Touchable>
+                  ))}
                   {mine.map((r) => (
                     <Touchable key={r.id} onPress={() => router.push(`/rides/${r.ride_id}` as never)}
                       accessibilityRole="button" accessibilityLabel={`Your request for ${formatRideDate(r.ride_date)}`}>
