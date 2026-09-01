@@ -14,6 +14,7 @@ import {
   fetchRides,
   formatRideDate,
   formatRideTime,
+  standingEnded,
   upcomingDates,
 } from '../../lib/rides';
 import { useThemeColors } from '../../theme';
@@ -51,7 +52,8 @@ export default function RidesScreen() {
       ]);
       setRides(all);
       setMine(reqs.filter((r) => r.status !== 'cancelled'));
-      setStanding(stand);
+      // An arrangement past its last day is history, not a live seat.
+      setStanding(stand.filter((x) => !standingEnded(x)));
     } catch {
       setRides([]);
     }
@@ -106,6 +108,7 @@ export default function RidesScreen() {
                             <Text className="font-sans mt-0.5 text-[12.5px]" style={{ color: c.subtle }}>
                               Every week · {formatRideTime(r.ride?.depart_time)}
                               {r.seats > 1 ? ` · ${r.seats} seats` : ''}
+                              {r.ends_on ? ` · until ${formatRideDate(r.ends_on)}` : ''}
                             </Text>
                           </View>
                           <Badge

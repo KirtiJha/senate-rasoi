@@ -285,6 +285,8 @@ export interface RideStanding {
   seats: number;
   status: RideRequestStatus;
   note: string | null;
+  /** Last day the arrangement covers. Null is open-ended (0100). */
+  ends_on: string | null;
   created_at: string;
   rider?: { name: string; flat: string | null; whatsapp: string | null } | null;
   ride?: Ride | null;
@@ -319,12 +321,15 @@ export async function requestStanding(input: {
   riderUserId: string;
   seats: number;
   note?: string | null;
+  /** Optional last day — a term ending, a posting finishing. */
+  endsOn?: string | null;
 }): Promise<void> {
   const { error } = await supabase.from('ride_standing').upsert({
     ride_id: input.rideId,
     rider_user_id: input.riderUserId,
     seats: input.seats,
     note: input.note?.trim() || null,
+    ends_on: input.endsOn ?? null,
     status: 'pending',
   }, { onConflict: 'ride_id,rider_user_id' });
   if (error) throw error;
@@ -398,8 +403,21 @@ export function seatsTakenOn(
   const skipped = new Set(skips.filter((k) => k.skip_date === date).map((k) => k.standing_id));
 
   const regular = standing
-    .filter((s) => s.status === 'accepted' && !skipped.has(s.id))
+    .filter((s) => s.status === 'accepted'
+      && !skipped.has(s.id)
+      // Past its last day, so it holds nothing.
+      && (!s.ends_on || s.ends_on >= date))
     .reduce((s, x) => s + x.seats, 0);
 
   return dated + regular;
+}
+
+/** Does this arrangement still cover the given date? Mirrors 0100. */
+export function standingCoversDate(s: RideStanding, date: string): boolean {
+  return s.status === 'accepted' && (!s.ends_on || s.ends_on >= date);
+}
+
+/** Has the arrangement run out? Used to stop showing it as a live seat. */
+export function standingEnded(s: RideStanding): boolean {
+  return !!s.ends_on && s.ends_on < todayIso();
 }

@@ -29,13 +29,14 @@ import {
   routeUrl,
   seatsTakenOn,
   setStandingSkip,
+  todayIso,
   upcomingDates,
   withdrawRequest,
   withdrawStanding,
 } from '../../lib/rides';
 import { useThemeColors } from '../../theme';
 import {
-  Avatar, Badge, Button, Container, ErrorState, KeyboardAvoider, ScreenHeader, Stepper, Touchable,
+  Avatar, Badge, Button, Container, DateField, ErrorState, KeyboardAvoider, ScreenHeader, Stepper, Touchable,
 } from '../../components/ui';
 
 function openUrl(u: string) {
@@ -68,6 +69,7 @@ export default function RideDetailScreen() {
   const [date, setDate] = useState<string | null>(null);
   const [seats, setSeats] = useState(1);
   const [note, setNote] = useState('');
+  const [endsOn, setEndsOn] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -161,7 +163,7 @@ export default function RideDetailScreen() {
     if (!userId || busy) return;
     setBusy(true);
     try {
-      await requestStanding({ rideId: ride.id, riderUserId: userId, seats, note });
+      await requestStanding({ rideId: ride.id, riderUserId: userId, seats, note, endsOn });
       haptics.success();
       toast.show('Asked — the driver will confirm your regular seat');
       setNote('');
@@ -301,7 +303,8 @@ export default function RideDetailScreen() {
                   // For a standing rider the day is already booked, so the only
                   // question is whether they are coming — tapping toggles the
                   // skip rather than selecting the day.
-                  const regular = !isDriver && myStanding?.status === 'accepted';
+                  const regular = !isDriver && myStanding?.status === 'accepted'
+                    && (!myStanding.ends_on || myStanding.ends_on >= d);
                   const away = !!regular && skips.some((k) => k.standing_id === myStanding?.id && k.skip_date === d);
                   const mark = away ? ' ✕' : regular ? ' ✓' : asked ? (asked.status === 'accepted' ? ' ✓' : ' ·') : '';
                   return (
@@ -357,6 +360,7 @@ export default function RideDetailScreen() {
                   </View>
                   <Text className="font-sans mt-1 text-[12.5px]" style={{ color: c.subtle }}>
                     {myStanding.seats} seat{myStanding.seats === 1 ? '' : 's'}
+                    {myStanding.ends_on ? ` · until ${formatRideDate(myStanding.ends_on)}` : ''}
                     {myStanding.status === 'accepted'
                       ? ' · tap a day below to skip it'
                       : ''}
@@ -383,6 +387,15 @@ export default function RideDetailScreen() {
                     Agree it once and the seat is yours on every one of these days.
                     Skip any day you are away — asking twenty times a month is not a commute.
                   </Text>
+                  <View className="mt-3">
+                    <DateField
+                      label="Until (optional)"
+                      value={endsOn}
+                      onChange={setEndsOn}
+                      placeholder="No end — until I give it up"
+                      minDate={todayIso()}
+                    />
+                  </View>
                   <View className="mt-3">
                     <Button label="Ask for a regular seat" icon="repeat" variant="outline" size="sm"
                       disabled={busy} onPress={askStanding} />
@@ -469,6 +482,7 @@ export default function RideDetailScreen() {
                         </Text>
                         <Text className="font-sans text-[12px]" style={{ color: c.subtle }}>
                           {r.seats} seat{r.seats === 1 ? '' : 's'} every week
+                          {r.ends_on ? ` · until ${formatRideDate(r.ends_on)}` : ''}
                           {away ? ' · not coming this day' : ''}
                         </Text>
                       </View>
