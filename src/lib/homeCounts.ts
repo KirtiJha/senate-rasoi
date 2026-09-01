@@ -22,7 +22,7 @@ export async function fetchHomeTileCounts(
     } catch { return 0; }
   };
 
-  const [feed, sports, documents, properties, recommend, helpers, polls, emergency, places, payments, directory] =
+  const [feed, sports, documents, properties, recommend, helpers, polls, emergency, places, payments, directory, rides] =
     await Promise.all([
       head('posts'),
       head('sport_groups'),
@@ -53,7 +53,13 @@ export async function fetchHomeTileCounts(
         try { return (await fetchDirectory(communityId, userId, false)).length; }
         catch { return 0; }
       })(),
+      // Lifts still on offer. A one-off whose day has gone is over, so it is
+      // excluded the same way the Carpool screen excludes it — a tile
+      // advertising last Tuesday's lift is worse than one showing nothing.
+      head('rides', (q) => q
+        .eq('active', true)
+        .or(`one_off_date.is.null,one_off_date.gte.${new Date().toLocaleDateString('en-CA')}`)),
     ]);
 
-  return { feed, sports, documents, properties, recommend, helpers, polls, emergency, places, payments, directory };
+  return { feed, sports, documents, properties, recommend, helpers, polls, emergency, places, payments, directory, rides };
 }

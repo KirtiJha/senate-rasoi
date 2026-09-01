@@ -37,6 +37,7 @@ export const MUTABLE_CATEGORIES: MutableCategory[] = [
   { type: 'property', label: 'Flats', blurb: 'New flats to rent or buy' },
   { type: 'borrow', label: 'Borrow', blurb: 'Things neighbours are lending or need' },
   { type: 'lost_found', label: 'Lost & found', blurb: 'Items lost or found nearby' },
+  { type: 'carpool', label: 'Carpool', blurb: 'New lifts offered — never your own seats' },
   { type: 'poll', label: 'Polls', blurb: 'New polls to vote in' },
   { type: 'event', label: 'Events', blurb: 'Society events and gatherings' },
   { type: 'sport', label: 'Sports', blurb: 'Sport groups and court bookings', covers: ['court'] },
