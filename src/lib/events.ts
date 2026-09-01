@@ -990,3 +990,67 @@ export async function setContributionFacts(
   const { error } = await supabase.from('event_contributions').update(patch).eq('id', id);
   if (error) throw error;
 }
+
+// ── What a flat says about itself ───────────────────────────────────
+
+/** The caller's own flat's row on this celebration, if one exists. */
+export async function fetchMyContribution(
+  eventId: string,
+  flat: string | null,
+): Promise<Contribution | null> {
+  if (!isSupabaseConfigured || !flat) return null;
+  const key = flat.replace(/[^0-9]/g, '');
+  if (!key) return null;
+
+  const { data, error } = await supabase
+    .from('event_contributions')
+    .select('*')
+    .eq('event_id', eventId);
+  if (error) throw error;
+
+  // Matched on digits, the same way 0087's flat_key does, because a profile
+  // may hold '149', 'A-149' or '149 ' for what the collection calls '149'.
+  return ((data ?? []) as Contribution[])
+    .find((c) => c.flat.replace(/[^0-9]/g, '') === key) ?? null;
+}
+
+/**
+ * Declare that this flat is not taking part.
+ *
+ * Creates the row if the committee has not listed the flat yet — which, now
+ * the collection is entered by hand as people pay, is the usual case for
+ * exactly the people worth hearing from early. 0096 forces the shape: opted
+ * out, owing nothing. A resident cannot invent a paid contribution this way.
+ */
+export async function declareOptOut(input: {
+  eventId: string;
+  communityId?: string;
+  flat: string;
+  userId: string;
+  existingId?: string | null;
+  optedOut: boolean;
+  headCount?: number | null;
+}): Promise<void> {
+  if (input.existingId) {
+    await setContributionFacts(input.existingId, {
+      opted_out: input.optedOut,
+      head_count: input.headCount ?? null,
+    });
+    return;
+  }
+
+  // Opting back in with no row to begin with is a no-op, not an insert: there
+  // is nothing to say, and the treasurer will add the row when they pay.
+  if (!input.optedOut) return;
+
+  const { error } = await supabase.from('event_contributions').insert({
+    event_id: input.eventId,
+    community_id: input.communityId ?? COMMUNITY_ID,
+    flat: input.flat.trim(),
+    amount: 0,
+    status: 'pending',
+    opted_out: true,
+    head_count: input.headCount ?? null,
+  });
+  if (error) throw error;
+}

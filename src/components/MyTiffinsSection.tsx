@@ -246,7 +246,9 @@ function TiffinPlanCard({
       </View>
 
       <TiffinEditSheet plan={plan} visible={showEdit} onClose={() => setShowEdit(false)} onSaved={() => { setShowEdit(false); onChanged(); }} />
-      <Text className="font-sans mt-0.5 text-[12px] text-faint">{daysLabel(plan.days_of_week)} · ₹{plan.price}/day · max {plan.max_per_day}</Text>
+      <Text className="font-sans mt-0.5 text-[12px] text-faint">
+        {daysLabel(plan.days_of_week)} · ₹{plan.price}/day · max {plan.max_per_day} per flat
+      </Text>
 
       <View className="mt-3 rounded-2xl bg-inset px-3 py-2.5">
         <Text className="mb-1 text-[11px] font-sans-sb uppercase tracking-wider text-muted">

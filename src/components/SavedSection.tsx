@@ -54,6 +54,7 @@ export function SavedSection() {
       <Container>
         {listings.map((l: ListingRow) => {
           const cat = getService(l.category);
+          const gone = l.status !== 'active';
           return (
             <Touchable
               key={l.id}
@@ -63,7 +64,7 @@ export function SavedSection() {
               accessibilityLabel={l.title}
               style={{ marginBottom: 10 }}
             >
-              <View className="flex-row items-center gap-3 card px-3.5 py-3">
+              <View className="flex-row items-center gap-3 card px-3.5 py-3" style={{ opacity: gone ? 0.55 : 1 }}>
                 <View
                   style={{
                     width: 40, height: 40, borderRadius: 14,
@@ -78,9 +79,14 @@ export function SavedSection() {
                   <Text className="font-sans-sb text-[15px] text-ink" numberOfLines={1}>{l.title}</Text>
                   <View className="mt-0.5 flex-row items-center" style={{ flexWrap: 'wrap' }}>
                     <Text className="text-[12px] font-sans-md text-subtle">{cat?.label ?? l.category}</Text>
-                    {l.price != null ? (
+                    {l.price != null && !gone ? (
                       <Text className="text-[12px] font-sans-sb text-ink">
-                        {'  ·  ₹' + l.price.toLocaleString('en-IN')}
+                        {l.price === 0 ? '  ·  Free' : '  ·  ₹' + l.price.toLocaleString('en-IN')}
+                      </Text>
+                    ) : null}
+                    {gone ? (
+                      <Text className="text-[12px] font-sans-sb uppercase" style={{ color: c.muted }}>
+                        {'  ·  ' + (l.status === 'sold' ? 'Sold' : 'Closed')}
                       </Text>
                     ) : null}
                   </View>

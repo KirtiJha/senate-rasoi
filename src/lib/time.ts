@@ -1,6 +1,14 @@
 import type { Slot } from './types';
 
 // Default "order by" cutoff per slot — order before the chef starts cooking.
+/**
+ * The one cut-off table.
+ *
+ * Mirrored by `slot_cutoff_at` in the database (0097), which the nightly
+ * recurring-dish job uses. The two used to disagree by up to two and a half
+ * hours, so a templated idli closed for orders long before the identical dish
+ * typed out by hand. Change one and you must change the other.
+ */
 const SLOT_CUTOFF_HOUR: Record<Slot, number | null> = {
   Breakfast: 9.5, // 9:30 AM
   Lunch: 12.5, // 12:30 PM

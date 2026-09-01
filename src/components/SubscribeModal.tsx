@@ -46,7 +46,7 @@ export function SubscribeModal({ plan, onClose, onConfirm }: SubscribeModalProps
           <View className="mb-4 flex-row items-center justify-between">
             <View>
               <Text className="font-sans-sb text-[15px] text-ink">Plates each day</Text>
-              <Text className="font-sans text-[12px] text-faint">Up to {plan.max_per_day} per day</Text>
+              <Text className="font-sans text-[12px] text-faint">Up to {plan.max_per_day} per day for your flat</Text>
             </View>
             <Stepper value={qty} min={1} max={plan.max_per_day} onChange={setQty} />
           </View>

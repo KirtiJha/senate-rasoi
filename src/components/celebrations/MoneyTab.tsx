@@ -26,6 +26,7 @@ import {
 } from '../../lib/events';
 import { haptics } from '../../lib/haptics';
 import { useThemeColors } from '../../theme';
+import { MyFlatCard } from './MyFlatCard';
 import { Button, Sheet, Touchable } from '../ui';
 
 const CATEGORIES: ExpenseCategory[] = ['decor', 'food', 'sound', 'priest', 'prizes', 'venue', 'gifts', 'misc'];
@@ -141,6 +142,10 @@ export function MoneyTab({
           </Text>
         </View>
       ) : null}
+
+      {/* A resident's own two facts. Renders nothing for the committee, who
+          edit any flat from the Collection screen instead. */}
+      <MyFlatCard eventId={event.id} communityId={event.community_id} canManage={canManage} />
 
       {locked ? (
         <View className="mb-4 flex-row items-start gap-2 rounded-2xl px-3.5 py-3"
