@@ -43,6 +43,7 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   saathi_watch: { icon: 'notifications', color: '#0E6B4E' },
   food_daily: { icon: 'restaurant', color: '#E8650A' },
   feedback: { icon: 'chatbox-ellipses', color: '#6366F1' },
+  pin_reset: { icon: 'key', color: '#B45309' },
 };
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {

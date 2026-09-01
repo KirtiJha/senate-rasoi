@@ -5,7 +5,9 @@ export type NotificationType =
   | 'dish' | 'tiffin' | 'sport' | 'document' | 'payment' | 'property' | 'recommend' | 'borrow' | 'court' | 'order' | 'place' | 'lost_found' | 'report' | 'event'
   // Saathi watches (0078), the daily menu nudge (0081), and replies on a bug
   // report or feature request (0085).
-  | 'saathi_watch' | 'food_daily' | 'feedback';
+  | 'saathi_watch' | 'food_daily' | 'feedback'
+  // Inserted by 0053 when a resident asks an admin to reset their PIN.
+  | 'pin_reset';
 
 export interface NotificationRow {
   id: string;

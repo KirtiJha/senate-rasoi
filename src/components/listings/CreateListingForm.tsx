@@ -134,7 +134,9 @@ export function CreateListingForm({ cat, onBack, existing }: Props) {
     try {
       const priceNum = price.trim() ? parseInt(price, 10) : null;
       const resolvedTitle = isDirectory ? `${referralName} – ${attrs['trade'] ?? ''}`.trim() : effectiveTitle;
-      const finalPrice = priceNum && !isNaN(priceNum) ? priceNum : null;
+      // Number.isFinite rather than a truthiness check: 0 is a real price,
+      // and treating it as "no price" made giving something away impossible.
+      const finalPrice = priceNum !== null && Number.isFinite(priceNum) ? priceNum : null;
       if (isEdit && existing) {
         await updateListing(existing.id, {
           title: resolvedTitle,

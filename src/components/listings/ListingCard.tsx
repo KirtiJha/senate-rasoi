@@ -156,7 +156,8 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
             {listing.price != null ? (
               <>
                 <Text className="font-display-x text-[19px] text-ink" numberOfLines={1}>
-                  ₹{listing.price.toLocaleString('en-IN')}
+                  {/* Zero is a real price and it means one specific thing. */}
+                  {listing.price === 0 ? 'Free' : `₹${listing.price.toLocaleString('en-IN')}`}
                 </Text>
                 {listing.price_unit ? (
                   <Text

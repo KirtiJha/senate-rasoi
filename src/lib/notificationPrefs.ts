@@ -39,7 +39,7 @@ export const MUTABLE_CATEGORIES: MutableCategory[] = [
   { type: 'lost_found', label: 'Lost & found', blurb: 'Items lost or found nearby' },
   { type: 'poll', label: 'Polls', blurb: 'New polls to vote in' },
   { type: 'event', label: 'Events', blurb: 'Society events and gatherings' },
-  { type: 'sport', label: 'Sports', blurb: 'Sport groups and court bookings' },
+  { type: 'sport', label: 'Sports', blurb: 'Sport groups and court bookings', covers: ['court'] },
   { type: 'document', label: 'Documents', blurb: 'New documents shared with the society' },
   { type: 'place', label: 'Places', blurb: 'New places added nearby' },
   { type: 'recommend', label: 'Recommendations', blurb: 'Questions and answers from neighbours' },

@@ -731,7 +731,11 @@ function PostMenu({ post, isOwner, isAdmin, onEdit, onDelete, onPinToggle, onRes
             {isAdmin ? (
               <MenuItem icon="pin-outline" label={post.pinned ? 'Unpin' : 'Pin to top'} onPress={() => { setOpen(false); onPinToggle(); }} c={c} />
             ) : null}
-            {isAdmin && isIssue ? (
+            {/* The posts policy has always allowed the author to resolve their
+                own issue — its comment says so. Only this menu insisted on an
+                admin, so a resident who reported a stuck lift could not close
+                it once it was fixed. */}
+            {(isAdmin || isOwner) && isIssue ? (
               <MenuItem icon="checkmark-circle-outline" label={post.resolved ? 'Reopen' : 'Mark resolved'} onPress={() => { setOpen(false); onResolveToggle(); }} c={c} />
             ) : null}
             <MenuItem icon="trash-outline" label="Delete post" onPress={() => { setOpen(false); onDelete(); }} c={c} danger />

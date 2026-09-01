@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, Platform, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -46,7 +46,12 @@ export default function AdminScreen() {
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { ready, isAdmin, userId, communityId, refreshProfile } = useAuth();
-  const [activeTab, setActiveTab] = useState<AdminTab>('members');
+  // Notifications link here with ?tab=reports; honour it or the deep link
+  // drops an admin on Members and makes them hunt for what was flagged.
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
+  const [activeTab, setActiveTab] = useState<AdminTab>(
+    tab === 'reports' || tab === 'requests' ? tab : 'members',
+  );
 
   // Members state
   const [members, setMembers] = useState<DbProfile[]>([]);
