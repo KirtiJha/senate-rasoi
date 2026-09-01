@@ -171,7 +171,7 @@ const COMMUNITY_TILES: CommunityTile[] = [
   },
   {
     key: 'rides',
-    label: 'Rides',
+    label: 'Carpool',
     blurb: 'Share a lift with neighbours going your way',
     icon: 'car',
     color: '#0EA5E9',

@@ -84,7 +84,7 @@ export default function NewRideScreen() {
 
   return (
     <KeyboardAvoider>
-      <ScreenHeader icon="car-outline" title="Offer a ride" showBack backHref="/rides" />
+      <ScreenHeader icon="car-outline" title="Offer a lift" showBack backHref="/rides" />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container narrow>

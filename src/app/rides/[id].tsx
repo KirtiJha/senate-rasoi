@@ -111,7 +111,7 @@ export default function RideDetailScreen() {
   if (ride === 'missing') {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader icon="car-outline" title="Ride" showBack backHref="/rides" />
+        <ScreenHeader icon="car-outline" title="Carpool" showBack backHref="/rides" />
         <ErrorState message="This ride is no longer available." />
       </View>
     );

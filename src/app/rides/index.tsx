@@ -72,7 +72,7 @@ export default function RidesScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader
         icon="car-outline"
-        title="Rides"
+        title="Carpool"
         showBack
         onAdd={() => router.push('/rides/new' as never)}
         addLabel="Offer a ride"
