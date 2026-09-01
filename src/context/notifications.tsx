@@ -44,6 +44,7 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   food_daily: { icon: 'restaurant', color: '#E8650A' },
   feedback: { icon: 'chatbox-ellipses', color: '#6366F1' },
   pin_reset: { icon: 'key', color: '#B45309' },
+  carpool: { icon: 'car', color: '#0EA5E9' },
 };
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {

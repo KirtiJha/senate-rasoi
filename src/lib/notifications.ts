@@ -7,7 +7,9 @@ export type NotificationType =
   // report or feature request (0085).
   | 'saathi_watch' | 'food_daily' | 'feedback'
   // Inserted by 0053 when a resident asks an admin to reset their PIN.
-  | 'pin_reset';
+  | 'pin_reset'
+  // Seat requests, confirmations and the evening-before reminder (0098–0101).
+  | 'carpool';
 
 export interface NotificationRow {
   id: string;
