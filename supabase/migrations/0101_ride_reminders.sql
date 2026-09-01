@@ -27,7 +27,7 @@ update public.notifications
    and route like '/rides/%';
 
 -- ─── One reminder per journey ────────────────────────────────────────
-create table public.ride_reminders (
+create table if not exists public.ride_reminders (
   ride_id     uuid not null references public.rides(id) on delete cascade,
   ride_date   date not null,
   sent_at     timestamptz not null default now(),
