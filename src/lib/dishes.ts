@@ -319,9 +319,10 @@ export interface PendingFeedback {
 /**
  * Reputation for a whole board in one round trip.
  *
- * Returns counts only — never a note, never who said what. In a building of
- * forty flats, seeing individual answers would identify whoever left the
- * single "no".
+ * Counts only — the individual opinions live on the dish itself
+ * (`fetchDishFeedback`). Since 0103 the badge shows from the first rating;
+ * the old five-rating threshold existed to protect anonymity, which no longer
+ * applies now that feedback is attributed.
  */
 export async function fetchChefReputations(chefIds: string[]): Promise<Map<string, ChefReputation>> {
   const ids = [...new Set(chefIds.filter(Boolean))];
@@ -339,7 +340,10 @@ export async function fetchPendingFeedback(): Promise<PendingFeedback[]> {
 }
 
 /**
- * "Would you order again?" — plus an optional note the chef alone will read.
+ * "Would you order again?" — plus an optional note.
+ *
+ * Since 0103 both the answer and the note are public to the society, shown on
+ * the dish with the rater's name. The compose UI says so.
  *
  * Deliberately not a star rating: a score out of five for a neighbour you meet
  * in the lift tomorrow gets answered politely rather than honestly.
@@ -467,4 +471,35 @@ export function orderTotal(
   dishPrice: number,
 ): number {
   return order.qty * (order.unit_price ?? dishPrice);
+}
+
+// ── Reading what neighbours said ─────────────────────────────────────
+
+export interface DishFeedback {
+  order_id: string;
+  rater_id: string;
+  rater_name: string | null;
+  rater_flat: string | null;
+  would_repeat: boolean;
+  note: string | null;
+  created_at: string;
+}
+
+export interface ChefFeedback extends Omit<DishFeedback, 'rater_id'> {
+  dish_id: string;
+  dish_name: string;
+}
+
+/** Every opinion left on one dish, newest first. Visible to the whole society. */
+export async function fetchDishFeedback(dishId: string): Promise<DishFeedback[]> {
+  const { data, error } = await supabase.rpc('dish_feedback_for_dish', { p_dish: dishId });
+  if (error) throw error;
+  return (data ?? []) as DishFeedback[];
+}
+
+/** Everything said about the signed-in chef's cooking, across all their dishes. */
+export async function fetchChefFeedback(): Promise<ChefFeedback[]> {
+  const { data, error } = await supabase.rpc('chef_feedback');
+  if (error) throw error;
+  return (data ?? []) as ChefFeedback[];
 }

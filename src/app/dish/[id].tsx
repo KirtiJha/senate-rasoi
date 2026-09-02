@@ -14,6 +14,7 @@ import { PayButton } from '../../components/PayButton';
 import { T } from '../../components/T';
 import { Avatar, Badge, Button, Container, ParallaxHero, Sheet, useResponsive } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
+import { DishFeedbackList } from '../../components/food/DishFeedbackList';
 import { useAuth } from '../../context/auth';
 import { useConfirm } from '../../context/confirm';
 import { useToast } from '../../context/toast';
@@ -322,6 +323,9 @@ export default function DishDetailScreen() {
                 <Button label="Remove dish" variant="danger" size="sm" onPress={handleRemove} />
               </View>
             ) : null}
+
+            {/* What neighbours said — public, and the chef reads the same list */}
+            <DishFeedbackList dishId={dish.id} />
           </Container>
         </View>
       </AScrollView>

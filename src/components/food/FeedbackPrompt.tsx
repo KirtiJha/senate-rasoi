@@ -20,8 +20,11 @@ import { Touchable } from '../ui';
  * Yes or no is answerable honestly by somebody who still has to be pleasant on
  * Tuesday, and it still aggregates into a number worth reading.
  *
- * The note is private to the chef. Public praise, private correction: the one
- * arrangement where an honest "the dal was very salty" gets written at all.
+ * The note is PUBLIC to the society and shown on the dish with your name
+ * (migration 0103). That is a deliberate trade: attributed feedback is softer
+ * than anonymous feedback would be, but a neighbour deciding what to order
+ * gets to read it, which is the whole point of leaving it. The prompt says so
+ * plainly — nobody should discover their name on a review after the fact.
  *
  * Shown at the top of Orders rather than as a popup. A modal that ambushes you
  * on open gets dismissed reflexively, and a dismissed prompt never comes back.
@@ -106,13 +109,13 @@ export function FeedbackPrompt() {
         <View className="px-4 py-3.5">
           <Text className="font-sans mb-2 text-[12.5px] leading-[18px]" style={{ color: c.subtle }}>
             {answer
-              ? 'Anything you want to tell them? Only they will see it.'
-              : 'What would you tell them? Only they will see it — nothing is posted publicly.'}
+              ? 'Anything to add? This shows on the dish with your name.'
+              : 'What would you tell them? This shows on the dish with your name, for the whole society.'}
           </Text>
           <TextInput
             value={note}
             onChangeText={setNote}
-            placeholder={answer ? 'Optional' : 'Optional, and kept private'}
+            placeholder={answer ? 'Optional' : 'Optional, and shown publicly'}
             placeholderTextColor={c.faint}
             multiline
             maxLength={500}
