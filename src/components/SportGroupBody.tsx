@@ -151,9 +151,22 @@ export function SportGroupBody({
           <Text className="text-[12px] font-sans-sb" style={{ color }}>{sport?.label ?? group.sport}</Text>
         </View>
         {group.description ? <Text className="font-sans mt-3 text-center text-[14px] leading-6 text-muted">{group.description}</Text> : null}
-        <View className="mt-4 w-full">
-          <Button label={isMember ? 'Leave group' : 'Join group'} fullWidth variant={isMember ? 'outline' : 'primary'} onPress={toggleJoin} />
-        </View>
+        {isMember ? (
+          <Pressable
+            onPress={toggleJoin}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Leave group"
+            className="mt-3 flex-row items-center gap-1.5 rounded-full px-3 py-1.5 active:opacity-70"
+          >
+            <Ionicons name="exit-outline" size={13} color={c.muted} />
+            <Text className="text-[12.5px] font-sans-sb text-muted">Leave group</Text>
+          </Pressable>
+        ) : (
+          <View className="mt-4 w-full">
+            <Button label="Join group" fullWidth onPress={toggleJoin} />
+          </View>
+        )}
       </View>
 
       {/* Practice */}
@@ -292,9 +305,21 @@ export function SportGroupBody({
       </View>
 
       {canManage ? (
-        <Pressable onPress={onDeleteGroup} className="mt-5 items-center py-3">
-          <Text className="text-[13px] font-sans-sb text-[#EF4444]">Delete group</Text>
-        </Pressable>
+        <View className="mt-5 rounded-2xl border border-danger/30 bg-danger-soft p-4">
+          <Text className="mb-1 font-sans-sb text-[13px] text-danger">Delete this group</Text>
+          <Text className="font-sans mb-3 text-[12px] leading-[17px] text-danger">
+            Every booking, attendance record and settled due on it goes too. This cannot be undone.
+          </Text>
+          <Pressable
+            onPress={onDeleteGroup}
+            accessibilityRole="button"
+            accessibilityLabel="Delete group"
+            className="flex-row items-center justify-center gap-2 rounded-xl border border-danger/30 bg-surface py-2.5 active:bg-danger-soft"
+          >
+            <Ionicons name="trash-outline" size={15} color={c.danger} />
+            <Text className="font-sans-sb text-[13px] text-danger">Delete group</Text>
+          </Pressable>
+        </View>
       ) : null}
 
       <EditGroupSheet

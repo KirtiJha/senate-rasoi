@@ -7,8 +7,9 @@ import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import {
-  SessionView, bookerSetAttendance, cancelSession, createBooking, deleteBooking, fetchGroupSessions,
-  respondToSession, subscribeGroupSessions, updateBooking,
+  CourtBooking, SessionView, bookerSetAttendance, cancelSession, createBooking, deleteBooking,
+  extendBooking, fetchGroupSessions, fetchLapsedBookings, respondToSession, subscribeGroupSessions,
+  updateBooking,
 } from '../lib/courts';
 import { haptics } from '../lib/haptics';
 import { durationLabel, formatTime, isValidTime, rsvpLocked } from '../lib/schedule';
@@ -47,12 +48,28 @@ export function CourtBookings({
   const [manageSession, setManageSession] = useState<SessionView | null>(null);
   const [editSession, setEditSession] = useState<SessionView | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  // Recurring bookings whose dates have run out (see fetchLapsedBookings).
+  const [lapsed, setLapsed] = useState<CourtBooking[]>([]);
 
   const load = useCallback(async () => {
     try { setSessions(await fetchGroupSessions(groupId, userId)); }
     catch { /* keep prior */ }
+    try { setLapsed(await fetchLapsedBookings(groupId)); }
+    catch { /* the banner is a nicety, not a blocker */ }
     finally { setLoading(false); }
   }, [groupId, userId]);
+
+  const extend = async (b: CourtBooking) => {
+    if (busy) return;
+    setBusy(b.id);
+    try {
+      const made = await extendBooking(b, 4, userId);
+      haptics.success();
+      toast.show(made ? `${made} more ${made === 1 ? 'date' : 'dates'} added` : 'Nothing to add');
+      await load();
+    } catch { toast.show('Could not add more dates'); }
+    finally { setBusy(null); }
+  };
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { fetchGroupMembers(groupId).then(setMembers).catch(() => {}); }, [groupId]);
@@ -114,6 +131,35 @@ export function CourtBookings({
           ) : null}
         </View>
       </View>
+
+      {lapsed.length && isMember ? (
+        <View className="mb-3 gap-2">
+          {lapsed.map((b) => (
+            <View key={b.id} className="flex-row items-center gap-2.5 rounded-2xl border border-line bg-inset px-3.5 py-3">
+              <Ionicons name="calendar-outline" size={17} color={c.muted} />
+              <View className="min-w-0 flex-1">
+                <Text className="font-sans-sb text-[13.5px] text-ink" numberOfLines={1}>
+                  {b.title || `Weekly ${noun}`} has run out of dates
+                </Text>
+                <Text className="font-sans text-[12px] text-muted">
+                  Nothing is on the calendar for it any more.
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => extend(b)}
+                disabled={busy === b.id}
+                hitSlop={6}
+                className="rounded-full px-3 py-1.5 active:opacity-80"
+                style={{ backgroundColor: accent + '1A' }}
+              >
+                <Text className="text-[12px] font-sans-sb" style={{ color: accent }}>
+                  {busy === b.id ? 'Adding…' : '+4 weeks'}
+                </Text>
+              </Pressable>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       {loading ? (
         <Text className="font-sans py-2 text-[13px] text-muted">Loading…</Text>

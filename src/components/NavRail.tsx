@@ -306,7 +306,11 @@ export function NavRail() {
         </View>
 
         {/* ── Scrollable middle (so all items reach on short screens) ── */}
-        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
+        <ScrollView
+          style={{ flex: 1, minHeight: 0 }}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 8 }}
+        >
         {/* ── Society badge (fades out when collapsed) ── */}
         {community ? (
           <Animated.View style={{ opacity: labelOpacity, height: collapsed ? 0 : undefined, marginBottom: collapsed ? 0 : 16, paddingHorizontal: 12, overflow: 'hidden' }}>
@@ -350,6 +354,13 @@ export function NavRail() {
           </View>
         ) : null}
         </ScrollView>
+
+        {/* ── Pinned actions ───────────────────────────────────────
+            The list above clips wherever it runs out of room, often through
+            the middle of a row. Without a line under it, a half-drawn row
+            sitting against the notification badge reads as a broken layout
+            rather than as "there is more above". */}
+        <View style={{ height: 1, backgroundColor: colors.line, marginHorizontal: 10, marginBottom: 8 }} />
 
         {/* ── Notifications (always accessible, above New Post) ── */}
         <View style={{ paddingHorizontal: 10, marginBottom: 2 }}>

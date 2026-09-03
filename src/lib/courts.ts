@@ -128,6 +128,60 @@ export async function deleteBooking(bookingId: string): Promise<void> {
   if (error) throw error;
 }
 
+/**
+ * Recurring bookings that have run out of dates.
+ *
+ * createBooking generates a few weeks of sessions and nothing extends them.
+ * 0114 tops up arrangements that are still being played, but one that has
+ * already lapsed is deliberately left alone — putting a fixture back on nine
+ * people's phones weeks later should be somebody's decision, not a sweep's.
+ * This is how the booker finds out it lapsed, and restarts it.
+ */
+export async function fetchLapsedBookings(groupId: string): Promise<CourtBooking[]> {
+  const today = new Date().toLocaleDateString('en-CA');
+  const { data, error } = await supabase
+    .from('court_bookings')
+    .select('*, sessions:court_sessions(session_date)')
+    .eq('group_id', groupId);
+  if (error) throw error;
+  return ((data ?? []) as any[])
+    .filter((b) => (b.days_of_week ?? []).length > 0)
+    .filter((b) => !((b.sessions ?? []) as { session_date: string }[]).some((s) => s.session_date >= today))
+    .map(mapBooking);
+}
+
+/** Put the next few weeks of a recurring booking back on the calendar. */
+export async function extendBooking(
+  booking: CourtBooking,
+  weeks = 4,
+  bookerUserId?: string | null,
+): Promise<number> {
+  const dates = upcomingDates(booking.days_of_week ?? [], weeks);
+  if (!dates.length) return 0;
+  const { data, error } = await supabase
+    .from('court_sessions')
+    .upsert(dates.map((d) => ({
+      booking_id: booking.id,
+      group_id: booking.group_id,
+      community_id: booking.community_id,
+      session_date: d,
+      start_time: booking.start_time,
+      duration_min: booking.duration_min,
+      charge: booking.charge,
+    })), { onConflict: 'booking_id,session_date', ignoreDuplicates: true })
+    .select('id');
+  if (error) throw error;
+  const made = (data ?? []) as { id: string }[];
+  const who = bookerUserId ?? booking.booker_user_id;
+  if (made.length && who) {
+    await supabase.from('court_session_players').upsert(
+      made.map((s) => ({ session_id: s.id, user_id: who, status: 'confirmed' as const })),
+      { onConflict: 'session_id,user_id', ignoreDuplicates: true },
+    );
+  }
+  return made.length;
+}
+
 export async function cancelSession(sessionId: string): Promise<void> {
   const { error } = await supabase.from('court_sessions').update({ status: 'cancelled' }).eq('id', sessionId);
   if (error) throw error;
