@@ -325,15 +325,15 @@ export default function HomeScreen() {
   // "Around the aangan" needs no new query: loadHome already fetches all five
   // sources. This is a client-side merge of what is on screen anyway.
   const around = [
-    ...recent.map((r) => ({ id: 'l' + r.id, at: r.created_at, icon: 'pricetag-outline' as const, title: r.title, where: 'Marketplace', photo: r.photos?.[0] ?? null, href: `/listing/${r.id}` })),
-    ...recentProps.map((r) => ({ id: 'p' + r.id, at: r.created_at, icon: 'key-outline' as const, title: r.title, where: 'Flats', photo: r.photos?.[0] ?? null, href: `/property/${r.id}` })),
-    ...recentBorrow.map((r) => ({ id: 'b' + r.id, at: r.created_at, icon: 'swap-horizontal-outline' as const, title: r.title, where: 'Borrow', photo: r.photo_url ?? null, href: `/borrow/${r.id}` })),
-    ...recentPlaces.map((r) => ({ id: 'pl' + r.id, at: r.created_at, icon: 'location-outline' as const, title: r.name, where: 'Places', photo: null, href: `/place/${r.id}` })),
-    ...recentLostFound.map((r) => ({ id: 'lf' + r.id, at: r.created_at, icon: 'help-circle-outline' as const, title: r.title, where: 'Lost & found', photo: null, href: `/lost-found/${r.id}` })),
+    ...recent.map((r) => ({ id: 'l' + r.id, at: r.created_at, icon: 'pricetag-outline' as const, tint: c.accent, title: r.title, where: 'Marketplace', photo: r.photos?.[0] ?? null, href: `/listing/${r.id}` })),
+    ...recentProps.map((r) => ({ id: 'p' + r.id, at: r.created_at, icon: 'key-outline' as const, tint: '#7C3AED', title: r.title, where: 'Flats', photo: r.photos?.[0] ?? null, href: `/property/${r.id}` })),
+    ...recentBorrow.map((r) => ({ id: 'b' + r.id, at: r.created_at, icon: 'swap-horizontal-outline' as const, tint: '#0891B2', title: r.title, where: 'Borrow', photo: r.photo_url ?? null, href: `/borrow/${r.id}` })),
+    ...recentPlaces.map((r) => ({ id: 'pl' + r.id, at: r.created_at, icon: 'location-outline' as const, tint: '#0D9488', title: r.name, where: 'Places', photo: null, href: `/place/${r.id}` })),
+    ...recentLostFound.map((r) => ({ id: 'lf' + r.id, at: r.created_at, icon: 'help-circle-outline' as const, tint: '#D97706', title: r.title, where: 'Lost & found', photo: null, href: `/lost-found/${r.id}` })),
   ]
     .filter((x) => x.title)
     .sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''))
-    .slice(0, 5);
+    .slice(0, 8);
 
   // ── Zone 2 data ──────────────────────────────────────────────────────
   // Four separately-styled banners become one mechanism — and, critically,
@@ -587,27 +587,23 @@ export default function HomeScreen() {
         {around.length ? (
           <Rise index={3} style={{ marginBottom: 32 }}>
             <SectionHead label="Around the aangan" actionLabel="See all" onAction={() => router.push('/listings' as any)} c={c} />
-            <View
-              className="overflow-hidden"
-              style={{
-                backgroundColor: c.surface,
-                borderTopLeftRadius: 22,
-                borderTopRightRadius: 22,
-                borderBottomLeftRadius: 14,
-                borderBottomRightRadius: 14,
-                boxShadow: c.shadowCard,
-              } as any}
-            >
-              {around.map((a, i) => (
-                <AroundRow
-                  key={a.id}
-                  item={a}
-                  last={i === around.length - 1}
-                  onPress={() => router.push(a.href as any)}
-                  c={c}
-                />
-              ))}
-            </View>
+            {isDesktop ? (
+              <View className="flex-row flex-wrap gap-3">
+                {around.map((a) => (
+                  <AroundCard key={a.id} item={a} onPress={() => router.push(a.href as any)} c={c} />
+                ))}
+              </View>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 12, paddingRight: 8 }}
+              >
+                {around.map((a) => (
+                  <AroundCard key={a.id} item={a} onPress={() => router.push(a.href as any)} c={c} />
+                ))}
+              </ScrollView>
+            )}
           </Rise>
         ) : null}
 
@@ -649,55 +645,94 @@ export default function HomeScreen() {
 }
 
 /**
- * A row in "Around the aangan".
+ * A card in the "Around the aangan" rail.
  *
- * The generic list row was too quiet for the most interesting section on the
- * screen. This one leads with the actual photo when there is one — a thing
- * your neighbour posted, not an icon standing in for a category — falling back
- * to a glyph plate. The category and the time share one line beneath the
- * title, so the row reads title-first, and the time sits at the end where it
- * is a glance rather than a competing headline.
+ * This was a vertical list, which was the wrong shape for it: eight rows of
+ * near-identical grey pushed everything below the section off the screen, and
+ * the one genuinely interesting thing about each item — that a neighbour
+ * posted a photo of it — was reduced to a 40px thumbnail in a column of
+ * thumbnails.
+ *
+ * As a swipeable rail it costs one screen-height instead of five, and each
+ * item gets room to be its own thing. The category is carried by a coloured
+ * spine and eyebrow rather than a repeated word in the body, so five sources
+ * are told apart at a glance without five different card layouts.
+ *
+ * Fixed height on purpose: a rail with ragged card bottoms reads as broken
+ * rather than organic, and the title is the only variable-length part.
  */
-function AroundRow({
-  item, last, onPress, c,
+function AroundCard({
+  item, onPress, c,
 }: {
-  item: { icon: any; title: string; where: string; at: string | null; photo: string | null };
-  last: boolean;
+  item: { icon: any; title: string; where: string; at: string | null; photo: string | null; tint: string };
   onPress: () => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
   return (
-    <Touchable haptic={null} onPress={onPress} accessibilityRole="button" accessibilityLabel={item.title}>
-      <View>
-        <View className="flex-row items-center gap-3 px-4" style={{ minHeight: 58, paddingVertical: 9 }}>
-          {item.photo ? (
-            <Image
-              source={{ uri: item.photo }}
-              style={{ width: 40, height: 40, borderRadius: 13 }}
-              contentFit="cover"
-              {...IMAGE_CACHE_PROPS}
-            />
-          ) : (
-            <View
-              className="items-center justify-center"
-              style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: c.accentSoft }}
-            >
-              <Ionicons name={item.icon} size={19} color={c.accent} />
-            </View>
-          )}
+    // The width lives on a plain wrapper: Touchable composes its own animated
+    // style, and layout handed to it does not reliably reach the tree.
+    <View style={{ width: 232 }}>
+    <Touchable
+      feel="card"
+      haptic={null}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.title}, ${item.where}`}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          height: 112,
+          overflow: 'hidden',
+          backgroundColor: c.surface,
+          borderTopLeftRadius: 22,
+          borderTopRightRadius: 22,
+          borderBottomLeftRadius: 14,
+          borderBottomRightRadius: 14,
+          boxShadow: c.shadowCard,
+        } as any}
+      >
+        {/* The spine is the category, said once and quietly. */}
+        <View style={{ width: 3, backgroundColor: item.tint, marginVertical: 14, marginLeft: 12, borderRadius: 2 }} />
 
-          <View className="min-w-0 flex-1">
-            <Text className="font-sans-sb text-[15px] text-ink" numberOfLines={1}>{item.title}</Text>
-            <Text className="mt-0.5 text-[12px] font-sans-md text-subtle" numberOfLines={1}>
-              <Text style={{ color: c.accent }} className="font-sans-sb">{item.where}</Text>
-              {'  ·  ' + timeAgo(item.at)}
-            </Text>
+        <View style={{ flex: 1, minWidth: 0, paddingHorizontal: 12, paddingVertical: 13 }}>
+          <View className="flex-row items-center gap-2.5">
+            {item.photo ? (
+              <Image
+                source={{ uri: item.photo }}
+                style={{ width: 36, height: 36, borderRadius: 12 }}
+                contentFit="cover"
+                {...IMAGE_CACHE_PROPS}
+              />
+            ) : (
+              <View
+                className="items-center justify-center"
+                style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: item.tint + '1A' }}
+              >
+                <Ionicons name={item.icon} size={18} color={item.tint} />
+              </View>
+            )}
+            <View className="min-w-0 flex-1">
+              <Text
+                className="text-[10px] font-sans-sb uppercase tracking-[0.06em]"
+                style={{ color: item.tint }}
+                numberOfLines={1}
+              >
+                {item.where}
+              </Text>
+              <Text className="mt-0.5 text-[11px] font-sans-md text-faint" numberOfLines={1}>
+                {timeAgo(item.at)}
+              </Text>
+            </View>
           </View>
 
+          <Text className="mt-2.5 font-sans-sb text-[14px] leading-[19px] text-ink" numberOfLines={2}>
+            {item.title}
+          </Text>
         </View>
-        {!last ? <View style={{ height: 1, marginLeft: 67, backgroundColor: c.line }} /> : null}
       </View>
     </Touchable>
+    </View>
   );
 }
 
@@ -841,13 +876,8 @@ function FreshFoodStrip({ items, isDesktop }: { items: DishRow[]; isDesktop: boo
   };
 
   return (
-    <View className="mb-6">
-      <View className="mb-3 flex-row items-center justify-between px-1.5">
-        <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-muted">Fresh from kitchens</Text>
-        <Pressable onPress={() => router.push('/food' as any)} hitSlop={8}>
-          <Text className="text-[12px] font-sans-sb text-accent">See all →</Text>
-        </Pressable>
-      </View>
+    <View className="mb-2">
+      <SectionHead label="Fresh from kitchens" actionLabel="See all" onAction={() => router.push('/food' as any)} c={c} />
       {isDesktop ? (
         <View className="flex-row flex-wrap gap-3">{items.slice(0, 6).map((d) => <Card key={d.id} d={d} />)}</View>
       ) : (
