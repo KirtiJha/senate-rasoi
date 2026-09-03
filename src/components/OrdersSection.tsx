@@ -12,6 +12,7 @@ import { FeedbackPrompt } from './food/FeedbackPrompt';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
 import { orderTotal, waLink } from '../lib/dishes';
+import { fetchOrderPaymentStatus, PaymentStatus } from '../lib/payments';
 import { cancelOrder, canSelfCancel, listMyOrders, subscribeToOrders } from '../lib/orders';
 import { MyOrder, OrderStatus, SLOT_EMOJI } from '../lib/types';
 import { useThemeColors } from '../theme';
@@ -37,12 +38,17 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
   const c = useThemeColors();
   const { userId } = useAuth();
   const [orders, setOrders] = useState<MyOrder[]>([]);
+  const [paid, setPaid] = useState<Record<string, PaymentStatus>>({});
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     if (!userId) return;
     try {
-      setOrders(await listMyOrders(userId));
+      const rows = await listMyOrders(userId);
+      setOrders(rows);
+      // Second call rather than a join: payments live in their own table with
+      // their own policy, and an order with no payment is the common case.
+      setPaid(await fetchOrderPaymentStatus(rows.map((o) => o.id)));
     } catch (e) {
       console.error(e);
     }
@@ -93,6 +99,11 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
             const selfCancel = canSelfCancel(o);
             const active = o.status === 'placed' || o.status === 'accepted' || o.status === 'cooking';
             const dimmed = o.status === 'cancelled' || o.status === 'rejected';
+            // Paying and asking a question do not stop when the food arrives —
+            // delivery is when most people actually settle up. Only a
+            // cancelled or declined order is genuinely finished.
+            const open = active || o.status === 'delivered';
+            const payState = paid[o.id];
             const wa = o.dish?.whatsapp;
             return (
               <View key={o.id} className={`mb-3 card p-3.5 ${dimmed ? 'opacity-60' : ''}`}>
@@ -115,7 +126,21 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
                 <View className="mt-2.5 flex-row items-center justify-between border-t border-line pt-2.5">
                   <Badge label={st.label} tone={st.tone} />
                   <View className="flex-row items-center gap-3">
-                    {active && o.dish?.chef_user_id ? (
+                    {open && payState ? (
+                      <View className="flex-row items-center gap-1">
+                        <Ionicons
+                          name={payState === 'received' ? 'checkmark-circle' : 'time-outline'}
+                          size={14}
+                          color={payState === 'received' ? c.success : c.muted}
+                        />
+                        <Text
+                          className="text-[12px] font-sans-sb"
+                          style={{ color: payState === 'received' ? c.success : c.muted }}
+                        >
+                          {payState === 'received' ? 'Paid' : 'Payment sent'}
+                        </Text>
+                      </View>
+                    ) : open && o.dish?.chef_user_id ? (
                       <PayButton
                         payee={{ id: o.dish.chef_user_id, name: o.dish.chef_name, upi: o.dish.upi }}
                         amount={orderTotal(o, o.dish.price ?? 0)}
@@ -123,18 +148,19 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
                         context={{ type: 'dish', id: o.id }}
                         label="Pay"
                         size="sm"
+                        onPaid={load}
                       />
                     ) : null}
                     {/* In-app first, and it works for every chef — including
                         the ones who never added a number, who used to leave
                         this row with no way to say anything at all. */}
-                    {active ? (
+                    {open ? (
                       <MessageIconButton
                         userId={o.dish?.chef_user_id}
                         label={`Message ${o.dish?.chef_name ?? 'the cook'}`}
                       />
                     ) : null}
-                    {active && wa ? (
+                    {open && wa ? (
                       <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={() => openUrl(waLink(wa, `Hi ${o.dish?.chef_name ?? ''}! About my Aangan order for ${o.dish?.dish_name ?? ''}…`))} hitSlop={6}>
                         <Ionicons name="logo-whatsapp" size={18} color={c.success} />
                       </Pressable>

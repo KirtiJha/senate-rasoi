@@ -52,6 +52,38 @@ export async function createPayment(input: NewPayment): Promise<void> {
   if (error) throw error;
 }
 
+/**
+ * Which of these orders have already been paid for, and how far along.
+ *
+ * `received` wins over `initiated` when an order has more than one row —
+ * someone recording a payment twice should not un-confirm the one the chef
+ * already acknowledged. Cancelled rows are ignored, so a payment recorded by
+ * mistake and withdrawn leaves the order payable again.
+ *
+ * Safe to call from either side: the `payments_read` policy limits rows to the
+ * payer, the payee and admins.
+ */
+export async function fetchOrderPaymentStatus(
+  orderIds: string[],
+): Promise<Record<string, PaymentStatus>> {
+  if (!isSupabaseConfigured || orderIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from('payments')
+    .select('context_id,status')
+    .eq('context_type', 'dish')
+    .in('context_id', orderIds)
+    .neq('status', 'cancelled');
+  if (error) throw error;
+
+  const byOrder: Record<string, PaymentStatus> = {};
+  for (const row of (data ?? []) as { context_id: string | null; status: PaymentStatus }[]) {
+    if (!row.context_id) continue;
+    if (byOrder[row.context_id] === 'received') continue;
+    byOrder[row.context_id] = row.status;
+  }
+  return byOrder;
+}
+
 /** Receiver confirms a payment (only the payee can; returns false if not allowed). */
 export async function markReceived(id: string): Promise<boolean> {
   const { data, error } = await supabase.rpc('payment_mark_received', { p_id: id });
