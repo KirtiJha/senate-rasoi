@@ -63,23 +63,28 @@ export async function createPayment(input: NewPayment): Promise<void> {
  * Safe to call from either side: the `payments_read` policy limits rows to the
  * payer, the payee and admins.
  */
-export async function fetchOrderPaymentStatus(
+export interface OrderPayment {
+  id: string;
+  status: PaymentStatus;
+}
+
+export async function fetchOrderPayments(
   orderIds: string[],
-): Promise<Record<string, PaymentStatus>> {
+): Promise<Record<string, OrderPayment>> {
   if (!isSupabaseConfigured || orderIds.length === 0) return {};
   const { data, error } = await supabase
     .from('payments')
-    .select('context_id,status')
+    .select('id,context_id,status')
     .eq('context_type', 'dish')
     .in('context_id', orderIds)
     .neq('status', 'cancelled');
   if (error) throw error;
 
-  const byOrder: Record<string, PaymentStatus> = {};
-  for (const row of (data ?? []) as { context_id: string | null; status: PaymentStatus }[]) {
+  const byOrder: Record<string, OrderPayment> = {};
+  for (const row of (data ?? []) as { id: string; context_id: string | null; status: PaymentStatus }[]) {
     if (!row.context_id) continue;
-    if (byOrder[row.context_id] === 'received') continue;
-    byOrder[row.context_id] = row.status;
+    if (byOrder[row.context_id]?.status === 'received') continue;
+    byOrder[row.context_id] = { id: row.id, status: row.status };
   }
   return byOrder;
 }

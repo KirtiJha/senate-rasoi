@@ -12,6 +12,7 @@ import { useToast } from '../context/toast';
 import { fetchDishes, listChefOrders, orderTotal, setOrderStatus, statusMessageForFoodie, waLink } from '../lib/dishes';
 import { haptics } from '../lib/haptics';
 import { subscribeToOrders } from '../lib/orders';
+import { fetchOrderPayments, markReceived, OrderPayment } from '../lib/payments';
 import { countdown } from '../lib/time';
 import { ChefOrder, DishRow, OrderStatus, SLOT_EMOJI } from '../lib/types';
 import { useThemeColors } from '../theme';
@@ -45,6 +46,7 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
   const { userId, communityId } = useAuth();
   const [dishes, setDishes] = useState<DishRow[]>([]);
   const [ordersByDish, setOrdersByDish] = useState<Record<string, ChefOrder[]>>({});
+  const [payments, setPayments] = useState<Record<string, OrderPayment>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -55,6 +57,9 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
       setDishes(mine);
       const entries = await Promise.all(mine.map(async (d) => [d.id, await listChefOrders(d.id)] as const));
       setOrdersByDish(Object.fromEntries(entries));
+      // Who has actually paid. The chef could see this only by leaving for the
+      // Payments ledger and matching names to dishes by hand.
+      setPayments(await fetchOrderPayments(entries.flatMap(([, os]) => os.map((o) => o.id))));
     } catch (e) {
       console.error(e);
     } finally {
@@ -93,6 +98,19 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
     }
   };
 
+  /** Confirm the money arrived. Only the payee may, and the RPC enforces it. */
+  const confirmPaid = async (paymentId: string) => {
+    try {
+      haptics.success();
+      const ok = await markReceived(paymentId);
+      toast.show(ok ? 'Marked as received ✅' : 'Could not confirm this payment');
+      await load();
+    } catch (e) {
+      console.error(e);
+      toast.show('Could not confirm this payment — try again');
+    }
+  };
+
   const postDish = () => (onPost ? onPost() : router.push({ pathname: '/post', params: { category: 'food' } }));
 
   return (
@@ -119,7 +137,14 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
         ) : (
           <>
             {dishes.map((dish) => (
-              <KitchenDishCard key={dish.id} dish={dish} orders={ordersByDish[dish.id] ?? []} onAct={act} />
+              <KitchenDishCard
+                key={dish.id}
+                dish={dish}
+                orders={ordersByDish[dish.id] ?? []}
+                payments={payments}
+                onAct={act}
+                onConfirmPaid={confirmPaid}
+              />
             ))}
             <Pressable
               onPress={postDish}
@@ -138,11 +163,15 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
 function KitchenDishCard({
   dish,
   orders,
+  payments,
   onAct,
+  onConfirmPaid,
 }: {
   dish: DishRow;
   orders: ChefOrder[];
+  payments: Record<string, OrderPayment>;
   onAct: (orderId: string, status: OrderStatus, msg: string) => void;
+  onConfirmPaid: (paymentId: string) => void;
 }) {
   const c = useThemeColors();
   // Plates reserved = max − left (set_order_status / place_order keep plates_left
@@ -185,6 +214,10 @@ function KitchenDishCard({
                   <Text className="font-sans text-[12px] text-muted">
                     {o.qty} plate{o.qty !== 1 ? 's' : ''} · ₹{orderTotal(o, dish.price)}
                   </Text>
+                  {/* Whether this plate has been paid for, next to the plate
+                      rather than in a separate ledger the chef has to
+                      reconcile by name. */}
+                  <PaidLine payment={payments[o.id]} onConfirm={onConfirmPaid} c={c} />
                 </View>
 
                 {CAN_MESSAGE.includes(o.status) ? (
@@ -248,6 +281,48 @@ function KitchenDishCard({
         )}
       </View>
     </View>
+  );
+}
+
+/**
+ * The payment state of one order, from the chef's side.
+ *
+ * A buyer recording a payment is a claim, not proof — only the chef knows the
+ * money arrived — so an unconfirmed one is offered as an action rather than
+ * shown as settled. Renders nothing until a payment exists: most orders are
+ * paid in cash at the door and never generate a row.
+ */
+function PaidLine({
+  payment, onConfirm, c,
+}: {
+  payment: OrderPayment | undefined;
+  onConfirm: (paymentId: string) => void;
+  c: ReturnType<typeof useThemeColors>;
+}) {
+  if (!payment) return null;
+
+  if (payment.status === 'received') {
+    return (
+      <View className="mt-1 flex-row items-center gap-1">
+        <Ionicons name="checkmark-circle" size={12} color={c.success} />
+        <Text className="text-[11px] font-sans-sb" style={{ color: c.success }}>Paid</Text>
+      </View>
+    );
+  }
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Confirm this payment was received"
+      onPress={() => onConfirm(payment.id)}
+      hitSlop={6}
+      className="mt-1 flex-row items-center gap-1 self-start"
+    >
+      <Ionicons name="time-outline" size={12} color={c.accent} />
+      <Text className="text-[11px] font-sans-sb" style={{ color: c.accent }}>
+        Payment sent — confirm
+      </Text>
+    </Pressable>
   );
 }
 

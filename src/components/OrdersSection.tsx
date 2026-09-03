@@ -12,7 +12,7 @@ import { FeedbackPrompt } from './food/FeedbackPrompt';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
 import { orderTotal, waLink } from '../lib/dishes';
-import { fetchOrderPaymentStatus, PaymentStatus } from '../lib/payments';
+import { fetchOrderPayments, OrderPayment } from '../lib/payments';
 import { cancelOrder, canSelfCancel, listMyOrders, subscribeToOrders } from '../lib/orders';
 import { MyOrder, OrderStatus, SLOT_EMOJI } from '../lib/types';
 import { useThemeColors } from '../theme';
@@ -38,7 +38,7 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
   const c = useThemeColors();
   const { userId } = useAuth();
   const [orders, setOrders] = useState<MyOrder[]>([]);
-  const [paid, setPaid] = useState<Record<string, PaymentStatus>>({});
+  const [paid, setPaid] = useState<Record<string, OrderPayment>>({});
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
@@ -48,7 +48,7 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
       setOrders(rows);
       // Second call rather than a join: payments live in their own table with
       // their own policy, and an order with no payment is the common case.
-      setPaid(await fetchOrderPaymentStatus(rows.map((o) => o.id)));
+      setPaid(await fetchOrderPayments(rows.map((o) => o.id)));
     } catch (e) {
       console.error(e);
     }
@@ -103,7 +103,7 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
             // delivery is when most people actually settle up. Only a
             // cancelled or declined order is genuinely finished.
             const open = active || o.status === 'delivered';
-            const payState = paid[o.id];
+            const payState = paid[o.id]?.status;
             const wa = o.dish?.whatsapp;
             return (
               <View key={o.id} className={`mb-3 card p-3.5 ${dimmed ? 'opacity-60' : ''}`}>
