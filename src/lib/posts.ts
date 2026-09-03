@@ -369,3 +369,37 @@ export function subscribeToCommentReactions(postId: string, onChange: () => void
     .subscribe();
   return () => { supabase.removeChannel(ch); };
 }
+
+// ── Muting one thread ───────────────────────────────────────────────
+//
+// Comment notifications reach the author and everyone who has ever commented.
+// That is right for a two-reply thread and punishing on a fifteen-reply one,
+// and because the rows are targeted rather than broadcast the category mute
+// never applied to them. See 0105.
+
+/** Threads this resident has muted, so the UI can show the state. */
+export async function fetchMutedPosts(userId: string): Promise<Set<string>> {
+  if (!isSupabaseConfigured || !userId) return new Set();
+  const { data, error } = await supabase
+    .from('post_mutes')
+    .select('post_id')
+    .eq('user_id', userId);
+  if (error) return new Set();
+  return new Set((data ?? []).map((r: { post_id: string }) => r.post_id));
+}
+
+export async function setPostMuted(postId: string, userId: string, muted: boolean): Promise<void> {
+  if (muted) {
+    const { error } = await supabase
+      .from('post_mutes')
+      .upsert({ post_id: postId, user_id: userId }, { onConflict: 'post_id,user_id' });
+    if (error) throw error;
+    return;
+  }
+  const { error } = await supabase
+    .from('post_mutes')
+    .delete()
+    .eq('post_id', postId)
+    .eq('user_id', userId);
+  if (error) throw error;
+}

@@ -20,9 +20,9 @@ import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
 import {
-  ALL_POST_CATEGORIES, CommentRow, POST_CATEGORY_ICONS, POST_CATEGORY_LABELS,
+  ALL_POST_CATEGORIES, CommentRow, POST_CATEGORY_COLORS, POST_CATEGORY_ICONS, POST_CATEGORY_LABELS,
   PostCategory, PostRow, ReactionMap, createComment, deleteComment, deletePost,
-  fetchCommentReactions, fetchComments, fetchPostById, setPinned, setResolved,
+  fetchCommentReactions, fetchComments, fetchMutedPosts, fetchPostById, setPinned, setPostMuted, setResolved,
   subscribeToCommentReactions, subscribeToComments,
   toggleCommentReaction, updateComment, updatePost, uploadPostPhoto,
 } from '../../lib/posts';
@@ -50,6 +50,7 @@ export default function PostThreadScreen() {
   );
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [muted, setMuted] = useState(false);
 
   // On web, opening this route directly (or after a refresh) leaves an empty
   // history stack, so router.back() is a no-op. Fall back to the feed.
@@ -128,6 +129,13 @@ export default function PostThreadScreen() {
   }, [loadPost]);
 
   useEffect(() => { loadPost(); }, [loadPost]);
+
+  // Whether this resident has muted the thread — see 0105. A busy thread used
+  // to notify everyone who had ever commented, with no way out.
+  useEffect(() => {
+    if (!userId || !postId) return;
+    fetchMutedPosts(userId).then((m) => setMuted(m.has(postId))).catch(() => {});
+  }, [userId, postId]);
 
   useEffect(() => {
     if (!postId) return;
@@ -227,7 +235,7 @@ export default function PostThreadScreen() {
     );
   }
 
-  const color = c.accent;
+  const color = POST_CATEGORY_COLORS[post.category] ?? c.accent;
   const icon = POST_CATEGORY_ICONS[post.category];
   const isOwner = post.author_id === userId;
   const canManage = isOwner || isAdmin;
@@ -246,7 +254,21 @@ export default function PostThreadScreen() {
           </View>
           <View className="flex-1" />
           {canManage ? (
-            <PostMenu post={post} isOwner={isOwner} isAdmin={!!isAdmin} onEdit={() => setEditing(true)} onDelete={handleDeletePost} onPinToggle={async () => { await setPinned(post.id, !post.pinned); loadPost(); }} onResolveToggle={async () => { await setResolved(post.id, !post.resolved); loadPost(); }} c={c} />
+            <PostMenu post={post} isOwner={isOwner} isAdmin={!!isAdmin} onEdit={() => setEditing(true)} onDelete={handleDeletePost} onPinToggle={async () => {
+                try { await setPinned(post.id, !post.pinned); loadPost(); }
+                catch { toast.show('Only a society admin can pin a post'); }
+              }} onResolveToggle={async () => { await setResolved(post.id, !post.resolved); loadPost(); }}
+              muted={muted}
+              onMuteToggle={async () => {
+                if (!userId) return;
+                const next = !muted;
+                setMuted(next);
+                try {
+                  await setPostMuted(post.id, userId, next);
+                  toast.show(next ? 'Muted — you will not be told about new comments' : 'Unmuted');
+                } catch { setMuted(!next); toast.show('Could not save that'); }
+              }}
+              c={c} />
           ) : null}
         </View>
       </View>
@@ -661,7 +683,7 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3 -mx-1" contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}>
               {cats.map((k) => {
                 const on = category === k;
-                const color = c.accent;
+                const color = POST_CATEGORY_COLORS[k] ?? c.accent;
                 return (
                   <Pressable key={k} onPress={() => setCategory(k)} className="flex-row items-center gap-1 rounded-full border px-3 py-1.5" style={{ borderColor: on ? color : c.line, backgroundColor: on ? color : c.surface }}>
                     <Ionicons name={POST_CATEGORY_ICONS[k] as any} size={12} color={on ? '#fff' : c.muted} />
@@ -702,9 +724,10 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
   );
 }
 
-function PostMenu({ post, isOwner, isAdmin, onEdit, onDelete, onPinToggle, onResolveToggle, c }: {
-  post: PostRow; isOwner: boolean; isAdmin: boolean;
+function PostMenu({ post, isOwner, isAdmin, muted, onEdit, onDelete, onPinToggle, onResolveToggle, onMuteToggle, c }: {
+  post: PostRow; isOwner: boolean; isAdmin: boolean; muted: boolean;
   onEdit: () => void; onDelete: () => void; onPinToggle: () => void; onResolveToggle: () => void;
+  onMuteToggle: () => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
   const [open, setOpen] = useState(false);
@@ -738,7 +761,15 @@ function PostMenu({ post, isOwner, isAdmin, onEdit, onDelete, onPinToggle, onRes
             {(isAdmin || isOwner) && isIssue ? (
               <MenuItem icon="checkmark-circle-outline" label={post.resolved ? 'Reopen' : 'Mark resolved'} onPress={() => { setOpen(false); onResolveToggle(); }} c={c} />
             ) : null}
-            <MenuItem icon="trash-outline" label="Delete post" onPress={() => { setOpen(false); onDelete(); }} c={c} danger />
+            <MenuItem
+              icon={muted ? 'notifications-outline' : 'notifications-off-outline'}
+              label={muted ? 'Unmute this thread' : 'Mute this thread'}
+              onPress={() => { setOpen(false); onMuteToggle(); }}
+              c={c}
+            />
+            {isOwner || isAdmin ? (
+              <MenuItem icon="trash-outline" label="Delete post" onPress={() => { setOpen(false); onDelete(); }} c={c} danger />
+            ) : null}
           </View>
         </Pressable>
       </Modal>

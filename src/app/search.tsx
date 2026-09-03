@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, ErrorState, RowSkeleton, ScreenHeader, useResponsive } from '../components/ui';
@@ -10,7 +10,7 @@ import { fetchDirectory } from '../lib/directory';
 import { fetchDishes } from '../lib/dishes';
 import { fetchDocuments, fileGlyph } from '../lib/documents';
 import { fetchAllListings } from '../lib/listings';
-import { POST_CATEGORY_ICONS, fetchPosts } from '../lib/posts';
+import { POST_CATEGORY_ICONS, fetchPosts, searchPosts } from '../lib/posts';
 import { addRecentSearch, clearRecentSearches, getRecentSearches } from '../lib/recentSearches';
 import { getService } from '../lib/services';
 import { fetchGroups, getSport } from '../lib/sports';
@@ -71,6 +71,8 @@ export default function SearchScreen() {
 
   const [query, setQuery] = useState('');
   const [items, setItems] = useState<SearchItem[]>([]);
+  // Posts found by asking the database, for anything older than the local index.
+  const [deepPosts, setDeepPosts] = useState<SearchItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [retrying, setRetrying] = useState(false);
@@ -83,7 +85,7 @@ export default function SearchScreen() {
       const [residents, listings, posts, dishes, tiffins, groups, documents] = await Promise.all([
         fetchDirectory(communityId, userId, !!isAdmin).catch(() => []),
         fetchAllListings(communityId, 0, 200).catch(() => []),
-        fetchPosts(communityId, undefined, 0, 100).catch(() => []),
+        fetchPosts(communityId, undefined, 0, 300).catch(() => []),
         fetchDishes(communityId).catch(() => []),
         listTiffinPlans(communityId).catch(() => []),
         fetchGroups(communityId, userId).catch(() => []),
@@ -164,6 +166,30 @@ export default function SearchScreen() {
 
   useFocusEffect(useCallback(() => { load(); getRecentSearches().then(setRecents); }, [load]));
 
+  useEffect(() => {
+    const q = query.trim();
+    if (!communityId || q.length < 3) { setDeepPosts([]); return; }
+    // Three characters and a beat, so this is not a request per keystroke.
+    const t = setTimeout(() => {
+      searchPosts(q, communityId)
+        .then((rows) => setDeepPosts(rows.map((p) => {
+          const title = p.title || p.body.split('\n')[0].slice(0, 80);
+          return {
+            id: `p:${p.id}`,
+            kind: 'post' as Kind,
+            title,
+            subtitle: `${p.author?.name ?? 'Someone'} · Feed`,
+            haystack: `${p.title ?? ''} ${p.body} ${p.author?.name ?? ''}`.toLowerCase(),
+            icon: (POST_CATEGORY_ICONS[p.category] as string) ?? 'chatbubble',
+            color: c.accent,
+            open: () => router.push(`/feed/${p.id}` as never),
+          };
+        })))
+        .catch(() => setDeepPosts([]));
+    }, 350);
+    return () => clearTimeout(t);
+  }, [query, communityId, router, c.accent]);
+
   const grouped = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
@@ -178,7 +204,7 @@ export default function SearchScreen() {
       byKind.set(it.kind, arr);
     }
     return KIND_ORDER.filter((k) => byKind.has(k)).map((k) => ({ kind: k, rows: byKind.get(k)! }));
-  }, [items, query]);
+  }, [items, deepPosts, query]);
 
   const total = grouped.reduce((s, g) => s + g.rows.length, 0);
 

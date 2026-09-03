@@ -18,10 +18,11 @@ import { useConfirm } from '../../context/confirm';
 import { useBlocks } from '../../context/blocks';
 import { useToast } from '../../context/toast';
 import {
-  ALL_POST_CATEGORIES, POST_CATEGORY_ICONS,
+  ALL_POST_CATEGORIES, POST_CATEGORY_COLORS, POST_CATEGORY_ICONS,
   POST_CATEGORY_LABELS, PostCategory, PostRow,
   createPost, fetchPosts, subscribeToFeed,
 } from '../../lib/posts';
+import { useDraft } from '../../lib/draft';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { layout, useThemeColors } from '../../theme';
@@ -247,7 +248,7 @@ function PostCardSkeleton() {
 const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userId: string | null }) {
   const router = useRouter();
   const c = useThemeColors();
-  const color = c.accent;
+  const color = POST_CATEGORY_COLORS[post.category] ?? c.accent;
   const icon = POST_CATEGORY_ICONS[post.category];
   const isOwn = post.author_id === userId;
   const timeAgo = formatTimeAgo(post.created_at);
@@ -333,10 +334,14 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
   const availableCategories = ALL_POST_CATEGORIES.filter(
     (cat) => cat !== 'announcement' || isAdmin,
   );
-  const [category, setCategory] = useState<PostCategory>('general');
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [photos, setPhotos] = useState<string[]>([]);
+  // useDraft, not useState: (tabs)/_layout renders a bare Slot, so switching
+  // tabs unmounts this modal and a half-written post vanished with it. The
+  // comment box has used the draft store since it was written, for exactly
+  // this reason; the composer — much the longer thing to retype — never did.
+  const [category, setCategory] = useDraft<PostCategory>('post:category', 'general');
+  const [title, setTitle] = useDraft('post:title', '');
+  const [body, setBody] = useDraft('post:body', '');
+  const [photos, setPhotos] = useDraft<string[]>('post:photos', []);
   const [bodyHeight, setBodyHeight] = useState(160);
   const [posting, setPosting] = useState(false);
   const bodyRef = useRef<TextInput>(null);
@@ -344,6 +349,13 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
   // Inside an RN Modal, so the JS Keyboard API rather than Reanimated.
   const composeKb = useKeyboardInset();
   const confirm = useConfirm();
+
+  const clearDraft = () => {
+    setCategory('general');
+    setTitle('');
+    setBody('');
+    setPhotos([]);
+  };
 
   const closeWithGuard = async () => {
     const hasWork = title.trim() || body.trim() || photos.length > 0;
@@ -354,14 +366,16 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
       confirmLabel: 'Discard',
       destructive: true,
     });
-    if (discard) onClose();
+    // Actually discard it. This used to hide the modal and keep the text, so
+    // reopening showed what the user had just been told was gone.
+    if (discard) { clearDraft(); onClose(); }
   };
   const MAX_PHOTOS = 4;
 
   const pickPhotos = async () => {
     if (photos.length >= MAX_PHOTOS) return toast.show(`Up to ${MAX_PHOTOS} photos`);
     const res = await openPhotoPicker({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: MAX_PHOTOS - photos.length, quality: 0.9 });
-    if (!res.canceled) setPhotos((prev) => [...prev, ...res.assets.map((a) => a.uri)].slice(0, MAX_PHOTOS));
+    if (!res.canceled) setPhotos([...photos, ...res.assets.map((a) => a.uri)].slice(0, MAX_PHOTOS));
   };
 
   const handlePost = async () => {
@@ -394,7 +408,7 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
             <View className="flex-row gap-2">
               {availableCategories.map((cat) => {
-                const color = c.accent;
+                const color = POST_CATEGORY_COLORS[cat] ?? c.accent;
                 const on = category === cat;
                 return (
                   <Pressable
@@ -458,7 +472,7 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
               {photos.map((uri, i) => (
                 <View key={`${uri}-${i}`} className="overflow-hidden rounded-xl" style={{ width: 88, height: 88 }}>
                   <Image source={{ uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-                  <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setPhotos((p) => p.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 h-6 w-6 items-center justify-center rounded-full bg-black/60">
+                  <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setPhotos(photos.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 h-6 w-6 items-center justify-center rounded-full bg-black/60">
                     <Ionicons name="close" size={13} color="#fff" />
                   </Pressable>
                 </View>
