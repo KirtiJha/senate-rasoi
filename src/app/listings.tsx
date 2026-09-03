@@ -2,15 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ErrorState, ScreenHeader, useResponsive } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useBlocks } from '../context/blocks';
 import { useToast } from '../context/toast';
-import { fetchDishes, waLink } from '../lib/dishes';
-import { sendInquiry } from '../lib/inquiries';
-import { buildInquiryWhatsAppLink, fetchAllListings } from '../lib/listings';
+import { fetchDishes } from '../lib/dishes';
+import { fetchAllListings } from '../lib/listings';
 import { SERVICES, getService } from '../lib/services';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { listTiffinPlans } from '../lib/tiffin';
@@ -109,7 +108,7 @@ export default function AllListingsScreen() {
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { userId, communityId, profile } = useAuth();
+  const { communityId } = useAuth();
   const { filterBlocked } = useBlocks();
 
   const [items, setItems] = useState<AllItem[]>([]);
@@ -174,37 +173,26 @@ export default function AllListingsScreen() {
       : null);
   }, [items, category, filterBlocked]);
 
+  /**
+   * A row opens the thing. Contacting happens on the detail screen.
+   *
+   * There used to be a second, green button on every row that fired WhatsApp
+   * directly — and for a listing it also silently recorded an inquiry the
+   * person had not written yet. It was the last place in the app where
+   * WhatsApp was the only way through: no in-app option, and nothing at all
+   * for a neighbour who never added a number. On a dish it skipped ordering
+   * entirely, messaging the cook about plates that were never reserved.
+   *
+   * Every detail screen now offers both channels properly — the inquiry sheet,
+   * the order sheet, Message in Aangan — so the row does not need to guess
+   * which one you meant.
+   */
   const openItem = (i: AllItem) => {
     if (i.kind === 'listing') router.push(`/listing/${i.raw.id}` as any);
     else if (i.kind === 'borrow') router.push(`/borrow/${i.raw.id}` as any);
     else if (i.kind === 'place') router.push(`/place/${i.raw.id}` as any);
     else if (i.kind === 'lost_found') router.push(`/lost-found/${i.raw.id}` as any);
     else router.push('/food' as any);
-  };
-
-  const contactItem = (i: AllItem) => {
-    // Places and lost-found carry contact on their detail page — send there.
-    if (i.kind === 'place') { router.push(`/place/${i.raw.id}` as any); return; }
-    if (i.kind === 'lost_found') { router.push(`/lost-found/${i.raw.id}` as any); return; }
-    let url: string;
-    if (i.kind === 'listing') {
-      url = buildInquiryWhatsAppLink(i.raw, profile?.name ?? 'A neighbour', '');
-      if (userId) sendInquiry(i.raw.id, userId, null).catch(() => {});
-    } else if (i.kind === 'dish') {
-      url = waLink(i.raw.whatsapp, `Hi ${i.raw.chef_name}! I'm interested in your *${i.raw.dish_name}* on Aangan 🍽️`);
-    } else if (i.kind === 'borrow') {
-      const wa = i.raw.contact_whatsapp ?? i.raw.owner?.whatsapp ?? null;
-      const ownerName = i.raw.owner?.name ?? 'Owner';
-      const msg = i.raw.kind === 'request'
-        ? `Hi ${ownerName}, I saw your request for "${i.raw.title}" on Aangan — I have one you can borrow! 🤝`
-        : `Hi ${ownerName}, I'd like to borrow your "${i.raw.title}" on Aangan 🤝`;
-      url = waLink(wa, msg);
-    } else {
-      url = waLink(i.raw.chef?.whatsapp, `Hi ${i.raw.chef?.name ?? ''}! About your *${i.raw.title}* tiffin on Aangan 🍱`);
-    }
-    if (Platform.OS === 'web') window.open(url, '_blank');
-    else Linking.openURL(url);
-    toast.show('Opening WhatsApp 📲');
   };
 
   const chipRow = (
@@ -255,7 +243,7 @@ export default function AllListingsScreen() {
           data={loading ? [] : filtered}
           keyExtractor={(item: AllItem) => `${item.kind}:${item.id}`}
           renderItem={({ item }: { item: AllItem }) => (
-            <ItemRow item={item} isDesktop={isDesktop} onOpen={() => openItem(item)} onContact={() => contactItem(item)} c={c} />
+            <ItemRow item={item} isDesktop={isDesktop} onOpen={() => openItem(item)} c={c} />
           )}
           ListHeaderComponent={
             isDesktop && filtered.length > 0 ? (
@@ -308,12 +296,11 @@ export default function AllListingsScreen() {
 }
 
 function ItemRow({
-  item, isDesktop, onOpen, onContact, c,
+  item, isDesktop, onOpen, c,
 }: {
   item: AllItem;
   isDesktop: boolean;
   onOpen: () => void;
-  onContact: () => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
   const d = display(item);
@@ -351,7 +338,6 @@ function ItemRow({
               </View>
             ) : null}
             <RowBtn icon="open-outline" label={item.kind === 'dish' || item.kind === 'tiffin' ? 'Order' : 'View'} onPress={onOpen} c={c} />
-            {sold ? null : <RowBtn icon="logo-whatsapp" label="Contact" onPress={onContact} c={c} whatsapp />}
           </View>
         </>
       ) : (
@@ -360,10 +346,7 @@ function ItemRow({
             <Text className="text-[11px] font-sans-sb uppercase" style={{ color: c.muted }}>Sold</Text>
           </View>
         ) : (
-          <Pressable accessibilityRole="button" accessibilityLabel="Contact on WhatsApp" onPress={onContact} hitSlop={8}
-            className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: '#25D36618' }}>
-            <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
-          </Pressable>
+          <Ionicons name="chevron-forward" size={16} color={c.faint} />
         )
       )}
     </Pressable>
@@ -371,22 +354,21 @@ function ItemRow({
 }
 
 function RowBtn({
-  icon, label, onPress, c, whatsapp,
+  icon, label, onPress, c,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
   c: ReturnType<typeof useThemeColors>;
-  whatsapp?: boolean;
 }) {
   return (
     <Pressable
       onPress={onPress}
       className="flex-row items-center gap-1.5 rounded-xl border px-2.5 py-1.5 active:opacity-80"
-      style={{ borderColor: whatsapp ? '#25D36655' : c.line, backgroundColor: whatsapp ? '#25D36612' : c.inset }}
+      style={{ borderColor: c.line, backgroundColor: c.inset }}
     >
-      <Ionicons name={icon} size={14} color={whatsapp ? '#25D366' : c.muted} />
-      <Text className="text-[12px] font-sans-sb" style={{ color: whatsapp ? '#15803D' : c.muted }}>{label}</Text>
+      <Ionicons name={icon} size={14} color={c.muted} />
+      <Text className="text-[12px] font-sans-sb" style={{ color: c.muted }}>{label}</Text>
     </Pressable>
   );
 }

@@ -372,11 +372,15 @@ export default function ListingDetailScreen() {
                 cost ~190px of a phone screen between them. */}
             {(isOwner || isAdmin || (listing.status === 'active' && cat)) && (
               <View className="mb-4 flex-row flex-wrap items-center gap-2">
+                {/* Opens the inquiry sheet, where sending in Aangan is the
+                    primary action — so it should not be dressed as WhatsApp.
+                    The green button promised a channel the sheet does not
+                    insist on, and for an owner with no number it promised one
+                    that is not there at all. */}
                 {!isOwner && listing.status === 'active' && cat ? (
                   <Button
                     label={cat.ctaLabel}
-                    icon="logo-whatsapp"
-                    variant="whatsapp"
+                    icon="chatbubble-ellipses-outline"
                     size="sm"
                     onPress={() => setInquiryListing(listing)}
                   />

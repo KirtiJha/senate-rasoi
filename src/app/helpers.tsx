@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { MessageIconButton } from '../components/MessageNeighbour';
 import { Avatar, Button, Chip, Container, ErrorState, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
@@ -171,7 +172,13 @@ function PersonRow({ p, badge, c, inline }: { p: RegistryPerson; badge?: string;
           <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={() => openUrl(wa(phone, 'Hi, reaching out via the Aangan emergency registry.'))} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: '#25D36618' }}><Ionicons name="logo-whatsapp" size={17} color="#25D366" /></Pressable>
           <Pressable accessibilityRole="button" accessibilityLabel="Call" onPress={() => openUrl(`tel:${phone}`)} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: c.inset }}><Ionicons name="call" size={16} color={c.muted} /></Pressable>
         </>
-      ) : null}
+      ) : (
+        /* Only when there is no number. A blood donor or a first-aider who
+           volunteered without one had no contact control at all — they were
+           listed as reachable and were not. In an actual emergency a call
+           beats a chat, so this does not compete with the two above. */
+        <MessageIconButton userId={p.id} label={`Message ${p.name}`} />
+      )}
     </View>
   );
 }
