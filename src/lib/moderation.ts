@@ -8,7 +8,10 @@ import { COMMUNITY_ID, isSupabaseConfigured, supabase } from './supabase';
 
 export type ReportTargetType =
   | 'post' | 'comment' | 'listing' | 'dish' | 'borrow'
-  | 'lost_found' | 'recommend' | 'property' | 'place' | 'message' | 'profile';
+  | 'lost_found' | 'recommend' | 'property' | 'place' | 'message' | 'profile'
+  // A roster row somebody was added to without being asked. Not abuse — a
+  // correction request — but it belongs in the same admin queue.
+  | 'directory_entry';
 
 export type ReportReason =
   | 'csae'

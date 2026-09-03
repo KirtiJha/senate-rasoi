@@ -460,6 +460,7 @@ function ReportsTab({
       case 'dish': return `/dish/${r.target_id}`;
       case 'recommend': return `/recommend/${r.target_id}`;
       case 'profile': return `/profile/${r.target_id}`;
+      case 'directory_entry': return '/directory';
       default: return null; // comments and DMs have no standalone route
     }
   };

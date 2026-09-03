@@ -11,6 +11,7 @@ import { useToast } from '../context/toast';
 import { Resident, addDirectoryEntry, adminSetDirectoryVisibility, adminSetMovedIn, deleteDirectoryEntry, fetchDirectory, updateDirectoryEntry } from '../lib/directory';
 import { waLink } from '../lib/dishes';
 import { getOrCreateThread } from '../lib/dm';
+import { reportContent } from '../lib/moderation';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { layout, useThemeColors } from '../theme';
 
@@ -62,6 +63,7 @@ export default function DirectoryScreen() {
   // own profile and edits it there.
   const [editingEntry, setEditingEntry] = useState<Resident | null>(null);
   const [selected, setSelected] = useState<Resident | null>(null);
+  const [flagging, setFlagging] = useState<Resident | null>(null);
 
   // Distinct blocks / floors present (for the filter sheet).
   const { blocks, floors } = useMemo(() => {
@@ -96,7 +98,7 @@ export default function DirectoryScreen() {
       if (filter !== 'all' && r.resident_type !== filter) return false;
       if (block && r.block !== block) return false;
       if (floor && floorOf(r.flat) !== floor) return false;
-      if (reg !== 'all' && r.registration_status !== reg) return false;
+      if (reg !== 'all' && (r.onboarded ? 'done' : 'pending') !== reg) return false;
       if (shf !== 'all' && (r.shifted ? 'yes' : 'no') !== shf) return false;
       if (!q) return true;
       return (
@@ -117,12 +119,17 @@ export default function DirectoryScreen() {
       const rows = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
       return rows.length ? [{ key: '__byname', block: null, flat: null, byName: true, rows }] : [];
     }
+    // Grouped by flat NUMBER alone. It used to be block+flat, and since the
+    // block letter is the field neighbours typed inconsistently, one home split
+    // into a "209" heading and an "E-209" heading with a neighbour under each.
     const out: Group[] = [];
     for (const r of filtered) {
-      const key = `${r.block ?? ''}|${r.flat ?? ''}`;
+      const key = r.flat ?? '';
       const last = out[out.length - 1];
-      if (last && last.key === key) last.rows.push(r);
-      else out.push({ key, block: r.block, flat: r.flat, byName: false, rows: [r] });
+      if (last && last.key === key) {
+        last.rows.push(r);
+        last.block = last.block ?? r.block; // whichever row recorded the block
+      } else out.push({ key, block: r.block, flat: r.flat, byName: false, rows: [r] });
     }
     return out;
   }, [filtered, sort]);
@@ -154,21 +161,45 @@ export default function DirectoryScreen() {
   };
 
   const remove = async (r: Resident) => {
+    if (!r.entryId) return;
     const ok = await confirm({
-      title: r.removeKind === 'hide' ? 'Hide from directory' : 'Remove resident',
-      message: r.removeKind === 'hide'
-        ? `Hide ${r.name} from the resident directory?`
-        : `Remove ${r.name} from the directory?`,
-      confirmLabel: r.removeKind === 'hide' ? 'Hide' : 'Remove',
+      title: 'Remove resident',
+      message: `Remove ${r.name} from the directory?`,
+      confirmLabel: 'Remove',
       destructive: true,
     });
     if (!ok) return;
     try {
-      if (r.removeKind === 'entry' && r.entryId) await deleteDirectoryEntry(r.entryId);
-      else if (r.removeKind === 'hide' && r.userId) await adminSetDirectoryVisibility(r.userId, false);
+      await deleteDirectoryEntry(r.entryId);
       toast.show('Removed from directory');
       await load();
     } catch { toast.show('Could not remove'); }
+  };
+
+  /**
+   * A registered member cannot be taken out of the directory — they are a
+   * member of the society and the roster is the point. All an admin can do is
+   * hide their phone number, which is what the RPC has always actually done.
+   * It used to be labelled "Hide from directory" and reported "Removed from
+   * directory", with no way back once used.
+   */
+  const togglePhoneVisibility = async (r: Resident) => {
+    if (!r.userId) return;
+    const hiding = !r.phoneHidden;
+    const ok = await confirm({
+      title: hiding ? 'Hide their number?' : 'Show their number?',
+      message: hiding
+        ? `${r.name} stays listed in the directory, but neighbours won't see their phone number or be able to call or WhatsApp them.`
+        : `Neighbours will be able to see ${r.name}'s phone number again.`,
+      confirmLabel: hiding ? 'Hide number' : 'Show number',
+      destructive: hiding,
+    });
+    if (!ok) return;
+    try {
+      await adminSetDirectoryVisibility(r.userId, !hiding);
+      toast.show(hiding ? 'Phone number hidden' : 'Phone number visible again');
+      await load();
+    } catch { toast.show('Could not update'); }
   };
 
   const FILTERS: { key: Filter; label: string }[] = [
@@ -196,8 +227,8 @@ export default function DirectoryScreen() {
           {floors.map((f) => <Chip key={f} label={f === '0' ? 'G' : f} selected={floor === f} onPress={() => setFloor(floor === f ? null : f)} />)}
         </FilterGroup>
       ) : null}
-      <FilterGroup label="Registration">
-        {([['all', 'All'], ['done', 'Registered'], ['pending', 'Pending']] as const).map(([k, lbl]) => (
+      <FilterGroup label="On Aangan">
+        {([['all', 'All'], ['done', 'Has an account'], ['pending', 'Not yet']] as const).map(([k, lbl]) => (
           <Chip key={k} label={lbl} selected={reg === k} onPress={() => setReg(k)} />
         ))}
       </FilterGroup>
@@ -383,6 +414,33 @@ export default function DirectoryScreen() {
           try { await adminSetMovedIn(selected.userId, !selected.shifted); toast.show('Updated'); setSelected(null); await load(); }
           catch { toast.show('Could not update'); }
         }}
+        onTogglePhone={() => { if (selected) { togglePhoneVisibility(selected); setSelected(null); } }}
+        onFlag={() => { if (selected) { setFlagging(selected); setSelected(null); } }}
+      />
+
+      <FlagResidentSheet
+        r={flagging}
+        c={c}
+        onClose={() => setFlagging(null)}
+        onSubmit={async (kind, note) => {
+          if (!userId || !flagging?.entryId) return;
+          const said = FLAG_KINDS.find((k) => k.key === kind)?.label ?? kind;
+          try {
+            await reportContent({
+              communityId: communityId ?? undefined,
+              reporterId: userId,
+              targetType: 'directory_entry',
+              targetId: flagging.entryId,
+              targetOwnerId: null,
+              reason: 'other',
+              details: [`${said} — ${flagging.name}`, note.trim()].filter(Boolean).join('\n'),
+            });
+            setFlagging(null);
+            toast.show('Sent — your society admins will review it 🚩');
+          } catch {
+            toast.show('Could not send — try again');
+          }
+        }}
       />
     </View>
   );
@@ -399,10 +457,12 @@ function FilterGroup({ label, children, last }: { label: string; children: React
 
 
 function ResidentDetailSheet({
-  r, onClose, c, isAdmin, onCall, onWhatsApp, onMessage, onInvite, onProfile, onRemove, onEdit, onToggleMovedIn,
+  r, onClose, c, isAdmin, onCall, onWhatsApp, onMessage, onInvite, onProfile, onRemove, onEdit,
+  onToggleMovedIn, onTogglePhone, onFlag,
 }: {
   r: Resident | null; onClose: () => void; c: ReturnType<typeof useThemeColors>; isAdmin: boolean;
-  onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onProfile: () => void; onRemove: () => void; onEdit: () => void; onToggleMovedIn: () => void;
+  onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onProfile: () => void; onRemove: () => void; onEdit: () => void;
+  onToggleMovedIn: () => void; onTogglePhone: () => void; onFlag: () => void;
 }) {
   const typeColor = r?.resident_type === 'owner' ? '#0D9488' : '#7C3AED';
   return (
@@ -414,9 +474,16 @@ function ResidentDetailSheet({
             {r.flat ? <Badge label={`🏠 Flat ${r.flat}`} c={c} /> : null}
             {r.block ? <Badge label={`Block ${r.block}`} color="#8B5CF6" c={c} /> : null}
             {r.resident_type ? <Badge label={r.resident_type === 'owner' ? 'Owner' : 'Tenant'} color={typeColor} c={c} /> : null}
-            <Badge label={r.registration_status === 'done' ? '✓ Registered' : 'Not registered'} color={r.registration_status === 'done' ? '#16A34A' : '#CA8A04'} c={c} />
+            {/* One membership status, derived from whether an account exists.
+                It used to be two badges from two different sources, so a row
+                could say "✓ Registered" and "Not on Aangan" at the same time. */}
+            <Badge
+              label={r.onboarded ? '✓ On Aangan' : 'Not on Aangan yet'}
+              color={r.onboarded ? '#16A34A' : '#CA8A04'}
+              c={c}
+            />
             <Badge label={r.shifted ? 'Living here' : 'Not moved in yet'} color={r.shifted ? '#16A34A' : '#CA8A04'} c={c} />
-            {!r.onboarded ? <Badge label="Not on Aangan" c={c} /> : null}
+            {r.phoneHidden ? <Badge label="Number hidden" c={c} /> : null}
           </View>
 
           {/* Details */}
@@ -429,6 +496,19 @@ function ResidentDetailSheet({
             <DetailRow icon="car-outline" label="Vehicle" value={r.vehicle_no} c={c} last />
           </View>
 
+          {/* A fifth of the roster has no phone number at all, and those rows
+              used to open onto an empty sheet with nothing to do. Say why, and
+              point at the one thing that fixes it. */}
+          {!r.phone && !r.onboarded ? (
+            <View className="mb-4 flex-row items-start gap-2.5 rounded-2xl border border-line bg-inset px-3.5 py-3">
+              <Ionicons name="information-circle-outline" size={17} color={c.muted} />
+              <Text className="font-sans flex-1 text-[13px] leading-[18px] text-muted">
+                No phone number on file, so {r.name.split(' ')[0]} can't be called, messaged or invited yet.
+                {r.removeKind === 'entry' ? ' Add one below.' : ' If you have it, let the admins know.'}
+              </Text>
+            </View>
+          ) : null}
+
           {/* Actions */}
           <View className="flex-row flex-wrap gap-2">
             {r.phone ? <Button label="Call" icon="call" variant="outline" onPress={onCall} /> : null}
@@ -436,11 +516,116 @@ function ResidentDetailSheet({
             {r.onboarded ? <Button label="Message" icon="chatbubble-ellipses-outline" variant="outline" onPress={onMessage} /> : (r.phone ? <Button label="Invite" icon="paper-plane-outline" onPress={onInvite} /> : null)}
             {r.onboarded ? <Button label="View profile" variant="ghost" onPress={onProfile} /> : null}
             {isAdmin && r.onboarded ? <Button label={r.shifted ? 'Mark not moved in' : 'Mark moved in'} icon="home-outline" variant="ghost" onPress={onToggleMovedIn} /> : null}
-            {r.removeKind === 'entry' ? <Button label="Edit" icon="pencil" variant="outline" onPress={onEdit} /> : null}
-            {r.removeKind ? <Button label={r.removeKind === 'hide' ? 'Hide from directory' : 'Remove'} icon="trash-outline" variant="danger" onPress={onRemove} /> : null}
+            {isAdmin && r.onboarded ? (
+              <Button
+                label={r.phoneHidden ? 'Show number' : 'Hide number'}
+                icon={r.phoneHidden ? 'eye-outline' : 'eye-off-outline'}
+                variant="ghost"
+                onPress={onTogglePhone}
+              />
+            ) : null}
+            {r.removeKind === 'entry' ? (
+              <Button label={r.phone ? 'Edit' : 'Add phone'} icon="pencil" variant="outline" onPress={onEdit} />
+            ) : null}
+            {r.removeKind === 'entry' ? <Button label="Remove" icon="trash-outline" variant="danger" onPress={onRemove} /> : null}
+            {/* Anyone can be added to this directory by a neighbour, without
+                being asked. Everyone therefore needs a way to say so. */}
+            {!r.onboarded ? (
+              <Button label="This is me / wrong" icon="flag-outline" variant="ghost" onPress={onFlag} />
+            ) : null}
           </View>
         </View>
       ) : null}
+    </Sheet>
+  );
+}
+
+/**
+ * A neighbour can add anyone to this directory — name, flat, phone, profession
+ * — without that person being asked, and 133 of the rows here were loaded that
+ * way. The person listed had no route to object: they aren't the adder, they
+ * often aren't on Aangan at all, and the abuse-reporting menu ("spam", "hate")
+ * doesn't describe "that's my number and I didn't agree to publish it".
+ *
+ * This is that route. It files into the same admin review queue as every other
+ * report, so nothing new has to be built to answer it.
+ */
+const FLAG_KINDS = [
+  { key: 'me', label: "This is me — take my listing down", blurb: 'You did not agree to being listed here' },
+  { key: 'wrong', label: 'The details are wrong', blurb: 'Wrong flat, phone, name or occupancy' },
+  { key: 'gone', label: "This person doesn't live here", blurb: 'Moved out, or never lived in the society' },
+] as const;
+type FlagKind = (typeof FLAG_KINDS)[number]['key'];
+
+function FlagResidentSheet({
+  r, onClose, onSubmit, c,
+}: {
+  r: Resident | null;
+  onClose: () => void;
+  onSubmit: (kind: FlagKind, note: string) => Promise<void>;
+  c: ReturnType<typeof useThemeColors>;
+}) {
+  const [kind, setKind] = useState<FlagKind | null>(null);
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => { if (!r) { setKind(null); setNote(''); } }, [r]);
+
+  return (
+    <Sheet
+      visible={!!r}
+      onClose={onClose}
+      title={r ? `About ${r.name}'s listing` : 'Listing'}
+      footer={
+        <Button
+          label={busy ? 'Sending…' : 'Send to admins'}
+          icon="flag"
+          fullWidth
+          loading={busy}
+          disabled={!kind}
+          onPress={async () => {
+            if (!kind) return;
+            setBusy(true);
+            try { await onSubmit(kind, note); } finally { setBusy(false); }
+          }}
+        />
+      }
+    >
+      <Text className="font-sans mb-3 text-[13px] leading-[19px] text-muted">
+        This listing was added by a neighbour, not by {r?.name.split(' ')[0] ?? 'them'}. Tell the society
+        admins what's wrong and they'll correct or remove it.
+      </Text>
+      <View className="gap-2">
+        {FLAG_KINDS.map((k) => {
+          const on = kind === k.key;
+          return (
+            <Pressable
+              key={k.key}
+              onPress={() => setKind(k.key)}
+              className="flex-row items-center gap-3 rounded-2xl border px-3.5 py-3"
+              style={{ borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent + '12' : c.surface }}
+            >
+              <Ionicons name={on ? 'radio-button-on' : 'radio-button-off'} size={18} color={on ? c.accent : c.faint} />
+              <View className="flex-1">
+                <Text className="font-sans-sb text-[14px] text-ink">{k.label}</Text>
+                <Text className="font-sans text-[12px] text-muted">{k.blurb}</Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
+      <Text className="mb-1.5 mt-4 text-[11px] font-sans-sb uppercase tracking-wider text-muted">
+        Anything else? (optional)
+      </Text>
+      <TextInput
+        value={note}
+        onChangeText={setNote}
+        placeholder="e.g. the correct flat number"
+        placeholderTextColor={c.faint}
+        multiline
+        className="rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink"
+        style={{ minHeight: 72, outline: 'none' } as any}
+      />
     </Sheet>
   );
 }
@@ -545,11 +730,10 @@ function AddResidentModal({
   /** Present when correcting a manually-added neighbour. */
   existing?: Resident | null;
   onClose: () => void;
-  onAdd: (f: { name: string; block: string | null; flat: string | null; phone: string | null; resident_type: 'owner' | 'tenant' | null; profession: string | null; vehicle_no: string | null; native: string | null; alt_phone: string | null; email: string | null; registration_status: 'pending' | 'done'; shifted: boolean }) => void;
+  onAdd: (f: { name: string; block: string | null; flat: string | null; phone: string | null; resident_type: 'owner' | 'tenant' | null; profession: string | null; vehicle_no: string | null; native: string | null; alt_phone: string | null; email: string | null; shifted: boolean }) => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
   const [name, setName] = useState('');
-  const [registration, setRegistration] = useState<'pending' | 'done'>('pending');
   const [shifted, setShifted] = useState(false);
   const [block, setBlock] = useState('');
   const [flat, setFlat] = useState('');
@@ -574,12 +758,15 @@ function AddResidentModal({
     setNative(existing?.native ?? '');
     setAltPhone(existing?.alt_phone ?? '');
     setEmail(existing?.email ?? '');
+    // Reopening the form used to reset occupancy to "No" and write that back,
+    // so correcting a phone number quietly marked the flat empty.
+    setShifted(existing?.shifted ?? false);
   }, [visible, existing]);
 
   const submit = () => {
     if (!name.trim()) return;
     setBusy(true);
-    onAdd({ name, block: block || null, flat: flat || null, phone: phone || null, resident_type: type, profession: profession || null, vehicle_no: vehicle || null, native: native || null, alt_phone: altPhone || null, email: email || null, registration_status: registration, shifted });
+    onAdd({ name, block: block || null, flat: flat || null, phone: phone || null, resident_type: type, profession: profession || null, vehicle_no: vehicle || null, native: native || null, alt_phone: altPhone || null, email: email || null, shifted });
     setBusy(false);
   };
 
@@ -593,8 +780,8 @@ function AddResidentModal({
       <Text className="font-sans mb-4 text-[13px] text-muted">Add a neighbour to the directory. If they're not on Aangan yet, you can invite them after.</Text>
       <Field label="Name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} />
       <View className="flex-row gap-3">
-        <View className="w-24"><Field label="Block" autoCapitalize="characters" placeholder="E" value={block} onChangeText={setBlock} /></View>
-        <View className="flex-1"><Field label="Flat number" placeholder="204" value={flat} onChangeText={setFlat} /></View>
+        <View className="flex-1"><Field label="Flat number" keyboardType="number-pad" placeholder="204" value={flat} onChangeText={(t) => setFlat(t.replace(/[^0-9]/g, ''))} /></View>
+        <View className="w-24"><Field label="Block" hint="Optional" autoCapitalize="characters" maxLength={4} placeholder="E" value={block} onChangeText={setBlock} /></View>
       </View>
       <Field label="Phone" hint="For contact & invite" keyboardType="phone-pad" placeholder="98765 43210" value={phone} onChangeText={setPhone} />
       <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Owner / Tenant (optional)</Text>
@@ -613,17 +800,11 @@ function AddResidentModal({
       </View>
       <Field label="Email" keyboardType="email-address" autoCapitalize="none" placeholder="name@email.com" value={email} onChangeText={setEmail} />
 
+      {/* "Registration" was a hand-typed column nobody kept up — 67 rows
+          claimed 'done' with no account behind them, which the row then showed
+          next to "Not on Aangan". Membership is derived from whether an account
+          exists, so there is nothing left to type. */}
       <View className="flex-row gap-3">
-        <View className="flex-1">
-          <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Registration</Text>
-          <View className="flex-row gap-2">
-            {(['done', 'pending'] as const).map((s) => (
-              <Pressable key={s} onPress={() => setRegistration(s)} className={`flex-1 items-center rounded-xl border py-2 ${registration === s ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
-                <Text className={`text-[13px] font-sans-sb ${registration === s ? 'text-accent' : 'text-muted'}`}>{s === 'done' ? 'Done' : 'Pending'}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
         <View className="flex-1">
           <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Moved in?</Text>
           <View className="flex-row gap-2">

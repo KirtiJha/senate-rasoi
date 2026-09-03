@@ -42,9 +42,9 @@ export interface Resident {
   native: string | null;
   alt_phone: string | null;
   email: string | null;
-  registration_status: 'pending' | 'done';
   shifted: boolean;
-  onboarded: boolean;       // has an Aangan account
+  onboarded: boolean;       // has an Aangan account — the ONLY registration truth
+  phoneHidden: boolean;     // member chose (or an admin chose) to hide their number
   userId: string | null;    // member id (DM / public profile)
   entryId: string | null;   // directory_entries id (delete)
   removeKind: 'entry' | 'hide' | null; // how the current user may remove this row
@@ -74,12 +74,13 @@ export async function fetchDirectory(
     // `show_in_directory === false` now means "hide my phone number" — the
     // member still appears in the directory, just without a contactable number.
     const hidePhone = m.show_in_directory === false;
-    const mf = splitFlat(m.flat);
+    // 0107: the block is its own optional column and the flat is the bare
+    // number. splitFlat remains only for text somebody typed by hand.
     residents.push({
       key: `m:${m.id}`,
       name: m.name || 'Resident',
-      block: mf.block,
-      flat: mf.block ? mf.unit : m.flat, // strip the block prefix if the member typed one
+      block: m.block ?? splitFlat(m.flat).block,
+      flat: splitFlat(m.flat).unit ?? m.flat,
       phone: hidePhone ? null : m.phone,
       whatsapp: hidePhone ? null : m.whatsapp,
       resident_type: m.resident_type,
@@ -88,9 +89,9 @@ export async function fetchDirectory(
       native: null,
       alt_phone: m.alt_phone ?? null,
       email: null,
-      registration_status: 'done', // a registered member
       shifted: m.moved_in ?? false, // occupancy: has the member moved in
       onboarded: true,
+      phoneHidden: hidePhone,
       userId: m.id,
       entryId: null,
       removeKind: isAdmin && m.id !== currentUserId ? 'hide' : null,
@@ -112,18 +113,25 @@ export async function fetchDirectory(
       native: e.native,
       alt_phone: e.alt_phone,
       email: e.email,
-      registration_status: e.registration_status ?? 'pending',
       shifted: e.shifted ?? false,
+      // Rows that reach here are, by construction, roster rows whose phone
+      // matched no member — so they are not on Aangan. `registration_status`
+      // is a hand-typed column nobody maintained: 67 of 133 rows claim 'done'
+      // while having no account, which rendered as "✓ Registered" and "Not on
+      // Aangan" in the same row. Membership is derived now; the column is left
+      // alone but no longer shown or filtered on.
       onboarded: false,
+      phoneHidden: false,
       userId: null,
       entryId: e.id,
       removeKind: e.added_by === currentUserId || isAdmin ? 'entry' : null,
     });
   }
 
+  // Flat number first, block never — the block letter is the inconsistent
+  // field, and sorting by it put the two halves of one home in different parts
+  // of the list, where the screen then rendered them as two separate flats.
   residents.sort((a, b) => {
-    const ba = a.block ?? '~'; const bb = b.block ?? '~';
-    if (ba !== bb) return ba.localeCompare(bb);
     const fa = a.flat ?? '~'; const fb = b.flat ?? '~';
     if (fa !== fb) return fa.localeCompare(fb, undefined, { numeric: true });
     return a.name.localeCompare(b.name);
@@ -155,7 +163,7 @@ export async function addDirectoryEntry(input: NewDirectoryEntry): Promise<void>
     added_by: input.addedBy,
     name: input.name.trim(),
     block: input.block?.trim().toUpperCase() || null,
-    flat: input.flat?.trim() || null,
+    flat: flatKey(input.flat),
     phone: input.phone?.replace(/\D/g, '') || null,
     resident_type: input.resident_type,
     profession: input.profession?.trim() || null,
@@ -196,6 +204,7 @@ export async function updateDirectoryEntry(
     // a different shape than a created one.
     if (k === 'phone' || k === 'alt_phone') clean[k] = norm(v) || null;
     else if (k === 'block') clean[k] = v.trim().toUpperCase() || null;
+    else if (k === 'flat') clean[k] = flatKey(v);
     else clean[k] = v.trim() || null;
   }
   if (typeof patch.name === 'string') clean.name = patch.name.trim();
@@ -212,10 +221,20 @@ export async function deleteDirectoryEntry(id: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Digits only, no leading zeros — the stored shape of a flat number (0107). */
+export const flatKey = (flat: string | null | undefined): string | null =>
+  ((flat ?? '').replace(/[^0-9]/g, '').replace(/^0+/, '') || null);
+
 /**
  * Find a roster entry that likely belongs to a just-registered member: same
- * block + flat, a similar name, and a DIFFERENT phone than the one they signed
- * up with. Used to offer a merge at sign-up.
+ * flat, a similar name, and a DIFFERENT phone than the one they signed up
+ * with. Used to offer a merge at sign-up.
+ *
+ * The flat NUMBER is the whole match. It used to also require the block letter
+ * to be identical, which is the one field neighbours typed inconsistently — a
+ * roster row saying 'E' and a sign-up saying nothing meant no match, so the new
+ * member got a second directory listing and the phone number already recorded
+ * for them was orphaned. Block is now only a tiebreak between candidates.
  */
 export async function findRosterMatch(
   communityId: string,
@@ -224,22 +243,23 @@ export async function findRosterMatch(
   flat: string | null,
   signupPhone: string,
 ): Promise<DirectoryEntry | null> {
-  if (!flat) return null;
+  const key = flatKey(flat);
+  if (!key) return null;
   const sp = norm(signupPhone);
   const { data } = await supabase
     .from('directory_entries')
     .select('*')
     .eq('community_id', communityId)
-    .eq('flat', flat);
-  const entries = ((data ?? []) as DirectoryEntry[]).filter((e) => {
-    if ((e.block ?? null) !== (block ?? null)) return false;
-    if (e.phone && norm(e.phone) === sp) return false; // already the same number — nothing to merge
-    return true;
-  });
+    .eq('flat', key);
+  const entries = ((data ?? []) as DirectoryEntry[]).filter(
+    (e) => !(e.phone && norm(e.phone) === sp), // same number already — nothing to merge
+  );
   if (!entries.length) return null;
-  // Prefer a name match; otherwise the first same-flat entry.
   const first = name.trim().toLowerCase().split(/\s+/)[0];
-  return entries.find((e) => e.name.toLowerCase().includes(first)) ?? entries[0];
+  const byName = entries.filter((e) => e.name.toLowerCase().includes(first));
+  const pool = byName.length ? byName : entries;
+  const blockUp = block?.trim().toUpperCase() || null;
+  return pool.find((e) => (e.block ?? null) === blockUp) ?? pool[0];
 }
 
 /** New member claims a matching roster entry: keep its number (alternate) or just replace it. */

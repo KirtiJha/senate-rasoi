@@ -198,7 +198,7 @@ export function useProfile(): {
     update: async (next) => {
       await saveProfile({
         name: next.chefName,
-        flat: next.flat,
+        flat: next.flat.replace(/[^0-9]/g, '').replace(/^0+/, '') || null,
         whatsapp: next.whatsapp,
         upi: next.upi,
       });

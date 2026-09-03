@@ -198,6 +198,7 @@ function label(t: ReportTargetType): string {
     case 'place': return 'place';
     case 'message': return 'conversation';
     case 'profile': return 'member';
+    case 'directory_entry': return 'directory listing';
     default: return 'content';
   }
 }

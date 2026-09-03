@@ -65,12 +65,16 @@ export async function signUp(input: SignUpInput): Promise<DbProfile> {
   }
 
   const blockUp = input.block?.trim().toUpperCase();
-  const unit = input.flat.trim();
+  // Digits only, no leading zeros — the same shape 0107 normalised the table
+  // to, so '019' and '19' can never become two different flats. Gluing the
+  // block letter on here is how one home became both '209' and 'E-209'.
+  const unit = input.flat.replace(/[^0-9]/g, '').replace(/^0+/, '');
   const row = {
     id: userId,
     phone: input.phone.replace(/\D/g, ''),
     name: input.name.trim(),
-    flat: (blockUp && unit ? `${blockUp}-${unit}` : unit) || null,
+    flat: unit || null,
+    block: blockUp || null,
     whatsapp: input.whatsapp.trim() || null,
     upi: input.upi.trim() || null,
     roles,

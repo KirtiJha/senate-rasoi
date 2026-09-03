@@ -24,6 +24,7 @@ export default function ProfileScreen() {
   // Profile edit state
   const [name, setName] = useState(profile?.name ?? '');
   const [flat, setFlat] = useState(profile?.flat ?? '');
+  const [block, setBlock] = useState(profile?.block ?? '');
   const [whatsapp, setWhatsapp] = useState(profile?.whatsapp ?? '');
   const [upi, setUpi] = useState(profile?.upi ?? '');
   const [altPhone, setAltPhone] = useState(profile?.alt_phone ?? '');
@@ -53,6 +54,7 @@ export default function ProfileScreen() {
     if (profile) {
       setName(profile.name ?? '');
       setFlat(profile.flat ?? '');
+      setBlock(profile.block ?? '');
       setWhatsapp(profile.whatsapp ?? '');
       setUpi(profile.upi ?? '');
       setResidentType(profile.resident_type ?? null);
@@ -68,7 +70,17 @@ export default function ProfileScreen() {
     if (!name.trim()) return toast.show('Name cannot be empty');
     setSavingProfile(true);
     try {
-      await saveProfile({ name: name.trim(), flat: flat.trim() || null, whatsapp: whatsapp.trim() || null, upi: upi.trim() || null });
+      // The flat number is the identity, so it is stored bare: digits only and
+      // no leading zeros, matching what 0107 normalised the table to. Letting a
+      // block letter back into this field is what made 209 and E-209 two homes.
+      const flatNumber = flat.replace(/[^0-9]/g, '').replace(/^0+/, '');
+      await saveProfile({
+        name: name.trim(),
+        flat: flatNumber || null,
+        block: block.trim().toUpperCase() || null,
+        whatsapp: whatsapp.trim() || null,
+        upi: upi.trim() || null,
+      });
       if (profile) await updateResidentInfo(profile.id, {
         resident_type: residentType,
         profession: profession.trim() || null,
@@ -159,7 +171,7 @@ export default function ProfileScreen() {
                 </View>
                 {profile?.flat ? (
                   <Text className="text-[13px] font-sans-md text-subtle" numberOfLines={1}>
-                    Flat {profile.flat}
+                    Flat {profile.block ? `${profile.block}-${profile.flat}` : profile.flat}
                   </Text>
                 ) : null}
               </View>
@@ -172,10 +184,25 @@ export default function ProfileScreen() {
               <View className="flex-1">
                 <Field label="Name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} />
               </View>
-              <View className="w-28">
-                <Field label="Flat" placeholder="A-204" value={flat} onChangeText={setFlat} />
+              <View className="w-24">
+                <Field
+                  label="Flat no."
+                  placeholder="204"
+                  keyboardType="number-pad"
+                  value={flat}
+                  onChangeText={(t) => setFlat(t.replace(/[^0-9]/g, ''))}
+                />
               </View>
             </View>
+            <Field
+              label="Block / tower"
+              hint="Optional — flat numbers are unique here, so this is just a label"
+              autoCapitalize="characters"
+              maxLength={4}
+              placeholder="A"
+              value={block}
+              onChangeText={setBlock}
+            />
             <Field label="WhatsApp" placeholder="98765 43210" keyboardType="phone-pad" value={whatsapp} onChangeText={setWhatsapp} />
             <Field label="UPI ID" hint="Neighbours pay you directly" autoCapitalize="none" placeholder="priya@ybl" value={upi} onChangeText={setUpi} />
             <Field

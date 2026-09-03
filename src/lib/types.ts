@@ -94,7 +94,10 @@ export interface DbProfile {
   id: string;
   phone: string;
   name: string;
+  /** Flat NUMBER only — the unique identity of a home here (0107). */
   flat: string | null;
+  /** Optional block/tower label. Display only; never identifies a flat. */
+  block: string | null;
   whatsapp: string | null;
   upi: string | null;
   roles: Role[];
