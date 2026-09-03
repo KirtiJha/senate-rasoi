@@ -437,9 +437,14 @@ export default function DishDetailScreen() {
             <View className="mb-2">
               <PayButton
                 payee={{ id: dish.chef_user_id, name: dish.chef_name, upi: dish.upi }}
-                amount={dish.price}
+                amount={myPlates ? dish.price * myPlates : dish.price}
                 note={dish.dish_name}
-                context={{ type: 'dish', id: dish.id }}
+                /* The ORDER, not the dish. Paying from here used to file the
+                   payment against the dish id while the Orders tab filed it
+                   against the order id — and only order ids are ever looked
+                   up, so a payment made on this screen showed as unpaid to
+                   both sides for ever. Three real payments landed that way. */
+                context={{ type: 'dish', id: myOpen[0]?.id ?? mine[0]?.id ?? dish.id }}
                 label={`Pay ₹${dish.price} via UPI`}
                 variant="outline"
                 size="lg"

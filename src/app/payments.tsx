@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { Avatar, Container, RowSkeleton, ScreenHeader } from '../components/ui';
@@ -13,6 +13,22 @@ import { layout, useThemeColors } from '../theme';
 
 type Filter = 'all' | 'sent' | 'received';
 
+/**
+ * Where a payment came from. Every row named a thing — "Butter Chicken × 1",
+ * "🏸 Court · 1 Sep" — and none of them went anywhere, so checking what a
+ * charge was for meant finding it again by hand.
+ */
+function routeFor(p: PaymentRow): string | null {
+  switch (p.context_type) {
+    case 'dish': return '/food?tab=orders';
+    case 'tiffin': return '/food?tab=tiffins';
+    case 'court': return '/sports';
+    case 'listing': return p.context_id ? `/listing/${p.context_id}` : '/listings';
+    case 'event': return p.context_id ? `/events/${p.context_id}` : '/events';
+    default: return null;
+  }
+}
+
 const STATUS_META: Record<string, { label: string; color: string }> = {
   initiated: { label: 'Awaiting', color: '#D97706' },
   received: { label: 'Received', color: '#16A34A' },
@@ -24,6 +40,7 @@ export default function PaymentsScreen() {
   const toast = useToast();
   const confirm = useConfirm();
   const { userId } = useAuth();
+  const router = useRouter();
 
   const [rows, setRows] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +58,21 @@ export default function PaymentsScreen() {
     const unsub = subscribePayments(load);
     return unsub;
   }, [load]));
+
+  /**
+   * The two numbers a ledger exists to answer, which this screen never showed:
+   * what you have recorded and nobody has confirmed, and what neighbours have
+   * recorded to you and you have not confirmed.
+   */
+  const { owedByMe, owedToMe } = useMemo(() => {
+    let byMe = 0; let toMe = 0;
+    for (const p of rows) {
+      if (p.status !== 'initiated') continue;
+      if (p.payer_id === userId) byMe += Number(p.amount);
+      else if (p.payee_id === userId) toMe += Number(p.amount);
+    }
+    return { owedByMe: byMe, owedToMe: toMe };
+  }, [rows, userId]);
 
   const filtered = useMemo(() => rows.filter((p) => {
     if (filter === 'sent') return p.payer_id === userId;
@@ -94,6 +126,13 @@ export default function PaymentsScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
+          {!loading && rows.length > 0 ? (
+            <View className="mb-3 flex-row gap-3">
+              <Standing label="Waiting on you" amount={owedByMe} tone={c.danger} c={c} />
+              <Standing label="Owed to you" amount={owedToMe} tone={c.success} c={c} />
+            </View>
+          ) : null}
+
           {loading ? (
             <View className="overflow-hidden card"><RowSkeleton count={5} /></View>
           ) : filtered.length === 0 ? (
@@ -109,10 +148,16 @@ export default function PaymentsScreen() {
                 const other = iPaid ? p.payee : p.payer;
                 const st = STATUS_META[p.status] ?? STATUS_META.initiated;
                 const amt = Number(p.amount);
+                const route = routeFor(p);
                 return (
                   <View key={p.id} className={`flex-row items-center gap-3 px-3.5 py-3 ${i === 0 ? '' : 'border-t border-line'}`}>
                     <Avatar name={other?.name ?? '?'} size={38} />
-                    <View className="flex-1" style={{ minWidth: 0 }}>
+                    <Pressable
+                      className="flex-1"
+                      style={{ minWidth: 0 }}
+                      disabled={!route}
+                      onPress={() => route && router.push(route as never)}
+                    >
                       <View className="flex-row items-center gap-1.5">
                         <Ionicons name={iPaid ? 'arrow-up' : 'arrow-down'} size={13} color={iPaid ? '#EF4444' : '#16A34A'} />
                         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>
@@ -120,11 +165,11 @@ export default function PaymentsScreen() {
                         </Text>
                       </View>
                       <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{p.note || 'Payment'} · {timeAgo(p.created_at)}</Text>
-                    </View>
+                    </Pressable>
                     <View className="items-end gap-1">
                       <Text className="font-display-x text-[16px] text-ink">₹{amt}</Text>
-                      <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.accentSoft }}>
-                        <Text className="text-[10px] font-sans-sb uppercase" style={{ color: c.accent }}>{st.label}</Text>
+                      <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: st.color + '1A' }}>
+                        <Text className="text-[10px] font-sans-sb uppercase" style={{ color: st.color }}>{st.label}</Text>
                       </View>
                     </View>
                     {/* Actions — works for neighbour payments and sports dues alike */}
@@ -144,6 +189,23 @@ export default function PaymentsScreen() {
           )}
         </View>
       </ScrollView>
+    </View>
+  );
+}
+
+/** One half of the "where do I stand" strip. */
+function Standing({
+  label, amount, tone, c,
+}: { label: string; amount: number; tone: string; c: ReturnType<typeof useThemeColors> }) {
+  return (
+    <View className="flex-1 rounded-2xl border border-line bg-surface px-3.5 py-3">
+      <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-muted">{label}</Text>
+      <Text className="mt-0.5 font-display-x text-[20px]" style={{ color: amount > 0 ? tone : c.faint }}>
+        ₹{amount}
+      </Text>
+      <Text className="font-sans text-[11px] text-faint">
+        {amount > 0 ? 'awaiting confirmation' : 'all settled'}
+      </Text>
     </View>
   );
 }
