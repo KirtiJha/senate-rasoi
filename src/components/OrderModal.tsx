@@ -5,10 +5,25 @@ import { useProfile } from '../context/profile';
 import { DishRow, SLOT_EMOJI } from '../lib/types';
 import { Avatar, Button, IconButton, Stepper, VegMark, useResponsive } from './ui';
 
+/**
+ * WHATSAPP IS NOT WHAT PLACES THE ORDER.
+ *
+ * This sheet used to end in a single green button, and confirming launched
+ * WhatsApp — which read as though the message *was* the order. It never was.
+ * `place_order` reserves the plates, notifies the chef in the bell and by push
+ * (0005/0057), and the chef accepts, cooks and delivers from the Kitchen tab,
+ * each step notifying the buyer back (0057). The whole loop already runs
+ * inside Aangan.
+ *
+ * So WhatsApp was doing nothing but forcing every buyer out of the app, and
+ * failing outright for a chef who never added a number. Reserving is now the
+ * primary action, and WhatsApp is an extra shown only when there is a number
+ * to open it with — the same shape the marketplace settled on in InquiryModal.
+ */
 interface OrderModalProps {
   dish: DishRow | null;
   onClose: () => void;
-  onConfirm: (dish: DishRow, qty: number) => void;
+  onConfirm: (dish: DishRow, qty: number, via: 'app' | 'whatsapp') => void;
 }
 
 export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
@@ -71,9 +86,31 @@ export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
             <Text className="font-display-x text-[22px] text-ink">₹{total}</Text>
           </View>
 
-          <Button label="Reserve & message on WhatsApp" icon="logo-whatsapp" variant="whatsapp" size="lg" fullWidth onPress={() => onConfirm(dish, qty)} />
+          <Button
+            label={`Reserve ${qty} plate${qty !== 1 ? 's' : ''}`}
+            icon="checkmark-circle-outline"
+            size="lg"
+            fullWidth
+            onPress={() => onConfirm(dish, qty, 'app')}
+          />
+
+          {dish.whatsapp ? (
+            <View className="mt-2">
+              <Button
+                label="Reserve & message on WhatsApp"
+                icon="logo-whatsapp"
+                variant="whatsapp"
+                size="lg"
+                fullWidth
+                onPress={() => onConfirm(dish, qty, 'whatsapp')}
+              />
+            </View>
+          ) : null}
+
           <Text className="font-sans mt-2.5 text-center text-[11px] leading-4 text-faint">
-            Ordering as {profile.chefName || 'you'}. Reserves your plates; the chef confirms next.
+            Ordering as {profile.chefName || 'you'}. {dish.whatsapp ? 'Either way ' : ''}
+            {dish.chef_name} is notified in Aangan and confirms next; you can message them from your
+            Orders.
             {dish.upi ? ` Pay via UPI ${dish.upi}.` : ''}
           </Text>
           <Text className="font-sans mt-2 text-center text-[11px] leading-4 text-faint">

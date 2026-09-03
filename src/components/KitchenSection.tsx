@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Empty } from './Empty';
+import { MessageIconButton } from './MessageNeighbour';
 import { Avatar, Badge, Button, Container, VegMark } from './ui';
 import { useAuth } from '../context/auth';
 import { RepeatList } from './food/RepeatDish';
@@ -70,13 +71,21 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
     setRefreshing(false);
   }, [load]);
 
-  const act = async (orderId: string, status: OrderStatus, msg: string, wa?: string | null, dishName?: string) => {
+  /**
+   * Every status change already notifies the buyer.
+   *
+   * `set_order_status` writes the notification row and 0066 pushes it, so
+   * accepting an order tells the buyer "confirmed ✅" on their phone without
+   * anyone typing anything. This used to ALSO launch WhatsApp on every tap —
+   * so a chef working through six orders was thrown out of the app six times
+   * to send a message the buyer had already received. The buyer is told; the
+   * chef can still message them from the row when there is something to say.
+   */
+  const act = async (orderId: string, status: OrderStatus, msg: string) => {
     try {
       haptics.success();
       await setOrderStatus(orderId, status);
       toast.show(msg);
-      // Open WhatsApp so the chef can confirm the new status to the customer.
-      if (wa && dishName) openUrl(waLink(wa, statusMessageForFoodie(dishName, status)));
       await load();
     } catch (e) {
       console.error(e);
@@ -133,7 +142,7 @@ function KitchenDishCard({
 }: {
   dish: DishRow;
   orders: ChefOrder[];
-  onAct: (orderId: string, status: OrderStatus, msg: string, wa?: string | null, dishName?: string) => void;
+  onAct: (orderId: string, status: OrderStatus, msg: string) => void;
 }) {
   const c = useThemeColors();
   // Plates reserved = max − left (set_order_status / place_order keep plates_left
@@ -178,6 +187,10 @@ function KitchenDishCard({
                   </Text>
                 </View>
 
+                {CAN_MESSAGE.includes(o.status) ? (
+                  <MessageIconButton userId={o.orderer_user_id} label={`Message ${o.buyer_name}`} />
+                ) : null}
+
                 {wa && CAN_MESSAGE.includes(o.status) ? (
                   <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp"
                     onPress={() => openUrl(waLink(wa, statusMessageForFoodie(dish.dish_name, o.status)))}
@@ -190,10 +203,10 @@ function KitchenDishCard({
 
                 {o.status === 'placed' ? (
                   <View className="flex-row items-center gap-1.5">
-                    <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => onAct(o.id, 'rejected', 'Declined — plates released', wa, dish.dish_name)} className="h-9 w-9 items-center justify-center rounded-full border border-line active:bg-inset">
+                    <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => onAct(o.id, 'rejected', 'Declined — plates released')} className="h-9 w-9 items-center justify-center rounded-full border border-line active:bg-inset">
                       <Ionicons name="close" size={18} color={c.muted} />
                     </Pressable>
-                    <Pressable onPress={() => onAct(o.id, 'accepted', 'Order confirmed ✓', wa, dish.dish_name)} className="h-9 flex-row items-center gap-1 rounded-full bg-success px-3 active:opacity-90">
+                    <Pressable onPress={() => onAct(o.id, 'accepted', 'Order confirmed ✓')} className="h-9 flex-row items-center gap-1 rounded-full bg-success px-3 active:opacity-90">
                       <Ionicons name="checkmark" size={16} color="#fff" />
                       <Text className="font-sans-sb text-[12px] text-white">Accept</Text>
                     </Pressable>
@@ -205,7 +218,7 @@ function KitchenDishCard({
                      dish — which took every other buyer's order with it. */
                   <View className="flex-row items-center gap-1.5">
                     <Pressable accessibilityRole="button" accessibilityLabel="Cancel this order"
-                      onPress={() => onAct(o.id, 'cancelled', 'Cancelled — plates released', wa, dish.dish_name)}
+                      onPress={() => onAct(o.id, 'cancelled', 'Cancelled — plates released')}
                       className="h-9 w-9 items-center justify-center rounded-full border border-line active:bg-inset">
                       <Ionicons name="close" size={18} color={c.muted} />
                     </Pressable>
@@ -217,7 +230,7 @@ function KitchenDishCard({
                 ) : o.status === 'cooking' ? (
                   <View className="flex-row items-center gap-1.5">
                     <Pressable accessibilityRole="button" accessibilityLabel="Cancel this order"
-                      onPress={() => onAct(o.id, 'cancelled', 'Cancelled — plates released', wa, dish.dish_name)}
+                      onPress={() => onAct(o.id, 'cancelled', 'Cancelled — plates released')}
                       className="h-9 w-9 items-center justify-center rounded-full border border-line active:bg-inset">
                       <Ionicons name="close" size={18} color={c.muted} />
                     </Pressable>

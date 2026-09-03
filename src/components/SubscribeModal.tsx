@@ -4,10 +4,19 @@ import { daysLabel } from './TiffinCard';
 import { Avatar, Button, IconButton, Stepper, VegMark } from './ui';
 import { SLOT_EMOJI, TiffinPlanWithChef } from '../lib/types';
 
+/**
+ * Same shape as OrderModal: subscribing is the action, WhatsApp is an extra.
+ *
+ * This one needed a database change first. A one-off order has notified the
+ * chef since 0005; a subscription notified nobody, and the client papered over
+ * that by opening WhatsApp immediately after — so the outside app was
+ * genuinely load-bearing here. 0104 adds the trigger, and only then can this
+ * sheet stop insisting on WhatsApp.
+ */
 interface SubscribeModalProps {
   plan: TiffinPlanWithChef | null;
   onClose: () => void;
-  onConfirm: (plan: TiffinPlanWithChef, qty: number, startToday: boolean) => void;
+  onConfirm: (plan: TiffinPlanWithChef, qty: number, startToday: boolean, via: 'app' | 'whatsapp') => void;
 }
 
 export function SubscribeModal({ plan, onClose, onConfirm }: SubscribeModalProps) {
@@ -68,9 +77,31 @@ export function SubscribeModal({ plan, onClose, onConfirm }: SubscribeModalProps
             <Text className="font-display-x text-[20px] text-ink">₹{plan.price * qty}<Text className="font-sans text-[12px] text-faint">/day</Text></Text>
           </View>
 
-          <Button label="Subscribe & message chef" icon="logo-whatsapp" variant="whatsapp" size="lg" fullWidth onPress={() => onConfirm(plan, qty, startToday)} />
+          <Button
+            label="Subscribe"
+            icon="checkmark-circle-outline"
+            size="lg"
+            fullWidth
+            onPress={() => onConfirm(plan, qty, startToday, 'app')}
+          />
+
+          {plan.chef?.whatsapp ? (
+            <View className="mt-2">
+              <Button
+                label="Subscribe & message on WhatsApp"
+                icon="logo-whatsapp"
+                variant="whatsapp"
+                size="lg"
+                fullWidth
+                onPress={() => onConfirm(plan, qty, startToday, 'whatsapp')}
+              />
+            </View>
+          ) : null}
+
           <Text className="font-sans mt-2.5 text-center text-[11px] leading-4 text-faint">
-            You'll get this tiffin on {daysLabel(plan.days_of_week).toLowerCase()}. Pause or cancel anytime in You → Tiffins.
+            {plan.chef?.whatsapp ? 'Either way ' : ''}{plan.chef?.name ?? 'The cook'} is notified in
+            Aangan. You&apos;ll get this tiffin on {daysLabel(plan.days_of_week).toLowerCase()}. Pause
+            or cancel anytime in You → Tiffins.
           </Text>
           <Text className="font-sans mt-2 text-center text-[11px] leading-4 text-faint">
             This tiffin is cooked by a resident. Aangan only lists it and isn&apos;t responsible for the food,

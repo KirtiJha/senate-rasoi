@@ -98,7 +98,7 @@ export default function DishDetailScreen() {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleConfirmOrder = async (d: DishRow, qty: number) => {
+  const handleConfirmOrder = async (d: DishRow, qty: number, via: 'app' | 'whatsapp') => {
     setOrdering(false);
     try {
       const orderId = await placeOrder(d.id, qty);
@@ -109,10 +109,16 @@ export default function DishDetailScreen() {
         return;
       }
       haptics.success();
-      const url = buildWhatsAppOrderLink(d, qty);
-      toast.show('Plates reserved! Opening WhatsApp 📲');
-      if (Platform.OS === 'web') window.open(url, '_blank');
-      else Linking.openURL(url);
+      // The order itself notifies the chef either way; WhatsApp only opens
+      // when it was asked for.
+      if (via === 'whatsapp') {
+        const url = buildWhatsAppOrderLink(d, qty);
+        toast.show('Plates reserved! Opening WhatsApp 📲');
+        if (Platform.OS === 'web') window.open(url, '_blank');
+        else Linking.openURL(url);
+      } else {
+        toast.show(`Plates reserved — ${d.chef_name} has been notified 🛎️`);
+      }
       await load();
     } catch (e) {
       console.error(e);

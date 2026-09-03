@@ -12,6 +12,7 @@ import { Avatar, Badge, Button, Container, Sheet, VegMark } from './ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
+import { MessageIconButton } from './MessageNeighbour';
 import { waLink } from '../lib/dishes';
 import { SkipDays } from './food/SkipDays';
 import {
@@ -176,6 +177,10 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
                           size="sm"
                         />
                       ) : null}
+                      <MessageIconButton
+                        userId={plan?.chef_user_id}
+                        label={`Message ${plan?.chef?.name ?? 'the cook'}`}
+                      />
                       {wa ? (
                         <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={() => openUrl(waLink(wa, `Hi ${plan?.chef?.name ?? ''}! About my ${plan?.title ?? ''} tiffin…`))} hitSlop={6}>
                           <Ionicons name="logo-whatsapp" size={18} color={c.success} />

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Empty } from './Empty';
+import { MessageIconButton } from './MessageNeighbour';
 import { PayButton } from './PayButton';
 import { Avatar, Badge, Button, Container } from './ui';
 import { useAuth } from '../context/auth';
@@ -122,6 +123,15 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
                         context={{ type: 'dish', id: o.id }}
                         label="Pay"
                         size="sm"
+                      />
+                    ) : null}
+                    {/* In-app first, and it works for every chef — including
+                        the ones who never added a number, who used to leave
+                        this row with no way to say anything at all. */}
+                    {active ? (
+                      <MessageIconButton
+                        userId={o.dish?.chef_user_id}
+                        label={`Message ${o.dish?.chef_name ?? 'the cook'}`}
                       />
                     ) : null}
                     {active && wa ? (

@@ -120,7 +120,7 @@ export default function FoodScreen() {
     setRefreshing(false);
   }, [load]);
 
-  const handleConfirmOrder = async (dish: DishRow, qty: number) => {
+  const handleConfirmOrder = async (dish: DishRow, qty: number, via: 'app' | 'whatsapp') => {
     setOrderDish(null);
     try {
       const orderId = await placeOrder(dish.id, qty);
@@ -131,10 +131,16 @@ export default function FoodScreen() {
         return;
       }
       haptics.success();
-      const url = buildWhatsAppOrderLink(dish, qty);
-      toast.show('Plates reserved! Opening WhatsApp 📲');
-      if (Platform.OS === 'web') window.open(url, '_blank');
-      else Linking.openURL(url);
+      // The order itself notifies the chef either way; WhatsApp only opens
+      // when it was asked for.
+      if (via === 'whatsapp') {
+        const url = buildWhatsAppOrderLink(dish, qty);
+        toast.show('Plates reserved! Opening WhatsApp 📲');
+        if (Platform.OS === 'web') window.open(url, '_blank');
+        else Linking.openURL(url);
+      } else {
+        toast.show(`Plates reserved — ${dish.chef_name} has been notified 🛎️`);
+      }
       await load();
     } catch (e) {
       console.error(e);
@@ -142,18 +148,24 @@ export default function FoodScreen() {
     }
   };
 
-  const handleSubscribe = async (plan: TiffinPlanWithChef, qty: number, startToday: boolean) => {
+  const handleSubscribe = async (plan: TiffinPlanWithChef, qty: number, startToday: boolean, via: 'app' | 'whatsapp') => {
     setSubPlan(null);
     if (!userId) return;
     try {
       const start = startToday ? tdy() : new Date(Date.now() + 86400_000).toLocaleDateString('en-CA');
       await subscribe(plan.id, userId, qty, start);
       haptics.success();
-      toast.show('Subscribed! Opening WhatsApp 📲');
-      const msg = `Hi ${plan.chef?.name ?? ''}! I subscribed to your *${plan.title}* tiffin on Aangan (${qty}/day). Thanks!`;
-      const url = waLink(plan.chef?.whatsapp, msg);
-      if (Platform.OS === 'web') window.open(url, '_blank');
-      else Linking.openURL(url);
+      // 0104 notifies the chef from the subscription row itself, so WhatsApp
+      // is a courtesy now rather than the delivery mechanism.
+      if (via === 'whatsapp') {
+        toast.show('Subscribed! Opening WhatsApp 📲');
+        const msg = `Hi ${plan.chef?.name ?? ''}! I subscribed to your *${plan.title}* tiffin on Aangan (${qty}/day). Thanks!`;
+        const url = waLink(plan.chef?.whatsapp, msg);
+        if (Platform.OS === 'web') window.open(url, '_blank');
+        else Linking.openURL(url);
+      } else {
+        toast.show(`Subscribed — ${plan.chef?.name ?? 'the cook'} has been notified 🍱`);
+      }
       await load();
     } catch (e) {
       console.error(e);
