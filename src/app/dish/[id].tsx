@@ -67,6 +67,15 @@ export default function DishDetailScreen() {
   const [editPrice, setEditPrice] = useState('');
   const [editPhoto, setEditPhoto] = useState<{ uri: string; isNew: boolean } | null>(null);
   const [saving, setSaving] = useState(false);
+  /**
+   * Measured height of the sticky CTA, so the scroll view reserves exactly that
+   * much room beneath it.
+   *
+   * It was a hardcoded 120, which is shorter than the tallest case — two
+   * stacked large buttons when the chef has a UPI id — so the end of the page
+   * sat behind the bar with no way to scroll it into view.
+   */
+  const [ctaHeight, setCtaHeight] = useState(0);
 
   // On web, opening this route directly (or after a refresh) leaves an empty
   // history stack, so router.back() is a no-op. Fall back to the food board.
@@ -216,7 +225,7 @@ export default function DishDetailScreen() {
   return (
     <View className="flex-1 bg-bg">
       <AScrollView
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: (isOwner ? 0 : ctaHeight || 140) + 16 }}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}
@@ -333,8 +342,8 @@ export default function DishDetailScreen() {
       {/* Sticky CTA */}
       {!isOwner ? (
         <View
-          className="absolute bottom-0 left-0 right-0 border-t border-line bg-bg px-4 pt-3"
-          style={{ paddingBottom: insets.bottom + 12 }}
+          onLayout={(e) => setCtaHeight(e.nativeEvent.layout.height)}
+          className="absolute bottom-0 left-0 right-0 border-t border-line bg-bg px-4 pb-3 pt-3"
         >
           {dish.upi && dish.chef_user_id ? (
             <View className="mb-2">
