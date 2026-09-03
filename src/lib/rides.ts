@@ -238,6 +238,49 @@ export async function deleteRide(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// ── Days the driver is not running ──────────────────────────────────
+//
+// A recurring lift is a promise about Mondays, and a promise nobody can
+// suspend is one the driver breaks at the gate. A skip calls off ONE journey
+// and leaves every standing seat intact; 0113 tells the riders holding a seat
+// that day, and the reminder sweep leaves the journey alone.
+
+export interface RideSkip {
+  ride_id: string;
+  skip_date: string;
+  reason: string | null;
+}
+
+export async function fetchRideSkips(rideId: string): Promise<RideSkip[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase
+    .from('ride_skips')
+    .select('ride_id,skip_date,reason')
+    .eq('ride_id', rideId)
+    .gte('skip_date', todayIso());
+  if (error) throw error;
+  return (data ?? []) as RideSkip[];
+}
+
+export async function setRideSkip(
+  rideId: string,
+  date: string,
+  off: boolean,
+  reason?: string | null,
+): Promise<void> {
+  if (off) {
+    const { error } = await supabase
+      .from('ride_skips')
+      .upsert({ ride_id: rideId, skip_date: date, reason: reason?.trim() || null },
+              { onConflict: 'ride_id,skip_date' });
+    if (error) throw error;
+    return;
+  }
+  const { error } = await supabase
+    .from('ride_skips').delete().eq('ride_id', rideId).eq('skip_date', date);
+  if (error) throw error;
+}
+
 /** Ask for a seat. Re-asking for the same journey edits the same row. */
 export async function requestSeat(input: {
   rideId: string;

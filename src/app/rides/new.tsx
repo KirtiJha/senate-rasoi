@@ -1,11 +1,11 @@
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
 
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { haptics } from '../../lib/haptics';
-import { PREFERENCE_LABELS, RidePreference, createRide } from '../../lib/rides';
+import { PREFERENCE_LABELS, RidePreference, createRide, fetchRide, updateRide } from '../../lib/rides';
 import { useThemeColors } from '../../theme';
 import {
   Button, Container, DateField, KeyboardAvoider, ScreenHeader, Stepper, TimeField, Touchable,
@@ -17,18 +17,24 @@ const DAYS = [
 ];
 
 /**
- * Offering a ride.
+ * Offering a ride — or correcting one.
  *
  * The old carpool form took a departure time as free text ("9am") and a
  * schedule as the word "Daily", which is why nothing could ever list what was
  * on tomorrow or remind anybody. Here the time is a picker and the recurrence
  * is a real set of weekdays, so the ride can be booked per journey.
+ *
+ * `?ride=<id>` edits instead of creating. `updateRide` had sat unused, so
+ * moving a departure from 8:00 to 8:15 meant deleting the ride — and requests
+ * and standing seats cascade, so every rider was quietly unbooked.
  */
 export default function NewRideScreen() {
   const c = useThemeColors();
   const router = useRouter();
   const toast = useToast();
   const { userId, communityId } = useAuth();
+  const { ride: editId } = useLocalSearchParams<{ ride?: string }>();
+  const editing = typeof editId === 'string' && editId.length > 0;
 
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -43,6 +49,30 @@ export default function NewRideScreen() {
   const [vehicle, setVehicle] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(editing);
+
+  useEffect(() => {
+    if (!editing || !editId) return;
+    let alive = true;
+    fetchRide(editId)
+      .then((r) => {
+        if (!alive || !r) return;
+        setFrom(r.from_text); setTo(r.to_text);
+        setTime((r.depart_time ?? '09:00').slice(0, 5));
+        setDuration(r.duration_min != null ? String(r.duration_min) : '');
+        setRepeats(!r.one_off_date);
+        setDays(r.days_of_week ?? []);
+        setOneOff(r.one_off_date);
+        setSeats(r.seats_total);
+        setPrice(r.price_per_seat != null ? String(r.price_per_seat) : '');
+        setPreference(r.preference);
+        setVehicle(r.vehicle ?? '');
+        setNote(r.note ?? '');
+      })
+      .catch(() => toast.show('Could not load that ride'))
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [editing, editId, toast]);
 
   const label = 'mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted';
   const input = 'mb-4 rounded-2xl border border-line px-3.5 py-3 text-[15px] text-ink';
@@ -56,6 +86,25 @@ export default function NewRideScreen() {
 
     setBusy(true);
     try {
+      if (editing && editId) {
+        await updateRide(editId, {
+          from_text: from.trim(),
+          to_text: to.trim(),
+          depart_time: time,
+          duration_min: duration.trim() ? Number(duration) : null,
+          days_of_week: repeats ? days : [],
+          one_off_date: repeats ? null : oneOff,
+          seats_total: seats,
+          price_per_seat: price.trim() ? Number(price) : null,
+          preference,
+          vehicle: vehicle.trim() || null,
+          note: note.trim() || null,
+        });
+        haptics.success();
+        toast.show('Ride updated');
+        router.replace(`/rides/${editId}` as never);
+        return;
+      }
       const id = await createRide({
         communityId: communityId ?? undefined,
         driverUserId: userId,
@@ -84,7 +133,12 @@ export default function NewRideScreen() {
 
   return (
     <KeyboardAvoider>
-      <ScreenHeader icon="car-outline" title="Offer a lift" showBack backHref="/rides" />
+      <ScreenHeader
+        icon="car-outline"
+        title={editing ? 'Edit this lift' : 'Offer a lift'}
+        showBack
+        backHref={editing && editId ? (`/rides/${editId}` as never) : '/rides'}
+      />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
@@ -216,7 +270,11 @@ export default function NewRideScreen() {
             style={{ backgroundColor: c.inset, minHeight: 84, textAlignVertical: 'top', outline: 'none' } as never}
           />
 
-          <Button label={busy ? 'Saving…' : 'Offer this ride'} onPress={save} disabled={busy} />
+          <Button
+            label={busy ? 'Saving…' : editing ? 'Save changes' : 'Offer this ride'}
+            onPress={save}
+            disabled={busy || loading}
+          />
         </Container>
       </ScrollView>
     </KeyboardAvoider>

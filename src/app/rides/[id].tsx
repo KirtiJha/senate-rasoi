@@ -19,15 +19,18 @@ import {
   formatRideDate,
   formatRideTime,
   RideStanding,
+  RideSkip,
   StandingSkip,
   answerStanding,
   fetchMyStanding,
   fetchStanding,
+  fetchRideSkips,
   fetchStandingSkips,
   requestSeat,
   requestStanding,
   routeUrl,
   seatsTakenOn,
+  setRideSkip,
   setStandingSkip,
   todayIso,
   upcomingDates,
@@ -66,6 +69,8 @@ export default function RideDetailScreen() {
   const [standing, setStanding] = useState<RideStanding[]>([]);
   const [myStanding, setMyStanding] = useState<RideStanding | null>(null);
   const [skips, setSkips] = useState<StandingSkip[]>([]);
+  // Days the DRIVER has called off — different from a rider's own skip.
+  const [rideSkips, setRideSkips] = useState<RideSkip[]>([]);
   const [date, setDate] = useState<string | null>(null);
   const [seats, setSeats] = useState(1);
   const [note, setNote] = useState('');
@@ -98,6 +103,7 @@ export default function RideDetailScreen() {
       // arrangement's skips; a rider only ever needs their own.
       const ids = isDriver ? allStanding.map((x) => x.id) : own ? [own.id] : [];
       setSkips(ids.length ? await fetchStandingSkips(ids) : []);
+      setRideSkips(await fetchRideSkips(id).catch(() => []));
 
       setDate((d) => d ?? upcomingDates(r)[0] ?? null);
     } catch {
@@ -190,6 +196,35 @@ export default function RideDetailScreen() {
     }
   };
 
+  const offDays = new Set(rideSkips.map((k) => k.skip_date));
+
+  /**
+   * The driver calls off one journey. Everybody holding a seat that day is
+   * told (0113) and the reminder sweep leaves it alone — which is the whole
+   * point: the alternative was deleting the ride and unbooking everyone, or
+   * saying nothing and not turning up.
+   */
+  const toggleRideSkip = async (d: string) => {
+    if (!ride || busy) return;
+    const off = offDays.has(d);
+    if (!off) {
+      const ok = await confirm({
+        title: `Not running on ${formatRideDate(d)}?`,
+        message: 'Everyone holding a seat that day is told. Your regular riders keep their seat for every other day.',
+        confirmLabel: 'Call it off',
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    setBusy(true);
+    try {
+      await setRideSkip(ride.id, d, !off);
+      toast.show(off ? `Running again on ${formatRideDate(d)}` : 'Riders have been told');
+      await load();
+    } catch { toast.show('Could not update that day'); }
+    finally { setBusy(false); }
+  };
+
   const toggleSkip = async (d: string) => {
     if (!myStanding || busy) return;
     const on = skips.some((k) => k.standing_id === myStanding.id && k.skip_date === d);
@@ -203,7 +238,7 @@ export default function RideDetailScreen() {
   const removeRide = async () => {
     const ok = await confirm({
       title: 'Remove this ride?',
-      message: 'Everyone who has asked for a seat will lose their request.',
+      message: 'Every request and every regular seat on it goes too. To change the time or the days, use Edit; to call off one journey, tap that day instead.',
       confirmLabel: 'Remove',
       destructive: true,
     });
@@ -220,12 +255,26 @@ export default function RideDetailScreen() {
         showBack
         backHref="/rides"
         right={isDriver || isAdmin ? (
+          <View className="flex-row items-center gap-2">
+          {isDriver ? (
+            <Touchable
+              onPress={() => router.push(`/rides/new?ride=${ride.id}` as never)}
+              accessibilityRole="button"
+              accessibilityLabel="Edit this ride"
+            >
+              <View pointerEvents="none" className="h-9 w-9 items-center justify-center rounded-full"
+                style={{ backgroundColor: c.inset }}>
+                <Ionicons name="create-outline" size={17} color={c.muted} />
+              </View>
+            </Touchable>
+          ) : null}
           <Touchable onPress={removeRide} accessibilityRole="button" accessibilityLabel="Remove ride">
             <View pointerEvents="none" className="h-9 w-9 items-center justify-center rounded-full"
               style={{ backgroundColor: c.inset }}>
               <Ionicons name="trash-outline" size={15} color={c.muted} />
             </View>
           </Touchable>
+          </View>
         ) : undefined}
       />
 
@@ -292,7 +341,7 @@ export default function RideDetailScreen() {
           ) : (
             <View className="mt-5">
               <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">
-                {isDriver ? 'Journeys'
+                {isDriver ? 'Journeys — tap one you are not running'
                   : myStanding?.status === 'accepted' ? 'Your days — tap one you are missing'
                     : 'Pick a day'}
               </Text>
@@ -305,18 +354,26 @@ export default function RideDetailScreen() {
                   // skip rather than selecting the day.
                   const regular = !isDriver && myStanding?.status === 'accepted'
                     && (!myStanding.ends_on || myStanding.ends_on >= d);
-                  const away = !!regular && skips.some((k) => k.standing_id === myStanding?.id && k.skip_date === d);
-                  const mark = away ? ' ✕' : regular ? ' ✓' : asked ? (asked.status === 'accepted' ? ' ✓' : ' ·') : '';
+                  // The driver has called this journey off: nobody can book
+                  // it and it reads as struck through on both sides.
+                  const cancelled = offDays.has(d);
+                  const away = cancelled
+                    || (!!regular && skips.some((k) => k.standing_id === myStanding?.id && k.skip_date === d));
+                  const mark = cancelled ? ' ✕' : away ? ' ✕' : regular ? ' ✓' : asked ? (asked.status === 'accepted' ? ' ✓' : ' ·') : '';
                   return (
                     <Touchable
                       key={d}
-                      onPress={() => (regular ? toggleSkip(d) : setDate(d))}
-                      disabled={busy}
+                      onPress={() => (isDriver ? toggleRideSkip(d) : cancelled ? undefined : regular ? toggleSkip(d) : setDate(d))}
+                      disabled={busy || (!isDriver && cancelled)}
                       accessibilityRole="button"
                       accessibilityState={{ selected: on }}
-                      accessibilityLabel={regular
-                        ? `${away ? 'Take' : 'Skip'} ${formatRideDate(d)}`
-                        : formatRideDate(d)}
+                      accessibilityLabel={isDriver
+                        ? `${cancelled ? 'Run' : 'Do not run'} on ${formatRideDate(d)}`
+                        : cancelled
+                          ? `${formatRideDate(d)} — not running`
+                          : regular
+                            ? `${away ? 'Take' : 'Skip'} ${formatRideDate(d)}`
+                            : formatRideDate(d)}
                     >
                       <View pointerEvents="none" className="rounded-full px-3.5 py-2"
                         style={{
