@@ -26,6 +26,8 @@ export interface DishRow {
   chef_user_id: string | null; // owner (auth.uid())
   order_by: string | null; // ISO deadline to order before cooking starts
   serve_date: string; // YYYY-MM-DD the dish is cooked/served
+  template_id: string | null; // the standing dish this was materialised from
+  withdrawn_at: string | null; // taken off the board without deleting the orders
   created_at: string;
 }
 

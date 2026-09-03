@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
@@ -54,7 +54,12 @@ export default function FoodScreen() {
   const { userId, communityId, isAdmin } = useAuth();
   const { columns, isDesktop } = useResponsive();
   const c = useThemeColors();
-  const [tab, setTab] = useState<FoodTab>('discover');
+  // /food?tab=orders — so a notification or a link from a dish can land on
+  // the right tab instead of dumping you on the menu to find it yourself.
+  const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
+  const [tab, setTab] = useState<FoodTab>(
+    FOOD_TABS.some((t) => t.key === tabParam) ? (tabParam as FoodTab) : 'discover',
+  );
   const [posting, setPosting] = useState<'dish' | 'tiffin' | null>(null);
   const [dishes, setDishes] = useState<DishRow[]>([]);
   const [reputations, setReputations] = useState<Map<string, ChefReputation>>(new Map());

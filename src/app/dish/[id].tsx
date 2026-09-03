@@ -19,12 +19,13 @@ import { useAuth } from '../../context/auth';
 import { useConfirm } from '../../context/confirm';
 import { useToast } from '../../context/toast';
 import {
-  buildWhatsAppOrderLink, deleteDish, fetchDishById, placeOrder, updateDish, waLink,
+  buildWhatsAppOrderLink, deleteDish, fetchDishById, placeOrder, updateDish, waLink, withdrawDish,
 } from '../../lib/dishes';
+import { cancelOrder, canSelfCancel, listMyOrders, STATUS_TEXT } from '../../lib/orders';
 import { haptics } from '../../lib/haptics';
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { countdown } from '../../lib/time';
-import { DishRow, SLOT_EMOJI } from '../../lib/types';
+import { DishRow, MyOrder, SLOT_EMOJI } from '../../lib/types';
 import { useThemeColors } from '../../theme';
 
 // Warm two-tone backdrop for photo-less dishes, themed by meal slot.
@@ -59,6 +60,10 @@ export default function DishDetailScreen() {
   const c = useThemeColors();
 
   const [dish, setDish] = useState<DishRow | null>(null);
+  // What this person has already ordered from this dish. The screen used to
+  // know nothing about it, so "Order" looked identical whether you had ordered
+  // nothing or five times — and five separate rows is what the chef then got.
+  const [mine, setMine] = useState<MyOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -88,13 +93,17 @@ export default function DishDetailScreen() {
     if (!id) return;
     try {
       setDish(await fetchDishById(id));
+      if (userId) {
+        const rows = await listMyOrders(userId);
+        setMine(rows.filter((o) => o.dish_id === id));
+      }
     } catch (e) {
       console.error(e);
       toast.show('Could not load this dish');
     } finally {
       setLoading(false);
     }
-  }, [id, toast]);
+  }, [id, userId, toast]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -126,6 +135,49 @@ export default function DishDetailScreen() {
     }
   };
 
+  const myOpen = mine.filter(
+    (o) => o.status === 'placed' || o.status === 'accepted' || o.status === 'cooking',
+  );
+  const myPlates = myOpen.reduce((n, o) => n + o.qty, 0);
+
+  const cancelMine = async () => {
+    const target = myOpen.find(canSelfCancel);
+    if (!target) return;
+    const ok = await confirm({
+      title: 'Cancel order',
+      message: `Cancel your order of ${target.qty} plate${target.qty !== 1 ? 's' : ''}?`,
+      confirmLabel: 'Cancel order',
+      cancelLabel: 'Keep',
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      const done = await cancelOrder(target.id);
+      toast.show(done ? 'Order cancelled — the cook has been told' : 'Too late to self-cancel — message the cook');
+      await load();
+    } catch { toast.show('Could not cancel — try again'); }
+  };
+
+  /**
+   * Take the dish off the board and keep every order on it. The delete guard
+   * (0092) says to do this; until now nothing offered it.
+   */
+  const handleWithdraw = async () => {
+    if (!dish) return;
+    const ok = await confirm({
+      title: 'Stop taking orders?',
+      message: `"${dish.dish_name}" comes off the board. Orders already placed stay — decline or cancel each one from your Kitchen so those neighbours know.`,
+      confirmLabel: 'Stop taking orders',
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      const done = await withdrawDish(dish.id);
+      toast.show(done ? 'Taken off the board' : 'Could not withdraw this dish');
+      await load();
+    } catch { toast.show('Could not withdraw — try again'); }
+  };
+
   const handleRemove = () => {
     if (!dish) return;
     const doDelete = async () => {
@@ -136,7 +188,13 @@ export default function DishDetailScreen() {
         goBack();
       } catch (e) {
         console.error(e);
-        toast.show('Could not remove — check your connection');
+        // 0092 refuses to delete a dish people have ordered, so their orders
+        // and reviews survive. Say what to do instead of "check your
+        // connection", which is what this used to blame.
+        const msg = e instanceof Error ? e.message : '';
+        toast.show(/ordered|withdraw/i.test(msg)
+          ? 'People have ordered this — use "Stop taking orders" instead'
+          : 'Could not remove — check your connection');
       }
     };
     confirm({ title: 'Remove dish', message: `Remove "${dish.dish_name}" from the board?`, confirmLabel: 'Remove', destructive: true })
@@ -316,6 +374,27 @@ export default function DishDetailScreen() {
               </View>
             ) : null}
 
+            {/* What you already have on this dish. Without it the only way
+                to find out was the Orders tab, so people re-ordered. */}
+            {myOpen.length ? (
+              <View className="mb-4 card p-4">
+                <View className="flex-row items-center gap-2">
+                  <Ionicons name="basket-outline" size={16} color={c.accent} />
+                  <Text className="flex-1 font-sans-sb text-[14px] text-ink">
+                    You've ordered {myPlates} plate{myPlates !== 1 ? 's' : ''}
+                  </Text>
+                  <Text className="font-sans text-[12px] text-muted">{STATUS_TEXT[myOpen[0].status]}</Text>
+                </View>
+                <View className="mt-2.5 flex-row gap-2">
+                  <Button label="My orders" variant="outline" size="sm" icon="receipt-outline"
+                    onPress={() => router.push('/food?tab=orders' as any)} />
+                  {myOpen.some(canSelfCancel) ? (
+                    <Button label="Cancel" variant="ghost" size="sm" onPress={cancelMine} />
+                  ) : null}
+                </View>
+              </View>
+            ) : null}
+
             {/* Chef card */}
             <View className="mb-4 flex-row items-center gap-3 card p-4">
               <Avatar name={dish.chef_name} size={42} />
@@ -333,8 +412,11 @@ export default function DishDetailScreen() {
 
             {/* Owner / admin actions */}
             {canManage ? (
-              <View className="mb-4 flex-row gap-2">
+              <View className="mb-4 flex-row flex-wrap gap-2">
                 <Button label="Edit" variant="outline" size="sm" icon="create-outline" onPress={openEdit} />
+                {!dish.withdrawn_at && dish.plates_left > 0 ? (
+                  <Button label="Stop taking orders" variant="outline" size="sm" icon="pause-circle-outline" onPress={handleWithdraw} />
+                ) : null}
                 <Button label="Remove dish" variant="danger" size="sm" onPress={handleRemove} />
               </View>
             ) : null}
@@ -370,7 +452,13 @@ export default function DishDetailScreen() {
               <Text className="font-sans-sb text-[14px] text-muted">{closed ? 'Ordering closed' : 'Sold out'}</Text>
             </View>
           ) : (
-            <Button label="Order" icon="bag-add-outline" size="lg" fullWidth onPress={() => setOrdering(true)} />
+            <Button
+              label={myOpen.length ? 'Order more plates' : 'Order'}
+              icon="bag-add-outline"
+              size="lg"
+              fullWidth
+              onPress={() => setOrdering(true)}
+            />
           )}
         </View>
       ) : null}

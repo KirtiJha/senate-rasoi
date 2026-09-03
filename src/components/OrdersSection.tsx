@@ -13,6 +13,7 @@ import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
 import { orderTotal, waLink } from '../lib/dishes';
 import { fetchOrderPayments, OrderPayment } from '../lib/payments';
+import { getOrCreateThread } from '../lib/dm';
 import { cancelOrder, canSelfCancel, listMyOrders, subscribeToOrders } from '../lib/orders';
 import { MyOrder, OrderStatus, SLOT_EMOJI } from '../lib/types';
 import { useThemeColors } from '../theme';
@@ -62,6 +63,25 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
     await load();
     setRefreshing(false);
   }, [load]);
+
+  /**
+   * After the self-cancel window it is the cook's call, so this opens the
+   * conversation rather than pretending to cancel. WhatsApp when they have a
+   * number, the in-app thread when they do not — which used to be a row with
+   * no cancel affordance at all.
+   */
+  const askToCancel = async (order: MyOrder) => {
+    const text = `Hi ${order.dish?.chef_name ?? ''}! I need to cancel my order for ${order.dish?.dish_name ?? ''}.`;
+    const wa = order.dish?.whatsapp;
+    if (wa) return openUrl(waLink(wa, text));
+    if (order.dish?.chef_user_id) {
+      try {
+        router.push(`/messages/${await getOrCreateThread(order.dish.chef_user_id)}` as any);
+        return;
+      } catch { /* fall through to the toast */ }
+    }
+    toast.show('No way to reach this cook — ask a neighbour');
+  };
 
   const doCancel = (order: MyOrder) => {
     const run = async () => {
@@ -169,15 +189,21 @@ export function OrdersSection({ onBrowse }: { onBrowse?: () => void } = {}) {
                       <Pressable onPress={() => doCancel(o)} hitSlop={6}>
                         <Text className="text-[12px] font-sans-sb text-nonveg">Cancel</Text>
                       </Pressable>
-                    ) : active && wa ? (
-                      <Pressable onPress={() => openUrl(waLink(wa, `Hi ${o.dish?.chef_name ?? ''}! I need to cancel my order for ${o.dish?.dish_name ?? ''}.`))} hitSlop={6}>
-                        <Text className="text-[12px] font-sans-sb text-muted">Call chef to cancel</Text>
+                    ) : active ? (
+                      /* Past the five-minute window the cook has to agree, so
+                         this asks them — in Aangan, and on WhatsApp only when
+                         there is a number to ask on. */
+                      <Pressable onPress={() => askToCancel(o)} hitSlop={6}>
+                        <Text className="text-[12px] font-sans-sb text-muted">Ask to cancel</Text>
                       </Pressable>
-                    ) : wa ? (
-                      <Pressable onPress={() => openUrl(waLink(wa, `Hi ${o.dish?.chef_name ?? ''}! I'd like to order ${o.dish?.dish_name ?? ''} again 🍲`))} hitSlop={6}>
+                    ) : (
+                      /* Re-ordering is ordering. It used to open WhatsApp with
+                         a message the cook had to turn into an order by hand,
+                         and did not appear at all for a cook with no number. */
+                      <Pressable onPress={() => router.push(`/dish/${o.dish_id}` as any)} hitSlop={6}>
                         <Text className="text-[12px] font-sans-sb text-accent">Order again</Text>
                       </Pressable>
-                    ) : null}
+                    )}
                   </View>
                 </View>
               </View>

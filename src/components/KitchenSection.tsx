@@ -7,9 +7,11 @@ import { Empty } from './Empty';
 import { MessageIconButton } from './MessageNeighbour';
 import { Avatar, Badge, Button, Container, VegMark } from './ui';
 import { useAuth } from '../context/auth';
+import { ChefFeedbackList } from './food/ChefFeedbackList';
 import { RepeatList } from './food/RepeatDish';
+import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
-import { fetchDishes, listChefOrders, orderTotal, setOrderStatus, statusMessageForFoodie, waLink } from '../lib/dishes';
+import { fetchMyKitchen, listChefOrders, orderTotal, setOrderStatus, statusMessageForFoodie, waLink, withdrawDish } from '../lib/dishes';
 import { haptics } from '../lib/haptics';
 import { subscribeToOrders } from '../lib/orders';
 import { fetchOrderPayments, markReceived, OrderPayment } from '../lib/payments';
@@ -43,7 +45,8 @@ function openUrl(url: string) {
 export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
   const router = useRouter();
   const toast = useToast();
-  const { userId, communityId } = useAuth();
+  const confirm = useConfirm();
+  const { userId } = useAuth();
   const [dishes, setDishes] = useState<DishRow[]>([]);
   const [ordersByDish, setOrdersByDish] = useState<Record<string, ChefOrder[]>>({});
   const [payments, setPayments] = useState<Record<string, OrderPayment>>({});
@@ -51,9 +54,12 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
+    if (!userId) return;
     try {
-      const all = await fetchDishes(communityId);
-      const mine = all.filter((d) => d.chef_user_id === userId);
+      // The chef's own dishes, not the public board filtered down: the board
+      // hides anything before today and anything withdrawn, which is exactly
+      // where the orders still waiting on a chef end up.
+      const mine = await fetchMyKitchen(userId);
       setDishes(mine);
       const entries = await Promise.all(mine.map(async (d) => [d.id, await listChefOrders(d.id)] as const));
       setOrdersByDish(Object.fromEntries(entries));
@@ -65,7 +71,7 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
     } finally {
       setLoading(false);
     }
-  }, [userId, communityId]);
+  }, [userId]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
   useEffect(() => subscribeToOrders(load), [load]);
@@ -111,6 +117,35 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
     }
   };
 
+  /**
+   * Take a dish off the board without touching the orders already on it.
+   *
+   * The only other exit was "Remove", which 0092 blocks the moment somebody
+   * has ordered — correctly, since deleting would take their order and their
+   * review with it. That left a chef who could not cook with no move at all.
+   */
+  const withdraw = async (dish: DishRow) => {
+    const open = (ordersByDish[dish.id] ?? []).filter(
+      (o) => o.status === 'placed' || o.status === 'accepted' || o.status === 'cooking',
+    ).length;
+    const ok = await confirm({
+      title: 'Stop taking orders?',
+      message: open
+        ? `"${dish.dish_name}" comes off the board. The ${open} order${open === 1 ? '' : 's'} already on it stay — decline or cancel each one to let those neighbours know.`
+        : `"${dish.dish_name}" comes off the board. Nobody has ordered it, so nothing else changes.`,
+      confirmLabel: 'Stop taking orders',
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      const done = await withdrawDish(dish.id);
+      toast.show(done ? 'Taken off the board' : 'Could not withdraw this dish');
+      await load();
+    } catch {
+      toast.show('Could not withdraw — try again');
+    }
+  };
+
   const postDish = () => (onPost ? onPost() : router.push({ pathname: '/post', params: { category: 'food' } }));
 
   return (
@@ -144,6 +179,7 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
                 payments={payments}
                 onAct={act}
                 onConfirmPaid={confirmPaid}
+                onWithdraw={withdraw}
               />
             ))}
             <Pressable
@@ -153,6 +189,9 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
               <Ionicons name="add" size={16} color="#9CA3AF" />
               <Text className="font-sans-sb text-[13px] text-muted">Post a dish</Text>
             </Pressable>
+
+            {/* Reviews, where the cook will actually see them. */}
+            <ChefFeedbackList />
           </>
         )}
       </Container>
@@ -166,14 +205,25 @@ function KitchenDishCard({
   payments,
   onAct,
   onConfirmPaid,
+  onWithdraw,
 }: {
   dish: DishRow;
   orders: ChefOrder[];
   payments: Record<string, OrderPayment>;
   onAct: (orderId: string, status: OrderStatus, msg: string) => void;
   onConfirmPaid: (paymentId: string) => void;
+  onWithdraw: (dish: DishRow) => void;
 }) {
   const c = useThemeColors();
+  const router = useRouter();
+  const today = new Date().toLocaleDateString('en-CA');
+  const past = dish.serve_date < today;
+  const withdrawn = !!dish.withdrawn_at;
+  // Still taking orders? Then the chef can stop taking them — the guard in
+  // 0092 refuses to delete a dish people have ordered and says "withdraw it
+  // instead", which until now was advice with no button behind it.
+  const canWithdraw = !withdrawn && !past && dish.plates_left > 0;
+  const openOrders = orders.filter((o) => o.status === 'placed' || o.status === 'accepted' || o.status === 'cooking').length;
   // Plates reserved = max − left (set_order_status / place_order keep plates_left
   // accurate); this avoids depending on the orders array being fully loaded.
   const platesOrdered = Math.max(0, dish.max_plates - dish.plates_left);
@@ -185,11 +235,24 @@ function KitchenDishCard({
     <View className="mb-4 card p-4">
       <View className="flex-row items-center gap-2">
         <VegMark type={dish.veg_type} size={15} />
-        <Text className="flex-1 font-display-sb text-[18px] text-ink" numberOfLines={1}>
-          {SLOT_EMOJI[dish.slot]} {dish.dish_name}
-        </Text>
-        {cd ? <Badge label={cd.closed ? 'Closed' : `⏱ ${cd.label.replace('Order in ', '')}`} tone={cd.closed ? 'neutral' : 'accent'} /> : null}
+        <Pressable className="flex-1 active:opacity-70" onPress={() => router.push(`/dish/${dish.id}` as never)}>
+          <Text className="font-display-sb text-[18px] text-ink" numberOfLines={1}>
+            {SLOT_EMOJI[dish.slot]} {dish.dish_name}
+          </Text>
+        </Pressable>
+        {cd && !past && !withdrawn ? <Badge label={cd.closed ? 'Closed' : `⏱ ${cd.label.replace('Order in ', '')}`} tone={cd.closed ? 'neutral' : 'accent'} /> : null}
       </View>
+
+      {/* Why this card is still here. The tab used to end at midnight, so a
+          dish never had to explain itself. */}
+      {withdrawn || past ? (
+        <Text className="font-sans mt-1 text-[12px] text-muted">
+          {withdrawn ? 'Withdrawn' : `For ${serveLabel(dish.serve_date)}`}
+          {openOrders > 0
+            ? ` · ${openOrders} order${openOrders === 1 ? '' : 's'} still open`
+            : ' · nothing left to do'}
+        </Text>
+      ) : null}
 
       <View className="mt-3 flex-row gap-2">
         <Stat label="Ordered" value={`${platesOrdered}`} />
@@ -280,8 +343,28 @@ function KitchenDishCard({
           })
         )}
       </View>
+
+      {canWithdraw ? (
+        <Pressable
+          onPress={() => onWithdraw(dish)}
+          className="mt-3 flex-row items-center justify-center gap-1.5 rounded-xl border border-line py-2.5 active:bg-inset"
+        >
+          <Ionicons name="pause-circle-outline" size={15} color={c.muted} />
+          <Text className="font-sans-sb text-[12px] text-muted">Stop taking orders</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
+}
+
+/** "yesterday" / "Mon 1 Sep" — plain enough to read in a list of past days. */
+function serveLabel(serveDate: string): string {
+  try {
+    const d = new Date(serveDate + 'T00:00:00');
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    if (serveDate === y.toLocaleDateString('en-CA')) return 'yesterday';
+    return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+  } catch { return serveDate; }
 }
 
 /**

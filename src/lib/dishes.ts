@@ -465,6 +465,56 @@ export async function fetchChefOpenOrders(): Promise<OpenOrder[]> {
   return (data ?? []) as OpenOrder[];
 }
 
+/**
+ * The dishes the Kitchen tab should show: everything the chef still has to do
+ * something about, and nothing that has genuinely finished.
+ *
+ * The tab used to read the public board — `serve_date >= today`, withdrawn
+ * hidden — and filter it down to the chef's own. Which meant a dish left the
+ * chef's screen at midnight while its orders were still open, while a
+ * withdrawn dish took its accepted orders with it, and the guard in 0092 that
+ * tells a chef to "withdraw it instead" pointed at a screen where the dish
+ * would then vanish.
+ *
+ * Three sources, unioned: anything serving from a week ago onward, anything
+ * still holding an open order (via `chef_open_orders`, at any age), and that
+ * is it. A withdrawn dish stays as long as somebody is waiting on it.
+ */
+const KITCHEN_LOOKBACK_DAYS = 7;
+
+export async function fetchMyKitchen(userId: string): Promise<DishRow[]> {
+  if (!isSupabaseConfigured || !userId) return [];
+  const since = new Date();
+  since.setDate(since.getDate() - KITCHEN_LOOKBACK_DAYS);
+  const sinceStr = since.toLocaleDateString('en-CA');
+
+  const [recent, open] = await Promise.all([
+    supabase
+      .from('dishes')
+      .select('*')
+      .eq('chef_user_id', userId)
+      .gte('serve_date', sinceStr)
+      .order('serve_date', { ascending: false })
+      .order('created_at', { ascending: false }),
+    fetchChefOpenOrders().catch(() => [] as OpenOrder[]),
+  ]);
+  if (recent.error) throw recent.error;
+
+  const rows = (recent.data ?? []) as DishRow[];
+  const have = new Set(rows.map((d) => d.id));
+  const missing = [...new Set(open.map((o) => o.dish_id))].filter((id) => !have.has(id));
+  if (missing.length) {
+    const { data } = await supabase.from('dishes').select('*').in('id', missing);
+    for (const d of (data ?? []) as DishRow[]) rows.push(d);
+  }
+  // Newest serve date first, so today's cooking is at the top and last week's
+  // loose ends sit below it.
+  rows.sort((a, b) => (a.serve_date === b.serve_date
+    ? b.created_at.localeCompare(a.created_at)
+    : b.serve_date.localeCompare(a.serve_date)));
+  return rows;
+}
+
 /** What a line of an order actually costs — the agreed price, not today's. */
 export function orderTotal(
   order: { qty: number; unit_price?: number | null },
