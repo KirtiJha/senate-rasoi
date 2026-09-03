@@ -15,6 +15,7 @@ import {
   deleteTask,
   fetchTaskUpdates,
   fetchTasks,
+  updateTask,
 } from '../../lib/events';
 import { haptics } from '../../lib/haptics';
 import { openPhotoPicker } from '../../lib/photo';
@@ -61,6 +62,7 @@ export function TasksTab({
 
   const [tasks, setTasks] = useState<EventTask[] | null>(null);
   const [adding, setAdding] = useState(false);
+  const [editingTask, setEditingTask] = useState<EventTask | null>(null);
   const [open, setOpen] = useState<EventTask | null>(null);
 
   const load = useCallback(async () => {
@@ -72,7 +74,12 @@ export function TasksTab({
     t === 'done' ? c.accent : t === 'blocked' ? c.danger : t === 'doing' ? c.highlightInk : c.muted;
 
   const remove = async (t: EventTask) => {
-    const ok = await confirm({ title: 'Delete this task?', message: t.title, confirmLabel: 'Delete', destructive: true });
+    const ok = await confirm({
+      title: 'Delete this task?',
+      message: `"${t.title}" and every update posted on it go with it. To fix a name or hand it to somebody else, use Edit instead.`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
     if (!ok) return;
     setTasks((prev) => (prev ?? []).filter((x) => x.id !== t.id));
     try { await deleteTask(t.id); } catch { toast.show('Could not delete'); load(); }
@@ -150,48 +157,84 @@ export function TasksTab({
         onAdded={() => { setAdding(false); load(); }}
       />
 
+      <AddTask
+        visible={editingTask !== null}
+        existing={editingTask}
+        onClose={() => setEditingTask(null)}
+        eventId={eventId}
+        communityId={communityId}
+        team={team}
+        onAdded={() => { setEditingTask(null); load(); }}
+      />
+
       <TaskDetail
         task={open}
         onClose={() => { setOpen(null); load(); }}
         canManage={canManage}
         isAssignee={!!open && open.assignee_id === userId}
+        onEdit={open ? () => { const t = open; setOpen(null); setEditingTask(t); } : undefined}
         onDelete={open ? () => { const t = open; setOpen(null); remove(t); } : undefined}
       />
     </View>
   );
 }
 
+/**
+ * Add a task, or correct one.
+ *
+ * `updateTask` has existed unused since the tab was built, so the only way to
+ * fix a typo'd title or hand a job to somebody else was Delete — and
+ * event_task_updates cascades, so correcting the name of a task threw away
+ * every photo and note of progress on it.
+ */
 function AddTask({
-  visible, onClose, eventId, communityId, team, onAdded,
+  visible, onClose, eventId, communityId, team, onAdded, existing,
 }: {
   visible: boolean; onClose: () => void; eventId: string; communityId: string;
-  team: EventTeamMember[]; onAdded: () => void;
+  team: EventTeamMember[]; onAdded: () => void; existing?: EventTask | null;
 }) {
   const c = useThemeColors();
   const toast = useToast();
   const { userId } = useAuth();
   const [title, setTitle] = useState('');
   const [assignee, setAssignee] = useState<string | null>(null);
-  const [days, setDays] = useState<number | null>(null);
+  // undefined = leave the date as it is (edit only); null = no date.
+  const [days, setDays] = useState<number | null | undefined>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!visible) return;
+    setTitle(existing?.title ?? '');
+    setAssignee(existing?.assignee_id ?? null);
+    setDays(existing ? undefined : null);
+  }, [visible, existing]);
 
   const save = async () => {
     if (!title.trim() || busy || !userId) return;
     setBusy(true);
     try {
-      const due = days === null ? null
+      const due = days === undefined ? undefined
+        : days === null ? null
         : new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
-      await addTask({ eventId, communityId, createdBy: userId, title, assigneeId: assignee, dueDate: due });
+      if (existing) {
+        await updateTask(existing.id, {
+          title: title.trim(),
+          assignee_id: assignee,
+          ...(due === undefined ? {} : { due_date: due }),
+        });
+      } else {
+        await addTask({ eventId, communityId, createdBy: userId, title, assigneeId: assignee, dueDate: due ?? null });
+      }
       haptics.success();
       setTitle(''); setAssignee(null); setDays(null);
       onAdded();
     } catch {
-      toast.show('Could not add that task');
+      toast.show(existing ? 'Could not save that change' : 'Could not add that task');
     } finally { setBusy(false); }
   };
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="Add a task">
+    <Sheet visible={visible} onClose={onClose} title={existing ? 'Edit task' : 'Add a task'}>
       <View className="px-4 pb-2">
         <TextInput
           value={title}
@@ -227,12 +270,15 @@ function AddTask({
             talks about a deadline three weeks before the festival. */}
         <Text className="mb-2 mt-4 text-[11px] font-sans-sb uppercase tracking-wider text-muted">By when</Text>
         <View className="flex-row gap-2">
-          {[['Today', 0], ['3 days', 3], ['A week', 7], ['2 weeks', 14]].map(([label, d]) => {
-            const on = days === d;
+          {([
+            ...(existing?.due_date ? [['Keep', undefined] as [string, undefined]] : []),
+            ['Today', 0], ['3 days', 3], ['A week', 7], ['2 weeks', 14],
+          ] as [string, number | undefined][]).map(([label, d]) => {
+            const on = days === (d ?? null) || (d === undefined && days === undefined);
             return (
               <View key={label as string} style={{ flex: 1 }}>
-                <Touchable haptic={null} onPress={() => { haptics.select(); setDays(on ? null : (d as number)); }}
-                  accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={label as string}>
+                <Touchable haptic={null} onPress={() => { haptics.select(); setDays(on ? null : d); }}
+                  accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={label}>
                   <View pointerEvents="none" className="items-center rounded-xl py-2"
                     style={{ backgroundColor: on ? c.accent : c.inset }}>
                     <Text className="text-[12.5px] font-sans-sb" style={{ color: on ? c.onAccent : c.muted }}>{label}</Text>
@@ -244,7 +290,12 @@ function AddTask({
         </View>
 
         <View className="mt-5">
-          <Button label={busy ? 'Adding…' : 'Add task'} fullWidth loading={busy} onPress={save} />
+          <Button
+            label={busy ? 'Saving…' : existing ? 'Save changes' : 'Add task'}
+            fullWidth
+            loading={busy}
+            onPress={save}
+          />
         </View>
       </View>
     </Sheet>
@@ -252,10 +303,10 @@ function AddTask({
 }
 
 function TaskDetail({
-  task, onClose, canManage, isAssignee, onDelete,
+  task, onClose, canManage, isAssignee, onEdit, onDelete,
 }: {
   task: EventTask | null; onClose: () => void;
-  canManage: boolean; isAssignee: boolean; onDelete?: () => void;
+  canManage: boolean; isAssignee: boolean; onEdit?: () => void; onDelete?: () => void;
 }) {
   const c = useThemeColors();
   const toast = useToast();
@@ -378,9 +429,20 @@ function TaskDetail({
           </View>
         ) : null}
 
-        {canManage && onDelete ? (
-          <View className="mt-4">
-            <Button label="Delete task" variant="ghost" fullWidth onPress={onDelete} />
+        {canManage ? (
+          <View className="mt-4 flex-row gap-2">
+            {onEdit ? (
+              <View style={{ flex: 1 }}>
+                <Button label="Edit" variant="outline" icon="create-outline" fullWidth onPress={onEdit} />
+              </View>
+            ) : null}
+            {onDelete ? (
+              <View style={{ flex: 1 }}>
+                {/* Deleting takes the whole update thread with it — which is
+                    why "Edit" sits beside it rather than behind it. */}
+                <Button label="Delete task" variant="ghost" fullWidth onPress={onDelete} />
+              </View>
+            ) : null}
           </View>
         ) : null}
       </View>

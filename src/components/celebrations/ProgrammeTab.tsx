@@ -16,6 +16,7 @@ import {
   fetchAllParticipants,
   joinActivity,
   leaveActivity,
+  updateActivity,
 } from '../../lib/events';
 import { haptics } from '../../lib/haptics';
 import { useThemeColors } from '../../theme';
@@ -68,6 +69,7 @@ export function ProgrammeTab({
   const [people, setPeople] = useState<ActivityParticipant[]>([]);
   const [filter, setFilter] = useState<Audience | null>(null);
   const [adding, setAdding] = useState(false);
+  const [editingItem, setEditingItem] = useState<EventActivity | null>(null);
   const [joining, setJoining] = useState<EventActivity | null>(null);
 
   const load = useCallback(async () => {
@@ -92,9 +94,12 @@ export function ProgrammeTab({
   }, [people]);
 
   const remove = async (a: EventActivity) => {
+    const entered = (byActivity.get(a.id) ?? []).length;
     const ok = await confirm({
       title: 'Remove this from the programme?',
-      message: `"${a.title}" and everyone entered for it.`,
+      message: entered
+        ? `"${a.title}" goes, and so do the ${entered} ${entered === 1 ? 'person' : 'people'} entered for it — they will be told it is off. To change the time or the venue, use Edit instead.`
+        : `"${a.title}" comes off the programme. Nobody has entered for it.`,
       confirmLabel: 'Remove',
       destructive: true,
     });
@@ -163,6 +168,7 @@ export function ProgrammeTab({
               canManage={canManage}
               onJoin={() => setJoining(a)}
               onWithdraw={withdraw}
+              onEdit={() => setEditingItem(a)}
               onDelete={() => remove(a)}
             />
           ))}
@@ -186,6 +192,18 @@ export function ProgrammeTab({
         onAdded={() => { setAdding(false); load(); }}
       />
 
+      <AddActivity
+        visible={editingItem !== null}
+        existing={editingItem}
+        eventId={eventId}
+        communityId={communityId}
+        eventDate={eventDate}
+        userId={userId}
+        nextOrder={items.length}
+        onClose={() => setEditingItem(null)}
+        onAdded={() => { setEditingItem(null); load(); }}
+      />
+
       <JoinActivity
         activity={joining}
         userId={userId}
@@ -205,6 +223,7 @@ function ActivityCard({
   canManage,
   onJoin,
   onWithdraw,
+  onEdit,
   onDelete,
 }: {
   activity: EventActivity;
@@ -212,6 +231,7 @@ function ActivityCard({
   userId: string | null;
   canManage: boolean;
   onJoin: () => void;
+  onEdit: () => void;
   onWithdraw: (p: ActivityParticipant) => void;
   onDelete: () => void;
 }) {
@@ -253,12 +273,21 @@ function ActivityCard({
         </View>
 
         {canManage ? (
-          <Touchable onPress={onDelete} accessibilityRole="button" accessibilityLabel="Remove from programme">
-            <View pointerEvents="none" className="h-8 w-8 items-center justify-center rounded-full"
-              style={{ backgroundColor: c.inset }}>
-              <Ionicons name="trash-outline" size={14} color={c.muted} />
-            </View>
-          </Touchable>
+          <View className="flex-row items-center gap-1.5">
+            {/* Edit before delete: deleting drops everyone entered for it. */}
+            <Touchable onPress={onEdit} accessibilityRole="button" accessibilityLabel="Edit this item">
+              <View pointerEvents="none" className="h-8 w-8 items-center justify-center rounded-full"
+                style={{ backgroundColor: c.inset }}>
+                <Ionicons name="create-outline" size={14} color={c.muted} />
+              </View>
+            </Touchable>
+            <Touchable onPress={onDelete} accessibilityRole="button" accessibilityLabel="Remove from programme">
+              <View pointerEvents="none" className="h-8 w-8 items-center justify-center rounded-full"
+                style={{ backgroundColor: c.inset }}>
+                <Ionicons name="trash-outline" size={14} color={c.muted} />
+              </View>
+            </Touchable>
+          </View>
         ) : null}
       </View>
 
@@ -327,6 +356,13 @@ function ActivityCard({
   );
 }
 
+/**
+ * Add something to the programme, or correct it.
+ *
+ * `updateActivity` has existed unused since the tab was built, so moving the
+ * tug of war from five o'clock to six meant deleting it — and participants
+ * cascade, so everyone who had entered was silently dropped.
+ */
 function AddActivity({
   visible,
   eventId,
@@ -336,6 +372,7 @@ function AddActivity({
   nextOrder,
   onClose,
   onAdded,
+  existing,
 }: {
   visible: boolean;
   eventId: string;
@@ -345,6 +382,7 @@ function AddActivity({
   nextOrder: number;
   onClose: () => void;
   onAdded: () => void;
+  existing?: EventActivity | null;
 }) {
   const c = useThemeColors();
   const toast = useToast();
@@ -361,9 +399,15 @@ function AddActivity({
 
   useEffect(() => {
     if (!visible) return;
-    setTitle(''); setDescription(''); setAudience('all');
-    setDate(eventDate); setStart(null); setEnd(null); setVenue(''); setCap('');
-  }, [visible, eventDate]);
+    setTitle(existing?.title ?? '');
+    setDescription(existing?.description ?? '');
+    setAudience(existing?.audience ?? 'all');
+    setDate(existing ? existing.activity_date : eventDate);
+    setStart(existing?.start_time ?? null);
+    setEnd(existing?.end_time ?? null);
+    setVenue(existing?.venue ?? '');
+    setCap(existing?.max_participants != null ? String(existing.max_participants) : '');
+  }, [visible, eventDate, existing]);
 
   const save = async () => {
     if (busy || !userId) return;
@@ -372,18 +416,31 @@ function AddActivity({
 
     setBusy(true);
     try {
-      await addActivity({
-        eventId, communityId, createdBy: userId,
-        title, description, audience,
-        activityDate: date, startTime: start, endTime: end,
-        venue, maxParticipants: cap.trim() ? Number(cap) : null,
-        sortOrder: nextOrder,
-      });
+      if (existing) {
+        await updateActivity(existing.id, {
+          title: title.trim(),
+          description: description.trim() || null,
+          audience,
+          activity_date: date,
+          start_time: start,
+          end_time: end,
+          venue: venue.trim() || null,
+          max_participants: cap.trim() ? Number(cap) : null,
+        });
+      } else {
+        await addActivity({
+          eventId, communityId, createdBy: userId,
+          title, description, audience,
+          activityDate: date, startTime: start, endTime: end,
+          venue, maxParticipants: cap.trim() ? Number(cap) : null,
+          sortOrder: nextOrder,
+        });
+      }
       haptics.success();
       onAdded();
     } catch (e) {
       console.error(e);
-      toast.show('Could not add that');
+      toast.show(existing ? 'Could not save that change' : 'Could not add that');
     } finally {
       setBusy(false);
     }
@@ -392,7 +449,7 @@ function AddActivity({
   const input = 'rounded-xl px-3 py-2.5 text-[15px] text-ink';
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="Add to the programme">
+    <Sheet visible={visible} onClose={onClose} title={existing ? 'Edit this item' : 'Add to the programme'}>
       <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={false}>
         <View className="gap-3">
           <TextInput

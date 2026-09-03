@@ -13,7 +13,7 @@ import { useConfirm } from '../../../context/confirm';
 import { useToast } from '../../../context/toast';
 import {
   EXPENSE_CATEGORIES, EventTeamMember, Expense, ExpenseCategory, SocietyEvent,
-  addExpense, deleteExpense, fetchEvent, fetchExpenses, fetchTeam, rupees, subscribeEvent,
+  addExpense, deleteExpense, fetchEvent, fetchExpenses, fetchTeam, rupees, subscribeEvent, updateExpense,
 } from '../../../lib/events';
 import { IMAGE_CACHE_PROPS } from '../../../lib/image';
 import { uploadContentPhoto } from '../../../lib/photoUpload';
@@ -38,6 +38,7 @@ export default function ExpensesScreen() {
   const [loading, setLoading] = useState(true);
 
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Expense | null>(null);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<ExpenseCategory>('misc');
   const [amount, setAmount] = useState('');
@@ -101,7 +102,25 @@ export default function ExpensesScreen() {
   };
 
   const reset = () => {
+    setEditing(null);
     setTitle(''); setCategory('misc'); setAmount(''); setVendor(''); setSpentOn(''); setReceipt(null);
+  };
+
+  /**
+   * Correcting an expense used to mean deleting it and typing it again, bill
+   * and all — `updateExpense` had been written and never called. A wrong
+   * amount in a public account is exactly the thing that has to be fixable
+   * without the row disappearing from the ledger first.
+   */
+  const openEdit = (e: Expense) => {
+    setEditing(e);
+    setTitle(e.title);
+    setCategory(e.category);
+    setAmount(String(e.amount));
+    setVendor(e.vendor ?? '');
+    setSpentOn(e.spent_on ?? '');
+    setReceipt(e.receipt_url ?? null);
+    setOpen(true);
   };
 
   const submit = async () => {
@@ -113,12 +132,30 @@ export default function ExpensesScreen() {
     setSaving(true);
     try {
       // Upload the bill first — an expense without its receipt is the thing
-      // residents question later.
-      let receiptUrl: string | null = null;
-      if (receipt) {
+      // residents question later. An unchanged bill is already a URL, so it
+      // is kept rather than re-uploaded.
+      let receiptUrl: string | null = editing?.receipt_url ?? null;
+      if (receipt && receipt !== editing?.receipt_url) {
         try {
           receiptUrl = await uploadContentPhoto(receipt, `events/${event.id}/receipt-${Date.now()}.jpg`);
         } catch { toast.show('Bill upload failed — saving the expense without it'); }
+      } else if (!receipt) {
+        receiptUrl = null;
+      }
+      if (editing) {
+        await updateExpense(editing.id, {
+          title: title.trim(),
+          category,
+          amount: amt,
+          vendor: vendor || null,
+          spent_on: spentOn || null,
+          receipt_url: receiptUrl,
+        });
+        setOpen(false);
+        reset();
+        await load();
+        toast.show('Expense updated ✓');
+        return;
       }
       await addExpense({
         eventId: event.id,
@@ -166,7 +203,7 @@ export default function ExpensesScreen() {
         title="Expenses & bills"
         showBack
         hideSociety
-        onAdd={onTeam && !locked ? () => setOpen(true) : undefined}
+        onAdd={onTeam && !locked ? () => { reset(); setOpen(true); } : undefined}
         addLabel="Add"
       />
 
@@ -202,7 +239,7 @@ export default function ExpensesScreen() {
                 Record every payment with its bill so the final accounts hold up.
               </Text>
               {onTeam && !locked ? (
-                <Button label="Add first expense" icon="add" size="md" onPress={() => setOpen(true)} />
+                <Button label="Add first expense" icon="add" size="md" onPress={() => { reset(); setOpen(true); }} />
               ) : null}
             </View>
           ) : (
@@ -249,9 +286,14 @@ export default function ExpensesScreen() {
                       ) : null}
                       <View className="flex-1" />
                       {(mine || isAdmin) && !locked ? (
-                        <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={() => remove(e)} hitSlop={8}>
-                          <Ionicons name="trash-outline" size={15} color={c.faint} />
-                        </Pressable>
+                        <View className="flex-row items-center gap-3">
+                          <Pressable accessibilityRole="button" accessibilityLabel="Edit" onPress={() => openEdit(e)} hitSlop={8}>
+                            <Ionicons name="create-outline" size={15} color={c.faint} />
+                          </Pressable>
+                          <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={() => remove(e)} hitSlop={8}>
+                            <Ionicons name="trash-outline" size={15} color={c.faint} />
+                          </Pressable>
+                        </View>
                       ) : null}
                     </View>
                   </View>
@@ -266,8 +308,8 @@ export default function ExpensesScreen() {
       <Sheet
         visible={open}
         onClose={() => { setOpen(false); reset(); }}
-        title="Add an expense"
-        footer={<Button label="Save expense" icon="checkmark" fullWidth loading={saving} onPress={submit} />}
+        title={editing ? 'Edit expense' : 'Add an expense'}
+        footer={<Button label={editing ? 'Save changes' : 'Save expense'} icon="checkmark" fullWidth loading={saving} onPress={submit} />}
       >
         <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Bill / receipt</Text>
         <Pressable

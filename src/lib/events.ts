@@ -999,7 +999,7 @@ export async function fetchMyContribution(
   flat: string | null,
 ): Promise<Contribution | null> {
   if (!isSupabaseConfigured || !flat) return null;
-  const key = flat.replace(/[^0-9]/g, '');
+  const key = flat.replace(/[^0-9]/g, '').replace(/^0+/, '');
   if (!key) return null;
 
   const { data, error } = await supabase
@@ -1008,10 +1008,11 @@ export async function fetchMyContribution(
     .eq('event_id', eventId);
   if (error) throw error;
 
-  // Matched on digits, the same way 0087's flat_key does, because a profile
-  // may hold '149', 'A-149' or '149 ' for what the collection calls '149'.
+  // Digits with leading zeros dropped — the same rule flat_key follows since
+  // 0106, because the collection is typed by hand and a spreadsheet gives
+  // '019' for the flat a profile calls '19'.
   return ((data ?? []) as Contribution[])
-    .find((c) => c.flat.replace(/[^0-9]/g, '') === key) ?? null;
+    .find((c) => c.flat.replace(/[^0-9]/g, '').replace(/^0+/, '') === key) ?? null;
 }
 
 /**

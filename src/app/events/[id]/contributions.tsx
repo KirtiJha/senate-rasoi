@@ -5,14 +5,15 @@ import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Button, Container, PhotoViewer, ScreenHeader, Sheet, Touchable } from '../../../components/ui';
 import { useAuth } from '../../../context/auth';
+import { useConfirm } from '../../../context/confirm';
 import { useToast } from '../../../context/toast';
 import { openPhotoPicker } from '../../../lib/photo';
 import { uploadContentPhoto } from '../../../lib/photoUpload';
 import {
   Contribution, ContributionStatus, EventTeamMember, PayMethod, SocietyEvent,
   computeTotals, fetchContributions, fetchEvent, fetchTeam, generateRoster, rupees,
-  setContributionFacts, setContributionReceipt, setContributionStatus, subscribeEvent,
-  upsertContribution,
+  deleteContribution, setContributionFacts, setContributionReceipt, setContributionStatus,
+  subscribeEvent, upsertContribution,
 } from '../../../lib/events';
 import { useThemeColors } from '../../../theme';
 
@@ -30,6 +31,7 @@ export default function ContributionsScreen() {
   const c = useThemeColors();
   const ACCENT = c.accent;
   const toast = useToast();
+  const confirm = useConfirm();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { userId, communityId, isAdmin } = useAuth();
 
@@ -115,6 +117,27 @@ export default function ContributionsScreen() {
     setEditHeads('');
     setEditOptedOut(false);
     setEditReceipt(null);
+  };
+
+  /** Remove a row entered against the wrong flat. */
+  const removeRow = async () => {
+    if (!editing) return;
+    const ok = await confirm({
+      title: 'Delete this row?',
+      message: `Flat ${editing.flat}${editing.contributor_name ? ` · ${editing.contributor_name}` : ''} comes off the collection entirely. If they simply are not contributing, use Waive instead.`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
+    setSaving(true);
+    try {
+      await deleteContribution(editing.id);
+      setEditing(null);
+      await load();
+      toast.show('Row deleted');
+    } catch {
+      toast.show('Could not delete that row');
+    } finally { setSaving(false); }
   };
 
   const saveEdit = async (status: ContributionStatus) => {
@@ -316,6 +339,12 @@ export default function ContributionsScreen() {
                 <Button label="Waive" variant="outline" fullWidth disabled={saving} onPress={() => saveEdit('waived')} />
               </View>
             </View>
+            {/* A row typed against the wrong flat is not a waiver — waiving it
+                leaves a line in the public account for a payment that never
+                existed. `deleteContribution` was written and never called. */}
+            {!addingNew && editing && canManage ? (
+              <Button label="Delete this row" variant="ghost" fullWidth disabled={saving} onPress={removeRow} />
+            ) : null}
           </View>
         }
       >
