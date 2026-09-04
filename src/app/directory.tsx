@@ -373,6 +373,11 @@ export default function DirectoryScreen() {
       <AddResidentModal
         visible={showAdd || editingEntry !== null}
         existing={editingEntry}
+        // Self-configuring: a society with one block (or none recorded yet)
+        // never sees the requirement; the moment a second block exists, the
+        // field stops being optional.
+        blockRequired={blocks.length > 1}
+        knownBlocks={blocks}
         onClose={() => { setShowAdd(false); setEditingEntry(null); }}
         onAdd={async (fields) => {
           if (!communityId || !userId) return;
@@ -727,7 +732,7 @@ function IconBtn({ icon, label, onPress, bg, color }: { icon: keyof typeof Ionic
 }
 
 function AddResidentModal({
-  visible, onClose, onAdd, c, existing = null,
+  visible, onClose, onAdd, c, existing = null, blockRequired = false, knownBlocks = [],
 }: {
   visible: boolean;
   /** Present when correcting a manually-added neighbour. */
@@ -735,6 +740,9 @@ function AddResidentModal({
   onClose: () => void;
   onAdd: (f: { name: string; block: string | null; flat: string | null; phone: string | null; resident_type: 'owner' | 'tenant' | null; profession: string | null; vehicle_no: string | null; native: string | null; alt_phone: string | null; email: string | null; shifted: boolean }) => void;
   c: ReturnType<typeof useThemeColors>;
+  /** True once this society is known to have more than one block. */
+  blockRequired?: boolean;
+  knownBlocks?: string[];
 }) {
   const [name, setName] = useState('');
   const [shifted, setShifted] = useState(false);
@@ -768,6 +776,11 @@ function AddResidentModal({
 
   const submit = () => {
     if (!name.trim()) return;
+    // A roster row without a block is unusable in a society that numbers per
+    // tower: "247" alone names two homes and the app will refuse to match it
+    // to anybody. Twenty-five of this society's rows were entered that way
+    // while the field said "Optional".
+    if (blockRequired && !block.trim()) return;
     setBusy(true);
     onAdd({ name, block: block || null, flat: flat || null, phone: phone || null, resident_type: type, profession: profession || null, vehicle_no: vehicle || null, native: native || null, alt_phone: altPhone || null, email: email || null, shifted });
     setBusy(false);
@@ -778,14 +791,48 @@ function AddResidentModal({
       visible={visible}
       onClose={onClose}
       title={existing ? 'Edit resident' : 'Add a resident'}
-      footer={<Button label={busy ? 'Saving…' : existing ? 'Save changes' : 'Add resident'} loading={busy} fullWidth disabled={!name.trim()} onPress={submit} />}
+      footer={(
+        <Button
+          label={busy ? 'Saving…' : existing ? 'Save changes' : 'Add resident'}
+          loading={busy}
+          fullWidth
+          disabled={!name.trim() || (blockRequired && !block.trim())}
+          onPress={submit}
+        />
+      )}
     >
       <Text className="font-sans mb-4 text-[13px] text-muted">Add a neighbour to the directory. If they're not on Aangan yet, you can invite them after.</Text>
       <Field label="Name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} />
       <View className="flex-row gap-3">
         <View className="flex-1"><Field label="Flat number" autoCapitalize="characters" placeholder="204" value={flat} onChangeText={setFlat} /></View>
-        <View className="w-24"><Field label="Block" hint="Optional" autoCapitalize="characters" maxLength={4} placeholder="E" value={block} onChangeText={setBlock} /></View>
+        <View className="w-24">
+          <Field
+            label="Block"
+            required={blockRequired}
+            hint={blockRequired ? undefined : 'Optional'}
+            autoCapitalize="characters"
+            maxLength={4}
+            placeholder={knownBlocks[0] ?? 'E'}
+            value={block}
+            onChangeText={setBlock}
+          />
+        </View>
       </View>
+      {knownBlocks.length > 1 ? (
+        <View className="-mt-1 mb-3 flex-row flex-wrap gap-1.5">
+          {knownBlocks.map((b) => (
+            <Pressable
+              key={b}
+              onPress={() => setBlock(b)}
+              className="rounded-full px-2.5 py-1"
+              style={{ backgroundColor: block.toUpperCase() === b ? c.accent : c.inset }}
+            >
+              <Text className="text-[12px] font-sans-sb" style={{ color: block.toUpperCase() === b ? c.onAccent : c.muted }}>{b}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+
       <Field label="Phone" hint="For contact & invite" keyboardType="phone-pad" placeholder="98765 43210" value={phone} onChangeText={setPhone} />
       <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Owner / Tenant (optional)</Text>
       <View className="mb-4 flex-row gap-2.5">
