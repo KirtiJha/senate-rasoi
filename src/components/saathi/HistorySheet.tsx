@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, View } from 'react-native';
 
 import { useAuth } from '../../context/auth';
 import { useConfirm } from '../../context/confirm';
 import { useToast } from '../../context/toast';
-import { AskSession, deleteSession, fetchSessions } from '../../lib/askSessions';
+import { AskSession, deleteSession, fetchSessions, renameSession } from '../../lib/askSessions';
 import { haptics } from '../../lib/haptics';
 import { useThemeColors } from '../../theme';
 import { Sheet, Touchable } from '../ui';
@@ -39,6 +39,8 @@ export function HistorySheet({
   const { userId } = useAuth();
 
   const [sessions, setSessions] = useState<AskSession[] | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState('');
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -64,6 +66,16 @@ export function HistorySheet({
     try { await deleteSession(s.id); } catch { toast.show('Could not delete that chat'); load(); }
   };
 
+  /** Inline, in the row — a rename is one word, not a screen. */
+  const commitRename = async (s: AskSession) => {
+    const title = draft.trim();
+    setEditing(null);
+    if (!title || title === s.title) return;
+    setSessions((prev) => (prev ?? []).map((x) => (x.id === s.id ? { ...x, title } : x)));
+    try { await renameSession(s.id, title); }
+    catch { toast.show('Could not rename that chat'); load(); }
+  };
+
   return (
     <Sheet visible={visible} onClose={onClose} title="Your chats">
       {sessions === null ? (
@@ -82,6 +94,31 @@ export function HistorySheet({
         <View className="gap-1 pb-2">
           {sessions.map((s) => {
             const current = s.id === currentId;
+            if (editing === s.id) {
+              return (
+                <View key={s.id} className="flex-row items-center gap-2 px-3 py-2">
+                  <Ionicons name="create-outline" size={16} color={c.accent} />
+                  <TextInput
+                    value={draft}
+                    onChangeText={setDraft}
+                    autoFocus
+                    maxLength={60}
+                    placeholder="Name this chat"
+                    placeholderTextColor={c.faint}
+                    onSubmitEditing={() => commitRename(s)}
+                    onBlur={() => commitRename(s)}
+                    className="flex-1 rounded-xl px-3 py-2 text-[14px] text-ink"
+                    style={{ backgroundColor: c.inset, outline: 'none' } as never}
+                  />
+                  <Touchable haptic={null} onPress={() => commitRename(s)}
+                    accessibilityRole="button" accessibilityLabel="Save name">
+                    <View pointerEvents="none" className="h-9 w-9 items-center justify-center rounded-full">
+                      <Ionicons name="checkmark" size={17} color={c.accent} />
+                    </View>
+                  </Touchable>
+                </View>
+              );
+            }
             return (
               <View key={s.id} className="flex-row items-center gap-1">
                 <View style={{ flex: 1 }}>
@@ -118,6 +155,20 @@ export function HistorySheet({
                   </Touchable>
                 </View>
 
+                {/* Twenty-five saved chats, all titled by whatever the first
+                    question happened to be. `renameSession` has existed since
+                    the sheet was built and nothing ever called it, so the only
+                    way to fix a title was to delete the conversation. */}
+                <Touchable
+                  haptic={null}
+                  onPress={() => { setEditing(s.id); setDraft(s.title ?? ''); }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Rename ${s.title ?? 'chat'}`}
+                >
+                  <View pointerEvents="none" className="h-9 w-9 items-center justify-center rounded-full">
+                    <Ionicons name="create-outline" size={15} color={c.subtle} />
+                  </View>
+                </Touchable>
                 <Touchable
                   haptic={null}
                   onPress={() => remove(s)}

@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { useAuth } from '../../context/auth';
+import { useConfirm } from '../../context/confirm';
 import { useToast } from '../../context/toast';
 import {
   FEEDBACK_FLOW,
@@ -13,6 +14,7 @@ import {
   FeedbackItem,
   FeedbackStatus,
   addFeedbackComment,
+  deleteFeedback,
   fetchFeedbackComments,
   fetchFeedbackItem,
 } from '../../lib/feedback';
@@ -34,6 +36,8 @@ import { Avatar, Badge, Container, ErrorState, KeyboardAvoider, ScreenHeader, To
 export default function FeedbackDetailScreen() {
   const c = useThemeColors();
   const toast = useToast();
+  const confirm = useConfirm();
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { userId, isAdmin } = useAuth();
 
@@ -56,6 +60,24 @@ export default function FeedbackDetailScreen() {
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+
+  const withdraw = async () => {
+    if (!id || typeof item !== 'object' || !item) return;
+    const mine = item.author_id === userId;
+    const ok = await confirm({
+      title: mine ? 'Withdraw this report?' : 'Delete this report?',
+      message: mine
+        ? "It comes off the admins' list, along with any replies on it."
+        : "This removes the resident's report and every reply on it.",
+      confirmLabel: mine ? 'Withdraw' : 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await deleteFeedback(id);
+      router.replace('/feedback' as never);
+    } catch { toast.show('Could not remove that'); }
+  };
 
   const send = async () => {
     if (busy || !userId || !id) return;
@@ -116,6 +138,24 @@ export default function FeedbackDetailScreen() {
                     style={{ width: 150, height: 150, borderRadius: 12, backgroundColor: c.inset }} />
                 ))}
               </ScrollView>
+            ) : null}
+
+            {/* The RLS policy has always let the author delete their own
+                report, and nothing ever offered it — so a bug filed by
+                mistake, or one you have since solved yourself, stayed on the
+                admin's queue for ever. */}
+            {item.author_id === userId || isAdmin ? (
+              <Pressable
+                onPress={withdraw}
+                accessibilityRole="button"
+                accessibilityLabel="Withdraw this report"
+                className="mt-3 flex-row items-center gap-1.5 self-start rounded-full px-3 py-1.5 active:opacity-70"
+              >
+                <Ionicons name="trash-outline" size={13} color={c.muted} />
+                <Text className="text-[12px] font-sans-sb text-muted">
+                  {item.author_id === userId ? 'Withdraw this' : 'Delete this'}
+                </Text>
+              </Pressable>
             ) : null}
 
             {/* Shown to admins only: useful for triage, clutter for everyone else. */}

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ErrorState, ScreenHeader, useResponsive } from '../components/ui';
 import { useAuth } from '../context/auth';
@@ -116,6 +116,7 @@ export default function AllListingsScreen() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [category, setCategory] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
   const filterChips = useMemo(() => [
     { key: 'food', label: 'Home Food', icon: 'restaurant' },
@@ -163,15 +164,28 @@ export default function AllListingsScreen() {
   }, [load]);
 
   const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
     const byCategory = category ? items.filter((i) => display(i).catKey === category) : items;
+    const bySearch = !q ? byCategory : byCategory.filter((i) => {
+      const d = display(i);
+      const raw = i.raw as unknown as Record<string, unknown>;
+      const hay = [
+        d.title, d.catLabel, d.location, d.priceText,
+        typeof raw.description === 'string' ? raw.description : null,
+        typeof raw.note === 'string' ? raw.note : null,
+        (raw.owner as { name?: string } | undefined)?.name,
+        (raw.chef_name as string | undefined),
+      ].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
     // Content from blocked members never appears in the unified feed.
-    return filterBlocked(byCategory, (i) =>
+    return filterBlocked(bySearch, (i) =>
       i.kind === 'listing' ? i.raw.owner_user_id
       : i.kind === 'borrow' ? i.raw.owner_user_id
       : i.kind === 'lost_found' ? i.raw.owner_user_id
       : i.kind === 'dish' ? i.raw.chef_user_id
       : null);
-  }, [items, category, filterBlocked]);
+  }, [items, category, query, filterBlocked]);
 
   /**
    * A row opens the thing. Contacting happens on the detail screen.
@@ -239,6 +253,29 @@ export default function AllListingsScreen() {
       />
 
       <View style={{ flex: 1, width: '100%', maxWidth: LIST_MAX, alignSelf: 'center' }}>
+        <View className="px-4 pb-1 pt-3">
+          <View
+            className="flex-row items-center gap-2 rounded-full border border-line bg-surface px-3.5"
+            style={{ height: 44 }}
+          >
+            <Ionicons name="search" size={16} color={c.faint} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search what neighbours have posted"
+              placeholderTextColor={c.faint}
+              className="flex-1 text-[14px] text-ink"
+              style={{ outline: 'none' } as never}
+              returnKeyType="search"
+            />
+            {query ? (
+              <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Clear search">
+                <Ionicons name="close-circle" size={16} color={c.faint} />
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+
         <FlashList
           data={loading ? [] : filtered}
           keyExtractor={(item: AllItem) => `${item.kind}:${item.id}`}
