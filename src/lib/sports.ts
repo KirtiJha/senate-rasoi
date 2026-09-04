@@ -71,11 +71,13 @@ export interface Tournament {
 
 // ── Groups ───────────────────────────────────────────────────────────
 export async function fetchGroups(communityId: string = COMMUNITY_ID, userId?: string | null): Promise<SportGroupWithMeta[]> {
-  const [{ data: groups, error }, { data: members }] = await Promise.all([
-    supabase.from('sport_groups').select('*').eq('community_id', communityId).order('sport').order('created_at'),
-    supabase.from('sport_group_members').select('group_id, user_id'),
-  ]);
+  const { data: groups, error } = await supabase
+    .from('sport_groups').select('*').eq('community_id', communityId).order('sport').order('created_at');
   if (error) throw error;
+  const ids = ((groups ?? []) as SportGroup[]).map((g) => g.id);
+  const { data: members } = ids.length
+    ? await supabase.from('sport_group_members').select('group_id, user_id').in('group_id', ids).limit(20000)
+    : { data: [] };
   const counts = new Map<string, number>();
   const mine = new Set<string>();
   for (const m of (members ?? []) as { group_id: string; user_id: string }[]) {
@@ -173,12 +175,42 @@ export async function joinGroup(groupId: string, userId: string): Promise<void> 
   const { error } = await supabase.from('sport_group_members').insert({ group_id: groupId, user_id: userId });
   if (error && error.code !== '23505') throw error; // ignore "already a member"
 }
-export async function leaveGroup(groupId: string, userId: string): Promise<void> {
-  const { error } = await supabase.from('sport_group_members').delete().eq('group_id', groupId).eq('user_id', userId);
+/**
+ * Leave a group — and stand down from its games.
+ *
+ * Deleting the membership row alone left you confirmed for sessions that had
+ * not happened: still counted in the head-count the charge divides by, still
+ * expected by whoever booked. Returns how many you were withdrawn from.
+ */
+export async function leaveGroup(groupId: string, userId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('sport_group_leave', { p_group: groupId });
+  if (!error) return (data as number) ?? 0;
+  // Older builds of the database have no such function; the membership row is
+  // still the thing that matters.
+  const { error: dErr } = await supabase
+    .from('sport_group_members').delete().eq('group_id', groupId).eq('user_id', userId);
+  if (dErr) throw dErr;
+  return 0;
+}
+
+/** What deleting a group would destroy — so the confirmation can say so. */
+export interface GroupDeleteImpact { members: number; upcoming: number; unsettled: number; tournaments: number }
+export async function fetchGroupDeleteImpact(groupId: string): Promise<GroupDeleteImpact> {
+  const { data } = await supabase.rpc('sport_group_delete_impact', { p_group: groupId });
+  const d = (data ?? {}) as Record<string, unknown>;
+  return {
+    members: Number(d.members ?? 0),
+    upcoming: Number(d.upcoming ?? 0),
+    unsettled: Number(d.unsettled ?? 0),
+    tournaments: Number(d.tournaments ?? 0),
+  };
+}
+/** Admin/captain removing another member. Their RSVPs are left alone. */
+export async function removeMember(groupId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('sport_group_members').delete().eq('group_id', groupId).eq('user_id', userId);
   if (error) throw error;
 }
-/** Admin/captain removing another member (same call shape as leave). */
-export const removeMember = leaveGroup;
 /** Admin/captain adding a member. */
 export async function addMember(groupId: string, userId: string): Promise<void> {
   return joinGroup(groupId, userId);

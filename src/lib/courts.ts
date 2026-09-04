@@ -20,8 +20,10 @@ export interface CourtBooking {
   duration_min: number;
   charge: number;
   upi_id: string | null;
-  /** How many players the game actually needs — doubles is 4 (0115). */
+  /** The point at which there is a game (0115). Not a cap. */
   min_players: number | null;
+  /** Courts/tables/nets held by this booking; the charge covers them all (0125). */
+  courts: number;
   created_at: string;
 }
 
@@ -36,6 +38,8 @@ export interface CourtSession {
   charge: number;
   status: 'scheduled' | 'cancelled';
   min_players: number | null;
+  /** How many courts/tables/nets this slot holds. The charge covers them all. */
+  courts: number;
   attendance_settled_at: string | null;
 }
 
@@ -80,8 +84,10 @@ export interface NewBooking {
   startTime: string; // HH:MM
   durationMin: number;
   charge: number;
-  /** How many players it takes to actually play. */
+  /** The point at which there is a game. Not a cap — more can always join. */
   minPlayers?: number | null;
+  /** Courts booked for the slot; the charge is for all of them together. */
+  courts?: number;
   weeks: number;
   oneOffDate?: string | null; // YYYY-MM-DD; when set, ignores days/weeks
   upi?: string | null;
@@ -101,6 +107,7 @@ export async function createBooking(input: NewBooking): Promise<CourtBooking> {
       duration_min: input.durationMin,
       charge: input.charge,
       min_players: input.minPlayers ?? null,
+      courts: input.courts ?? 1,
       upi_id: input.upi?.trim() || null,
     })
     .select()
@@ -120,6 +127,7 @@ export async function createBooking(input: NewBooking): Promise<CourtBooking> {
         duration_min: input.durationMin,
         charge: input.charge,
         min_players: input.minPlayers ?? null,
+        courts: input.courts ?? 1,
       })))
       .select('id');
     if (sErr) throw sErr;
@@ -181,6 +189,7 @@ export async function extendBooking(
       duration_min: booking.duration_min,
       charge: booking.charge,
       min_players: booking.min_players,
+      courts: booking.courts ?? 1,
     })), { onConflict: 'booking_id,session_date', ignoreDuplicates: true })
     .select('id');
   if (error) throw error;
@@ -362,6 +371,7 @@ export async function fetchGroupSessions(groupId: string, userId: string | null)
       myStatus: myBySession.get(s.id) ?? null,
       ended,
       min_players: s.min_players ?? null,
+      courts: s.courts ?? 1,
       attendance_settled_at: s.attendance_settled_at ?? null,
       needed: s.min_players ?? s.booking?.min_players ?? null,
       short: Math.max(0, (s.min_players ?? s.booking?.min_players ?? 0) - confirmed.length),
@@ -403,11 +413,13 @@ export async function bookerSetAttendance(sessionId: string, userId: string, sta
 /** Booker (or admin) edits a booking; flows to upcoming sessions, optionally resets RSVPs + notifies. */
 export async function updateBooking(
   bookingId: string,
-  f: { title: string | null; location: string | null; startTime: string | null; durationMin: number; charge: number; reset: boolean },
+  f: { title: string | null; location: string | null; startTime: string | null; durationMin: number; charge: number; reset: boolean; minPlayers: number | null; courts: number },
 ): Promise<boolean> {
   const { data, error } = await supabase.rpc('court_update_booking', {
     p_booking: bookingId, p_title: f.title, p_location: f.location,
     p_start_time: f.startTime, p_duration_min: f.durationMin, p_charge: f.charge, p_reset: f.reset,
+    // 0 clears the minimum; null would mean “leave it alone” (0125).
+    p_min_players: f.minPlayers ?? 0, p_courts: f.courts,
   });
   if (error) throw error;
   return Boolean(data);
@@ -586,5 +598,5 @@ export async function markPaymentReceived(paymentId: string): Promise<boolean> {
 }
 
 function mapBooking(b: any): CourtBooking {
-  return { ...b, charge: num(b.charge), days_of_week: b.days_of_week ?? [] };
+  return { ...b, charge: num(b.charge), days_of_week: b.days_of_week ?? [], courts: b.courts ?? 1 };
 }

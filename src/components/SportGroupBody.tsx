@@ -15,7 +15,7 @@ import {
   parseDaysLabel, parseDurationLabel, parseTimeLabel,
 } from '../lib/schedule';
 import {
-  GroupMember, SportGroup, Tournament, addMember, addTournament, deleteGroup, deleteTournament, updateTournament,
+  GroupMember, SportGroup, Tournament, addMember, addTournament, deleteGroup, deleteTournament, fetchGroupDeleteImpact, updateTournament,
   fetchGroup, fetchGroupMembers, fetchTournaments, getSport, joinGroup, leaveGroup, removeMember,
   setCaptain, updateGroup, uploadGroupLogo,
 } from '../lib/sports';
@@ -78,8 +78,30 @@ export function SportGroupBody({
 
   const toggleJoin = async () => {
     if (!userId || !group) return;
-    try { if (isMember) await leaveGroup(group.id, userId); else await joinGroup(group.id, userId); await reload(); }
-    catch { toast.show('Could not update — try again'); }
+    if (!isMember) {
+      try { await joinGroup(group.id, userId); await reload(); }
+      catch { toast.show('Could not update — try again'); }
+      return;
+    }
+    // Leaving used to be one silent tap that also left you confirmed for
+    // Friday's game — in the head-count the charge divides by, and expected
+    // by whoever booked. It now says so, and stands you down.
+    const ok = await confirm({
+      title: `Leave ${group.name}?`,
+      message: isCaptain
+        ? 'You are the captain. Hand captaincy to someone before you go, or the group is left without one.'
+        : 'You will stop getting this group’s messages, and any game you had said yes to will be marked as a no.',
+      confirmLabel: 'Leave group',
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      const dropped = await leaveGroup(group.id, userId);
+      toast.show(dropped > 0
+        ? `Left the group · withdrawn from ${dropped} ${dropped === 1 ? 'session' : 'sessions'}`
+        : 'Left the group');
+      await reload();
+    } catch { toast.show('Could not update — try again'); }
   };
 
   const onRemoveMember = (m: GroupMember) => {
@@ -109,11 +131,29 @@ export function SportGroupBody({
     } catch { toast.show('Could not upload logo'); }
   };
 
-  const onDeleteGroup = () => {
+  const onDeleteGroup = async () => {
     if (!group) return;
-    const run = async () => { try { await deleteGroup(group.id); toast.show('Group deleted'); onDeleted ? onDeleted() : router.back(); } catch { toast.show('Could not delete'); } };
-    const msg = `Delete the "${group.name}" group? This removes all members and tournaments.`;
-    confirm({ title: 'Delete group', message: msg, confirmLabel: 'Delete', destructive: true }).then((ok) => { if (ok) run(); });
+    // The old wording said "removes all members and tournaments" and stopped
+    // there. It also removes every upcoming booking and the record of who owes
+    // whom — court_payments cascades from the group. Say the whole of it.
+    const impact = await fetchGroupDeleteImpact(group.id).catch(() => null);
+    const parts = impact ? [
+      `${impact.members} ${impact.members === 1 ? 'member' : 'members'}`,
+      impact.tournaments ? `${impact.tournaments} ${impact.tournaments === 1 ? 'tournament' : 'tournaments'}` : null,
+      impact.upcoming ? `${impact.upcoming} upcoming ${impact.upcoming === 1 ? 'session' : 'sessions'}` : null,
+      impact.unsettled > 0 ? `₹${Math.round(impact.unsettled)} of unsettled dues` : null,
+    ].filter(Boolean) : [];
+    const ok = await confirm({
+      title: `Delete ${group.name}?`,
+      message: parts.length
+        ? `This removes ${parts.join(', ')}. It cannot be undone, and everyone in the group is told.`
+        : 'This cannot be undone, and everyone in the group is told.',
+      confirmLabel: 'Delete group',
+      destructive: true,
+    });
+    if (!ok) return;
+    try { await deleteGroup(group.id); toast.show('Group deleted'); onDeleted ? onDeleted() : router.back(); }
+    catch { toast.show('Could not delete'); }
   };
 
   if (loading) return <View className="overflow-hidden card"><RowSkeleton count={4} /></View>;

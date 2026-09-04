@@ -16,7 +16,7 @@ import { durationLabel, formatTime, isValidTime, rsvpLocked } from '../lib/sched
 import { GroupMember, fetchGroupMembers } from '../lib/sports';
 import { useThemeColors } from '../theme';
 import { WeekdayChips } from './WeekdayChips';
-import { Button, Sheet } from './ui';
+import { Button, Sheet, Stepper } from './ui';
 
 /** A sensible starting point for "how many do we need". */
 function defaultPlayers(facility: string): number | null {
@@ -313,9 +313,16 @@ function SessionCard({
             className="text-[11px] font-sans-sb"
             style={{ color: s.needed && s.short > 0 ? c.highlightInk : accent }}
           >
-            {s.needed ? `${s.confirmedCount} of ${s.needed}` : `${s.confirmedCount} in`}
+            {/* "6 of 4" read like a squad limit and looked broken besides. The
+                number is a minimum: once it is met, only the count matters. */}
+            {s.needed && s.short > 0 ? `${s.confirmedCount} of ${s.needed}` : `${s.confirmedCount} in`}
           </Text>
         </View>
+        {s.courts > 1 ? (
+          <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.surface }}>
+            <Text className="text-[11px] font-sans-sb text-muted">{s.courts} courts</Text>
+          </View>
+        ) : null}
         {s.needed && !s.ended ? (
           s.short > 0 ? (
             <Text className="text-[11px] font-sans-sb" style={{ color: c.highlightInk }}>
@@ -410,7 +417,7 @@ function CreateBookingSheet({
 }: {
   visible: boolean;
   onClose: () => void;
-  onCreate: (form: { title: string | null; location: string | null; days: number[]; startTime: string; durationMin: number; charge: number; weeks: number; oneOffDate: string | null; upi: string | null; minPlayers: number | null }) => void;
+  onCreate: (form: { title: string | null; location: string | null; days: number[]; startTime: string; durationMin: number; charge: number; weeks: number; oneOffDate: string | null; upi: string | null; minPlayers: number | null; courts: number }) => void;
   accent: string;
   facility: string;
   c: ReturnType<typeof useThemeColors>;
@@ -426,10 +433,12 @@ function CreateBookingSheet({
   const [time, setTime] = useState('18:00');
   const [duration, setDuration] = useState('60');
   const [charge, setCharge] = useState('');
-  // How many it takes to actually play. Eleven sessions in this society have
-  // been booked and not one reached three players — without a target there is
-  // nothing to be short OF, so nobody is ever asked to make up the numbers.
+  // How many it takes to actually play: without a target there is nothing to
+  // be short OF, so nobody is ever asked to make up the numbers. The value
+  // below is only a starting suggestion — societies play doubles, singles,
+  // eight-a-side and everything between, and the booker sets the real one.
   const [needPlayers, setNeedPlayers] = useState<number | null>(defaultPlayers(facility));
+  const [courts, setCourts] = useState(1);
   const [upi, setUpi] = useState(profile?.upi ?? '');
 
   useEffect(() => { if (visible) setUpi(profile?.upi ?? ''); }, [visible, profile?.upi]);
@@ -452,6 +461,7 @@ function CreateBookingSheet({
       oneOffDate: mode === 'oneoff' ? oneOff.trim() : null,
       upi: upi.trim() || null,
       minPlayers: needPlayers,
+      courts,
     });
   };
 
@@ -489,36 +499,37 @@ function CreateBookingSheet({
       <Text className={lbl}>Duration</Text>
       <View className="mb-3"><DurationChips value={durMin} onChange={(m) => setDuration(String(m))} accent={accent} c={c} /></View>
 
-      <Text className={lbl}>Players needed</Text>
-      <View className="mb-1 flex-row flex-wrap gap-2">
-        {[2, 4, 6, 8, 10, 12].map((n) => {
-          const on = needPlayers === n;
-          return (
-            <Pressable
-              key={n}
-              onPress={() => setNeedPlayers(on ? null : n)}
-              className="rounded-xl px-3.5 py-2"
-              style={{ backgroundColor: on ? accent : c.inset, borderWidth: 1, borderColor: on ? accent : c.line }}
-            >
-              <Text className="text-[13px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{n}</Text>
-            </Pressable>
-          );
-        })}
+      {/* How many courts. A group with a dozen players books two, and used to
+          have to make two bookings for it — two cards on one evening, two
+          RSVPs, and each court's charge split among whoever tapped that card. */}
+      <Text className={lbl}>How many {noun}s</Text>
+      <View className="mb-1 flex-row items-center gap-3">
+        <Stepper value={courts} min={1} max={10} onChange={setCourts} />
+        <Text className="font-sans flex-1 text-[11px] leading-[16px] text-faint">
+          {courts === 1 ? `One ${noun} for this slot.` : `The charge below covers all ${courts}.`}
+        </Text>
       </View>
-      <Text className="font-sans mb-3 text-[11px] text-faint">
-        {needPlayers
-          ? `The group is told when it is short, and again when ${needPlayers} are in.`
-          : 'Optional — without it nobody knows whether there is a game.'}
-      </Text>
 
-      <View className="mb-3 flex-row gap-2">
+      {/* Deliberately a minimum, not a maximum: the point at which there is a
+          game. The chips used to stop at 12 and read like a squad limit. */}
+      <Text className="mb-1.5 mt-3 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Players needed to play</Text>
+      <View className="mb-1 flex-row items-center gap-3">
+        <Stepper value={needPlayers ?? 0} min={0} max={40} onChange={(v) => setNeedPlayers(v === 0 ? null : v)} />
+        <Text className="font-sans flex-1 text-[11px] leading-[16px] text-faint">
+          {needPlayers
+            ? `Told when short, and again when ${needPlayers} are in. More can always join.`
+            : 'Set to 0 for no minimum — then nobody is asked to make up the numbers.'}
+        </Text>
+      </View>
+
+      <View className="mb-3 mt-3 flex-row gap-2">
         <View className="flex-1">
-          <Text className={lbl}>{facility} charge / session</Text>
+          <Text className={lbl}>{courts > 1 ? 'Total charge / session' : `${facility} charge / session`}</Text>
           <TextInput value={charge} onChangeText={setCharge} keyboardType="decimal-pad" placeholder="₹ 400" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
         </View>
         <View className="flex-1">
-          <Text className={lbl}>{facility} / venue</Text>
-          <TextInput value={location} onChangeText={setLocation} placeholder={`${facility} 1`} placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
+          <Text className={lbl}>{courts > 1 ? `${facility}s / venue` : `${facility} / venue`}</Text>
+          <TextInput value={location} onChangeText={setLocation} placeholder={courts > 1 ? `${facility} 1 & 2` : `${facility} 1`} placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
         </View>
       </View>
 
@@ -697,13 +708,15 @@ function ManagePlayersSheet({ session, members, accent, c, onClose, onSet, onCon
 function EditBookingSheet({ session, accent, facility, c, onClose, onSave }: {
   session: SessionView | null; accent: string; facility: string; c: Cols;
   onClose: () => void;
-  onSave: (f: { title: string | null; location: string | null; startTime: string | null; durationMin: number; charge: number; reset: boolean }) => void;
+  onSave: (f: { title: string | null; location: string | null; startTime: string | null; durationMin: number; charge: number; reset: boolean; minPlayers: number | null; courts: number }) => void;
 }) {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [time, setTime] = useState('18:00');
   const [duration, setDuration] = useState('60');
   const [charge, setCharge] = useState('');
+  const [needPlayers, setNeedPlayers] = useState<number | null>(null);
+  const [courts, setCourts] = useState(1);
   const [reset, setReset] = useState(true);
 
   useEffect(() => {
@@ -713,6 +726,8 @@ function EditBookingSheet({ session, accent, facility, c, onClose, onSave }: {
     setTime(session.start_time && isValidTime(session.start_time) ? session.start_time : '18:00');
     setDuration(String(session.duration_min || 60));
     setCharge(session.charge ? String(session.charge) : '');
+    setNeedPlayers(session.needed ?? null);
+    setCourts(session.courts ?? 1);
     setReset(true);
   }, [session]);
 
@@ -723,7 +738,11 @@ function EditBookingSheet({ session, accent, facility, c, onClose, onSave }: {
 
   const save = () => {
     if (!valid) return;
-    onSave({ title: title.trim() || null, location: location.trim() || null, startTime: time.trim(), durationMin: durMin, charge: parseFloat(charge) || 0, reset });
+    onSave({
+      title: title.trim() || null, location: location.trim() || null, startTime: time.trim(),
+      durationMin: durMin, charge: parseFloat(charge) || 0, reset,
+      minPlayers: needPlayers, courts,
+    });
   };
 
   return (
@@ -739,9 +758,26 @@ function EditBookingSheet({ session, accent, facility, c, onClose, onSave }: {
       <Text className={lbl}>Duration</Text>
       <View className="mb-3"><DurationChips value={durMin} onChange={(m) => setDuration(String(m))} accent={accent} c={c} /></View>
 
+      {/* Neither of these could be changed once booked. A group that grew was
+          stuck being told it "needs 1 more" forever, and adding a second court
+          meant starting the whole booking again. */}
+      <Text className={lbl}>How many {facility.toLowerCase()}s</Text>
+      <View className="mb-3 flex-row items-center gap-3">
+        <Stepper value={courts} min={1} max={10} onChange={setCourts} />
+        {courts > 1 ? <Text className="font-sans flex-1 text-[11px] text-faint">The charge below covers all {courts}.</Text> : null}
+      </View>
+
+      <Text className={lbl}>Players needed to play</Text>
+      <View className="mb-3 flex-row items-center gap-3">
+        <Stepper value={needPlayers ?? 0} min={0} max={40} onChange={(v) => setNeedPlayers(v === 0 ? null : v)} />
+        <Text className="font-sans flex-1 text-[11px] leading-[16px] text-faint">
+          {needPlayers ? 'More can always join.' : 'No minimum.'}
+        </Text>
+      </View>
+
       <View className="mb-3 flex-row gap-2">
         <View className="flex-1">
-          <Text className={lbl}>{facility} charge / session</Text>
+          <Text className={lbl}>{courts > 1 ? 'Total charge / session' : `${facility} charge / session`}</Text>
           <TextInput value={charge} onChangeText={setCharge} keyboardType="decimal-pad" placeholder="₹ 400" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} />
         </View>
         <View className="flex-1">
