@@ -155,6 +155,8 @@ export default function AskScreen() {
   const newChat = () => { clearAskConversation(); setMessages([]); setInput(''); sessionId.current = null; };
 
   const empty = messages.length === 0;
+  /** What to carry over when handing the question to the neighbours. */
+  const lastQuestion = [...messages].reverse().find((m) => m.role === 'user')?.text ?? '';
 
   return (
     <KeyboardAvoider style={{ overflow: 'hidden', backgroundColor: c.bg }}>
@@ -298,6 +300,41 @@ export default function AskScreen() {
                 </View>
               ) : m.steps?.length ? (
                 <StepsTrail steps={m.steps} />
+              ) : null}
+              {/* Saathi can only answer from what the society has already
+                  written down, and the neighbours know things it does not.
+                  Eleven of the last twenty conversations here asked for a
+                  plumber or a tutor; Ask & Recommend has never held a single
+                  row, because there was no route from the question to the
+                  neighbours.
+
+                  Offered on every finished answer rather than only when
+                  Saathi admits a gap. I tried keying it to that admission and
+                  the wording varies run to run — the same cat-vet question
+                  said "I couldn't find resident reviews" once and simply
+                  answered the next time. An affordance that appears
+                  unpredictably is worse than one that is always there and
+                  usually ignored. */}
+              {!loading && i === messages.length - 1 && lastQuestion ? (
+                <View className="ml-8 mt-2.5">
+                  <Touchable
+                    haptic={null}
+                    onPress={() => router.push(`/recommend?ask=${encodeURIComponent(lastQuestion)}` as never)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Ask your neighbours this"
+                  >
+                    <View
+                      pointerEvents="none"
+                      className="flex-row items-center gap-2 self-start rounded-full px-3.5 py-2"
+                      style={{ backgroundColor: c.surface, borderWidth: 1, borderColor: c.line }}
+                    >
+                      <Ionicons name="people-outline" size={14} color={c.muted} />
+                      <Text className="text-[12.5px] font-sans-sb" style={{ color: c.muted }}>
+                        Ask your neighbours this
+                      </Text>
+                    </View>
+                  </Touchable>
+                </View>
               ) : null}
               {!loading && i === messages.length - 1 && m.suggestions?.length ? (
                 <View className="ml-8 mt-2.5 flex-row flex-wrap gap-2">

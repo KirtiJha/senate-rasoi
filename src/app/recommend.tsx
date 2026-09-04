@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { openPhotoPicker } from '../lib/photo';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../components/T';
 import { Avatar, Button, Chip, Container, ScreenHeader, Sheet } from '../components/ui';
@@ -24,6 +24,19 @@ export default function RecommendScreen() {
   const [loading, setLoading] = useState(true);
   const [cat, setCat] = useState<string>('all');
   const [showAsk, setShowAsk] = useState(false);
+  /**
+   * `/recommend?ask=…` opens the composer with the question already typed.
+   *
+   * Eleven of the twenty most recent Saathi conversations in this society are
+   * recommendation questions — plumbers, tuitions, who to call — and this
+   * table has never held a single row. Saathi can only answer from what the
+   * app already knows, and nobody had a reason to put the answer in. This is
+   * the hand-off: when Saathi finds nothing, it offers to ask the neighbours,
+   * and the question arrives here already written.
+   */
+  const { ask: askParam } = useLocalSearchParams<{ ask?: string }>();
+  const seeded = typeof askParam === 'string' ? askParam.slice(0, 140) : '';
+  useEffect(() => { if (seeded) setShowAsk(true); }, [seeded]);
 
   const load = useCallback(async () => {
     try { setRows(await fetchQuestions(cat)); } catch { /* keep */ } finally { setLoading(false); }
@@ -103,6 +116,7 @@ export default function RecommendScreen() {
 
       <AskSheet
         visible={showAsk}
+        initialTitle={seeded}
         onClose={() => setShowAsk(false)}
         c={c}
         onSubmit={async (vals) => {
@@ -118,14 +132,15 @@ export default function RecommendScreen() {
   );
 }
 
-function AskSheet({ visible, onClose, onSubmit, c }: {
-  visible: boolean; onClose: () => void;
+function AskSheet({ visible, onClose, onSubmit, c, initialTitle = '' }: {
+  visible: boolean; onClose: () => void; initialTitle?: string;
   onSubmit: (v: { category: string; title: string; detail: string | null; photoUri: string | null }) => void;
   c: ReturnType<typeof useThemeColors>;
 }) {
   const [category, setCategory] = useState<string>('health');
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(initialTitle);
   const [detail, setDetail] = useState('');
+  useEffect(() => { if (visible && initialTitle) setTitle(initialTitle); }, [visible, initialTitle]);
   const [photo, setPhoto] = useState<string | null>(null);
   const input = 'rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink';
   const pickPhoto = async () => {
