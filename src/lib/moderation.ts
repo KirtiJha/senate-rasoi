@@ -11,7 +11,9 @@ export type ReportTargetType =
   | 'lost_found' | 'recommend' | 'property' | 'place' | 'message' | 'profile'
   // A roster row somebody was added to without being asked. Not abuse — a
   // correction request — but it belongs in the same admin queue.
-  | 'directory_entry';
+  | 'directory_entry'
+  // A message in a sports group's conversation (0116).
+  | 'group_message';
 
 export type ReportReason =
   | 'csae'

@@ -19,6 +19,7 @@ import { useToast } from '../../context/toast';
 import { useUnreadDms } from '../../context/unread';
 import { fetchSocietyDigest, SocietyDigest } from '../../lib/ai';
 import { NextGame, fetchMyNextGame } from '../../lib/courts';
+import { fetchTotalGroupUnread } from '../../lib/groupChat';
 import { formatTime } from '../../lib/schedule';
 import { AScrollView, dur, ease } from '../../lib/motion';
 import { timeAgo } from '../../lib/time';
@@ -216,6 +217,7 @@ export default function HomeScreen() {
   const [borrowCount, setBorrowCount] = useState(0);
   const [recentLostFound, setRecentLostFound] = useState<LostFoundItem[]>([]);
   const [nextGame, setNextGame] = useState<NextGame | null>(null);
+  const [groupUnread, setGroupUnread] = useState(0);
   const [lostFoundCount, setLostFoundCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -238,6 +240,7 @@ export default function HomeScreen() {
       fetchBorrowCounts(communityId).then((c) => setBorrowCount(c.offers + c.requests)),
       fetchLostFoundItems({ openOnly: true }, communityId).then((rows) => setRecentLostFound(rows.slice(0, 10))),
       fetchMyNextGame(userId).then(setNextGame),
+      fetchTotalGroupUnread().then(setGroupUnread),
       fetchLostFoundCounts(communityId).then(setLostFoundCount),
     ]);
 
@@ -649,7 +652,9 @@ export default function HomeScreen() {
                 icon={tile.icon as any}
                 label={tile.label}
                 blurb={tile.blurb}
-                badge={tile.key === 'messages' ? unread : 0}
+                // A badge is "somebody is waiting on you". Group chat earns
+                // one for the same reason a DM does.
+                badge={tile.key === 'messages' ? unread : tile.key === 'sports' ? groupUnread : 0}
                 count={
                   tile.key === 'borrow' ? borrowCount
                     : tile.key === 'lost_found' ? lostFoundCount

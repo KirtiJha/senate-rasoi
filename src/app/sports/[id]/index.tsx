@@ -1,8 +1,8 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Container, ScreenHeader } from '../../components/ui';
-import { SportGroupBody } from '../../components/SportGroupBody';
+import { Container, ScreenHeader } from '../../../components/ui';
+import { SportGroupBody } from '../../../components/SportGroupBody';
 
 export default function SportGroupScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

@@ -6,6 +6,8 @@ export type NotificationType =
   // Saathi watches (0078), the daily menu nudge (0081), and replies on a bug
   // report or feature request (0085).
   | 'saathi_watch' | 'food_daily' | 'feedback'
+  // A message in a sports group's own conversation (0116).
+  | 'group_chat'
   // Inserted by 0053 when a resident asks an admin to reset their PIN.
   | 'pin_reset'
   // Seat requests, confirmations and the evening-before reminder (0098–0101).

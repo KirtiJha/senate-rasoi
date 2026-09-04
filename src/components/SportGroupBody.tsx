@@ -9,6 +9,7 @@ import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import { fetchDirectory, Resident } from '../lib/directory';
+import { fetchGroupUnread } from '../lib/groupChat';
 import {
   durationLabel, formatDays, formatTime, isValidTime,
   parseDaysLabel, parseDurationLabel, parseTimeLabel,
@@ -49,6 +50,7 @@ export function SportGroupBody({
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAddTourney, setShowAddTourney] = useState(false);
   const [editTourney, setEditTourney] = useState<Tournament | null>(null);
+  const [unread, setUnread] = useState(0);
   const [showEdit, setShowEdit] = useState(false);
   const [managing, setManaging] = useState(false);
 
@@ -58,6 +60,7 @@ export function SportGroupBody({
       const [g, m, t] = await Promise.all([fetchGroup(groupId), fetchGroupMembers(groupId), fetchTournaments(groupId)]);
       setGroup(g); setMembers(m); setTournaments(t);
       if (g) onTitle?.(g.name);
+      fetchGroupUnread().then((m) => setUnread(m.get(groupId) ?? 0)).catch(() => {});
     } catch { toast.show('Could not load group'); }
     finally { setLoading(false); }
   }, [groupId, toast, onTitle]);
@@ -152,16 +155,38 @@ export function SportGroupBody({
         </View>
         {group.description ? <Text className="font-sans mt-3 text-center text-[14px] leading-6 text-muted">{group.description}</Text> : null}
         {isMember ? (
-          <Pressable
-            onPress={toggleJoin}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Leave group"
-            className="mt-3 flex-row items-center gap-1.5 rounded-full px-3 py-1.5 active:opacity-70"
-          >
-            <Ionicons name="exit-outline" size={13} color={c.muted} />
-            <Text className="text-[12.5px] font-sans-sb text-muted">Leave group</Text>
-          </Pressable>
+          <>
+            <View className="mt-4 w-full">
+              <Pressable
+                onPress={() => router.push(`/sports/${groupId}/chat` as never)}
+                accessibilityRole="button"
+                accessibilityLabel="Open the group conversation"
+                className="flex-row items-center justify-center gap-2 rounded-2xl py-3 active:opacity-90"
+                style={{ backgroundColor: color + '18', borderWidth: 1, borderColor: color + '44' }}
+              >
+                <Ionicons name="chatbubbles-outline" size={17} color={color} />
+                <Text className="text-[14px] font-sans-sb" style={{ color }}>
+                  {unread > 0 ? `${unread} new message${unread === 1 ? '' : 's'}` : 'Group chat'}
+                </Text>
+                {unread > 0 ? (
+                  <View className="h-5 min-w-5 items-center justify-center rounded-full px-1.5"
+                    style={{ backgroundColor: color }}>
+                    <Text className="text-[11px] font-sans-bold text-white">{unread > 9 ? '9+' : unread}</Text>
+                  </View>
+                ) : null}
+              </Pressable>
+            </View>
+            <Pressable
+              onPress={toggleJoin}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Leave group"
+              className="mt-3 flex-row items-center gap-1.5 rounded-full px-3 py-1.5 active:opacity-70"
+            >
+              <Ionicons name="exit-outline" size={13} color={c.muted} />
+              <Text className="text-[12.5px] font-sans-sb text-muted">Leave group</Text>
+            </Pressable>
+          </>
         ) : (
           <View className="mt-4 w-full">
             <Button label="Join group" fullWidth onPress={toggleJoin} />
