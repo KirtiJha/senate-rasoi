@@ -48,7 +48,7 @@ export function CourtBookings({
   const c = useThemeColors();
   const toast = useToast();
   const router = useRouter();
-  const { userId, isAdmin } = useAuth();
+  const { userId } = useAuth();
   const confirm = useConfirm();
 
   const [sessions, setSessions] = useState<SessionView[]>([]);
@@ -116,9 +116,22 @@ export function CourtBookings({
   };
 
   const onCancelSession = (s: SessionView) => {
-    const run = async () => { try { await cancelSession(s.id); await load(); } catch { toast.show('Could not cancel'); } };
-    const msg = `Cancel the ${fmtDate(s.session_date)} session?`;
-    confirm({ title: 'Cancel session', message: msg, confirmLabel: 'Cancel session', destructive: true }).then((ok) => { if (ok) run(); });
+    const run = async () => {
+      try { await cancelSession(s.id); toast.show('Session cancelled'); await load(); }
+      catch (e) {
+        // "Could not cancel" on its own hid a server error for weeks. Say what
+        // came back, so the next fault is one message away from being found.
+        const m = (e as { message?: string })?.message;
+        toast.show(m ? `Could not cancel — ${m}` : 'Could not cancel');
+      }
+    };
+    const going = s.confirmedCount;
+    confirm({
+      title: 'Cancel session',
+      message: `Cancel the ${fmtDate(s.session_date)} session?${going > 1 ? ` ${going - 1} ${going - 1 === 1 ? 'player' : 'players'} will be told.` : ''}`,
+      confirmLabel: 'Cancel session',
+      destructive: true,
+    }).then((ok) => { if (ok) run(); });
   };
 
   const upcoming = sessions.filter((s) => !s.ended);
@@ -178,14 +191,14 @@ export function CourtBookings({
       ) : (
         <View className="gap-2.5">
           {upcoming.map((s) => (
-            <SessionCard key={s.id} s={s} userId={userId} canManage={!!isAdmin} accent={accent} c={c} busy={busy === s.id}
+            <SessionCard key={s.id} s={s} userId={userId} accent={accent} c={c} busy={busy === s.id}
               onRespond={respond} onCancel={onCancelSession} onManage={setManageSession} onEdit={setEditSession} />
           ))}
           {recent.length ? (
             <>
               <Text className="mt-1 text-[10px] font-sans-sb uppercase tracking-wider text-faint">Recent</Text>
               {recent.map((s) => (
-                <SessionCard key={s.id} s={s} userId={userId} canManage={!!isAdmin} accent={accent} c={c} busy={busy === s.id}
+                <SessionCard key={s.id} s={s} userId={userId} accent={accent} c={c} busy={busy === s.id}
                   onRespond={respond} onCancel={onCancelSession} onManage={setManageSession} onEdit={setEditSession} />
               ))}
             </>
@@ -250,16 +263,19 @@ export function CourtBookings({
 }
 
 function SessionCard({
-  s, userId, canManage, accent, c, busy, onRespond, onCancel, onManage, onEdit,
+  s, userId, accent, c, busy, onRespond, onCancel, onManage, onEdit,
 }: {
-  s: SessionView; userId: string | null; canManage: boolean; accent: string; c: ReturnType<typeof useThemeColors>;
+  s: SessionView; userId: string | null; accent: string; c: ReturnType<typeof useThemeColors>;
   busy: boolean; onRespond: (s: SessionView, status: 'confirmed' | 'declined') => void; onCancel: (s: SessionView) => void;
   onManage: (s: SessionView) => void; onEdit: (s: SessionView) => void;
 }) {
-  // The booker runs their own slot; an admin is the escape hatch for when
-  // that person is gone. Mirrors the RLS in 0043 so the UI never offers an
-  // action the database would refuse, or withholds one it would allow.
-  const isBooker = s.booker_user_id === userId || canManage;
+  // A booking belongs to whoever made it. This used to include admins, which
+  // meant an admin was told "You booked · you're in" on somebody else's slot
+  // and was offered the bin next to it — cancelling another resident's game
+  // by tapping what looked like their own. The database still permits an
+  // admin (RLS 0043) for the case where the booker has left the society; the
+  // screen no longer invites it.
+  const isBooker = s.booker_user_id === userId;
   const time = s.start_time ? formatTime(s.start_time) : '';
   const locked = rsvpLocked(s.session_date, s.start_time ?? '');
   return (
@@ -270,11 +286,18 @@ function SessionCard({
           <Text className="font-sans mt-0.5 text-[12px] text-muted">
             {[s.title, s.location, durationLabel(s.duration_min)].filter(Boolean).join(' · ') || 'Court session'}
           </Text>
+          {/* Whose slot this is. Without it, a session you cannot manage looks
+              like one nobody owns. */}
+          {!isBooker && s.booker_name ? (
+            <Text className="font-sans mt-0.5 text-[11px] text-faint">Booked by {s.booker_name}</Text>
+          ) : null}
         </View>
         {isBooker ? (
           <View className="flex-row items-center gap-3">
             {!s.ended ? <Pressable accessibilityRole="button" accessibilityLabel="Edit" onPress={() => onEdit(s)} hitSlop={6}><Ionicons name="create-outline" size={16} color={c.faint} /></Pressable> : null}
-            <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={() => onCancel(s)} hitSlop={6}><Ionicons name="trash-outline" size={15} color={c.faint} /></Pressable>
+            {/* A bin said "delete"; the action is a cancellation that other
+                players get told about. Icon and label now say so. */}
+            <Pressable accessibilityRole="button" accessibilityLabel="Cancel session" onPress={() => onCancel(s)} hitSlop={6}><Ionicons name="close-circle-outline" size={16} color={c.faint} /></Pressable>
           </View>
         ) : null}
       </View>

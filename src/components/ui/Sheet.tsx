@@ -119,44 +119,56 @@ export function Sheet({
       >
         <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" />
 
-        <GestureDetector gesture={pan}>
-          <Animated.View
-            entering={SlideInDown.duration(dur.expressive).easing(ease.emphasized)}
-            exiting={SlideOutDown.duration(dur.standard).easing(ease.exit)}
-            style={[
-              panel,
-              {
-                maxHeight: '90%',
-                backgroundColor: c.bg,
-                borderTopLeftRadius: 28,
-                borderTopRightRadius: 28,
-                borderTopWidth: 1,
-                borderColor: c.line,
-              },
-            ]}
-          >
-            <View style={{ paddingBottom: kb }}>
-              {/* The jaali rule stands in for a grab handle: the app's
-                  signature appears at the exact moment of interaction, and it
-                  is also the affordance that says this sheet can be dragged. */}
-              <JaaliRule c={c} />
-              {header}
-              <ScrollView
-                style={{ flexShrink: 1 }}
-                contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }}
-                keyboardShouldPersistTaps="handled"
-              >
-                {children}
-              </ScrollView>
-              {footer ? (
-                <View className="border-t border-line px-4 pt-3"
-                  style={{ paddingBottom: kb > 0 ? 12 : insets.bottom + 8 }}>
-                  {footer}
-                </View>
-              ) : null}
-            </View>
-          </Animated.View>
-        </GestureDetector>
+        <Animated.View
+          entering={SlideInDown.duration(dur.expressive).easing(ease.emphasized)}
+          exiting={SlideOutDown.duration(dur.standard).easing(ease.exit)}
+          style={[
+            panel,
+            {
+              maxHeight: '90%',
+              backgroundColor: c.bg,
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              borderTopWidth: 1,
+              borderColor: c.line,
+            },
+          ]}
+        >
+          {/* flexShrink so this column is bounded by the panel's maxHeight.
+              Without it the column sizes to its content, the ScrollView never
+              gets a smaller box to scroll inside, and a long list simply runs
+              off the bottom of the sheet. */}
+          <View style={{ flexShrink: 1, paddingBottom: kb }}>
+            {/* The drag lives on the handle and title only. It used to cover
+                the whole sheet, so dragging UP through a long list — the
+                players in "Who played?", for one — was read as a pull on the
+                sheet: rubber-banded a quarter, then sprung back. The list
+                appeared to scroll itself down and would not let you reach the
+                top of it. */}
+            <GestureDetector gesture={pan}>
+              <View>
+                {/* The jaali rule stands in for a grab handle: the app's
+                    signature appears at the exact moment of interaction, and
+                    it is also the affordance that says this sheet drags. */}
+                <JaaliRule c={c} />
+                {header}
+              </View>
+            </GestureDetector>
+            <ScrollView
+              style={{ flexShrink: 1 }}
+              contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }}
+              keyboardShouldPersistTaps="handled"
+            >
+              {children}
+            </ScrollView>
+            {footer ? (
+              <View className="border-t border-line px-4 pt-3"
+                style={{ paddingBottom: kb > 0 ? 12 : insets.bottom + 8 }}>
+                {footer}
+              </View>
+            ) : null}
+          </View>
+        </Animated.View>
       </Animated.View>
     </Modal>
   );
