@@ -8,8 +8,8 @@ import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import {
   CourtBooking, SessionView, bookerSetAttendance, cancelSession, createBooking, deleteBooking,
-  extendBooking, fetchGroupSessions, fetchLapsedBookings, respondToSession, subscribeGroupSessions,
-  updateBooking,
+  extendBooking, fetchGroupSessions, fetchLapsedBookings, respondToSession, settleAttendance,
+  subscribeGroupSessions, updateBooking,
 } from '../lib/courts';
 import { haptics } from '../lib/haptics';
 import { durationLabel, formatTime, isValidTime, rsvpLocked } from '../lib/schedule';
@@ -17,6 +17,16 @@ import { GroupMember, fetchGroupMembers } from '../lib/sports';
 import { useThemeColors } from '../theme';
 import { WeekdayChips } from './WeekdayChips';
 import { Button, Sheet } from './ui';
+
+/** A sensible starting point for "how many do we need". */
+function defaultPlayers(facility: string): number | null {
+  switch (facility.toLowerCase()) {
+    case 'court': return 4;   // doubles
+    case 'table': return 2;   // table tennis
+    case 'net': return 4;     // cricket nets
+    default: return null;
+  }
+}
 
 function fmtDate(iso: string): string {
   try {
@@ -208,6 +218,18 @@ export function CourtBookings({
           try { await bookerSetAttendance(liveManage.id, uid, status); await load(); }
           catch { toast.show('Could not update'); }
         }}
+        onConfirmAttendance={async () => {
+          if (!liveManage) return;
+          try {
+            // No list to rewrite — the ticks are already right. This records
+            // that the booker has SAID so, which is what stops the prompt and
+            // makes the split trustworthy.
+            await settleAttendance(liveManage.id, [], []);
+            setManageSession(null);
+            toast.show('Attendance recorded — the split is final');
+            await load();
+          } catch { toast.show('Could not record that'); }
+        }}
       />
 
       <EditBookingSheet
@@ -258,11 +280,28 @@ function SessionCard({
       </View>
 
       {/* split + confirmed */}
-      <View className="mt-2 flex-row items-center gap-2">
-        <View className="flex-row items-center gap-1 rounded-full bg-surface px-2 py-0.5">
-          <Ionicons name="people" size={12} color={accent} />
-          <Text className="text-[11px] font-sans-sb" style={{ color: accent }}>{s.confirmedCount} in</Text>
+      <View className="mt-2 flex-row flex-wrap items-center gap-2">
+        <View
+          className="flex-row items-center gap-1 rounded-full px-2 py-0.5"
+          style={{ backgroundColor: s.needed && s.short > 0 ? c.highlightSoft : c.surface }}
+        >
+          <Ionicons name="people" size={12} color={s.needed && s.short > 0 ? c.highlightInk : accent} />
+          <Text
+            className="text-[11px] font-sans-sb"
+            style={{ color: s.needed && s.short > 0 ? c.highlightInk : accent }}
+          >
+            {s.needed ? `${s.confirmedCount} of ${s.needed}` : `${s.confirmedCount} in`}
+          </Text>
         </View>
+        {s.needed && !s.ended ? (
+          s.short > 0 ? (
+            <Text className="text-[11px] font-sans-sb" style={{ color: c.highlightInk }}>
+              needs {s.short} more
+            </Text>
+          ) : (
+            <Text className="text-[11px] font-sans-sb" style={{ color: accent }}>game is on ✓</Text>
+          )
+        ) : null}
         {s.charge > 0 ? (
           <Text className="font-sans text-[11px] text-muted">₹{s.charge} · ₹{s.perHead}/head{s.ended ? '' : ' (so far)'}</Text>
         ) : <Text className="font-sans text-[11px] text-faint">Free court</Text>}
@@ -273,13 +312,34 @@ function SessionCard({
         </Text>
       ) : null}
 
+      {/* The split divides by who said yes days ago. Once the game is over,
+          the booker says who actually turned up — otherwise two players carry
+          a four-way bill. */}
+      {isBooker && s.ended && !s.attendance_settled_at && s.charge > 0 ? (
+        <Pressable
+          onPress={() => onManage(s)}
+          className="mt-2.5 flex-row items-center gap-2 rounded-xl px-3 py-2.5 active:opacity-80"
+          style={{ backgroundColor: c.highlightSoft }}
+        >
+          <Ionicons name="checkbox-outline" size={15} color={c.highlightInk} />
+          <View className="min-w-0 flex-1">
+            <Text className="text-[12px] font-sans-sb" style={{ color: c.highlightInk }}>Who actually played?</Text>
+            <Text className="font-sans text-[11px]" style={{ color: c.highlightInk }}>
+              The ₹{s.perHead}/head split is still based on who said yes.
+            </Text>
+          </View>
+        </Pressable>
+      ) : null}
+
       {/* booker controls / my response */}
       {isBooker ? (
         <View className="mt-2.5 flex-row items-center justify-between">
           <Text className="text-[11px] font-sans-sb" style={{ color: accent }}>You booked · you're in</Text>
           <Pressable onPress={() => onManage(s)} className="flex-row items-center gap-1 rounded-full bg-surface px-2.5 py-1" style={{ borderWidth: 1, borderColor: c.line }}>
             <Ionicons name="people-outline" size={13} color={c.muted} />
-            <Text className="text-[11px] font-sans-sb text-muted">Manage players</Text>
+            <Text className="text-[11px] font-sans-sb text-muted">
+              {s.ended ? 'Who played' : 'Manage players'}
+            </Text>
           </Pressable>
         </View>
       ) : s.ended ? (
@@ -327,7 +387,7 @@ function CreateBookingSheet({
 }: {
   visible: boolean;
   onClose: () => void;
-  onCreate: (form: { title: string | null; location: string | null; days: number[]; startTime: string; durationMin: number; charge: number; weeks: number; oneOffDate: string | null; upi: string | null }) => void;
+  onCreate: (form: { title: string | null; location: string | null; days: number[]; startTime: string; durationMin: number; charge: number; weeks: number; oneOffDate: string | null; upi: string | null; minPlayers: number | null }) => void;
   accent: string;
   facility: string;
   c: ReturnType<typeof useThemeColors>;
@@ -343,6 +403,10 @@ function CreateBookingSheet({
   const [time, setTime] = useState('18:00');
   const [duration, setDuration] = useState('60');
   const [charge, setCharge] = useState('');
+  // How many it takes to actually play. Eleven sessions in this society have
+  // been booked and not one reached three players — without a target there is
+  // nothing to be short OF, so nobody is ever asked to make up the numbers.
+  const [needPlayers, setNeedPlayers] = useState<number | null>(defaultPlayers(facility));
   const [upi, setUpi] = useState(profile?.upi ?? '');
 
   useEffect(() => { if (visible) setUpi(profile?.upi ?? ''); }, [visible, profile?.upi]);
@@ -364,6 +428,7 @@ function CreateBookingSheet({
       weeks: mode === 'weekly' ? parseInt(weeks, 10) || 1 : 1,
       oneOffDate: mode === 'oneoff' ? oneOff.trim() : null,
       upi: upi.trim() || null,
+      minPlayers: needPlayers,
     });
   };
 
@@ -400,6 +465,28 @@ function CreateBookingSheet({
 
       <Text className={lbl}>Duration</Text>
       <View className="mb-3"><DurationChips value={durMin} onChange={(m) => setDuration(String(m))} accent={accent} c={c} /></View>
+
+      <Text className={lbl}>Players needed</Text>
+      <View className="mb-1 flex-row flex-wrap gap-2">
+        {[2, 4, 6, 8, 10, 12].map((n) => {
+          const on = needPlayers === n;
+          return (
+            <Pressable
+              key={n}
+              onPress={() => setNeedPlayers(on ? null : n)}
+              className="rounded-xl px-3.5 py-2"
+              style={{ backgroundColor: on ? accent : c.inset, borderWidth: 1, borderColor: on ? accent : c.line }}
+            >
+              <Text className="text-[13px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{n}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <Text className="font-sans mb-3 text-[11px] text-faint">
+        {needPlayers
+          ? `The group is told when it is short, and again when ${needPlayers} are in.`
+          : 'Optional — without it nobody knows whether there is a game.'}
+      </Text>
 
       <View className="mb-3 flex-row gap-2">
         <View className="flex-1">
@@ -517,9 +604,11 @@ function NumberChips({ options, value, onChange, suffix, accent, c }: { options:
 }
 
 // ── Booker: mark who actually played (overrides the member RSVP lock) ─
-function ManagePlayersSheet({ session, members, accent, c, onClose, onSet }: {
+function ManagePlayersSheet({ session, members, accent, c, onClose, onSet, onConfirmAttendance }: {
   session: SessionView | null; members: GroupMember[]; accent: string; c: Cols;
-  onClose: () => void; onSet: (userId: string, status: 'confirmed' | 'declined') => void;
+  onClose: () => void;
+  onSet: (userId: string, status: 'confirmed' | 'declined') => void;
+  onConfirmAttendance?: () => void;
 }) {
   const statusOf = (uid: string) => session?.players.find((p) => p.user_id === uid)?.status ?? null;
   // Group members PLUS anyone who already responded for this session (so a player
@@ -530,10 +619,25 @@ function ManagePlayersSheet({ session, members, accent, c, onClose, onSet }: {
     for (const p of session?.players ?? []) if (!byId.has(p.user_id)) byId.set(p.user_id, { user_id: p.user_id, name: p.profile?.name ?? null, flat: p.profile?.flat ?? null });
     return [...byId.values()];
   })();
+  const settling = !!session?.ended && !session?.attendance_settled_at;
   return (
-    <Sheet visible={!!session} onClose={onClose} title="Who played?">
+    <Sheet
+      visible={!!session}
+      onClose={onClose}
+      title="Who played?"
+      footer={settling && onConfirmAttendance ? (
+        <Button
+          label={`That's who played — ${session?.confirmedCount ?? 0} in`}
+          icon="checkmark-circle-outline"
+          fullWidth
+          onPress={onConfirmAttendance}
+        />
+      ) : undefined}
+    >
       <Text className="font-sans mb-3 text-[12px] leading-[18px] text-muted">
-        Mark each member in or out — the cost splits among everyone marked “in”, so no one who played is left off and your share stays fair.
+        {settling
+          ? 'The game is over, so this is the list the cost splits by. Take out anyone who did not turn up before you settle.'
+          : 'Mark each member in or out — the cost splits among everyone marked “in”, so no one who played is left off and your share stays fair.'}
       </Text>
       <View className="gap-1.5">
         {roster.map((m) => {

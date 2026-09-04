@@ -18,6 +18,8 @@ import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useUnreadDms } from '../../context/unread';
 import { fetchSocietyDigest, SocietyDigest } from '../../lib/ai';
+import { NextGame, fetchMyNextGame } from '../../lib/courts';
+import { formatTime } from '../../lib/schedule';
 import { AScrollView, dur, ease } from '../../lib/motion';
 import { timeAgo } from '../../lib/time';
 import { PostRow, fetchLatestAnnouncement } from '../../lib/posts';
@@ -213,6 +215,7 @@ export default function HomeScreen() {
   const [recentBorrow, setRecentBorrow] = useState<LendItem[]>([]);
   const [borrowCount, setBorrowCount] = useState(0);
   const [recentLostFound, setRecentLostFound] = useState<LostFoundItem[]>([]);
+  const [nextGame, setNextGame] = useState<NextGame | null>(null);
   const [lostFoundCount, setLostFoundCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -234,6 +237,7 @@ export default function HomeScreen() {
       fetchBorrowItems({ availableOnly: false }, communityId).then((rows) => setRecentBorrow(rows.slice(0, 10))),
       fetchBorrowCounts(communityId).then((c) => setBorrowCount(c.offers + c.requests)),
       fetchLostFoundItems({ openOnly: true }, communityId).then((rows) => setRecentLostFound(rows.slice(0, 10))),
+      fetchMyNextGame(userId).then(setNextGame),
       fetchLostFoundCounts(communityId).then(setLostFoundCount),
     ]);
 
@@ -371,6 +375,24 @@ export default function HomeScreen() {
       eyebrow: unread === 1 ? '1 new message' : `${unread} new messages`,
       title: 'Open your inbox',
       onPress: () => router.push('/messages' as any),
+    });
+  }
+  // A game you are playing in within three days. It sits above the digest
+  // because it is the only thing on this screen with a kick-off time.
+  if (nextGame) {
+    const when = gameWhen(nextGame.session_date, nextGame.start_time);
+    const short = nextGame.needed ? Math.max(0, nextGame.needed - nextGame.confirmed) : 0;
+    needsYou.push({
+      key: 'game',
+      eyebrow: `${nextGame.group_name} · ${when}`,
+      title: nextGame.myStatus === 'confirmed'
+        ? (short > 0
+            ? `You're in — still ${short} short of ${nextGame.needed}`
+            : `You're in · ${nextGame.confirmed} playing`)
+        : short > 0
+          ? `${nextGame.confirmed} of ${nextGame.needed} in — can you play?`
+          : `${nextGame.confirmed} playing — are you in?`,
+      onPress: () => router.push(`/sports/${nextGame.group_id}` as any),
     });
   }
   if (digest?.summary) {
@@ -887,6 +909,19 @@ function FreshFoodStrip({ items, isDesktop }: { items: DishRow[]; isDesktop: boo
       )}
     </View>
   );
+}
+
+/** "tonight 9:00 pm" / "tomorrow 8:00 am" / "Sat 8:00 am". */
+function gameWhen(dateISO: string, time: string | null): string {
+  const t = time ? formatTime(time) : '';
+  const today = new Date().toLocaleDateString('en-CA');
+  const tm = new Date(); tm.setDate(tm.getDate() + 1);
+  if (dateISO === today) return t ? `today ${t}` : 'today';
+  if (dateISO === tm.toLocaleDateString('en-CA')) return t ? `tomorrow ${t}` : 'tomorrow';
+  try {
+    const d = new Date(dateISO + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short' });
+    return t ? `${d} ${t}` : d;
+  } catch { return t || dateISO; }
 }
 
 function getGreeting() {

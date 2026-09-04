@@ -259,7 +259,10 @@ export function SportGroupBody({
         <CourtBookings groupId={group.id} communityId={group.community_id} accent={color} isMember={isMember} facility={sport.booking} />
       ) : null}
 
-      {/* Tournaments */}
+      {/* Tournaments — only when there is one. A named, dated game is a
+          booking with a title; this section exists for the rare thing that
+          genuinely is not (an inter-society cup with a poster). */}
+      {tournaments.length > 0 || showAddTourney ? (
       <View className="mt-4 card p-4">
         <View className="mb-2.5 flex-row items-center justify-between">
           <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-muted">Upcoming tournaments</Text>
@@ -303,6 +306,15 @@ export function SportGroupBody({
           </View>
         )}
       </View>
+      ) : canManage ? (
+        <Pressable
+          onPress={() => setShowAddTourney(true)}
+          className="mt-4 flex-row items-center justify-center gap-1.5 rounded-2xl border border-dashed border-line py-3 active:bg-inset"
+        >
+          <Ionicons name="trophy-outline" size={15} color={c.muted} />
+          <Text className="text-[12.5px] font-sans-sb text-muted">Add a tournament</Text>
+        </Pressable>
+      ) : null}
 
       {canManage ? (
         <View className="mt-5 rounded-2xl border border-danger/30 bg-danger-soft p-4">

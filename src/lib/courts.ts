@@ -1,5 +1,5 @@
 import { sessionEnded, upcomingDates } from './schedule';
-import { supabase } from './supabase';
+import { isSupabaseConfigured, supabase } from './supabase';
 
 /**
  * Court bookings, attendance and cost-splitting for sports groups.
@@ -20,6 +20,8 @@ export interface CourtBooking {
   duration_min: number;
   charge: number;
   upi_id: string | null;
+  /** How many players the game actually needs — doubles is 4 (0115). */
+  min_players: number | null;
   created_at: string;
 }
 
@@ -33,6 +35,8 @@ export interface CourtSession {
   duration_min: number;
   charge: number;
   status: 'scheduled' | 'cancelled';
+  min_players: number | null;
+  attendance_settled_at: string | null;
 }
 
 export interface SessionPlayer {
@@ -56,6 +60,10 @@ export interface SessionView extends CourtSession {
   myStatus: 'confirmed' | 'declined' | null;
   ended: boolean;
   perHead: number;
+  /** Players needed, from the session or its booking. Null when unset. */
+  needed: number | null;
+  /** How many more are needed. 0 once the game is on. */
+  short: number;
 }
 
 const num = (v: unknown): number => (typeof v === 'string' ? parseFloat(v) : (v as number)) || 0;
@@ -72,6 +80,8 @@ export interface NewBooking {
   startTime: string; // HH:MM
   durationMin: number;
   charge: number;
+  /** How many players it takes to actually play. */
+  minPlayers?: number | null;
   weeks: number;
   oneOffDate?: string | null; // YYYY-MM-DD; when set, ignores days/weeks
   upi?: string | null;
@@ -90,6 +100,7 @@ export async function createBooking(input: NewBooking): Promise<CourtBooking> {
       start_time: input.startTime || null,
       duration_min: input.durationMin,
       charge: input.charge,
+      min_players: input.minPlayers ?? null,
       upi_id: input.upi?.trim() || null,
     })
     .select()
@@ -108,6 +119,7 @@ export async function createBooking(input: NewBooking): Promise<CourtBooking> {
         start_time: input.startTime || null,
         duration_min: input.durationMin,
         charge: input.charge,
+        min_players: input.minPlayers ?? null,
       })))
       .select('id');
     if (sErr) throw sErr;
@@ -168,6 +180,7 @@ export async function extendBooking(
       start_time: booking.start_time,
       duration_min: booking.duration_min,
       charge: booking.charge,
+      min_players: booking.min_players,
     })), { onConflict: 'booking_id,session_date', ignoreDuplicates: true })
     .select('id');
   if (error) throw error;
@@ -180,6 +193,116 @@ export async function extendBooking(
     );
   }
   return made.length;
+}
+
+/**
+ * Who actually played.
+ *
+ * The cost splits by CONFIRMED, but confirming is a promise made days
+ * earlier and in this society nobody has ever pressed "can't make it" — so
+ * the split has always been "everyone who said yes", and two people who
+ * turned up would be billed for four. The booker ticks the real list once
+ * the game is over, and the split follows it.
+ */
+export async function settleAttendance(
+  sessionId: string,
+  played: string[],
+  absent: string[],
+): Promise<void> {
+  if (played.length) {
+    const { error } = await supabase.from('court_session_players').upsert(
+      played.map((user_id) => ({ session_id: sessionId, user_id, status: 'confirmed' as const })),
+      { onConflict: 'session_id,user_id' },
+    );
+    if (error) throw error;
+  }
+  if (absent.length) {
+    const { error } = await supabase
+      .from('court_session_players')
+      .update({ status: 'declined' })
+      .eq('session_id', sessionId)
+      .in('user_id', absent);
+    if (error) throw error;
+  }
+  const { error } = await supabase
+    .from('court_sessions')
+    .update({ attendance_settled_at: new Date().toISOString() })
+    .eq('id', sessionId);
+  if (error) throw error;
+}
+
+/**
+ * The next game the signed-in resident could be at, across every group they
+ * belong to.
+ *
+ * A weekly game is the most time-bound thing in this app and the home screen
+ * never mentioned it — the Sports tile said "Teams, practice & tournaments"
+ * whether or not you were playing in twelve hours. To answer it you had to
+ * open the group, scroll past the badge, the practice card and nine members.
+ */
+export interface NextGame {
+  session_id: string;
+  group_id: string;
+  group_name: string;
+  sport: string;
+  session_date: string;
+  start_time: string | null;
+  confirmed: number;
+  needed: number | null;
+  myStatus: 'confirmed' | 'declined' | null;
+}
+
+export async function fetchMyNextGame(
+  userId: string | null,
+  withinDays = 3,
+): Promise<NextGame | null> {
+  if (!isSupabaseConfigured || !userId) return null;
+
+  const { data: mem } = await supabase
+    .from('sport_group_members')
+    .select('group_id, group:sport_groups!sport_group_members_group_id_fkey(name, sport)')
+    .eq('user_id', userId);
+  const groups = (mem ?? []) as any[];
+  if (!groups.length) return null;
+
+  const today = new Date();
+  const until = new Date();
+  until.setDate(until.getDate() + withinDays);
+  const iso = (d: Date) => d.toLocaleDateString('en-CA');
+
+  const { data, error } = await supabase
+    .from('court_sessions')
+    .select('id, group_id, session_date, start_time, duration_min, min_players, booking:court_bookings!court_sessions_booking_id_fkey(min_players)')
+    .in('group_id', groups.map((g) => g.group_id))
+    .eq('status', 'scheduled')
+    .gte('session_date', iso(today))
+    .lte('session_date', iso(until))
+    .order('session_date', { ascending: true })
+    .limit(8);
+  if (error || !data?.length) return null;
+
+  // The first one that has not already finished.
+  const live = (data as any[]).find((s) => !sessionEnded(s.session_date, s.start_time, s.duration_min));
+  if (!live) return null;
+
+  const { data: players } = await supabase
+    .from('court_session_players')
+    .select('user_id, status')
+    .eq('session_id', live.id);
+  const rows = (players ?? []) as { user_id: string; status: 'confirmed' | 'declined' }[];
+  const g = groups.find((x) => x.group_id === live.group_id);
+
+  return {
+    session_id: live.id,
+    group_id: live.group_id,
+    group_name: g?.group?.name ?? 'Your group',
+    sport: g?.group?.sport ?? '',
+    session_date: live.session_date,
+    start_time: live.start_time,
+    confirmed: rows.filter((p) => p.status === 'confirmed').length,
+    needed: live.min_players ?? live.booking?.min_players ?? null,
+    myStatus: rows.find((p) => p.user_id === userId)?.status ?? null,
+  };
 }
 
 export async function cancelSession(sessionId: string): Promise<void> {
@@ -195,7 +318,7 @@ export async function fetchGroupSessions(groupId: string, userId: string | null)
 
   const { data: sessions, error } = await supabase
     .from('court_sessions')
-    .select('*, booking:court_bookings!court_sessions_booking_id_fkey(booker_user_id, upi_id, title, location, booker:profiles!court_bookings_booker_user_id_fkey(name, upi))')
+    .select('*, booking:court_bookings!court_sessions_booking_id_fkey(booker_user_id, upi_id, title, location, min_players, booker:profiles!court_bookings_booker_user_id_fkey(name, upi))')
     .eq('group_id', groupId)
     .eq('status', 'scheduled')
     .gte('session_date', fromISO)
@@ -238,6 +361,10 @@ export async function fetchGroupSessions(groupId: string, userId: string | null)
       confirmedCount: confirmed.length,
       myStatus: myBySession.get(s.id) ?? null,
       ended,
+      min_players: s.min_players ?? null,
+      attendance_settled_at: s.attendance_settled_at ?? null,
+      needed: s.min_players ?? s.booking?.min_players ?? null,
+      short: Math.max(0, (s.min_players ?? s.booking?.min_players ?? 0) - confirmed.length),
       perHead: confirmed.length ? Math.ceil(charge / confirmed.length) : charge,
     } as SessionView;
   });
