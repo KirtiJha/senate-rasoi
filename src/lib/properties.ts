@@ -2,6 +2,24 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import { COMMUNITY_ID, LISTING_PHOTOS_BUCKET, isSupabaseConfigured, supabase } from './supabase';
 
 export type ListingType = 'sale' | 'rent';
+
+/**
+ * Indian money, the way it is actually said out loud: thousands in full,
+ * then lakh, then crore. "₹9500000" is a number nobody reads; "₹95 L" is a
+ * price somebody recognises.
+ */
+export function rupeesShort(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n) || n <= 0) return '';
+  if (n >= 10000000) {
+    const cr = n / 10000000;
+    return `₹${cr % 1 === 0 ? cr : cr.toFixed(2).replace(/.?0+$/, '')} Cr`;
+  }
+  if (n >= 100000) {
+    const l = n / 100000;
+    return `₹${l % 1 === 0 ? l : l.toFixed(2).replace(/.?0+$/, '')} L`;
+  }
+  return `₹${n.toLocaleString('en-IN')}`;
+}
 export type PropertyStatus = 'available' | 'sold' | 'rented';
 export type Furnishing = 'unfurnished' | 'semi' | 'furnished';
 export type Parking = 'none' | 'open' | 'covered';
@@ -33,6 +51,10 @@ export interface PropertyRow {
   tower: string | null;
   flat_no: string | null;
   available_from: string | null;
+  /** Monthly rent, or the asking price on a sale. Null = "on request" (0120). */
+  price: number | null;
+  /** Security deposit, rent only. */
+  deposit: number | null;
   amenities: string[];
   photos: string[];
   contact_whatsapp: string | null;
@@ -121,6 +143,8 @@ export interface NewProperty {
   tower: string | null;
   flatNo: string | null;
   availableFrom: string | null;
+  price: number | null;
+  deposit: number | null;
   amenities: string[];
   contactWhatsapp: string | null;
   contactPhone: string | null;
@@ -165,6 +189,8 @@ export async function postProperty(input: NewProperty): Promise<PropertyRow> {
       tower: input.tower?.trim() || null,
       flat_no: input.flatNo?.trim() || null,
       available_from: input.availableFrom,
+      price: input.price,
+      deposit: input.deposit,
       amenities: input.amenities,
       contact_whatsapp: input.contactWhatsapp?.replace(/\D/g, '') || null,
       contact_phone: input.contactPhone?.replace(/\D/g, '') || null,
@@ -213,6 +239,8 @@ export async function updateProperty(
     tower: input.tower?.trim() || null,
     flat_no: input.flatNo?.trim() || null,
     available_from: input.availableFrom,
+    price: input.price,
+    deposit: input.deposit,
     amenities: input.amenities,
     contact_whatsapp: input.contactWhatsapp?.replace(/\D/g, '') || null,
     contact_phone: input.contactPhone?.replace(/\D/g, '') || null,

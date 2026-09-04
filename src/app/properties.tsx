@@ -7,7 +7,7 @@ import { T } from '../components/T';
 import { Chip, Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { IMAGE_CACHE_PROPS } from '../lib/image';
-import { ListingType, PropertyRow, fetchProperties, propertySubtitle, subscribeProperties } from '../lib/properties';
+import { ListingType, PropertyRow, fetchProperties, propertySubtitle, rupeesShort, subscribeProperties } from '../lib/properties';
 import { useThemeColors } from '../theme';
 
 type Filter = 'all' | ListingType;
@@ -123,9 +123,21 @@ function PropertyCard({ p, onPress, c }: { p: PropertyRow; onPress: () => void; 
         </View>
         <T source="property" id={p.id} field="title" text={p.title} showToggle={false} className="mt-1 font-sans-bold text-[14px] text-ink" numberOfLines={1} />
         {sub ? <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{sub}</Text> : null}
-        <View className="mt-auto flex-row items-center gap-1 pt-1.5">
-          <Ionicons name="pricetag-outline" size={12} color={c.faint} />
-          <Text className="text-[11px] font-sans-sb text-muted">Contact owner for price</Text>
+        {/* The price belongs on the card. "Contact owner for price" on every
+            tile made the whole board look identical and put a conversation
+            between a neighbour and a number they were entitled to see. */}
+        <View className="mt-auto flex-row items-baseline gap-1 pt-1.5">
+          {p.price ? (
+            <>
+              <Text className="font-display-x text-[15px] text-ink">{rupeesShort(p.price)}</Text>
+              {isRent ? <Text className="font-sans text-[11px] text-muted">/mo</Text> : null}
+            </>
+          ) : (
+            <>
+              <Ionicons name="pricetag-outline" size={12} color={c.faint} />
+              <Text className="text-[11px] font-sans-sb text-muted">Price on request</Text>
+            </>
+          )}
         </View>
       </View>
     </Pressable>

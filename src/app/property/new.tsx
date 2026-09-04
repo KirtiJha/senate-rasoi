@@ -5,7 +5,7 @@ import { openPhotoPicker } from '../../lib/photo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Button, Chip, Container, KeyboardAvoider, ScreenHeader } from '../../components/ui';
+import { Button, Chip, Container, DateField, KeyboardAvoider, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import {
@@ -19,6 +19,7 @@ import {
   Parking,
   fetchPropertyById,
   postProperty,
+  rupeesShort,
   updateProperty,
   uploadPropertyPhoto,
 } from '../../lib/properties';
@@ -37,10 +38,13 @@ export default function NewPropertyScreen() {
   const [loading, setLoading] = useState(isEdit);
 
   const [listingType, setListingType] = useState<ListingType>('sale');
+  const isRent = listingType === 'rent';
   const [photos, setPhotos] = useState<string[]>([]);
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [config, setConfig] = useState<string | null>(null);
+  const [price, setPrice] = useState('');
+  const [deposit, setDeposit] = useState('');
   const [area, setArea] = useState('');
   const [floor, setFloor] = useState('');
   const [totalFloors, setTotalFloors] = useState('');
@@ -67,6 +71,8 @@ export default function NewPropertyScreen() {
       setTitle(p.title);
       setDesc(p.description ?? '');
       setConfig(p.config);
+      setPrice(p.price != null ? String(p.price) : '');
+      setDeposit(p.deposit != null ? String(p.deposit) : '');
       setArea(p.area_sqft != null ? String(p.area_sqft) : '');
       setFloor(p.floor != null ? String(p.floor) : '');
       setTotalFloors(p.total_floors != null ? String(p.total_floors) : '');
@@ -103,6 +109,7 @@ export default function NewPropertyScreen() {
         areaSqft: num(area), floor: num(floor), totalFloors: num(totalFloors),
         furnishing, facing, bathrooms: num(bathrooms), balconies: num(balconies), parking,
         tower, flatNo, availableFrom: validDate, amenities,
+        price: num(price), deposit: isRent ? num(deposit) : null,
         contactWhatsapp: wa || null, contactPhone: phone || null,
       };
       if (isEdit && id) {
@@ -180,6 +187,42 @@ export default function NewPropertyScreen() {
           <Text className={label}>Configuration</Text>
           <Chips options={CONFIG_OPTIONS} value={config} onPick={setConfig} className="mb-4" />
 
+          {/* What it costs. Optional — "on request" is a legitimate choice,
+              it just should not be the only one the app allows. */}
+          <View className="mb-1 flex-row gap-3">
+            <View className="flex-1">
+              <Text className={label}>{isRent ? 'Monthly rent (₹)' : 'Asking price (₹)'}</Text>
+              <TextInput
+                value={price}
+                onChangeText={(t) => setPrice(t.replace(/[^0-9]/g, ''))}
+                keyboardType="number-pad"
+                placeholder={isRent ? '25000' : '9500000'}
+                placeholderTextColor={c.faint}
+                className={input}
+                style={{ outline: 'none' } as any}
+              />
+            </View>
+            {isRent ? (
+              <View className="flex-1">
+                <Text className={label}>Deposit (₹)</Text>
+                <TextInput
+                  value={deposit}
+                  onChangeText={(t) => setDeposit(t.replace(/[^0-9]/g, ''))}
+                  keyboardType="number-pad"
+                  placeholder="150000"
+                  placeholderTextColor={c.faint}
+                  className={input}
+                  style={{ outline: 'none' } as any}
+                />
+              </View>
+            ) : null}
+          </View>
+          <Text className="font-sans mb-4 text-[11px] text-faint">
+            {price
+              ? `Shown on the card as ${rupeesShort(Number(price))}.`
+              : 'Leave blank for "price on request" — but neighbours scroll past those.'}
+          </Text>
+
           {/* Area / floor */}
           <View className="mb-3 flex-row gap-3">
             <View className="flex-1"><Text className={label}>Area (sq.ft)</Text><TextInput value={area} onChangeText={setArea} keyboardType="number-pad" placeholder="1200" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} /></View>
@@ -204,10 +247,14 @@ export default function NewPropertyScreen() {
           {/* Tower / flat / availability */}
           <View className="mb-3 flex-row gap-3">
             <View className="flex-1"><Text className={label}>Tower / Block</Text><TextInput value={tower} onChangeText={setTower} placeholder="B" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} /></View>
-            <View className="flex-1"><Text className={label}>Flat no.</Text><TextInput value={flatNo} onChangeText={setFlatNo} placeholder="B-1204" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} /></View>
+            {/* The number alone: 0107 made it the identity and the block a
+                separate, optional label. */}
+            <View className="flex-1"><Text className={label}>Flat no.</Text><TextInput value={flatNo} onChangeText={(t) => setFlatNo(t.replace(/[^0-9]/g, ''))} keyboardType="number-pad" placeholder="1204" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} /></View>
           </View>
-          <Text className={label}>Available from (YYYY-MM-DD, optional)</Text>
-          <TextInput value={availableFrom} onChangeText={setAvailableFrom} placeholder="2026-07-01" placeholderTextColor={c.faint} className={`mb-4 ${input}`} style={{ outline: 'none' } as any} />
+          <Text className={label}>Available from</Text>
+          <View className="mb-4">
+            <DateField value={availableFrom || null} onChange={(d) => setAvailableFrom(d ?? '')} placeholder="Any time" />
+          </View>
 
           {/* Amenities */}
           <Text className={label}>Amenities</Text>

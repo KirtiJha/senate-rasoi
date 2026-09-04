@@ -20,6 +20,7 @@ import {
   deleteProperty,
   fetchPropertyById,
   fetchReferrals,
+  rupeesShort,
   setPropertyStatus,
   setReferralStatus,
   subscribeReferrals,
@@ -90,7 +91,9 @@ export default function PropertyDetailScreen() {
   const wa = p.contact_whatsapp ?? p.owner?.whatsapp ?? null;
   const phone = p.contact_phone ?? p.owner?.phone ?? null;
   const isRent = p.listing_type === 'rent';
-  const contactMsg = `Hi ${ownerName}! I'm interested in your flat "${p.title}". Could you share the price and details?`;
+  const contactMsg = p.price
+    ? `Hi ${ownerName}! I'm interested in your flat "${p.title}" at ${rupeesShort(p.price)}${isRent ? ' a month' : ''}. Is it still available?`
+    : `Hi ${ownerName}! I'm interested in your flat "${p.title}". Could you share the price and details?`;
 
 
   const specs: [string, string][] = [];
@@ -150,10 +153,23 @@ export default function PropertyDetailScreen() {
           </View>
           <T source="property" id={p.id} field="title" text={p.title} className="mt-2 font-display-x text-[22px] text-ink" />
 
-          {/* Price → contact */}
+          {/* What it costs. "On request" is still allowed; it is no longer
+              the only thing this card can say. */}
           <View className="mt-2 flex-row items-center gap-2 card px-3.5 py-2.5">
             <Ionicons name="pricetag-outline" size={16} color={ACCENT} />
-            <Text className="font-sans flex-1 text-[13px] text-muted">Price on request — contact the owner</Text>
+            {p.price ? (
+              <View className="min-w-0 flex-1 flex-row items-baseline gap-1.5">
+                <Text className="font-display-x text-[19px] text-ink">{rupeesShort(p.price)}</Text>
+                {isRent ? <Text className="font-sans text-[13px] text-muted">a month</Text> : null}
+                {isRent && p.deposit ? (
+                  <Text className="font-sans text-[12px] text-faint" numberOfLines={1}>
+                    · {rupeesShort(p.deposit)} deposit
+                  </Text>
+                ) : null}
+              </View>
+            ) : (
+              <Text className="font-sans flex-1 text-[13px] text-muted">Price on request — contact the owner</Text>
+            )}
           </View>
 
           {p.description ? <T source="property" id={p.id} field="description" text={p.description} className="mt-3 text-[14px] leading-[21px] text-muted" /> : null}
