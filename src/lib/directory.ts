@@ -128,10 +128,12 @@ export async function fetchDirectory(
     });
   }
 
-  // Flat number first, block never — the block letter is the inconsistent
-  // field, and sorting by it put the two halves of one home in different parts
-  // of the list, where the screen then rendered them as two separate flats.
+  // Block, then number. Sorting by number alone was right for one society
+  // whose numbers happen to be unique and wrong for any society with an A-101
+  // and a B-101, which would interleave two towers into one run.
   residents.sort((a, b) => {
+    const ba = a.block ?? ''; const bb = b.block ?? '';
+    if (ba !== bb) return ba.localeCompare(bb);
     const fa = a.flat ?? '~'; const fb = b.flat ?? '~';
     if (fa !== fb) return fa.localeCompare(fb, undefined, { numeric: true });
     return a.name.localeCompare(b.name);
@@ -163,7 +165,9 @@ export async function addDirectoryEntry(input: NewDirectoryEntry): Promise<void>
     added_by: input.addedBy,
     name: input.name.trim(),
     block: input.block?.trim().toUpperCase() || null,
-    flat: flatKey(input.flat),
+    // Stored as typed (normalised for case/spacing), because a society may
+    // legitimately call a flat "A-101" or "101A". 0107 forced digits here.
+    flat: input.flat?.trim() || null,
     phone: input.phone?.replace(/\D/g, '') || null,
     resident_type: input.resident_type,
     profession: input.profession?.trim() || null,
@@ -204,7 +208,7 @@ export async function updateDirectoryEntry(
     // a different shape than a created one.
     if (k === 'phone' || k === 'alt_phone') clean[k] = norm(v) || null;
     else if (k === 'block') clean[k] = v.trim().toUpperCase() || null;
-    else if (k === 'flat') clean[k] = flatKey(v);
+    else if (k === 'flat') clean[k] = v.trim() || null;
     else clean[k] = v.trim() || null;
   }
   if (typeof patch.name === 'string') clean.name = patch.name.trim();
@@ -221,7 +225,32 @@ export async function deleteDirectoryEntry(id: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Digits only, no leading zeros — the stored shape of a flat number (0107). */
+/**
+ * A flat's address, normalised — the client mirror of 0121's flat_addr.
+ *
+ * NOT digits alone. That was 0107, written when the only society in the app
+ * happened to have unique numbers across its towers; A-101 and B-101 are two
+ * different homes in most societies and collapsing them to "101" is wrong
+ * everywhere else. Block and number together, with separators, case and
+ * leading zeros normalised away so 'D-019', 'd 19' and (block D, flat 19) all
+ * come out as 'D19'.
+ */
+export const flatNorm = (s: string | null | undefined): string | null =>
+  ((s ?? '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+    .replace(/(^|[A-Z])0+([0-9])/g, '$1$2') || null);
+
+export const flatAddr = (
+  block: string | null | undefined,
+  flat: string | null | undefined,
+): string | null => {
+  const f = flatNorm(flat);
+  if (!f) return null;
+  const b = flatNorm(block);
+  if (!b || f.startsWith(b)) return f;
+  return b + f;
+};
+
+/** Just the number. Used only where a society states no block at all. */
 export const flatKey = (flat: string | null | undefined): string | null =>
   ((flat ?? '').replace(/[^0-9]/g, '').replace(/^0+/, '') || null);
 
@@ -230,11 +259,12 @@ export const flatKey = (flat: string | null | undefined): string | null =>
  * flat, a similar name, and a DIFFERENT phone than the one they signed up
  * with. Used to offer a merge at sign-up.
  *
- * The flat NUMBER is the whole match. It used to also require the block letter
- * to be identical, which is the one field neighbours typed inconsistently — a
- * roster row saying 'E' and a sign-up saying nothing meant no match, so the new
- * member got a second directory listing and the phone number already recorded
- * for them was orphaned. Block is now only a tiebreak between candidates.
+ * Matched on the whole ADDRESS. It briefly matched on the number alone, which
+ * suited one society whose numbers happen to be unique across its towers and
+ * would pair a new A-101 resident with B-101's roster row anywhere else.
+ * flatAddr still converges the spellings that matter — a roster row saying
+ * "E-209" and a sign-up saying block E, flat 209 are the same home — so the
+ * original problem it solved stays solved.
  */
 export async function findRosterMatch(
   communityId: string,
@@ -243,17 +273,16 @@ export async function findRosterMatch(
   flat: string | null,
   signupPhone: string,
 ): Promise<DirectoryEntry | null> {
-  const key = flatKey(flat);
-  if (!key) return null;
+  const addr = flatAddr(block, flat);
+  if (!addr) return null;
   const sp = norm(signupPhone);
   const { data } = await supabase
     .from('directory_entries')
     .select('*')
-    .eq('community_id', communityId)
-    .eq('flat', key);
-  const entries = ((data ?? []) as DirectoryEntry[]).filter(
-    (e) => !(e.phone && norm(e.phone) === sp), // same number already — nothing to merge
-  );
+    .eq('community_id', communityId);
+  const entries = ((data ?? []) as DirectoryEntry[])
+    .filter((e) => flatAddr(e.block, e.flat) === addr)
+    .filter((e) => !(e.phone && norm(e.phone) === sp));
   if (!entries.length) return null;
   const first = name.trim().toLowerCase().split(/\s+/)[0];
   const byName = entries.filter((e) => e.name.toLowerCase().includes(first));

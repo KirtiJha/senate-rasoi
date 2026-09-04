@@ -247,9 +247,9 @@ export default function NewPropertyScreen() {
           {/* Tower / flat / availability */}
           <View className="mb-3 flex-row gap-3">
             <View className="flex-1"><Text className={label}>Tower / Block</Text><TextInput value={tower} onChangeText={setTower} placeholder="B" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} /></View>
-            {/* The number alone: 0107 made it the identity and the block a
-                separate, optional label. */}
-            <View className="flex-1"><Text className={label}>Flat no.</Text><TextInput value={flatNo} onChangeText={(t) => setFlatNo(t.replace(/[^0-9]/g, ''))} keyboardType="number-pad" placeholder="1204" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} /></View>
+            {/* As the society writes it — "1204" here, "A-1204" elsewhere.
+                The tower field beside it stays the structured half. */}
+            <View className="flex-1"><Text className={label}>Flat no.</Text><TextInput value={flatNo} onChangeText={setFlatNo} autoCapitalize="characters" placeholder="1204" placeholderTextColor={c.faint} className={input} style={{ outline: 'none' } as any} /></View>
           </View>
           <Text className={label}>Available from</Text>
           <View className="mb-4">

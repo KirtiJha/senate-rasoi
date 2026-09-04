@@ -1,3 +1,4 @@
+import { flatAddr, flatKey, flatNorm } from './directory';
 import { uploadContentPhoto } from './photoUpload';
 import { COMMUNITY_ID, isSupabaseConfigured, supabase } from './supabase';
 
@@ -997,10 +998,12 @@ export async function setContributionFacts(
 export async function fetchMyContribution(
   eventId: string,
   flat: string | null,
+  block: string | null = null,
 ): Promise<Contribution | null> {
   if (!isSupabaseConfigured || !flat) return null;
-  const key = flat.replace(/[^0-9]/g, '').replace(/^0+/, '');
-  if (!key) return null;
+  const addr = flatAddr(block, flat);
+  if (!addr) return null;
+  const number = flatKey(flat);
 
   const { data, error } = await supabase
     .from('event_contributions')
@@ -1008,11 +1011,25 @@ export async function fetchMyContribution(
     .eq('event_id', eventId);
   if (error) throw error;
 
-  // Digits with leading zeros dropped — the same rule flat_key follows since
-  // 0106, because the collection is typed by hand and a spreadsheet gives
-  // '019' for the flat a profile calls '19'.
-  return ((data ?? []) as Contribution[])
-    .find((c) => c.flat.replace(/[^0-9]/g, '').replace(/^0+/, '') === key) ?? null;
+  const rows = (data ?? []) as Contribution[];
+
+  // The whole address first — 'D-019' on the sheet and (block D, flat 19) on
+  // the profile are the same home, while A-101 and B-101 are not.
+  const exact = rows.find((c) => flatAddr(null, c.flat) === addr);
+  if (exact) return exact;
+
+  // The sheet often states a bare number. Accept that only when the number can
+  // mean one home in this society: if two towers both have a 101, the app must
+  // not guess which resident it belongs to. Mirrors flat_number_is_unique.
+  if (!number) return null;
+  const sameNumber = rows.filter((c) => flatKey(c.flat) === number);
+  if (sameNumber.length !== 1) return null;
+  const blocksSeen = new Set(
+    rows.filter((c) => flatKey(c.flat) === number)
+      .map((c) => flatNorm(c.flat)?.replace(/[0-9].*$/, '') || null)
+      .filter(Boolean),
+  );
+  return blocksSeen.size <= 1 ? sameNumber[0] : null;
 }
 
 /**

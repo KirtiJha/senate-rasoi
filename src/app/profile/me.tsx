@@ -70,10 +70,10 @@ export default function ProfileScreen() {
     if (!name.trim()) return toast.show('Name cannot be empty');
     setSavingProfile(true);
     try {
-      // The flat number is the identity, so it is stored bare: digits only and
-      // no leading zeros, matching what 0107 normalised the table to. Letting a
-      // block letter back into this field is what made 209 and E-209 two homes.
-      const flatNumber = flat.replace(/[^0-9]/g, '').replace(/^0+/, '');
+      // Stored as typed. Forcing digits suited one society whose flats are
+      // plain numbers; "A-101" and "101A" are real addresses elsewhere and the
+      // letter is not noise. Block keeps its own field either way.
+      const flatNumber = flat.trim();
       await saveProfile({
         name: name.trim(),
         flat: flatNumber || null,
@@ -188,9 +188,9 @@ export default function ProfileScreen() {
                 <Field
                   label="Flat no."
                   placeholder="204"
-                  keyboardType="number-pad"
+                  autoCapitalize="characters"
                   value={flat}
-                  onChangeText={(t) => setFlat(t.replace(/[^0-9]/g, ''))}
+                  onChangeText={setFlat}
                 />
               </View>
             </View>

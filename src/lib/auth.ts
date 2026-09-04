@@ -65,10 +65,12 @@ export async function signUp(input: SignUpInput): Promise<DbProfile> {
   }
 
   const blockUp = input.block?.trim().toUpperCase();
-  // Digits only, no leading zeros — the same shape 0107 normalised the table
-  // to, so '019' and '19' can never become two different flats. Gluing the
-  // block letter on here is how one home became both '209' and 'E-209'.
-  const unit = input.flat.replace(/[^0-9]/g, '').replace(/^0+/, '');
+  // Kept as typed, minus stray spacing. Stripping to digits was right for one
+  // society and wrong for any that calls a flat "A-101" or "101A" — the letter
+  // is part of the address, not decoration. The block still gets its own
+  // column, so "A-101" with block A does not become "AA101" downstream;
+  // flat_addr (0121) converges the spellings.
+  const unit = input.flat.trim();
   const row = {
     id: userId,
     phone: input.phone.replace(/\D/g, ''),

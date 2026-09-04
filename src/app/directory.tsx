@@ -8,7 +8,7 @@ import { Field } from '../components/forms';
 import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
-import { Resident, addDirectoryEntry, adminSetDirectoryVisibility, adminSetMovedIn, deleteDirectoryEntry, fetchDirectory, updateDirectoryEntry } from '../lib/directory';
+import { Resident, addDirectoryEntry, adminSetDirectoryVisibility, adminSetMovedIn, deleteDirectoryEntry, fetchDirectory, flatAddr, updateDirectoryEntry } from '../lib/directory';
 import { waLink } from '../lib/dishes';
 import { getOrCreateThread } from '../lib/dm';
 import { reportContent } from '../lib/moderation';
@@ -119,12 +119,12 @@ export default function DirectoryScreen() {
       const rows = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
       return rows.length ? [{ key: '__byname', block: null, flat: null, byName: true, rows }] : [];
     }
-    // Grouped by flat NUMBER alone. It used to be block+flat, and since the
-    // block letter is the field neighbours typed inconsistently, one home split
-    // into a "209" heading and an "E-209" heading with a neighbour under each.
+    // Grouped by ADDRESS — flatAddr converges the spellings of one home
+    // ("209" and "E-209" land together) without merging two homes that share a
+    // number in different towers, which grouping by the number alone did.
     const out: Group[] = [];
     for (const r of filtered) {
-      const key = r.flat ?? '';
+      const key = flatAddr(r.block, r.flat) ?? '';
       const last = out[out.length - 1];
       if (last && last.key === key) {
         last.rows.push(r);
@@ -317,7 +317,10 @@ export default function DirectoryScreen() {
                   <View className="mb-2 flex-row items-center gap-2">
                     <Ionicons name="home-outline" size={14} color={c.muted} />
                     <Text className="font-sans-bold text-[13px] uppercase tracking-wider text-muted">
-                      {g.flat ? `Flat ${g.flat}` : 'No flat listed'}
+                      {/* Block-qualified, because two towers can both have a
+                          247 and two headings reading "FLAT 247" look like a
+                          bug rather than two homes. */}
+                      {g.flat ? `Flat ${flatDisplay(g.block, g.flat)}` : 'No flat listed'}
                     </Text>
                     {g.block ? (
                       <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#8B5CF620' }}>
@@ -780,7 +783,7 @@ function AddResidentModal({
       <Text className="font-sans mb-4 text-[13px] text-muted">Add a neighbour to the directory. If they're not on Aangan yet, you can invite them after.</Text>
       <Field label="Name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} />
       <View className="flex-row gap-3">
-        <View className="flex-1"><Field label="Flat number" keyboardType="number-pad" placeholder="204" value={flat} onChangeText={(t) => setFlat(t.replace(/[^0-9]/g, ''))} /></View>
+        <View className="flex-1"><Field label="Flat number" autoCapitalize="characters" placeholder="204" value={flat} onChangeText={setFlat} /></View>
         <View className="w-24"><Field label="Block" hint="Optional" autoCapitalize="characters" maxLength={4} placeholder="E" value={block} onChangeText={setBlock} /></View>
       </View>
       <Field label="Phone" hint="For contact & invite" keyboardType="phone-pad" placeholder="98765 43210" value={phone} onChangeText={setPhone} />

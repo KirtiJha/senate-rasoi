@@ -46,7 +46,7 @@ export function MyFlatCard({
   const load = useCallback(async () => {
     if (!flat) { setRow('none'); return; }
     try {
-      const r = await fetchMyContribution(eventId, flat);
+      const r = await fetchMyContribution(eventId, flat, profile?.block ?? null);
       setRow(r);
       setHeads(r?.head_count ? String(r.head_count) : '');
     } catch {
