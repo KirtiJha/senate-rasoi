@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { T } from '../components/T';
 import { Chip, Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import {
@@ -13,6 +14,7 @@ import {
   subscribeLostFoundItems,
 } from '../lib/lostFound';
 import { IMAGE_CACHE_PROPS } from '../lib/image';
+import { timeAgo } from '../lib/time';
 import { useThemeColors } from '../theme';
 
 const catMeta = (key: string | null) =>
@@ -28,6 +30,8 @@ export default function LostFoundScreen() {
   const [rows, setRows] = useState<LostFoundItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [mine, setMine] = useState(false);
+  const [cat, setCat] = useState<string>('all');
+  const [query, setQuery] = useState('');
 
   const load = useCallback(async () => {
     try {
@@ -47,6 +51,18 @@ export default function LostFoundScreen() {
 
   const isLost = tab === 'lost';
   const addHref = isLost ? '/lost-found/new?kind=lost' : '/lost-found/new?kind=found';
+
+  // Categories were collected on the way in and shown on every card, but there
+  // was no way to browse by them — the one question people arrive with ("has
+  // anyone handed in keys?") had to be answered by scrolling.
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return rows.filter((r) =>
+      (cat === 'all' || r.category === cat)
+      && (!q || r.title.toLowerCase().includes(q)
+        || (r.description ?? '').toLowerCase().includes(q)
+        || (r.owner?.name ?? '').toLowerCase().includes(q)));
+  }, [rows, cat, query]);
 
   const emptyTitle = mine
     ? (isLost ? "You haven't reported any lost items" : "You haven't reported any found items")
@@ -78,8 +94,12 @@ export default function LostFoundScreen() {
               ))}
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-              <Chip label="All" selected={!mine} onPress={() => setMine(false)} />
-              <Chip label="Mine" selected={mine} onPress={() => setMine(true)} />
+              <Chip label="All" selected={cat === 'all' && !mine} onPress={() => { setCat('all'); setMine(false); }} />
+              <Chip label="Mine" selected={mine} onPress={() => setMine((v) => !v)} />
+              <View style={{ width: 1, height: 18, backgroundColor: c.line, alignSelf: 'center' }} />
+              {LOST_FOUND_CATEGORIES.map((b) => (
+                <Chip key={b.key} label={b.label} selected={cat === b.key} onPress={() => setCat(cat === b.key ? 'all' : b.key)} />
+              ))}
             </ScrollView>
           </View>
         }
@@ -87,11 +107,40 @@ export default function LostFoundScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container>
+          {rows.length > 4 ? (
+            <View className="mb-3 flex-row items-center gap-2 rounded-full border border-line bg-surface px-3.5" style={{ height: 44 }}>
+              <Ionicons name="search" size={16} color={c.faint} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder={isLost ? 'Search lost reports' : 'Search found items'}
+                placeholderTextColor={c.faint}
+                className="flex-1 text-[14px] text-ink"
+                style={{ outline: 'none' } as never}
+              />
+              {query ? (
+                <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Clear search">
+                  <Ionicons name="close-circle" size={16} color={c.faint} />
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
+
           {loading ? (
             <View className="gap-3">
               {[0, 1, 2, 3].map((i) => (
                 <View key={i} className="h-24 rounded-2xl bg-inset animate-pulse" />
               ))}
+            </View>
+          ) : rows.length > 0 && filtered.length === 0 ? (
+            <View className="items-center px-6 py-14">
+              <Ionicons name="search-outline" size={26} color={c.faint} />
+              <Text className="font-sans mt-2 text-center text-[13px] text-muted">
+                Nothing here{query ? ` matching “${query.trim()}”` : ' in that category'}.
+              </Text>
+              <Pressable onPress={() => { setQuery(''); setCat('all'); }} hitSlop={8} className="mt-2 px-3 py-1 active:opacity-60">
+                <Text className="text-[13px] font-sans-sb" style={{ color: ACCENT }}>Show everything</Text>
+              </Pressable>
             </View>
           ) : rows.length === 0 ? (
             <View className="items-center py-20">
@@ -110,7 +159,7 @@ export default function LostFoundScreen() {
             </View>
           ) : (
             <View className="gap-3">
-              {rows.map((item) => <ItemCard key={item.id} item={item} />)}
+              {filtered.map((item) => <ItemCard key={item.id} item={item} />)}
             </View>
           )}
         </Container>
@@ -155,12 +204,16 @@ function ItemCard({ item }: { item: LostFoundItem }) {
               </View>
             ) : null}
           </View>
-          <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{item.title}</Text>
+          <T source="lost_found" id={item.id} field="title" text={item.title} showToggle={false}
+            className="font-sans-bold text-[14px] text-ink" numberOfLines={1} />
           {item.description ? (
-            <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{item.description}</Text>
+            <T source="lost_found" id={item.id} field="description" text={item.description} showToggle={false}
+              className="text-[12px] text-muted" numberOfLines={1} />
           ) : null}
+          {/* When matters as much as what here: a phone lost this morning and
+              one lost in March are not the same notice. */}
           <Text className="font-sans text-[11px] text-faint mt-0.5">
-            {item.owner?.name ?? 'A neighbour'}{item.owner?.flat ? ` · Flat ${item.owner.flat}` : ''}
+            {item.owner?.name ?? 'A neighbour'}{item.owner?.flat ? ` · Flat ${item.owner.flat}` : ''} · {timeAgo(item.created_at)}
           </Text>
         </View>
       </View>

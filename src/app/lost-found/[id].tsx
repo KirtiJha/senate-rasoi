@@ -27,6 +27,7 @@ import {
 import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { MessageNeighbour } from '../../components/MessageNeighbour';
 import { waLink } from '../../lib/listings';
+import { timeAgo } from '../../lib/time';
 import { useThemeColors } from '../../theme';
 
 function openUrl(u: string) { if (Platform.OS === 'web') window.open(u, '_blank'); else Linking.openURL(u); }
@@ -154,6 +155,7 @@ export default function LostFoundDetailScreen() {
   const wa = item.contact_whatsapp ?? item.owner?.whatsapp ?? null;
   const isLost = item.kind === 'lost';
   const isResolved = item.status === 'resolved';
+  const staleDays = Math.floor((Date.now() - new Date(item.created_at).getTime()) / 86400000);
 
   return (
     <View className="flex-1 bg-bg">
@@ -199,6 +201,9 @@ export default function LostFoundDetailScreen() {
           </View>
 
           <T source="lost_found" id={item.id} field="title" text={item.title} className="mt-1.5 font-display-x text-[21px] text-ink" />
+          <Text className="font-sans mt-1 text-[12px] text-faint">
+            {isLost ? 'Lost' : 'Found'} · reported {timeAgo(item.created_at)}
+          </Text>
           {item.description ? (
             <T source="lost_found" id={item.id} field="description" text={item.description} className="mt-2 text-[14px] leading-[21px] text-muted" />
           ) : null}
@@ -231,6 +236,18 @@ export default function LostFoundDetailScreen() {
           {/* Owner controls */}
           {canManage ? (
             <View className="mt-4 card p-4">
+              {/* Nobody comes back to close these. A month on, the report is
+                  still asking neighbours to look out for something that may
+                  well be back in a drawer. */}
+              {!isResolved && staleDays >= 30 ? (
+                <View className="mb-3 flex-row items-start gap-2 rounded-xl p-2.5" style={{ backgroundColor: ACCENT + '14' }}>
+                  <Ionicons name="time-outline" size={15} color={ACCENT} style={{ marginTop: 1 }} />
+                  <Text className="font-sans flex-1 text-[12px] leading-[17px] text-muted">
+                    This has been open for {staleDays} days. {isLost ? 'Turned up since?' : 'Handed it back since?'} Closing it keeps
+                    the list worth reading.
+                  </Text>
+                </View>
+              ) : null}
               <Text className="mb-2 text-[12px] font-sans-sb uppercase tracking-wider text-muted">Status</Text>
               <View className="flex-row gap-2">
                 <Pressable
