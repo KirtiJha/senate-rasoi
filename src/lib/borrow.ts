@@ -2,8 +2,22 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import { COMMUNITY_ID, LISTING_PHOTOS_BUCKET, isSupabaseConfigured, supabase } from './supabase';
 
 export type LendStatus = 'available' | 'lent' | 'unavailable';
-export type BorrowStatus = 'pending' | 'accepted' | 'declined' | 'returned';
+export type BorrowStatus = 'pending' | 'accepted' | 'declined' | 'returned' | 'cancelled';
 export type LendKind = 'offer' | 'request';
+
+/** A request still awaiting or in effect — the ones that block a re-ask. */
+export const isOpenRequest = (s: BorrowStatus): boolean => s === 'pending' || s === 'accepted';
+
+/** What the two sides should read, rather than the column value. */
+export function requestLabel(r: { status: BorrowStatus; auto_closed?: boolean }): string {
+  switch (r.status) {
+    case 'pending': return 'Waiting';
+    case 'accepted': return 'Lent';
+    case 'declined': return r.auto_closed ? 'Closed' : 'Declined';
+    case 'returned': return 'Returned';
+    case 'cancelled': return 'Withdrawn';
+  }
+}
 
 export const BORROW_CATEGORIES = [
   { key: 'tools', label: 'Tools', icon: 'construct' },
@@ -39,6 +53,8 @@ export interface BorrowRequest {
   requester_id: string;
   note: string | null;
   status: BorrowStatus;
+  /** The app closed this, not the owner — the item went elsewhere or was withdrawn. */
+  auto_closed?: boolean;
   created_at: string;
   requester?: { name: string; flat: string | null; whatsapp: string | null; phone: string | null };
 }
@@ -149,6 +165,31 @@ export async function fetchRequests(itemId: string): Promise<BorrowRequest[]> {
 export async function setRequestStatus(id: string, status: BorrowStatus): Promise<void> {
   const { error } = await supabase.from('borrow_requests').update({ status }).eq('id', id);
   if (error) throw error;
+}
+
+/**
+ * The asker's own way out. Server-side (0122) this also frees the item if it
+ * had already been lent to them, and tells the owner.
+ */
+export async function cancelBorrow(id: string): Promise<void> {
+  const { error } = await supabase.from('borrow_requests').update({ status: 'cancelled' }).eq('id', id);
+  if (error) throw error;
+}
+
+/**
+ * How many neighbours are still waiting on each of my listings — so the list
+ * can show "2 waiting" instead of making me open every card to find out.
+ */
+export async function fetchWaitingCounts(ownerId: string, communityId: string = COMMUNITY_ID): Promise<Record<string, number>> {
+  const { data: mine } = await supabase
+    .from('lend_items').select('id').eq('community_id', communityId).eq('owner_user_id', ownerId);
+  const ids = ((mine ?? []) as { id: string }[]).map((r) => r.id);
+  if (!ids.length) return {};
+  const { data } = await supabase
+    .from('borrow_requests').select('item_id').in('item_id', ids).eq('status', 'pending');
+  const out: Record<string, number> = {};
+  for (const r of (data ?? []) as { item_id: string }[]) out[r.item_id] = (out[r.item_id] ?? 0) + 1;
+  return out;
 }
 
 export function subscribeItems(communityId: string, onChange: () => void): () => void {

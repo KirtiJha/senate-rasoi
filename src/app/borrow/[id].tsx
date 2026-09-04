@@ -20,10 +20,13 @@ import {
   BorrowStatus,
   LendItem,
   LendStatus,
+  cancelBorrow,
   deleteItem,
   fetchItem,
   fetchRequests,
+  isOpenRequest,
   requestBorrow,
+  requestLabel,
   setItemStatus,
   setRequestStatus,
   subscribeRequests,
@@ -63,7 +66,14 @@ export default function LendItemDetailScreen() {
   const isOwner = !!item && item.owner_user_id === userId;
   const canManage = isOwner || isAdmin;
   const isOffer = !item || item.kind === 'offer';
-  const myRequest = requests.find((r) => r.requester_id === userId);
+  const mine = requests.filter((r) => r.requester_id === userId);
+  // Live request, if any — this is what decides whether asking is still on the
+  // table. A request that ended (declined, returned, withdrawn) used to count
+  // here too, which quietly barred you from ever asking for that item again.
+  const myRequest = mine.find((r) => isOpenRequest(r.status)) ?? null;
+  const myLastClosed = myRequest ? null : mine[0] ?? null;
+  const waiting = requests.filter((r) => r.status === 'pending').length;
+  const openCount = requests.filter((r) => isOpenRequest(r.status)).length;
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -151,18 +161,54 @@ export default function LendItemDetailScreen() {
   const ownerName = item.owner?.name ?? 'Owner';
   const wa = item.contact_whatsapp ?? item.owner?.whatsapp ?? null;
 
-  const changeItem = async (s: LendStatus) => { try { await setItemStatus(item.id, s); setItem({ ...item, status: s }); } catch { toast.show('Could not update'); } };
+  const changeItem = async (s: LendStatus) => {
+    if (s !== 'available' && waiting > 0
+      && !(await confirm({
+        title: s === 'lent' ? 'Mark as lent out?' : 'Hide this listing?',
+        message: `${waiting === 1 ? 'One neighbour is' : `${waiting} neighbours are`} still waiting to hear from you. They'll be told the ${item.title} is no longer free.`,
+        confirmLabel: s === 'lent' ? 'Mark lent out' : 'Hide it',
+      }))) return;
+    try { await setItemStatus(item.id, s); await load(); } catch { toast.show('Could not update'); }
+  };
+
+  // Accepting, returning and withdrawing all move the ITEM too — that now
+  // happens in one place server-side (0122), so we only reload here.
   const changeReq = async (r: BorrowRequest, s: BorrowStatus) => {
+    if (s === 'declined' && !(await confirm({
+      title: 'Decline this request?',
+      message: `${r.requester?.name ?? 'They'} will be told you can't lend it right now.`,
+      confirmLabel: 'Decline',
+    }))) return;
     try {
       await setRequestStatus(r.id, s);
       setRequests((prev) => prev.map((x) => x.id === r.id ? { ...x, status: s } : x));
-      if (s === 'accepted') changeItem('lent');
-      if (s === 'returned') changeItem('available');
+      await load();
     } catch { toast.show('Could not update'); }
   };
+
+  const withdraw = async () => {
+    if (!myRequest) return;
+    if (!(await confirm({
+      title: 'Withdraw your request?',
+      message: myRequest.status === 'accepted'
+        ? `${ownerName} will be told you no longer need the ${item.title}, and it goes back on the list.`
+        : `${ownerName} will be told you no longer need it. You can always ask again.`,
+      confirmLabel: 'Withdraw',
+    }))) return;
+    try { await cancelBorrow(myRequest.id); await load(); toast.show('Request withdrawn'); }
+    catch { toast.show('Could not withdraw — try again'); }
+  };
+
   const removeItem = async () => {
     const go = async () => { await deleteItem(item.id); if (router.canGoBack()) router.back(); else router.replace('/borrow' as any); };
-    if (await confirm({ title: 'Delete item', message: 'Delete this listing?', confirmLabel: 'Delete', destructive: true })) go();
+    if (await confirm({
+      title: isOffer ? 'Delete listing' : 'Delete request',
+      message: openCount > 0
+        ? `${openCount === 1 ? 'One neighbour has' : `${openCount} neighbours have`} an open request on this. They'll be told it's no longer listed.`
+        : 'This cannot be undone.',
+      confirmLabel: 'Delete',
+      destructive: true,
+    })) go();
   };
 
   return (
@@ -239,8 +285,28 @@ export default function LendItemDetailScreen() {
                   </Pressable>
                 </View>
               ) : (
+                /* A "needs to borrow" post. Getting hold of the thing used to
+                   leave deleting as the only way to take the ask down — so it
+                   either stayed up forever or vanished without a trace. */
                 <View className="mt-4 card p-4">
-                  <Pressable onPress={removeItem} className="flex-row items-center justify-center gap-1.5 py-2 active:opacity-60">
+                  {item.status === 'available' ? (
+                    <Button
+                      label="Sorted — I got one"
+                      icon="checkmark-circle-outline"
+                      variant="outline"
+                      fullWidth
+                      onPress={() => changeItem('unavailable')}
+                    />
+                  ) : (
+                    <>
+                      <View className="mb-2 flex-row items-center justify-center gap-1.5">
+                        <Ionicons name="checkmark-circle" size={15} color="#16A34A" />
+                        <Text className="font-sans text-[13px] text-muted">Marked as sorted — neighbours no longer see this.</Text>
+                      </View>
+                      <Button label="Ask again" icon="refresh-outline" variant="outline" fullWidth onPress={() => changeItem('available')} />
+                    </>
+                  )}
+                  <Pressable onPress={removeItem} className="mt-2 flex-row items-center justify-center gap-1.5 py-2 active:opacity-60">
                     <Ionicons name="trash-outline" size={15} color={c.danger} />
                     <Text className="text-[13px] font-sans-sb text-nonveg">Delete request</Text>
                   </Pressable>
@@ -250,7 +316,9 @@ export default function LendItemDetailScreen() {
               {/* Borrow requests (offers only) */}
               {isOffer && requests.length > 0 ? (
                 <View className="mt-4">
-                  <Text className="mb-2 text-[12px] font-sans-sb uppercase tracking-wider text-muted">Borrow requests ({requests.length})</Text>
+                  <Text className="mb-2 text-[12px] font-sans-sb uppercase tracking-wider text-muted">
+                    {waiting > 0 ? `${waiting} waiting for your answer` : `Borrow requests (${requests.length})`}
+                  </Text>
                   <View className="gap-2">
                     {requests.map((r) => (
                       <View key={r.id} className="card p-3.5">
@@ -260,7 +328,7 @@ export default function LendItemDetailScreen() {
                             <Text className="font-sans-bold text-[13px] text-ink">{r.requester?.name ?? 'A neighbour'}</Text>
                             {r.requester?.flat ? <Text className="font-sans text-[11px] text-faint">Flat {r.requester.flat}</Text> : null}
                           </View>
-                          <Text className="text-[11px] font-sans-sb" style={{ color: r.status === 'accepted' ? '#16A34A' : r.status === 'declined' ? '#EF4444' : r.status === 'returned' ? '#6B7280' : ACCENT }}>{r.status}</Text>
+                          <Text className="text-[11px] font-sans-sb" style={{ color: r.status === 'accepted' ? '#16A34A' : r.status === 'declined' && !r.auto_closed ? '#EF4444' : r.status === 'pending' ? ACCENT : '#6B7280' }}>{requestLabel(r)}</Text>
                         </View>
                         {r.note ? <Text className="font-sans mt-1.5 text-[13px] text-ink">{r.note}</Text> : null}
                         <View className="mt-2 flex-row flex-wrap gap-2">
@@ -291,12 +359,33 @@ export default function LendItemDetailScreen() {
               {isOffer ? (
                 myRequest ? (
                   <View className="items-center card p-4">
-                    <Ionicons name={myRequest.status === 'accepted' ? 'checkmark-circle' : myRequest.status === 'declined' ? 'close-circle' : 'time-outline'} size={26} color={myRequest.status === 'accepted' ? '#16A34A' : myRequest.status === 'declined' ? '#EF4444' : ACCENT} />
+                    <Ionicons name={myRequest.status === 'accepted' ? 'checkmark-circle' : 'time-outline'} size={26} color={myRequest.status === 'accepted' ? '#16A34A' : ACCENT} />
                     <Text className="mt-1 font-sans-bold text-[14px] text-ink">
-                      {myRequest.status === 'pending' ? 'Request sent' : myRequest.status === 'accepted' ? 'Request accepted 🎉' : myRequest.status === 'declined' ? 'Request declined' : 'Returned'}
+                      {myRequest.status === 'accepted' ? `${ownerName} said yes 🎉` : 'Request sent'}
                     </Text>
-                    <Text className="font-sans text-[12px] text-muted">{myRequest.status === 'accepted' ? 'Coordinate pickup with the owner.' : 'The owner will respond soon.'}</Text>
+                    <Text className="font-sans text-center text-[12px] text-muted">
+                      {myRequest.status === 'accepted' ? 'Arrange a time to pick it up.' : `${ownerName} will get back to you.`}
+                    </Text>
+                    {/* Plans change. Saying so beats leaving the owner holding
+                        an answer nobody is waiting for any more. */}
+                    <Pressable onPress={withdraw} hitSlop={8} className="mt-2.5 px-3 py-1 active:opacity-60">
+                      <Text className="text-[12px] font-sans-sb text-muted">
+                        {myRequest.status === 'accepted' ? "Changed my mind — I don't need it" : 'Withdraw my request'}
+                      </Text>
+                    </Pressable>
                   </View>
+                ) : myLastClosed && item.status === 'available' ? (
+                  <>
+                    <View className="items-center card p-3.5">
+                      <Text className="font-sans text-center text-[12px] text-muted">
+                        {myLastClosed.status === 'returned' ? `You borrowed this before and returned it.`
+                          : myLastClosed.status === 'cancelled' ? 'You withdrew your last request.'
+                          : myLastClosed.auto_closed ? 'It went to another neighbour last time.'
+                          : `${ownerName} couldn't lend it last time.`}
+                      </Text>
+                    </View>
+                    <Button label="Ask again" icon="hand-left-outline" size="lg" fullWidth onPress={() => setShowReq(true)} />
+                  </>
                 ) : item.status === 'available' ? (
                   <Button label="Request to borrow" icon="hand-left-outline" size="lg" fullWidth onPress={() => setShowReq(true)} />
                 ) : (
@@ -338,7 +427,14 @@ export default function LendItemDetailScreen() {
         <Button label="Send request" icon="paper-plane" fullWidth onPress={async () => {
           if (!userId) return;
           try { const r = await requestBorrow(item.id, userId, note || null); setRequests((p) => [r, ...p]); setShowReq(false); setNote(''); toast.show('Request sent 🤝'); }
-          catch { toast.show('Could not send — try again'); }
+          catch (e) {
+            // 23505 = the one-open-request-per-person index (0122): a second
+            // tap, or a request already sent from another device.
+            const dup = (e as { code?: string })?.code === '23505';
+            setShowReq(false);
+            if (dup) { await load(); toast.show('You have already asked for this'); }
+            else toast.show('Could not send — try again');
+          }
         }} />
       </Sheet>
 
