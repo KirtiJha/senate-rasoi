@@ -33,6 +33,7 @@ export default function DocumentsScreen() {
   const [filter, setFilter] = useState<Filter>('all');
   const [showUpload, setShowUpload] = useState(false);
   const [manage, setManage] = useState<DocRow | null>(null);
+  const [query, setQuery] = useState('');
 
   const load = useCallback(async () => {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
@@ -43,12 +44,20 @@ export default function DocumentsScreen() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  const filtered = useMemo(() => docs.filter((d) => {
-    if (filter === 'mine') return d.owner_id === userId;
-    if (filter === 'public') return d.is_public;
-    if (filter === 'shared') return !d.is_public && d.owner_id !== userId;
-    return true;
-  }), [docs, filter, userId]);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return docs.filter((d) => {
+      if (filter === 'mine' && d.owner_id !== userId) return false;
+      if (filter === 'public' && !d.is_public) return false;
+      if (filter === 'shared' && (d.is_public || d.owner_id === userId)) return false;
+      if (!q) return true;
+      return (
+        d.name.toLowerCase().includes(q)
+        || (d.description ?? '').toLowerCase().includes(q)
+        || (d.owner?.name ?? '').toLowerCase().includes(q)
+      );
+    });
+  }, [docs, filter, userId, query]);
 
   const preview = async (d: DocRow) => { try { openUrl(await getDocumentUrl(d.storage_path)); } catch { toast.show('Could not open file'); } };
   const download = async (d: DocRow) => { try { openUrl(await getDocumentUrl(d.storage_path, d.name)); } catch { toast.show('Could not download'); } };
@@ -81,15 +90,46 @@ export default function DocumentsScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
+          {docs.length > 3 ? (
+            <View className="mb-3 flex-row items-center gap-2 rounded-full border border-line bg-surface px-3.5"
+              style={{ height: 44 }}>
+              <Ionicons name="search" size={16} color={c.faint} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search documents"
+                placeholderTextColor={c.faint}
+                className="flex-1 text-[14px] text-ink"
+                style={{ outline: 'none' } as never}
+              />
+              {query ? (
+                <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Clear search">
+                  <Ionicons name="close-circle" size={16} color={c.faint} />
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
+
           {loading ? (
             <View className="overflow-hidden card"><RowSkeleton count={6} /></View>
           ) : filtered.length === 0 ? (
             <View className="items-center py-16">
               <Ionicons name="folder-open-outline" size={42} color={c.faint} />
-              <Text className="mt-3 font-display text-xl text-ink mb-1">No documents yet</Text>
-              <Text className="font-sans text-[14px] text-muted text-center max-w-xs">
-                {filter === 'all' ? 'Upload society notices, bylaws, forms and more — keep them public or share privately.' : 'Nothing here. Try another filter.'}
+              <Text className="mt-3 font-display text-xl text-ink mb-1">
+                {query ? 'Nothing matches that' : 'No documents yet'}
               </Text>
+              <Text className="font-sans max-w-xs text-center text-[14px] leading-[20px] text-muted">
+                {query
+                  ? 'Try part of the file name, or who shared it.'
+                  : filter === 'all'
+                    ? 'Notices, meeting minutes, bye-laws, forms, maintenance bills — put one here and the society is told it exists.'
+                    : 'Nothing here. Try another filter.'}
+              </Text>
+              {!query && filter === 'all' ? (
+                <View className="mt-4">
+                  <Button label="Upload a document" icon="cloud-upload-outline" onPress={() => setShowUpload(true)} />
+                </View>
+              ) : null}
             </View>
           ) : (
             <View className="overflow-hidden card">
@@ -145,7 +185,8 @@ function DocRowView({
   onPreview: () => void; onDownload: () => void; onManage: () => void;
 }) {
   const g = fileGlyph(doc.mime_type);
-  const meta = [doc.owner?.name ?? 'Someone', formatBytes(doc.file_size)].filter(Boolean).join(' · ');
+  const meta = [doc.owner?.name ?? 'Someone', docDate(doc.created_at), formatBytes(doc.file_size)]
+    .filter(Boolean).join(' · ');
   return (
     <View className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'}`}>
       <View className="h-10 w-10 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: c.accentSoft }}>
@@ -167,6 +208,17 @@ function DocRowView({
       </View>
     </View>
   );
+}
+
+/** "12 Mar" this year, "12 Mar 2025" beyond it — a filing date, not a clock. */
+function docDate(iso: string): string {
+  try {
+    const d = new Date(iso);
+    const sameYear = d.getFullYear() === new Date().getFullYear();
+    return d.toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'short', ...(sameYear ? {} : { year: 'numeric' }),
+    });
+  } catch { return ''; }
 }
 
 function IconBtn({ icon, onPress, c }: { icon: keyof typeof Ionicons.glyphMap; onPress: () => void; c: ReturnType<typeof useThemeColors> }) {
