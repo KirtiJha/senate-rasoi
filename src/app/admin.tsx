@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, Platform, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Avatar, Button, Container, ScreenHeader, Segmented, type SegmentedItem } from '../components/ui';
+import { Avatar, Badge, Button, Container, ScreenHeader, Segmented, type SegmentedItem } from '../components/ui';
 import { ReindexCard } from '../components/saathi/ReindexCard';
 import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
@@ -288,9 +288,9 @@ export default function AdminScreen() {
                     <View className="flex-1">
                       <View className="flex-row items-center gap-1.5 flex-wrap">
                         <Text className="font-sans-sb text-[15px] text-ink" numberOfLines={1}>{m.name || 'Unnamed'}</Text>
-                        {self ? <Badge label="you" color={c.accent} /> : null}
-                        {memberAdmin ? <Badge label="admin" color={c.accent} /> : null}
-                        {m.blocked ? <Badge label="blocked" color={c.danger} /> : null}
+                        {self ? <Badge tone="accent" size="sm" label="You" /> : null}
+                        {memberAdmin ? <Badge tone="accent" size="sm" label="Admin" /> : null}
+                        {m.blocked ? <Badge tone="danger" size="sm" label="Blocked" /> : null}
                       </View>
                       <Text className="font-sans text-[12px] text-muted">
                         {m.phone ?? '—'}{m.flat ? ` · Flat ${m.flat}` : ''}
@@ -524,12 +524,8 @@ function ReportsTab({
                   <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: color + '20' }}>
                     <Text className="text-[10px] font-sans-sb uppercase" style={{ color }}>{r.status}</Text>
                   </View>
-                  <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.inset }}>
-                    <Text className="text-[10px] font-sans-sb text-muted">{r.target_type}</Text>
-                  </View>
-                  <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.dangerSoft }}>
-                    <Text className="text-[10px] font-sans-sb" style={{ color: c.danger }}>{r.reason}</Text>
-                  </View>
+                  <Badge tone="neutral" size="sm" label={r.target_type} />
+                  <Badge tone="danger" size="sm" label={r.reason} />
                 </View>
 
                 <Text className="font-sans text-[13px] text-ink">
@@ -561,14 +557,6 @@ function ReportsTab({
         </View>
       </Container>
     </ScrollView>
-  );
-}
-
-function Badge({ label, color }: { label: string; color: string }) {
-  return (
-    <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: color + '20' }}>
-      <Text className="text-[10px] font-sans-sb uppercase" style={{ color }}>{label}</Text>
-    </View>
   );
 }
 

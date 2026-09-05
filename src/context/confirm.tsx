@@ -32,7 +32,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
 
   const close = (v: boolean) => { resolver.current?.(v); resolver.current = null; setOpts(null); };
 
-  const danger = '#DC2626';
+  const danger = c.danger;
   const confirmColor = opts?.destructive ? danger : c.accent;
 
   return (

@@ -218,7 +218,7 @@ function ContactRow({
           <Pressable onPress={() => openUrl(`tel:${phone}`)} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full active:opacity-70" style={{ backgroundColor: c.inset }}>
             <Ionicons name="call" size={16} color={c.muted} />
           </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={() => openUrl(waLink(phone, `Hi ${name.split(' ')[0]}! 👋 (via our society directory)`))} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full active:opacity-70" style={{ backgroundColor: '#25D36618' }}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={() => openUrl(waLink(phone, `Hi ${name.split(' ')[0]}! 👋 (via our society directory)`))} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full active:opacity-70" style={{ backgroundColor: c.whatsappSoft }}>
             <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
           </Pressable>
         </View>

@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../components/T';
-import { Chip, ScreenHeader } from '../components/ui';
+import { Badge, Chip, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { BORROW_CATEGORIES, LendItem, LendKind, fetchItems, fetchWaitingCounts, subscribeItems } from '../lib/borrow';
 import { IMAGE_CACHE_PROPS } from '../lib/image';
@@ -215,13 +215,9 @@ function ItemCard({ item, isOffer, waiting = 0, yours = false }: { item: LendIte
       <View className="flex-1 p-3">
         <View className="flex-row items-center gap-1.5 flex-wrap">
           {/* Kind badge */}
-          <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: ACCENT + '18' }}>
-            <Text className="text-[10px] font-sans-sb" style={{ color: ACCENT }}>{isOffer ? '🤝 Lending' : '🙏 Needs'}</Text>
-          </View>
+          <Badge tone="accent" size="sm" label={isOffer ? '🤝 Lending' : '🙏 Needs'} />
           {/* Category badge */}
-          <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.inset }}>
-            <Text className="text-[10px] font-sans-sb text-muted">{m.label}</Text>
-          </View>
+          <Badge tone="neutral" size="sm" label={m.label} />
           {/* Availability badge (offers only).
 
               "Lent out" and "Hidden" used to share one grey pill, though they
@@ -230,12 +226,12 @@ function ItemCard({ item, isOffer, waiting = 0, yours = false }: { item: LendIte
               marigold — the app's colour for "in progress, needs nothing from
               you yet" — and hidden stays grey, because it is dormant. */}
           {isOffer ? (item.status === 'lent'
-            ? <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.highlightSoft }}><Text className="text-[10px] font-sans-sb" style={{ color: c.highlightInk }}>Lent out</Text></View>
+            ? <Badge tone="highlight" size="sm" label="Lent out" />
             : item.status === 'unavailable'
-              ? <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#9CA3AF22' }}><Text className="text-[10px] font-sans-sb text-muted">Hidden</Text></View>
-              : <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#16A34A22' }}><Text className="text-[10px] font-sans-sb" style={{ color: '#16A34A' }}>Available</Text></View>
+              ? <Badge tone="neutral" size="sm" label="Hidden" />
+              : <Badge tone="success" size="sm" label="Available" />
           ) : lent ? (
-            <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#9CA3AF22' }}><Text className="text-[10px] font-sans-sb text-muted">Sorted</Text></View>
+            <Badge tone="neutral" size="sm" label="Sorted" />
           ) : null}
           {/* Your own listing with neighbours waiting — otherwise you'd have to
               open each card to discover somebody had asked. */}

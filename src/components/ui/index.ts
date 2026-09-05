@@ -1,5 +1,5 @@
 export { Avatar } from './Avatar';
-export { Badge, LiveDot } from './Badge';
+export { Badge, LiveDot, type BadgeTone } from './Badge';
 export { Button, IconButton } from './Button';
 export { ChoiceTiles, type Choice } from './ChoiceTiles';
 export { Container, useResponsive } from './Container';

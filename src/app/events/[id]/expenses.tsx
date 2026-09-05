@@ -7,7 +7,7 @@ import { haptics } from '../../../lib/haptics';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Button, Container, DateField, ScreenHeader, Sheet } from '../../../components/ui';
+import { Badge, Button, Container, DateField, ScreenHeader, Sheet } from '../../../components/ui';
 import { useAuth } from '../../../context/auth';
 import { useConfirm } from '../../../context/confirm';
 import { useToast } from '../../../context/toast';
@@ -215,7 +215,7 @@ export default function ExpensesScreen() {
               across {rows.length} {rows.length === 1 ? 'entry' : 'entries'}
             </Text>
             {withoutBill > 0 ? (
-              <Text className="font-sans mt-1.5 text-[12px]" style={{ color: '#B45309' }}>
+              <Text className="font-sans mt-1.5 text-[12px]" style={{ color: c.warnInk }}>
                 ⚠️ {withoutBill} {withoutBill === 1 ? 'entry has' : 'entries have'} no bill attached
               </Text>
             ) : null}
@@ -223,9 +223,9 @@ export default function ExpensesScreen() {
 
           {locked ? (
             <View className="mb-4 flex-row items-start gap-2 rounded-2xl border px-3.5 py-3"
-                  style={{ borderColor: '#0891B255', backgroundColor: '#0891B212' }}>
+                  style={{ borderColor: c.info + '55', backgroundColor: c.infoSoft }}>
               <Ionicons name="lock-closed-outline" size={16} color="#0891B2" />
-              <Text className="font-sans flex-1 text-[12px] leading-[17px]" style={{ color: '#0E7490' }}>
+              <Text className="font-sans flex-1 text-[12px] leading-[17px]" style={{ color: c.infoInk }}>
                 The accounts are published and closed. Expenses can no longer be changed.
               </Text>
             </View>
@@ -277,9 +277,7 @@ export default function ExpensesScreen() {
                           <Text className="text-[11px] font-sans-sb text-muted">View bill</Text>
                         </Pressable>
                       ) : (
-                        <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#F59E0B18' }}>
-                          <Text className="text-[11px] font-sans-sb" style={{ color: '#B45309' }}>No bill</Text>
-                        </View>
+                        <Badge tone="warn" label="No bill" />
                       )}
                       {e.paid_by?.name ? (
                         <Text className="font-sans text-[11px] text-faint">Paid by {e.paid_by.name}</Text>

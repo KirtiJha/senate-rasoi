@@ -1,28 +1,52 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef } from 'react';
 import { Animated, Text, View } from 'react-native';
+import { useThemeColors } from '../../theme';
 
-type Tone = 'accent' | 'success' | 'neutral' | 'onPhoto';
-
-const TONE: Record<Tone, { box: string; text: string }> = {
-  accent: { box: 'bg-accent-soft', text: 'text-accent' },
-  success: { box: 'bg-[#E4F5EC] dark:bg-[#10271D]', text: 'text-success' },
-  neutral: { box: 'bg-inset', text: 'text-muted' },
-  onPhoto: { box: 'bg-black/55', text: 'text-white' },
-};
+/**
+ * The one status pill.
+ *
+ * Every tile had grown its own: a rounded View with a Tailwind hex behind a
+ * ten-point Text with another hex — forty-odd copies, none of which knew
+ * about dark mode. A tone names the state; the theme decides the colours on
+ * whichever ground the pill lands.
+ */
+export type BadgeTone = 'accent' | 'success' | 'warn' | 'danger' | 'info' | 'neutral' | 'highlight' | 'whatsapp' | 'onPhoto';
 
 export function Badge({
   label,
   tone = 'neutral',
+  size = 'md',
+  icon,
   className = '',
 }: {
   label: string;
-  tone?: Tone;
+  tone?: BadgeTone;
+  /** `sm` is the in-card pill; `md` the standalone one. */
+  size?: 'sm' | 'md';
+  icon?: keyof typeof Ionicons.glyphMap;
   className?: string;
 }) {
-  const t = TONE[tone];
+  const c = useThemeColors();
+  const t = {
+    accent: { bg: c.accentSoft, fg: c.accent },
+    success: { bg: c.successSoft, fg: c.successInk },
+    warn: { bg: c.warnSoft, fg: c.warnInk },
+    danger: { bg: c.dangerSoft, fg: c.dangerInk },
+    info: { bg: c.infoSoft, fg: c.infoInk },
+    neutral: { bg: c.inset, fg: c.muted },
+    highlight: { bg: c.highlightSoft, fg: c.highlightInk },
+    whatsapp: { bg: c.whatsappSoft, fg: c.success },
+    onPhoto: { bg: 'rgba(0,0,0,0.55)', fg: '#FFFFFF' },
+  }[tone];
+  const sm = size === 'sm';
   return (
-    <View className={`rounded-full px-2.5 py-1 ${t.box} ${className}`}>
-      <Text className={`text-[11px] font-sans-sb ${t.text}`}>{label}</Text>
+    <View
+      className={`flex-row items-center gap-1 rounded-full ${sm ? 'px-2 py-0.5' : 'px-2.5 py-1'} ${className}`}
+      style={{ backgroundColor: t.bg }}
+    >
+      {icon ? <Ionicons name={icon} size={sm ? 10 : 12} color={t.fg} /> : null}
+      <Text className={`${sm ? 'text-[10px]' : 'text-[11px]'} font-sans-sb`} style={{ color: t.fg }}>{label}</Text>
     </View>
   );
 }

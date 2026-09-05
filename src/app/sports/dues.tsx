@@ -13,7 +13,7 @@ import {
   markPaymentReceived, payDues, revertPayment, subscribeCourtPayments,
 } from '../../lib/courts';
 import { upiUri } from '../../lib/payments';
-import { useThemeColors } from '../../theme';
+import { useThemeColors, type ThemeColors } from '../../theme';
 
 // A stable empty list, so a missing query result does not re-run memos.
 const NONE: never[] = [];
@@ -23,15 +23,16 @@ function fmtDate(iso: string): string {
   catch { return iso; }
 }
 
-const STATUS_META: Record<string, { label: string; color: string }> = {
-  due: { label: 'Due', color: '#DC2626' },
-  initiated: { label: 'Paid · awaiting confirm', color: '#CA8A04' },
-  paid: { label: 'Settled', color: '#16A34A' },
-  cancelled: { label: 'Cancelled', color: '#9CA3AF' },
-};
+const statusMeta = (c: ThemeColors): Record<string, { label: string; color: string }> => ({
+  due: { label: 'Due', color: c.danger },
+  initiated: { label: 'Paid · awaiting confirm', color: c.warn },
+  paid: { label: 'Settled', color: c.success },
+  cancelled: { label: 'Cancelled', color: c.muted },
+});
 
 export default function DuesScreen() {
   const c = useThemeColors();
+  const STATUS_META = statusMeta(c);
   const ACCENT = c.accent;
   const toast = useToast();
   const confirm = useConfirm();

@@ -300,8 +300,8 @@ export default function SignInScreen() {
               {/* Phone → already-has-an-account nudge */}
               {phoneMatch?.alreadyOnboarded ? (
                 <View className="mb-4">
-                  <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: '#B45309' }}>Already on Aangan</Text>
-                  <View className="rounded-2xl border px-4 py-3.5" style={{ borderColor: '#CA8A04', backgroundColor: '#CA8A0412' }}>
+                  <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider" style={{ color: c.warnInk }}>Already on Aangan</Text>
+                  <View className="rounded-2xl border px-4 py-3.5" style={{ borderColor: c.warn, backgroundColor: c.warnSoft }}>
                     <View className="flex-row items-start gap-3">
                       <Ionicons name="information-circle" size={20} color={c.highlightInk} />
                       <View className="flex-1">

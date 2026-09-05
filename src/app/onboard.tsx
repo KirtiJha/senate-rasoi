@@ -134,7 +134,7 @@ export default function OnboardScreen() {
               {/* Two neighbours founding the same society separately would split
                   it in half, with no way to merge them afterwards. */}
               {manualMatches.length > 0 ? (
-                <View className="mb-4 mt-2 rounded-2xl border p-3" style={{ borderColor: '#16A34A55', backgroundColor: '#16A34A10' }}>
+                <View className="mb-4 mt-2 rounded-2xl border p-3" style={{ borderColor: c.success + '55', backgroundColor: c.successSoft }}>
                   <Text className="mb-2 text-[12px] font-sans-sb" style={{ color: c.accent }}>
                     {manualMatches.length === 1 ? 'This one is already on Aangan' : 'These are already on Aangan'} — join instead of starting again?
                   </Text>
@@ -205,15 +205,15 @@ export default function OnboardScreen() {
                   <View className="mb-1">
                     <Text className="mb-1.5 px-1 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Already on Aangan — join</Text>
                     {existingMatches.map((cm) => (
-                      <Pressable key={cm.id} onPress={() => joinExisting(cm)} className="mb-2 flex-row items-center gap-3 rounded-2xl border p-3.5 active:opacity-80" style={{ borderColor: '#16A34A55', backgroundColor: '#16A34A10' }}>
-                        <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: '#16A34A22' }}>
+                      <Pressable key={cm.id} onPress={() => joinExisting(cm)} className="mb-2 flex-row items-center gap-3 rounded-2xl border p-3.5 active:opacity-80" style={{ borderColor: c.success + '55', backgroundColor: c.successSoft }}>
+                        <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: c.successSoft }}>
                           <Ionicons name="checkmark-circle" size={18} color={c.accent} />
                         </View>
                         <View className="flex-1">
                           <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{cm.name}</Text>
                           <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{[cm.city, cm.state].filter(Boolean).join(", ") || cm.address || "On Aangan"}</Text>
                         </View>
-                        <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: '#16A34A' }}>
+                        <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: c.success }}>
                           <Text className="text-[11px] font-sans-sb" style={{ color: '#fff' }}>Join</Text>
                         </View>
                       </Pressable>
@@ -229,7 +229,7 @@ export default function OnboardScreen() {
                     ) : null}
                     {results.map((r) => (
                       <Pressable accessibilityRole="button" accessibilityLabel="Open" key={r.osmId} onPress={() => pick(r)} className="flex-row items-start gap-3 card p-3.5 active:bg-inset" style={{ marginBottom: 8 }}>
-                        <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: '#0D948822' }}>
+                        <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: c.infoSoft }}>
                           <Ionicons name="business" size={17} color="#0D9488" />
                         </View>
                         <View className="flex-1">
@@ -304,9 +304,9 @@ export default function OnboardScreen() {
               ) : (
                 // ── New society — onboard form ──
                 <View className="mt-4">
-                  <View className="mb-4 flex-row items-center gap-2 self-start rounded-full px-3 py-1.5" style={{ backgroundColor: '#0D948822' }}>
+                  <View className="mb-4 flex-row items-center gap-2 self-start rounded-full px-3 py-1.5" style={{ backgroundColor: c.infoSoft }}>
                     <Ionicons name="sparkles" size={13} color="#0D9488" />
-                    <Text className="text-[12px] font-sans-sb" style={{ color: '#0D9488' }}>New society — you'll be its admin</Text>
+                    <Text className="text-[12px] font-sans-sb" style={{ color: c.info }}>New society — you'll be its admin</Text>
                   </View>
 
                   <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Society name</Text>

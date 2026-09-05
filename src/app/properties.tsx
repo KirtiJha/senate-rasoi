@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { T } from '../components/T';
-import { Chip, Container, ScreenHeader } from '../components/ui';
+import { Badge, Chip, Container, ScreenHeader, type BadgeTone } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { qk } from '../lib/queryClient';
 import { useCachedList } from '../lib/useCachedList';
@@ -14,10 +14,10 @@ import { useThemeColors } from '../theme';
 
 type Filter = 'all' | ListingType;
 
-const STATUS_META: Record<string, { label: string; bg: string; fg: string }> = {
-  available: { label: 'Available', bg: '#16A34A22', fg: '#16A34A' },
-  sold: { label: 'Sold', bg: '#9CA3AF22', fg: '#6B7280' },
-  rented: { label: 'Rented', bg: '#9CA3AF22', fg: '#6B7280' },
+const STATUS_META: Record<string, { label: string; tone: BadgeTone }> = {
+  available: { label: 'Available', tone: 'success' },
+  sold: { label: 'Sold', tone: 'neutral' },
+  rented: { label: 'Rented', tone: 'neutral' },
 };
 
 export default function PropertiesScreen() {
@@ -108,13 +108,9 @@ function PropertyCard({ p, onPress, c }: { p: PropertyRow; onPress: () => void; 
       </View>
       <View className="flex-1 p-3">
         <View className="flex-row items-center gap-1.5">
-          <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.accent + '18' }}>
-            <Text className="text-[10px] font-sans-sb" style={{ color: c.accent }}>{isRent ? 'For rent' : 'For sale'}</Text>
-          </View>
+          <Badge tone="accent" size="sm" label={isRent ? 'For rent' : 'For sale'} />
           {p.status !== 'available' ? (
-            <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: status.bg }}>
-              <Text className="text-[10px] font-sans-sb" style={{ color: status.fg }}>{status.label}</Text>
-            </View>
+            <Badge size="sm" tone={status.tone} label={status.label} />
           ) : null}
         </View>
         <T source="property" id={p.id} field="title" text={p.title} showToggle={false} className="mt-1 font-sans-bold text-[14px] text-ink" numberOfLines={1} />

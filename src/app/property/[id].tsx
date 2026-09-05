@@ -5,7 +5,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { PropertyChat } from '../../components/PropertyChat';
 import { T } from '../../components/T';
-import { Avatar, Button, Container, Gallery, KeyboardAvoider, ScreenHeader, Sheet } from '../../components/ui';
+import { Avatar, Badge, Button, Container, Gallery, KeyboardAvoider, ScreenHeader, Sheet } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -138,17 +138,11 @@ export default function PropertyDetailScreen() {
 
           {/* Badges + title */}
           <View className="flex-row items-center gap-2">
-            <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: ACCENT + '18' }}>
-              <Text className="text-[11px] font-sans-sb" style={{ color: ACCENT }}>{isRent ? 'For rent' : 'For sale'}</Text>
-            </View>
+            <Badge tone="accent" label={isRent ? 'For rent' : 'For sale'} />
             {p.status !== 'available' ? (
-              <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#9CA3AF22' }}>
-                <Text className="text-[11px] font-sans-sb" style={{ color: '#6B7280' }}>{p.status === 'sold' ? 'Sold' : 'Rented'}</Text>
-              </View>
+              <Badge tone="neutral" label={p.status === 'sold' ? 'Sold' : 'Rented'} />
             ) : (
-              <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#16A34A22' }}>
-                <Text className="text-[11px] font-sans-sb" style={{ color: '#16A34A' }}>Available</Text>
-              </View>
+              <Badge tone="success" label="Available" />
             )}
           </View>
           <T source="property" id={p.id} field="title" text={p.title} className="mt-2 font-display-x text-[22px] text-ink" />
@@ -295,9 +289,9 @@ export default function PropertyDetailScreen() {
 function ReferralRow({ r, isOwner, c }: { r: PropertyReferralRow; isOwner: boolean; c: ReturnType<typeof useThemeColors> }) {
   const NEXT: Record<ReferralStatus, ReferralStatus> = { new: 'contacted', contacted: 'closed', closed: 'new' };
   const META: Record<ReferralStatus, { label: string; bg: string; fg: string }> = {
-    new: { label: 'New', bg: '#7C3AED20', fg: '#7C3AED' },
-    contacted: { label: 'Contacted', bg: '#D9770622', fg: '#D97706' },
-    closed: { label: 'Closed', bg: '#16A34A22', fg: '#16A34A' },
+    new: { label: 'New', bg: c.infoSoft, fg: c.info },
+    contacted: { label: 'Contacted', bg: c.warnSoft, fg: c.warn },
+    closed: { label: 'Closed', bg: c.successSoft, fg: c.success },
   };
   const m = META[r.status];
   const phone = r.candidate_phone;
@@ -314,9 +308,9 @@ function ReferralRow({ r, isOwner, c }: { r: PropertyReferralRow; isOwner: boole
       {r.note ? <Text className="font-sans mt-1.5 text-[13px] leading-[19px] text-ink">{r.note}</Text> : null}
       {isOwner && phone ? (
         <View className="mt-2.5 flex-row gap-2">
-          <Pressable onPress={() => openUrl(waLink(phone, `Hi ${r.candidate_name}, I heard you're looking for a flat — let's connect.`))} className="flex-row items-center gap-1 rounded-full px-3 py-1.5" style={{ backgroundColor: '#25D36618' }}>
+          <Pressable onPress={() => openUrl(waLink(phone, `Hi ${r.candidate_name}, I heard you're looking for a flat — let's connect.`))} className="flex-row items-center gap-1 rounded-full px-3 py-1.5" style={{ backgroundColor: c.whatsappSoft }}>
             <Ionicons name="logo-whatsapp" size={14} color="#25D366" />
-            <Text className="text-[12px] font-sans-sb" style={{ color: '#25D366' }}>WhatsApp</Text>
+            <Text className="text-[12px] font-sans-sb" style={{ color: c.whatsapp }}>WhatsApp</Text>
           </Pressable>
           <Pressable onPress={() => openUrl(`tel:${phone}`)} className="flex-row items-center gap-1 rounded-full px-3 py-1.5" style={{ backgroundColor: c.inset }}>
             <Ionicons name="call" size={14} color={c.muted} />

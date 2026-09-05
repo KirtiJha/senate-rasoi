@@ -202,7 +202,7 @@ function PollCard({
 
   return (
     <View className="card overflow-hidden">
-      <View style={{ height: 3, backgroundColor: '#8B5CF6' }} />
+      <View style={{ height: 3, backgroundColor: c.info }} />
       <View className="p-4">
         {/* Meta row */}
         <View className="flex-row items-center gap-2 mb-3">
@@ -269,12 +269,12 @@ function PollCard({
                 onPress={() => { if (!hasVoted && !ended) onVote(opt.id); }}
                 disabled={hasVoted || ended}
                 className="rounded-xl overflow-hidden"
-                style={{ borderWidth: 1, borderColor: isMyVote ? '#8B5CF6' : c.line }}
+                style={{ borderWidth: 1, borderColor: isMyVote ? c.info : c.line }}
               >
                 {showResults ? (
                   <View
                     className="absolute inset-0 rounded-xl"
-                    style={{ backgroundColor: isMyVote ? '#8B5CF630' : c.inset, width: `${pct}%` }}
+                    style={{ backgroundColor: isMyVote ? c.infoSoft : c.inset, width: `${pct}%` }}
                   />
                 ) : null}
                 <View className="flex-row items-center justify-between px-3.5 py-2.5">

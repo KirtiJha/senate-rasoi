@@ -3,9 +3,10 @@ import { Image } from 'expo-image';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { TILE, tileMath, tileUrl } from '../lib/geo';
+import { fixed } from '../theme';
 
 /** A small OpenStreetMap tile mosaic centred on the location with a pin. */
-export function MapPreview({ lat, lon, height, pinColor = '#E8650A' }: { lat: number; lon: number; height: number; pinColor?: string }) {
+export function MapPreview({ lat, lon, height, pinColor = fixed.orange }: { lat: number; lon: number; height: number; pinColor?: string }) {
   const [w, setW] = useState(0);
   const { zoom, fx, fy, cx, cy } = tileMath(lat, lon, 16);
   const originX = w / 2 - fx * TILE;

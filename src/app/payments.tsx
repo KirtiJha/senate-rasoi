@@ -10,7 +10,7 @@ import { useConfirm } from '../context/confirm';
 import { markPaymentReceived as courtMarkReceived, revertPayment as courtRevert } from '../lib/courts';
 import { PaymentRow, cancelPayment, fetchMyPayments, markReceived, subscribePayments } from '../lib/payments';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { layout, useThemeColors } from '../theme';
+import { layout, useThemeColors, type ThemeColors } from '../theme';
 
 type Filter = 'all' | 'sent' | 'received';
 
@@ -30,14 +30,15 @@ function routeFor(p: PaymentRow): string | null {
   }
 }
 
-const STATUS_META: Record<string, { label: string; color: string }> = {
-  initiated: { label: 'Awaiting', color: '#D97706' },
-  received: { label: 'Received', color: '#16A34A' },
-  cancelled: { label: 'Cancelled', color: '#94A3B8' },
-};
+const statusMeta = (c: ThemeColors): Record<string, { label: string; color: string }> => ({
+  initiated: { label: 'Awaiting', color: c.warn },
+  received: { label: 'Received', color: c.success },
+  cancelled: { label: 'Cancelled', color: c.muted },
+});
 
 export default function PaymentsScreen() {
   const c = useThemeColors();
+  const STATUS_META = statusMeta(c);
   const toast = useToast();
   const confirm = useConfirm();
   const { userId } = useAuth();
@@ -153,7 +154,7 @@ export default function PaymentsScreen() {
                       onPress={() => route && router.push(route as never)}
                     >
                       <View className="flex-row items-center gap-1.5">
-                        <Ionicons name={iPaid ? 'arrow-up' : 'arrow-down'} size={13} color={iPaid ? '#EF4444' : '#16A34A'} />
+                        <Ionicons name={iPaid ? 'arrow-up' : 'arrow-down'} size={13} color={iPaid ? c.danger : c.success} />
                         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>
                           {iPaid ? `To ${other?.name ?? 'Neighbour'}` : `From ${other?.name ?? 'Neighbour'}`}
                         </Text>

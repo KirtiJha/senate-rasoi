@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../components/T';
-import { Chip, ScreenHeader } from '../components/ui';
+import { Badge, Chip, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import {
   LOST_FOUND_CATEGORIES,
@@ -220,18 +220,10 @@ function ItemCard({ item }: { item: LostFoundItem }) {
 
         <View className="flex-1 min-w-0">
           <View className="flex-row flex-wrap items-center gap-1.5 mb-1">
-            <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: item.kind === 'lost' ? '#EF444420' : '#16A34A20' }}>
-              <Text className="text-[10px] font-sans-sb" style={{ color: item.kind === 'lost' ? '#DC2626' : '#15803D' }}>
-                {item.kind === 'lost' ? '🔍 Lost' : '📦 Found'}
-              </Text>
-            </View>
-            <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: ACCENT + '20' }}>
-              <Text className="text-[10px] font-sans-sb" style={{ color: ACCENT }}>{cm.label}</Text>
-            </View>
+            <Badge size="sm" tone={item.kind === 'lost' ? 'danger' : 'success'} label={item.kind === 'lost' ? '🔍 Lost' : '📦 Found'} />
+            <Badge tone="accent" size="sm" label={cm.label} />
             {isResolved ? (
-              <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#16A34A20' }}>
-                <Text className="text-[10px] font-sans-sb" style={{ color: '#15803D' }}>✓ Resolved</Text>
-              </View>
+              <Badge tone="success" size="sm" label="✓ Resolved" />
             ) : null}
           </View>
           <T source="lost_found" id={item.id} field="title" text={item.title} showToggle={false}

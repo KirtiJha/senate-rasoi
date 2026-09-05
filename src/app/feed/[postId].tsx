@@ -743,7 +743,7 @@ function PostMenu({ post, isOwner, isAdmin, muted, onEdit, onDelete, onPinToggle
       </Pressable>
       {/* Rendered in a Modal so it always sits on top (not under later content). */}
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <Pressable className="flex-1" style={{ backgroundColor: '#00000055' }} onPress={() => setOpen(false)}>
+        <Pressable className="flex-1" style={{ backgroundColor: c.scrim }} onPress={() => setOpen(false)}>
           <View
             className="absolute overflow-hidden card"
             style={{ top: insets.top + 52, right: 14, minWidth: 200, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 12 }}
@@ -780,7 +780,7 @@ function PostMenu({ post, isOwner, isAdmin, muted, onEdit, onDelete, onPinToggle
 function MenuItem({ icon, label, onPress, c, danger }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void; c: ReturnType<typeof useThemeColors>; danger?: boolean }) {
   return (
     <Pressable onPress={onPress} className="flex-row items-center gap-2.5 px-4 py-3 active:bg-inset">
-      <Ionicons name={icon} size={16} color={danger ? '#DC2626' : c.muted} />
+      <Ionicons name={icon} size={16} color={danger ? c.danger : c.muted} />
       <Text className={`text-[14px] font-sans-md ${danger ? 'text-danger' : 'text-ink'}`}>{label}</Text>
     </Pressable>
   );

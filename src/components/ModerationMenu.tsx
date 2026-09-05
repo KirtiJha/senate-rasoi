@@ -114,7 +114,7 @@ export function ModerationMenu({
         </Pressable>
 
         {targetOwnerId ? (
-          <Pressable onPress={doBlock} className={`mt-2 ${row}`} style={{ backgroundColor: '#EF444412' }}>
+          <Pressable onPress={doBlock} className={`mt-2 ${row}`} style={{ backgroundColor: c.dangerSoft }}>
             <Ionicons name="ban-outline" size={19} color={c.danger} />
             <View className="flex-1">
               <Text className="font-sans-sb text-[14px] text-nonveg">Block {who}</Text>

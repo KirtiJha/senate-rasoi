@@ -136,16 +136,16 @@ export default function HelpersScreen() {
             accessibilityRole="button"
             accessibilityLabel="Ask the society for blood"
             className="mb-5 flex-row items-center gap-3 rounded-2xl px-4 py-3.5 active:opacity-90"
-            style={{ backgroundColor: '#B3261E' }}
+            style={{ backgroundColor: c.danger }}
           >
-            <Ionicons name="water" size={20} color="#fff" />
+            <Ionicons name="water" size={20} color={c.onDanger} />
             <View className="flex-1">
-              <Text className="font-sans-bold text-[15px] text-white">Ask the society for blood</Text>
-              <Text className="font-sans text-[12px]" style={{ color: '#FFE3E0' }}>
+              <Text className="font-sans-bold text-[15px]" style={{ color: c.onDanger }}>Ask the society for blood</Text>
+              <Text className="font-sans text-[12px]" style={{ color: c.onDanger, opacity: 0.85 }}>
                 Everyone who can give to that group is told straight away
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={17} color="#FFE3E0" />
+            <Ionicons name="chevron-forward" size={17} color={c.onDanger} />
           </Pressable>
 
           {requests.length > 0 ? (
@@ -315,10 +315,10 @@ function RequestCard({
   const phone = r.requester?.whatsapp ?? r.requester?.phone ?? null;
 
   return (
-    <View className="rounded-2xl border p-3.5" style={{ borderColor: urgent ? '#B3261E55' : c.line, backgroundColor: urgent ? '#B3261E0C' : c.surface }}>
+    <View className="rounded-2xl border p-3.5" style={{ borderColor: urgent ? c.danger + '55' : c.line, backgroundColor: urgent ? c.danger + '0C' : c.surface }}>
       <View className="flex-row items-center gap-2">
-        <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: '#B3261E18' }}>
-          <Text className="font-sans-bold text-[13px]" style={{ color: '#B3261E' }}>{r.blood_group}</Text>
+        <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: c.dangerSoft }}>
+          <Text className="font-sans-bold text-[13px]" style={{ color: c.danger }}>{r.blood_group}</Text>
         </View>
         <View className="min-w-0 flex-1">
           <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>
@@ -329,7 +329,7 @@ function RequestCard({
             {r.requester?.flat && !mine ? ` · Flat ${r.requester.flat}` : ''} · {timeAgo(r.created_at)}
           </Text>
         </View>
-        <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: urgent ? '#B3261E' : c.inset }}>
+        <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: urgent ? c.danger : c.inset }}>
           <Text className="text-[10px] font-sans-sb" style={{ color: urgent ? '#fff' : c.muted }}>{URGENCY_LABELS[r.urgency]}</Text>
         </View>
       </View>
@@ -358,7 +358,7 @@ function RequestCard({
                         <Pressable accessibilityRole="button" accessibilityLabel="Call" onPress={() => openUrl(`tel:${p}`)} hitSlop={6} className="h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: c.surface }}>
                           <Ionicons name="call" size={15} color={c.accent} />
                         </Pressable>
-                        <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={() => openUrl(wa(p, `Hi ${o.donor?.name ?? ''}, about the ${r.blood_group} blood request on Aangan — thank you!`))} hitSlop={6} className="h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: '#25D36618' }}>
+                        <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={() => openUrl(wa(p, `Hi ${o.donor?.name ?? ''}, about the ${r.blood_group} blood request on Aangan — thank you!`))} hitSlop={6} className="h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: c.whatsappSoft }}>
                           <Ionicons name="logo-whatsapp" size={15} color="#25D366" />
                         </Pressable>
                       </>
@@ -390,7 +390,7 @@ function RequestCard({
       ) : (
         <View className="mt-2.5 gap-2">
           {canGive ? (
-            <Pressable onPress={onOffer} className="items-center rounded-xl py-2.5 active:opacity-90" style={{ backgroundColor: '#B3261E' }}>
+            <Pressable onPress={onOffer} className="items-center rounded-xl py-2.5 active:opacity-90" style={{ backgroundColor: c.danger }}>
               <Text className="text-[13px] font-sans-sb text-white">I can give — tell them now</Text>
             </Pressable>
           ) : (
@@ -461,7 +461,7 @@ function AskSheet({
           const on = group === g;
           return (
             <Pressable key={g} onPress={() => setGroup(g)} className="rounded-xl border px-3.5 py-2"
-              style={{ borderColor: on ? '#B3261E' : c.line, backgroundColor: on ? '#B3261E' : c.surface }}>
+              style={{ borderColor: on ? c.danger : c.line, backgroundColor: on ? c.danger : c.surface }}>
               <Text className="text-[13.5px] font-sans-bold" style={{ color: on ? '#fff' : c.muted }}>{g}</Text>
             </Pressable>
           );
@@ -474,8 +474,8 @@ function AskSheet({
           const on = urgency === u;
           return (
             <Pressable key={u} onPress={() => setUrgency(u)} className="flex-1 items-center rounded-xl border py-2"
-              style={{ borderColor: on ? '#B3261E' : c.line, backgroundColor: on ? '#B3261E14' : c.surface }}>
-              <Text className="text-[12px] font-sans-sb" style={{ color: on ? '#B3261E' : c.muted }}>{URGENCY_LABELS[u]}</Text>
+              style={{ borderColor: on ? c.danger : c.line, backgroundColor: on ? c.dangerSoft : c.surface }}>
+              <Text className="text-[12px] font-sans-sb" style={{ color: on ? c.danger : c.muted }}>{URGENCY_LABELS[u]}</Text>
             </Pressable>
           );
         })}
@@ -519,7 +519,7 @@ function PersonRow({ p, badge, c, inline }: { p: RegistryPerson; badge?: string;
       </View>
       {phone ? (
         <>
-          <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={() => openUrl(wa(phone, 'Hi, reaching out via the Aangan emergency registry.'))} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: '#25D36618' }}><Ionicons name="logo-whatsapp" size={17} color="#25D366" /></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Open WhatsApp" onPress={() => openUrl(wa(phone, 'Hi, reaching out via the Aangan emergency registry.'))} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: c.whatsappSoft }}><Ionicons name="logo-whatsapp" size={17} color="#25D366" /></Pressable>
           <Pressable accessibilityRole="button" accessibilityLabel="Call" onPress={() => openUrl(`tel:${phone}`)} hitSlop={6} className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: c.inset }}><Ionicons name="call" size={16} color={c.muted} /></Pressable>
         </>
       ) : (

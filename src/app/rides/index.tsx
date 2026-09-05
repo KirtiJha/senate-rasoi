@@ -229,11 +229,7 @@ function RideCard({
             </Text>
           </View>
           {ride.preference !== 'all' ? (
-            <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.accentSoft }}>
-              <Text className="text-[11px] font-sans-sb" style={{ color: c.accent }}>
-                {PREFERENCE_LABELS[ride.preference]}
-              </Text>
-            </View>
+            <Badge tone="accent" size="sm" label={PREFERENCE_LABELS[ride.preference]} />
           ) : null}
         </View>
       </View>

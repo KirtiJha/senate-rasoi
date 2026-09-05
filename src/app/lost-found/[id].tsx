@@ -9,7 +9,7 @@ import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, Text
 import { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
-import { Avatar, Button, Container, ParallaxHero, ScreenHeader, Sheet } from '../../components/ui';
+import { Avatar, Badge, Button, Container, ParallaxHero, ScreenHeader, Sheet } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -185,18 +185,10 @@ export default function LostFoundDetailScreen() {
 
           {/* Badges */}
           <View className="flex-row flex-wrap items-center gap-1.5">
-            <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: isLost ? '#EF444420' : '#16A34A20' }}>
-              <Text className="text-[11px] font-sans-sb" style={{ color: isLost ? '#DC2626' : '#15803D' }}>
-                {isLost ? '🔍 Lost' : '📦 Found'}
-              </Text>
-            </View>
-            <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: ACCENT + '18' }}>
-              <Text className="text-[11px] font-sans-sb" style={{ color: ACCENT }}>{m.label}</Text>
-            </View>
+            <Badge tone={isLost ? 'danger' : 'success'} label={isLost ? '🔍 Lost' : '📦 Found'} />
+            <Badge tone="accent" label={m.label} />
             {isResolved ? (
-              <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#16A34A20' }}>
-                <Text className="text-[11px] font-sans-sb" style={{ color: '#15803D' }}>✓ Resolved</Text>
-              </View>
+              <Badge tone="success" label="✓ Resolved" />
             ) : null}
           </View>
 
@@ -260,7 +252,7 @@ export default function LostFoundDetailScreen() {
                 <Pressable
                   onPress={() => changeStatus('resolved')}
                   className="flex-1 items-center rounded-xl py-2.5"
-                  style={{ backgroundColor: isResolved ? '#16A34A' : c.inset }}
+                  style={{ backgroundColor: isResolved ? c.success : c.inset }}
                 >
                   <Text className="text-[12px] font-sans-sb" style={{ color: isResolved ? '#fff' : c.muted }}>
                     {isLost ? '✓ Found it!' : '✓ Returned'}

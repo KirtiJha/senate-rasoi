@@ -194,8 +194,8 @@ function DocRowView({
       <Pressable onPress={onPreview} className="flex-1 active:opacity-70" style={{ minWidth: 0 }}>
         <View className="flex-row items-center gap-1.5">
           <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{doc.name}</Text>
-          <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: doc.is_public ? '#16A34A20' : c.inset }}>
-            <Text className="text-[9px] font-sans-sb uppercase" style={{ color: doc.is_public ? '#16A34A' : c.muted }}>{doc.is_public ? 'Public' : 'Private'}</Text>
+          <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: doc.is_public ? c.successSoft : c.inset }}>
+            <Text className="text-[9px] font-sans-sb uppercase" style={{ color: doc.is_public ? c.success : c.muted }}>{doc.is_public ? 'Public' : 'Private'}</Text>
           </View>
         </View>
         <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{meta}</Text>
@@ -231,7 +231,7 @@ function IconBtn({ icon, onPress, c }: { icon: keyof typeof Ionicons.glyphMap; o
 function PublicToggle({ value, onToggle, c }: { value: boolean; onToggle: () => void; c: ReturnType<typeof useThemeColors> }) {
   return (
     <Pressable onPress={onToggle} className="flex-row items-center gap-3 rounded-2xl border border-line bg-inset px-4 py-3">
-      <Ionicons name={value ? 'globe-outline' : 'lock-closed-outline'} size={18} color={value ? '#16A34A' : c.muted} />
+      <Ionicons name={value ? 'globe-outline' : 'lock-closed-outline'} size={18} color={value ? c.success : c.muted} />
       <View className="flex-1">
         <Text className="font-sans-sb text-[14px] text-ink">{value ? 'Public' : 'Private'}</Text>
         <Text className="font-sans text-[12px] text-muted">{value ? 'Any society member can access' : 'Only people you share with can access'}</Text>

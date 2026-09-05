@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
-import { Container, ScreenHeader } from '../components/ui';
+import { Badge, Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { qk } from '../lib/queryClient';
 import { useCachedList } from '../lib/useCachedList';
@@ -119,9 +119,7 @@ function EventCard({ e }: { e: SocietyEvent }) {
       <View style={{ height: 4, backgroundColor: c.accent }} />
       <View className="p-4">
         <View className="mb-1.5 flex-row flex-wrap items-center gap-1.5">
-          <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.accentSoft }}>
-            <Text className="text-[10px] font-sans-sb" style={{ color: c.accent }}>{meta.label}</Text>
-          </View>
+          <Badge tone="accent" size="sm" label={meta.label} />
           {e.event_date ? (
             <Text className="font-sans text-[11px] text-faint">{formatDate(e.event_date)}</Text>
           ) : null}

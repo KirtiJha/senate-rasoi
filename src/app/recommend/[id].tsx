@@ -221,9 +221,9 @@ export default function RecoDetailScreen() {
                             </View>
                           ) : null}
                           {a.provider_phone ? (
-                            <Pressable onPress={() => openUrl(waLink(a.provider_phone, `Hi, a neighbour recommended you on Aangan.`))} className="flex-row items-center gap-1 rounded-full px-2.5 py-1" style={{ backgroundColor: '#25D36618' }}>
+                            <Pressable onPress={() => openUrl(waLink(a.provider_phone, `Hi, a neighbour recommended you on Aangan.`))} className="flex-row items-center gap-1 rounded-full px-2.5 py-1" style={{ backgroundColor: c.whatsappSoft }}>
                               <Ionicons name="logo-whatsapp" size={12} color="#25D366" />
-                              <Text className="text-[12px] font-sans-sb" style={{ color: '#25D366' }}>{a.provider_phone}</Text>
+                              <Text className="text-[12px] font-sans-sb" style={{ color: c.whatsapp }}>{a.provider_phone}</Text>
                             </Pressable>
                           ) : null}
                         </View>

@@ -137,7 +137,7 @@ export function ListingRequests({
                   accessibilityLabel="Reply on WhatsApp"
                 >
                   <View pointerEvents="none" className="flex-row items-center justify-center gap-1.5 rounded-xl py-2.5"
-                    style={{ backgroundColor: '#25D36618' }}>
+                    style={{ backgroundColor: c.whatsappSoft }}>
                     <Ionicons name="logo-whatsapp" size={15} color="#128C7E" />
                     <Text className="font-sans-sb text-[13px]" style={{ color: '#128C7E' }}>
                       Reply on WhatsApp

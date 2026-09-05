@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
-import { Avatar, Button, Container, ScreenHeader, Segmented, Sheet, Touchable, formatTimeLabel } from '../../../components/ui';
+import { Avatar, Badge, Button, Container, ScreenHeader, Segmented, Sheet, Touchable, formatTimeLabel } from '../../../components/ui';
 import { DetailsTab } from '../../../components/celebrations/DetailsTab';
 import { ProgrammeTab } from '../../../components/celebrations/ProgrammeTab';
 import { MoneyTab } from '../../../components/celebrations/MoneyTab';
@@ -222,13 +222,9 @@ export default function EventDetailScreen() {
 
           {/* Status + date */}
           <View className="flex-row flex-wrap items-center gap-1.5">
-            <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.accentSoft }}>
-              <Text className="text-[11px] font-sans-sb" style={{ color: c.accent }}>{meta.label}</Text>
-            </View>
+            <Badge tone="accent" label={meta.label} />
             {event.event_date ? (
-              <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.inset }}>
-                <Text className="text-[11px] font-sans-sb text-muted">{formatDate(event.event_date)}</Text>
-              </View>
+              <Badge tone="neutral" label={formatDate(event.event_date)} />
             ) : null}
             {event.start_time ? (
               <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.inset }}>
@@ -257,7 +253,7 @@ export default function EventDetailScreen() {
               <Stat
                 label="Balance"
                 value={rupees(totals.balance)}
-                color={totals.balance < 0 ? '#EF4444' : ACCENT}
+                color={totals.balance < 0 ? c.danger : ACCENT}
               />
             </View>
 
@@ -320,9 +316,7 @@ export default function EventDetailScreen() {
                         {t.profile?.flat ? `Flat ${t.profile.flat}` : 'Neighbour'}
                       </Text>
                     </View>
-                    <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: ACCENT + '18' }}>
-                      <Text className="text-[10px] font-sans-sb" style={{ color: ACCENT }}>{ROLE_LABEL[t.role]}</Text>
-                    </View>
+                    <Badge tone="accent" size="sm" label={ROLE_LABEL[t.role]} />
                   </View>
                 ))}
               </View>

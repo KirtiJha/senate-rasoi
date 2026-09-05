@@ -67,7 +67,7 @@ export function InviteNeighbours({
           accessibilityRole="button"
           accessibilityLabel="Invite on WhatsApp"
           className="flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2.5 active:opacity-90"
-          style={{ backgroundColor: '#25D366' }}
+          style={{ backgroundColor: c.whatsapp }}
         >
           <Ionicons name="logo-whatsapp" size={16} color="#fff" />
           <Text className="text-[13px] font-sans-sb text-white">WhatsApp</Text>

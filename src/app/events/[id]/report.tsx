@@ -108,7 +108,7 @@ export default function EventReportScreen() {
               </View>
               <View className="mt-3 border-t border-line pt-3">
                 <Text className="font-sans text-[11px] text-faint">Balance remaining</Text>
-                <Text className="font-sans-bold text-[26px]" style={{ color: t.balance < 0 ? '#EF4444' : ACCENT }}>
+                <Text className="font-sans-bold text-[26px]" style={{ color: t.balance < 0 ? c.danger : ACCENT }}>
                   {rupees(t.balance)}
                 </Text>
                 {t.balance < 0 ? (
@@ -205,7 +205,7 @@ export default function EventReportScreen() {
                           <Text className="text-[11px] font-sans-sb text-muted">View bill</Text>
                         </Pressable>
                       ) : (
-                        <Text className="font-sans mt-1.5 text-[11px]" style={{ color: '#B45309' }}>No bill attached</Text>
+                        <Text className="font-sans mt-1.5 text-[11px]" style={{ color: c.warnInk }}>No bill attached</Text>
                       )}
                     </View>
                   );
@@ -234,7 +234,7 @@ export default function EventReportScreen() {
                       {row.contributor_name || row.contributor?.name || '—'}
                       {row.method ? ` · ${row.method}` : ''}
                     </Text>
-                    <Text className="text-[12px] font-sans-sb" style={{ color: '#16A34A' }}>
+                    <Text className="text-[12px] font-sans-sb" style={{ color: c.success }}>
                       {rupees(Number(row.amount))}
                     </Text>
                   </View>

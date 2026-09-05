@@ -400,7 +400,7 @@ function SessionCard({
               onPress={() => onRespond(s, 'declined')}
               disabled={busy}
               className="flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2"
-              style={{ backgroundColor: s.myStatus === 'declined' ? '#6B7280' : c.surface, borderWidth: 1.5, borderColor: s.myStatus === 'declined' ? '#6B7280' : c.line, opacity: busy ? 0.6 : 1 }}
+              style={{ backgroundColor: s.myStatus === 'declined' ? c.muted : c.surface, borderWidth: 1.5, borderColor: s.myStatus === 'declined' ? c.muted : c.line, opacity: busy ? 0.6 : 1 }}
             >
               <Ionicons name={s.myStatus === 'declined' ? 'close-circle' : 'close'} size={15} color={s.myStatus === 'declined' ? '#fff' : c.muted} />
               <Text className="text-[12px] font-sans-sb" style={{ color: s.myStatus === 'declined' ? '#fff' : c.muted }}>Can't</Text>
@@ -690,7 +690,7 @@ function ManagePlayersSheet({ session, members, accent, c, onClose, onSet, onCon
                   <Pressable onPress={() => onSet(m.user_id, 'confirmed')} className="rounded-lg px-2.5 py-1.5" style={chipStyle(st === 'confirmed', accent, c)}>
                     <Text className="text-[11px] font-sans-sb" style={{ color: st === 'confirmed' ? '#fff' : c.muted }}>In</Text>
                   </Pressable>
-                  <Pressable onPress={() => onSet(m.user_id, 'declined')} className="rounded-lg px-2.5 py-1.5" style={chipStyle(st === 'declined', '#6B7280', c)}>
+                  <Pressable onPress={() => onSet(m.user_id, 'declined')} className="rounded-lg px-2.5 py-1.5" style={chipStyle(st === 'declined', c.muted, c)}>
                     <Text className="text-[11px] font-sans-sb" style={{ color: st === 'declined' ? '#fff' : c.muted }}>Out</Text>
                   </Pressable>
                 </View>

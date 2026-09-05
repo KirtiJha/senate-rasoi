@@ -9,7 +9,7 @@ import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, Text
 import { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
-import { Avatar, Button, Container, ParallaxHero, ScreenHeader, Sheet } from '../../components/ui';
+import { Avatar, Badge, Button, Container, ParallaxHero, ScreenHeader, Sheet } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -236,18 +236,14 @@ export default function LendItemDetailScreen() {
 
           {/* Kind + category + status badges */}
           <View className="flex-row flex-wrap items-center gap-1.5">
-            <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: ACCENT + '18' }}>
-              <Text className="text-[11px] font-sans-sb" style={{ color: ACCENT }}>{isOffer ? '🤝 Lending' : '🙏 Needs to borrow'}</Text>
-            </View>
-            <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.inset }}>
-              <Text className="text-[11px] font-sans-sb text-muted">{m.label}</Text>
-            </View>
+            <Badge tone="accent" label={isOffer ? '🤝 Lending' : '🙏 Needs to borrow'} />
+            <Badge tone="neutral" label={m.label} />
             {isOffer ? (
               item.status === 'lent'
-                ? <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.highlightSoft }}><Text className="text-[11px] font-sans-sb" style={{ color: c.highlightInk }}>Lent out</Text></View>
+                ? <Badge tone="highlight" label="Lent out" />
                 : item.status === 'unavailable'
-                  ? <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#9CA3AF22' }}><Text className="text-[11px] font-sans-sb text-muted">Hidden</Text></View>
-                  : <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#16A34A22' }}><Text className="text-[11px] font-sans-sb" style={{ color: '#16A34A' }}>Available</Text></View>
+                  ? <Badge tone="neutral" label="Hidden" />
+                  : <Badge tone="success" label="Available" />
             ) : null}
           </View>
 
@@ -330,22 +326,22 @@ export default function LendItemDetailScreen() {
                             <Text className="font-sans-bold text-[13px] text-ink">{r.requester?.name ?? 'A neighbour'}</Text>
                             {r.requester?.flat ? <Text className="font-sans text-[11px] text-faint">Flat {r.requester.flat}</Text> : null}
                           </View>
-                          <Text className="text-[11px] font-sans-sb" style={{ color: r.status === 'accepted' ? '#16A34A' : r.status === 'declined' && !r.auto_closed ? '#EF4444' : r.status === 'pending' ? ACCENT : '#6B7280' }}>{requestLabel(r)}</Text>
+                          <Text className="text-[11px] font-sans-sb" style={{ color: r.status === 'accepted' ? c.success : r.status === 'declined' && !r.auto_closed ? c.danger : r.status === 'pending' ? ACCENT : c.muted }}>{requestLabel(r)}</Text>
                         </View>
                         {r.note ? <Text className="font-sans mt-1.5 text-[13px] text-ink">{r.note}</Text> : null}
                         <View className="mt-2 flex-row flex-wrap gap-2">
                           {r.status === 'pending' ? (
                             <>
-                              <Pressable onPress={() => changeReq(r, 'accepted')} className="rounded-full px-3 py-1.5" style={{ backgroundColor: '#16A34A' }}><Text className="text-[12px] font-sans-sb text-white">Accept</Text></Pressable>
+                              <Pressable onPress={() => changeReq(r, 'accepted')} className="rounded-full px-3 py-1.5" style={{ backgroundColor: c.success }}><Text className="text-[12px] font-sans-sb text-white">Accept</Text></Pressable>
                               <Pressable onPress={() => changeReq(r, 'declined')} className="rounded-full px-3 py-1.5" style={{ backgroundColor: c.inset }}><Text className="text-[12px] font-sans-sb text-muted">Decline</Text></Pressable>
                             </>
                           ) : r.status === 'accepted' ? (
                             <Pressable onPress={() => changeReq(r, 'returned')} className="rounded-full px-3 py-1.5" style={{ backgroundColor: c.inset }}><Text className="text-[12px] font-sans-sb text-muted">Mark returned</Text></Pressable>
                           ) : null}
                           {r.requester?.whatsapp ? (
-                            <Pressable onPress={() => openUrl(waLink(r.requester!.whatsapp, `Hi ${r.requester!.name}, about the ${item.title} you wanted to borrow…`))} className="flex-row items-center gap-1 rounded-full px-3 py-1.5" style={{ backgroundColor: '#25D36618' }}>
+                            <Pressable onPress={() => openUrl(waLink(r.requester!.whatsapp, `Hi ${r.requester!.name}, about the ${item.title} you wanted to borrow…`))} className="flex-row items-center gap-1 rounded-full px-3 py-1.5" style={{ backgroundColor: c.whatsappSoft }}>
                               <Ionicons name="logo-whatsapp" size={13} color="#25D366" />
-                              <Text className="text-[12px] font-sans-sb" style={{ color: '#25D366' }}>WhatsApp</Text>
+                              <Text className="text-[12px] font-sans-sb" style={{ color: c.whatsapp }}>WhatsApp</Text>
                             </Pressable>
                           ) : null}
                         </View>
@@ -361,7 +357,7 @@ export default function LendItemDetailScreen() {
               {isOffer ? (
                 myRequest ? (
                   <View className="items-center card p-4">
-                    <Ionicons name={myRequest.status === 'accepted' ? 'checkmark-circle' : 'time-outline'} size={26} color={myRequest.status === 'accepted' ? '#16A34A' : ACCENT} />
+                    <Ionicons name={myRequest.status === 'accepted' ? 'checkmark-circle' : 'time-outline'} size={26} color={myRequest.status === 'accepted' ? c.success : ACCENT} />
                     <Text className="mt-1 font-sans-bold text-[14px] text-ink">
                       {myRequest.status === 'accepted' ? `${ownerName} said yes 🎉` : 'Request sent'}
                     </Text>

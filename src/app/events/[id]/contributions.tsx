@@ -15,20 +15,21 @@ import {
   deleteContribution, setContributionFacts, setContributionReceipt, setContributionStatus,
   subscribeEvent, upsertContribution,
 } from '../../../lib/events';
-import { useThemeColors } from '../../../theme';
+import { useThemeColors, type ThemeColors } from '../../../theme';
 
 
-const STATUS_META: Record<ContributionStatus, { label: string; color: string }> = {
-  pending: { label: 'Pending', color: '#6B7280' },
-  initiated: { label: 'Paying', color: '#F59E0B' },
-  received: { label: 'Received', color: '#16A34A' },
-  waived: { label: 'Waived', color: '#94A3B8' },
-};
+const statusMeta = (c: ThemeColors): Record<ContributionStatus, { label: string; color: string }> => ({
+  pending: { label: 'Pending', color: c.muted },
+  initiated: { label: 'Paying', color: c.highlight },
+  received: { label: 'Received', color: c.success },
+  waived: { label: 'Waived', color: c.muted },
+});
 
 type Filter = 'all' | 'pending' | 'received';
 
 export default function ContributionsScreen() {
   const c = useThemeColors();
+  const STATUS_META = statusMeta(c);
   const ACCENT = c.accent;
   const toast = useToast();
   const confirm = useConfirm();
@@ -243,9 +244,9 @@ export default function ContributionsScreen() {
 
           {locked ? (
             <View className="mb-4 flex-row items-start gap-2 rounded-2xl border px-3.5 py-3"
-                  style={{ borderColor: '#0891B255', backgroundColor: '#0891B212' }}>
+                  style={{ borderColor: c.info + '55', backgroundColor: c.infoSoft }}>
               <Ionicons name="lock-closed-outline" size={16} color="#0891B2" />
-              <Text className="font-sans flex-1 text-[12px] leading-[17px]" style={{ color: '#0E7490' }}>
+              <Text className="font-sans flex-1 text-[12px] leading-[17px]" style={{ color: c.infoInk }}>
                 The accounts are published and closed. Contributions can no longer be changed.
               </Text>
             </View>

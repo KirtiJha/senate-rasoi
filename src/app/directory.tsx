@@ -347,8 +347,8 @@ export default function DirectoryScreen() {
                       {g.flat ? `Flat ${flatDisplay(g.block, g.flat)}` : 'No flat listed'}
                     </Text>
                     {g.block ? (
-                      <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#8B5CF620' }}>
-                        <Text className="text-[10px] font-sans-sb uppercase" style={{ color: '#8B5CF6' }}>Block {g.block}</Text>
+                      <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.infoSoft }}>
+                        <Text className="text-[10px] font-sans-sb uppercase" style={{ color: c.info }}>Block {g.block}</Text>
                       </View>
                     ) : null}
                     {g.rows.length > 1 ? <Text className="font-sans text-[12px] text-faint">· {g.rows.length} residents</Text> : null}
@@ -507,26 +507,26 @@ function ResidentDetailSheet({
   onCall: () => void; onWhatsApp: () => void; onMessage: () => void; onInvite: () => void; onProfile: () => void; onRemove: () => void; onEdit: () => void;
   onToggleMovedIn: () => void; onTogglePhone: () => void; onFlag: () => void;
 }) {
-  const typeColor = r?.resident_type === 'owner' ? '#0D9488' : '#7C3AED';
+  const typeColor = r?.resident_type === 'owner' ? c.info : c.info;
   return (
     <Sheet visible={!!r} onClose={onClose} title={r?.name ?? 'Resident'}>
       {r ? (
         <View>
           {/* Identity badges */}
           <View className="mb-4 flex-row flex-wrap items-center gap-2">
-            {r.flat ? <Badge label={`🏠 Flat ${r.flat}`} c={c} /> : null}
-            {r.block ? <Badge label={`Block ${r.block}`} color="#8B5CF6" c={c} /> : null}
-            {r.resident_type ? <Badge label={r.resident_type === 'owner' ? 'Owner' : 'Tenant'} color={typeColor} c={c} /> : null}
+            {r.flat ? <Pill label={`🏠 Flat ${r.flat}`} c={c} /> : null}
+            {r.block ? <Pill label={`Block ${r.block}`} color="#8B5CF6" c={c} /> : null}
+            {r.resident_type ? <Pill label={r.resident_type === 'owner' ? 'Owner' : 'Tenant'} color={typeColor} c={c} /> : null}
             {/* One membership status, derived from whether an account exists.
                 It used to be two badges from two different sources, so a row
                 could say "✓ Registered" and "Not on Aangan" at the same time. */}
-            <Badge
+            <Pill
               label={r.onboarded ? '✓ On Aangan' : 'Not on Aangan yet'}
-              color={r.onboarded ? '#16A34A' : '#CA8A04'}
+              color={r.onboarded ? c.success : c.warn}
               c={c}
             />
-            <Badge label={r.shifted ? 'Living here' : 'Not moved in yet'} color={r.shifted ? '#16A34A' : '#CA8A04'} c={c} />
-            {r.phoneHidden ? <Badge label="Number hidden" c={c} /> : null}
+            <Pill label={r.shifted ? 'Living here' : 'Not moved in yet'} color={r.shifted ? c.success : c.warn} c={c} />
+            {r.phoneHidden ? <Pill label="Number hidden" c={c} /> : null}
           </View>
 
           {/* Details */}
@@ -673,7 +673,7 @@ function FlagResidentSheet({
   );
 }
 
-function Badge({ label, color, c }: { label: string; color?: string; c: ReturnType<typeof useThemeColors> }) {
+function Pill({ label, color, c }: { label: string; color?: string; c: ReturnType<typeof useThemeColors> }) {
   const col = color ?? c.muted;
   return (
     <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: col + '1A' }}>
@@ -699,7 +699,7 @@ function ResidentRow({
   r: Resident; first: boolean; showFlat?: boolean; c: ReturnType<typeof useThemeColors>;
   onOpen: () => void; onCall: () => void; onWhatsApp: () => void; onMessage: () => void;
 }) {
-  const typeColor = r.resident_type === 'owner' ? '#0D9488' : '#7C3AED';
+  const typeColor = r.resident_type === 'owner' ? c.info : c.info;
   const sub = [
     showFlat && r.flat ? `Flat ${[r.block, r.flat].filter(Boolean).join('-')}` : null,
     r.profession, r.native, r.vehicle_no ? `🚗 ${r.vehicle_no}` : null,
@@ -720,12 +720,12 @@ function ResidentRow({
             </View>
           ) : null}
           {!r.onboarded ? (
-            <View className="rounded px-1.5 py-0.5" style={{ backgroundColor: '#CA8A0420' }}>
+            <View className="rounded px-1.5 py-0.5" style={{ backgroundColor: c.warnSoft }}>
               <Text className="text-[9px] font-sans-sb uppercase" style={{ color: '#A16207' }}>Not on Aangan</Text>
             </View>
           ) : null}
           {!r.shifted ? (
-            <View className="rounded px-1.5 py-0.5" style={{ backgroundColor: '#9CA3AF22' }}>
+            <View className="rounded px-1.5 py-0.5" style={{ backgroundColor: c.inset }}>
               <Text className="text-[9px] font-sans-sb uppercase text-muted">Not moved in</Text>
             </View>
           ) : null}
