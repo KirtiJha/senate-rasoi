@@ -243,9 +243,11 @@ export default function LendItemDetailScreen() {
               <Text className="text-[11px] font-sans-sb text-muted">{m.label}</Text>
             </View>
             {isOffer ? (
-              item.status !== 'available'
-                ? <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#9CA3AF22' }}><Text className="text-[11px] font-sans-sb text-muted">{item.status === 'lent' ? 'Lent out' : 'Unavailable'}</Text></View>
-                : <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#16A34A22' }}><Text className="text-[11px] font-sans-sb" style={{ color: '#16A34A' }}>Available</Text></View>
+              item.status === 'lent'
+                ? <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.highlightSoft }}><Text className="text-[11px] font-sans-sb" style={{ color: c.highlightInk }}>Lent out</Text></View>
+                : item.status === 'unavailable'
+                  ? <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#9CA3AF22' }}><Text className="text-[11px] font-sans-sb text-muted">Hidden</Text></View>
+                  : <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#16A34A22' }}><Text className="text-[11px] font-sans-sb" style={{ color: '#16A34A' }}>Available</Text></View>
             ) : null}
           </View>
 

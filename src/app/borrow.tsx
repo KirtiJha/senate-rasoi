@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../components/T';
 import { Chip, Container, ScreenHeader } from '../components/ui';
@@ -36,13 +36,21 @@ export default function BorrowScreen() {
         availableOnly: !mine,
         viewerId: userId,
         mine: mine && userId ? userId : undefined,
-      }));
+      // The community was never passed, so every fetch fell back to the
+      // built-in default id. Right for this society by coincidence, wrong for
+      // the next one.
+      }, communityId));
       if (userId) setWaitingOn(await fetchWaitingCounts(userId, communityId).catch(() => ({})));
     } catch { /* keep */ } finally { setLoading(false); }
   }, [tab, cat, mine, userId, communityId]);
 
+  // Refetch whenever the inputs change — including userId, which is null for
+  // the first moments after a cold start. Without this the opening fetch is
+  // made as nobody, so your own lent-out things are filtered out and stay
+  // missing until you navigate away and come back.
+  useEffect(() => { load(); }, [load]);
+
   useFocusEffect(useCallback(() => {
-    setLoading(true);
     load();
     return subscribeItems(communityId, load);
   }, [load, communityId]));
@@ -189,10 +197,18 @@ function ItemCard({ item, isOffer, waiting = 0, yours = false }: { item: LendIte
           <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.inset }}>
             <Text className="text-[10px] font-sans-sb text-muted">{m.label}</Text>
           </View>
-          {/* Availability badge (offers only) */}
-          {isOffer ? (lent
-            ? <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#9CA3AF22' }}><Text className="text-[10px] font-sans-sb text-muted">{item.status === 'lent' ? 'Lent out' : 'Unavailable'}</Text></View>
-            : <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#16A34A22' }}><Text className="text-[10px] font-sans-sb" style={{ color: '#16A34A' }}>Available</Text></View>
+          {/* Availability badge (offers only).
+
+              "Lent out" and "Hidden" used to share one grey pill, though they
+              mean opposite things: one is out with a neighbour and coming
+              back, the other you took down yourself. Lent out gets the
+              marigold — the app's colour for "in progress, needs nothing from
+              you yet" — and hidden stays grey, because it is dormant. */}
+          {isOffer ? (item.status === 'lent'
+            ? <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.highlightSoft }}><Text className="text-[10px] font-sans-sb" style={{ color: c.highlightInk }}>Lent out</Text></View>
+            : item.status === 'unavailable'
+              ? <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#9CA3AF22' }}><Text className="text-[10px] font-sans-sb text-muted">Hidden</Text></View>
+              : <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#16A34A22' }}><Text className="text-[10px] font-sans-sb" style={{ color: '#16A34A' }}>Available</Text></View>
           ) : lent ? (
             <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: '#9CA3AF22' }}><Text className="text-[10px] font-sans-sb text-muted">Sorted</Text></View>
           ) : null}
@@ -203,18 +219,18 @@ function ItemCard({ item, isOffer, waiting = 0, yours = false }: { item: LendIte
               <Text className="text-[10px] font-sans-sb text-white">{waiting} waiting</Text>
             </View>
           ) : null}
-          {/* Your own lent-out or hidden things stay on this list, where you
-              can still open them to mark a return. This says why they're here
-              when nobody else can see them. */}
-          {yours && item.status !== 'available' ? (
-            <View className="rounded-full border px-2 py-0.5" style={{ borderColor: ACCENT }}>
-              <Text className="text-[10px] font-sans-sb" style={{ color: ACCENT }}>Yours</Text>
-            </View>
-          ) : null}
         </View>
         <T source="borrow" id={item.id} field="title" text={item.title} showToggle={false} className="mt-0.5 font-sans-bold text-[14px] text-ink" numberOfLines={1} />
         {item.description ? <T source="borrow" id={item.id} field="description" text={item.description} showToggle={false} className="text-[12px] text-muted" numberOfLines={2} /> : null}
-        <Text className="font-sans mt-auto pt-1 text-[11px] text-faint">{item.owner?.name ?? 'A neighbour'}{item.owner?.flat ? ` · Flat ${item.owner.flat}` : ''}</Text>
+        {/* Your own name told you nothing. On your own listings this says
+            "You", and when the listing is one only you can see, it says so
+            outright — which is the question a lent-out item on an otherwise
+            available list actually raises. */}
+        <Text className="font-sans mt-auto pt-1 text-[11px] text-faint" numberOfLines={1}>
+          {yours
+            ? (item.status === 'available' ? 'You' : 'You · only you can see this')
+            : `${item.owner?.name ?? 'A neighbour'}${item.owner?.flat ? ` · Flat ${item.owner.flat}` : ''}`}
+        </Text>
       </View>
     </Pressable>
   );
