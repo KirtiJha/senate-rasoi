@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+
+import { useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Container, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
+import { useCached } from '../../lib/useCachedList';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
 import {
@@ -14,6 +15,8 @@ import {
 import { upiUri } from '../../lib/payments';
 import { useThemeColors } from '../../theme';
 
+// A stable empty list, so a missing query result does not re-run memos.
+const NONE: never[] = [];
 
 function fmtDate(iso: string): string {
   try { return new Date(iso + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); }
@@ -34,21 +37,20 @@ export default function DuesScreen() {
   const confirm = useConfirm();
   const { userId, communityId } = useAuth();
   const [tab, setTab] = useState<'owe' | 'collect'>('owe');
-  const [dues, setDues] = useState<DueItem[]>([]);
-  const [collections, setCollections] = useState<CollectionPlayer[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const load = useCallback(async () => {
-    if (!userId) return;
-    try {
-      const [d, col] = await Promise.all([fetchMyDues(userId), fetchBookerCollections(userId)]);
-      setDues(d); setCollections(col);
-      setSelected(new Set(d.filter((x) => x.status === 'due').map((x) => x.session_id)));
-    } catch { /* ignore */ }
-  }, [userId]);
-
-  useFocusEffect(useCallback(() => { load(); }, [load]));
-  useEffect(() => subscribeCourtPayments(load), [load]);
+  // From the cache first; see useCached. The selection follows the data:
+  // every open due starts ticked, as before.
+  const q = useCached(['court-dues', userId], async () => {
+    const [dues, collections] = await Promise.all([fetchMyDues(userId!), fetchBookerCollections(userId!)]);
+    return { dues, collections };
+  }, { enabled: !!userId, subscribe: subscribeCourtPayments });
+  const dues: DueItem[] = q.data?.dues ?? NONE;
+  const collections: CollectionPlayer[] = q.data?.collections ?? NONE;
+  const load = q.load;
+  useEffect(() => {
+    setSelected(new Set(dues.filter((x) => x.status === 'due').map((x) => x.session_id)));
+  }, [dues]);
 
   // ── I owe: grouped by the person I owe (one UPI payee per group) ──
   const byBooker = new Map<string, DueItem[]>();

@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import { useAuth } from '../../context/auth';
+import { useCached } from '../../lib/useCachedList';
 import {
   FEEDBACK_KINDS,
   FEEDBACK_STATUS,
@@ -27,14 +27,9 @@ export default function MyFeedbackScreen() {
   const router = useRouter();
   const { userId, isAdmin } = useAuth();
 
-  const [items, setItems] = useState<FeedbackItem[] | null>(null);
-
-  const load = useCallback(async () => {
-    if (!userId) { setItems([]); return; }
-    try { setItems(await fetchMyFeedback(userId)); } catch { setItems([]); }
-  }, [userId]);
-
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  // From the cache first; see useCached. `null` still means "not yet".
+  const feedback = useCached<FeedbackItem[]>(['feedback', 'mine', userId], () => fetchMyFeedback(userId!), { enabled: !!userId });
+  const items: FeedbackItem[] | null = !userId || feedback.failed ? [] : (feedback.data ?? null);
 
   return (
     <View className="flex-1 bg-bg">

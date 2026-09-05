@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+
+import { useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import { useAuth } from '../../context/auth';
+import { useCached } from '../../lib/useCachedList';
 import {
   FEEDBACK_FLOW,
   FEEDBACK_KINDS,
@@ -32,25 +33,19 @@ export default function AdminFeedbackScreen() {
   const router = useRouter();
   const { communityId, isAdmin } = useAuth();
 
-  const [items, setItems] = useState<FeedbackItem[] | null>(null);
-  const [counts, setCounts] = useState<Record<FeedbackStatus, number> | null>(null);
   const [filter, setFilter] = useState<FeedbackStatus | null>(null);
 
-  const load = useCallback(async () => {
-    if (!communityId) return;
-    try {
-      const [q, n] = await Promise.all([
-        fetchFeedbackQueue(communityId, filter ? { status: filter } : undefined),
-        fetchFeedbackCounts(communityId),
-      ]);
-      setItems(q);
-      setCounts(n);
-    } catch {
-      setItems([]);
-    }
-  }, [communityId, filter]);
-
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  // From the cache first; see useCached.
+  const q = useCached(['feedback', 'queue', communityId, filter], async () => {
+    const [items, counts] = await Promise.all([
+      fetchFeedbackQueue(communityId, filter ? { status: filter } : undefined),
+      fetchFeedbackCounts(communityId),
+    ]);
+    return { items, counts };
+  }, { enabled: !!communityId, prefix: ['feedback', 'queue', communityId] });
+  const items: FeedbackItem[] | null = q.failed ? [] : (q.data?.items ?? null);
+  const counts: Record<FeedbackStatus, number> | null = q.data?.counts ?? null;
+  const load = q.load;
 
   if (!isAdmin) {
     return (

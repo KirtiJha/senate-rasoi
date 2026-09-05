@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+
+import { useCallback, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { MessageIconButton } from '../components/MessageNeighbour';
 import { Avatar, Button, Chip, Container, ErrorState, ScreenHeader, Sheet, Stepper } from '../components/ui';
 import { useAuth } from '../context/auth';
+import { useCached, useCachedList } from '../lib/useCachedList';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import {
@@ -14,6 +15,9 @@ import {
 import { BLOOD_GROUPS, HELPER_SKILLS, RegistryPerson, fetchRegistry, updateHelperProfile } from '../lib/donors';
 import { timeAgo } from '../lib/time';
 import { useThemeColors } from '../theme';
+
+// A stable empty list, so a missing query result does not re-run memos.
+const NONE: never[] = [];
 
 function openUrl(u: string) { if (Platform.OS === 'web') window.open(u, '_blank'); else Linking.openURL(u); }
 function wa(phone: string | null | undefined, msg: string) { const d = (phone ?? '').replace(/\D/g, ''); return `https://wa.me/${d.length === 10 ? '91' + d : d}?text=${encodeURIComponent(msg)}`; }
@@ -26,15 +30,27 @@ export default function HelpersScreen() {
 
   const confirm = useConfirm();
 
-  const [people, setPeople] = useState<RegistryPerson[]>([]);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [reloading, setReloading] = useState(false);
   const [bloodFilter, setBloodFilter] = useState<string>('all');
-
-  // Live blood requests, and who has offered on each.
-  const [requests, setRequests] = useState<BloodRequest[]>([]);
-  const [offers, setOffers] = useState<Map<string, BloodOffer[]>>(new Map());
   const [showAsk, setShowAsk] = useState(false);
+
+  // From the cache first; see useCached. The registry and the live blood
+  // requests are two queries, so one failing does not blank the other.
+  // Offers are cached as entries, not a Map — the cache is persisted as JSON.
+  const subscribe = useCallback((bump: () => void) => subscribeBlood(communityId, bump), [communityId]);
+  const registry = useCachedList<RegistryPerson>(
+    ['helpers', communityId, 'registry'], () => fetchRegistry(communityId),
+    { enabled: !!communityId, subscribe, prefix: ['helpers', communityId] },
+  );
+  const live = useCached(['helpers', communityId, 'requests'], async () => {
+    const rs = await fetchOpenRequests(communityId);
+    const offerMap = await fetchOffers(rs.map((r) => r.id));
+    return { requests: rs, offers: [...offerMap.entries()] as [string, BloodOffer[]][] };
+  }, { enabled: !!communityId, prefix: ['helpers', communityId] });
+  const people = registry.rows;
+  const loadFailed = registry.failed;
+  const reloading = registry.fetching && !registry.loading;
+  const requests: BloodRequest[] = live.data?.requests ?? NONE;
+  const offers = useMemo(() => new Map<string, BloodOffer[]>(live.data?.offers ?? []), [live.data?.offers]);
 
   // opt-in form
   const [bg, setBg] = useState<string | null>(profile?.blood_group ?? null);
@@ -43,31 +59,8 @@ export default function HelpersScreen() {
   const [lastDonated, setLastDonated] = useState<string>(profile?.donor_last_donated ?? '');
   const [saving, setSaving] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      setPeople(await fetchRegistry(communityId));
-      setLoadFailed(false);
-    } catch (e) {
-      console.error('helpers: registry load failed', e);
-      setLoadFailed(true);
-    }
-    try {
-      const rs = await fetchOpenRequests(communityId);
-      setRequests(rs);
-      setOffers(await fetchOffers(rs.map((r) => r.id)));
-    } catch { /* the registry is still worth showing without them */ }
-  }, [communityId]);
-
-  const retry = useCallback(async () => {
-    setReloading(true);
-    await load();
-    setReloading(false);
-  }, [load]);
-
-  useFocusEffect(useCallback(() => {
-    load();
-    return subscribeBlood(communityId, load);
-  }, [load, communityId]));
+  const load = registry.load; // invalidates the whole 'helpers' prefix
+  const retry = load;
 
   const save = async () => {
     if (!userId) return;

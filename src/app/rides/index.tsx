@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useRouter } from 'expo-router';
+
 import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { useAuth } from '../../context/auth';
+import { useCached } from '../../lib/useCachedList';
 import {
   PREFERENCE_LABELS,
   Ride,
@@ -19,6 +20,9 @@ import {
 } from '../../lib/rides';
 import { useThemeColors } from '../../theme';
 import { Badge, Container, ScreenHeader, Touchable } from '../../components/ui';
+
+// A stable empty list, so a missing query result does not re-run memos.
+const NONE: never[] = [];
 
 /**
  * Rides.
@@ -38,34 +42,26 @@ export default function RidesScreen() {
   const router = useRouter();
   const { userId, communityId } = useAuth();
 
-  const [rides, setRides] = useState<Ride[] | null>(null);
-  const [mine, setMine] = useState<RideRequest[]>([]);
-  const [standing, setStanding] = useState<RideStanding[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const load = useCallback(async () => {
-    try {
-      const [all, reqs, stand] = await Promise.all([
-        fetchRides(communityId ?? undefined),
-        userId ? fetchMyRideRequests(userId) : Promise.resolve([]),
-        userId ? fetchMyStanding(userId) : Promise.resolve([]),
-      ]);
-      setRides(all);
-      setMine(reqs.filter((r) => r.status !== 'cancelled'));
+  // From the cache first; see useCached.
+  const q = useCached(['rides', communityId, userId], async () => {
+    const [all, reqs, stand] = await Promise.all([
+      fetchRides(communityId ?? undefined),
+      userId ? fetchMyRideRequests(userId) : Promise.resolve([] as RideRequest[]),
+      userId ? fetchMyStanding(userId) : Promise.resolve([] as RideStanding[]),
+    ]);
+    return {
+      rides: all,
+      mine: reqs.filter((r) => r.status !== 'cancelled'),
       // An arrangement past its last day is history, not a live seat.
-      setStanding(stand.filter((x) => !standingEnded(x)));
-    } catch {
-      setRides([]);
-    }
-  }, [communityId, userId]);
-
-  useFocusEffect(useCallback(() => { load(); }, [load]));
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await load();
-    setRefreshing(false);
-  }, [load]);
+      standing: stand.filter((x) => !standingEnded(x)),
+    };
+  });
+  const rides: Ride[] | null = q.failed ? [] : (q.data?.rides ?? null);
+  const mine: RideRequest[] = q.data?.mine ?? NONE;
+  const standing: RideStanding[] = q.data?.standing ?? NONE;
+  const load = q.load;
+  const refreshing = q.fetching && !q.loading;
+  const onRefresh = load;
 
   const iDrive = (rides ?? []).filter((r) => r.driver_user_id === userId);
   const others = (rides ?? []).filter((r) => r.driver_user_id !== userId);

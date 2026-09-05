@@ -1,12 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, Chip, ErrorState, RowSkeleton, ScreenHeader, Sheet, useResponsive } from '../components/ui';
 import { Field } from '../components/forms';
 import { useAuth } from '../context/auth';
+import { qk } from '../lib/queryClient';
+import { useCachedList } from '../lib/useCachedList';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import { Resident, addDirectoryEntry, adminSetDirectoryVisibility, adminSetMovedIn, deleteDirectoryEntry, fetchDirectory, flatAddr, updateDirectoryEntry } from '../lib/directory';
@@ -48,9 +50,6 @@ export default function DirectoryScreen() {
   const { userId, communityId, isAdmin } = useAuth();
   const confirm = useConfirm();
 
-  const [residents, setResidents] = useState<Resident[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [block, setBlock] = useState<string | null>(null);
@@ -66,6 +65,14 @@ export default function DirectoryScreen() {
   const [selected, setSelected] = useState<Resident | null>(null);
   const [flagging, setFlagging] = useState<Resident | null>(null);
 
+  // From the cache first; see useCachedList. The largest list in the app,
+  // and the one most often reopened.
+  const { rows: residents, loading, failed: loadFailed, load } = useCachedList<Resident>(
+    qk.directory(communityId, userId, !!isAdmin),
+    () => fetchDirectory(communityId, userId, !!isAdmin),
+    { enabled: isSupabaseConfigured && !!communityId },
+  );
+
   // Distinct blocks / floors present (for the filter sheet).
   const { blocks, floors } = useMemo(() => {
     const bs = new Set<string>(); const fs = new Set<string>();
@@ -79,19 +86,6 @@ export default function DirectoryScreen() {
     };
   }, [residents]);
   const activeFilters = (block ? 1 : 0) + (floor ? 1 : 0) + (reg !== 'all' ? 1 : 0) + (shf !== 'all' ? 1 : 0) + (sort !== 'flat' ? 1 : 0);
-
-  const load = useCallback(async () => {
-    if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
-    try {
-      setResidents(await fetchDirectory(communityId, userId, !!isAdmin));
-      setLoadFailed(false);
-    } catch (e) {
-      console.error('directory: load failed', e);
-      setLoadFailed(true);
-    } finally { setLoading(false); }
-  }, [communityId, userId, isAdmin, toast]);
-
-  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -504,7 +498,6 @@ function FilterGroup({ label, children, last }: { label: string; children: React
     </View>
   );
 }
-
 
 function ResidentDetailSheet({
   r, onClose, c, isAdmin, onCall, onWhatsApp, onMessage, onInvite, onProfile, onRemove, onEdit,

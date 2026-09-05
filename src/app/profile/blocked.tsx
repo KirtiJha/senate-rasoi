@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { Avatar, Container, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
+import { useQueryClient } from '@tanstack/react-query';
+import { useCachedList } from '../../lib/useCachedList';
 import { useBlocks } from '../../context/blocks';
 import { useConfirm } from '../../context/confirm';
 import { useToast } from '../../context/toast';
@@ -21,17 +22,9 @@ export default function BlockedMembersScreen() {
   const { userId } = useAuth();
   const { refresh: refreshBlocks } = useBlocks();
 
-  const [rows, setRows] = useState<BlockedUser[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    if (!userId) { setLoading(false); return; }
-    try { setRows(await fetchMyBlocks(userId)); }
-    catch { /* keep what we have */ }
-    finally { setLoading(false); }
-  }, [userId]);
-
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  // From the cache first; see useCachedList.
+  const qc = useQueryClient();
+  const { rows, loading } = useCachedList<BlockedUser>(['blocks', userId], () => fetchMyBlocks(userId!), { enabled: !!userId });
 
   const undo = async (row: BlockedUser) => {
     if (!userId) return;
@@ -44,7 +37,7 @@ export default function BlockedMembersScreen() {
     if (!ok) return;
     try {
       await unblockUser(userId, row.blocked_id);
-      setRows((prev) => prev.filter((r) => r.blocked_id !== row.blocked_id));
+      qc.setQueryData<BlockedUser[]>(['blocks', userId], (prev) => (prev ?? []).filter((r) => r.blocked_id !== row.blocked_id));
       refreshBlocks();
       toast.show(`Unblocked ${name}`);
     } catch { toast.show('Could not unblock — try again'); }

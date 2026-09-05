@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { Avatar, Container, RowSkeleton, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
+import { useCachedList } from '../lib/useCachedList';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
 import { markPaymentReceived as courtMarkReceived, revertPayment as courtRevert } from '../lib/courts';
@@ -42,22 +43,15 @@ export default function PaymentsScreen() {
   const { userId } = useAuth();
   const router = useRouter();
 
-  const [rows, setRows] = useState<PaymentRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>('all');
 
-  const load = useCallback(async () => {
-    if (!isSupabaseConfigured || !userId) { setLoading(false); return; }
-    try { setRows(await fetchMyPayments()); }
-    catch { toast.show('Could not load payments'); }
-    finally { setLoading(false); }
-  }, [userId, toast]);
-
-  useFocusEffect(useCallback(() => {
-    load();
-    const unsub = subscribePayments(load);
-    return unsub;
-  }, [load]));
+  // From the cache first; see useCachedList.
+  const { rows, loading, failed, load } = useCachedList<PaymentRow>(
+    ['payments', userId],
+    () => fetchMyPayments(),
+    { enabled: isSupabaseConfigured && !!userId, subscribe: subscribePayments },
+  );
+  useEffect(() => { if (failed) toast.show('Could not load payments'); }, [failed, toast]);
 
   /**
    * The two numbers a ledger exists to answer, which this screen never showed:
