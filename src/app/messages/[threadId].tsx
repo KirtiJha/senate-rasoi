@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, ErrorState, KeyboardAvoider } from '../../components/ui';
+import { Avatar, ErrorState, KeyboardAvoider, PhotoViewer } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useBlocks } from '../../context/blocks';
@@ -12,9 +14,11 @@ import { useToast } from '../../context/toast';
 import { usePushPrompt } from '../../components/PushPrompt';
 import { useDraft } from '../../lib/draft';
 import { haptics } from '../../lib/haptics';
+import { IMAGE_CACHE_PROPS } from '../../lib/image';
+import { openPhotoPicker } from '../../lib/photo';
 import {
-  DmMessageRow, InboxThread, fetchMessages, fetchThread,
-  markThreadRead, sendMessage, subscribeToThread, unsendMessage,
+  DM_PHOTO_URL_TTL, DmMessageRow, InboxThread, dmPhotoUrl, fetchMessages, fetchThread,
+  markThreadRead, sendMessage, subscribeToThread, unsendMessage, uploadDmPhoto,
 } from '../../lib/dm';
 import { useThemeColors } from '../../theme';
 
@@ -35,7 +39,10 @@ export default function DmThreadScreen() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [body, setBody] = useDraft('dm:' + (threadId ?? ''), '');
+  // A photo picked but not yet sent. It goes with the next send, words or none.
+  const [photo, setPhoto] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [viewing, setViewing] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const blocked = isBlocked(thread?.other.id);
 
@@ -65,6 +72,8 @@ export default function DmThreadScreen() {
 
   useEffect(() => {
     if (!threadId) return;
+    // Inserts and updates alike: the other side reading a message is an
+    // update, and that is how the ticks on this side turn.
     const unsub = subscribeToThread(threadId, () => {
       fetchMessages(threadId).then((m) => {
         setMessages(m);
@@ -75,19 +84,28 @@ export default function DmThreadScreen() {
     return unsub;
   }, [threadId, userId]);
 
+  const pickPhoto = async () => {
+    const res = await openPhotoPicker({ mediaTypes: ['images'], quality: 0.9, allowsMultipleSelection: false });
+    if (!res.canceled && res.assets[0]) setPhoto(res.assets[0].uri);
+  };
+
+  const canSend = !!(body.trim() || photo) && !sending;
+
   const send = async () => {
     const text = body.trim();
-    if (!text || !userId || !threadId || sending) return;
+    if ((!text && !photo) || !userId || !threadId || sending) return;
     setSending(true);
     try {
-      const msg = await sendMessage(threadId, userId, text);
+      const path = photo ? await uploadDmPhoto(photo, threadId) : null;
+      const msg = await sendMessage(threadId, userId, text, path);
       setMessages((prev) => [...prev, msg]);
       setBody('');
+      setPhoto(null);
       haptics.tap();
       // They will reply. This is the moment a notification makes sense.
       offerPush('message');
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
-    } catch { toast.show('Could not send'); }
+    } catch { toast.show(photo ? 'Could not send the photo' : 'Could not send'); }
     finally { setSending(false); }
   };
 
@@ -101,7 +119,7 @@ export default function DmThreadScreen() {
     }))) return;
     try {
       await unsendMessage(m.id);
-      setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, body: '', deleted_at: new Date().toISOString() } : x)));
+      setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, body: '', photo_path: null, deleted_at: new Date().toISOString() } : x)));
     } catch { toast.show('Could not withdraw — try again'); }
   }, [confirm, thread?.other.name, toast]);
 
@@ -124,6 +142,8 @@ export default function DmThreadScreen() {
           <Pressable
             onPress={() => thread?.other.id ? router.push(`/profile/${thread.other.id}` as any) : undefined}
             className="flex-1 flex-row items-center gap-2.5 active:opacity-70"
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${thread?.other.name ?? 'neighbour'}'s profile`}
           >
             <Avatar name={thread?.other.name ?? '?'} size={34} />
             <View>
@@ -166,7 +186,7 @@ export default function DmThreadScreen() {
         ) : (
           <View style={{ gap: 8 }}>
             {messages.map((m) => (
-              <DmBubble key={m.id} message={m} isMine={m.sender_id === userId} accent={c.accent} onUnsend={onUnsend} />
+              <DmBubble key={m.id} message={m} isMine={m.sender_id === userId} c={c} onUnsend={onUnsend} onOpenPhoto={setViewing} />
             ))}
           </View>
         )}
@@ -185,44 +205,111 @@ export default function DmThreadScreen() {
         </View>
       ) : (
       <View style={{ paddingBottom: insets.bottom + 8 }} className="border-t border-line bg-bg px-4 pt-3">
+        {photo ? (
+          <View className="mb-2 flex-row items-end gap-2">
+            <View className="overflow-hidden rounded-xl" style={{ width: 84, height: 84 }}>
+              <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+              <Pressable
+                onPress={() => setPhoto(null)}
+                accessibilityRole="button"
+                accessibilityLabel="Remove photo"
+                className="absolute right-1 top-1 h-6 w-6 items-center justify-center rounded-full"
+                style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+                hitSlop={6}
+              >
+                <Ionicons name="close" size={14} color="#fff" />
+              </Pressable>
+            </View>
+            <Text className="font-sans text-[12px] text-muted">Photo ready to send</Text>
+          </View>
+        ) : null}
         <View className="flex-row items-end gap-2">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Attach a photo"
+            onPress={pickPhoto}
+            disabled={sending}
+            hitSlop={6}
+            className="h-10 w-10 items-center justify-center rounded-full active:bg-inset"
+          >
+            <Ionicons name="image-outline" size={22} color={photo ? c.accent : c.muted} />
+          </Pressable>
           <View className="flex-1 rounded-2xl border border-line bg-inset px-3 py-2">
             <TextInput
               value={body}
               onChangeText={setBody}
-              placeholder="Message…"
+              placeholder={photo ? 'Add a caption…' : 'Message…'}
               placeholderTextColor={c.faint}
               multiline
               maxLength={1000}
               className="max-h-24 text-[14px] text-ink"
               style={{ outline: 'none' } as any}
               onSubmitEditing={send}
+              accessibilityLabel="Message"
             />
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel="Send message"
             onPress={send}
-            disabled={sending || !body.trim()}
-            className={`h-10 w-10 items-center justify-center rounded-full ${body.trim() ? '' : 'bg-inset'}`}
-            style={body.trim() ? { backgroundColor: c.accent } : undefined}
+            disabled={!canSend}
+            className={`h-10 w-10 items-center justify-center rounded-full ${canSend ? '' : 'bg-inset'}`}
+            style={canSend ? { backgroundColor: c.accent } : undefined}
           >
             {sending
-              ? <ActivityIndicator size="small" color={body.trim() ? '#fff' : c.faint} />
-              : <Ionicons name="send" size={17} color={body.trim() ? '#fff' : c.faint} />}
+              ? <ActivityIndicator size="small" color={c.onAccent} />
+              : <Ionicons name="send" size={17} color={canSend ? c.onAccent : c.faint} />}
           </Pressable>
         </View>
       </View>
       )}
+
+      <PhotoViewer photos={viewing ? [viewing] : null} onClose={() => setViewing(null)} />
     </KeyboardAvoider>
   );
 }
 
+/**
+ * A photo in a bubble. The bucket is private, so each draw asks for a signed
+ * URL and keeps it for most of its hour; the query cache dedupes that across
+ * re-renders and the inbox → thread → inbox round trip.
+ */
+function DmPhoto({ path, isMine, onOpen }: { path: string; isMine: boolean; onOpen: (url: string) => void }) {
+  const c = useThemeColors();
+  const url = useQuery({
+    queryKey: ['dm-photo', path],
+    queryFn: () => dmPhotoUrl(path),
+    staleTime: (DM_PHOTO_URL_TTL - 300) * 1000,
+    gcTime: DM_PHOTO_URL_TTL * 1000,
+  });
+  return (
+    <Pressable
+      onPress={url.data ? () => onOpen(url.data!) : undefined}
+      accessibilityRole="imagebutton"
+      accessibilityLabel="Photo, open full size"
+      className="overflow-hidden rounded-xl"
+      style={{ width: 220, height: 165, backgroundColor: isMine ? 'rgba(255,255,255,0.18)' : c.line }}
+    >
+      {url.data ? (
+        <Image source={{ uri: url.data }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
+      ) : url.isError ? (
+        <View className="flex-1 items-center justify-center">
+          <Ionicons name="image-outline" size={22} color={isMine ? '#fff' : c.faint} />
+          <Text className={`font-sans mt-1 text-[11px] ${isMine ? 'text-white/80' : 'text-faint'}`}>Couldn't load</Text>
+        </View>
+      ) : (
+        <View className="flex-1 items-center justify-center"><ActivityIndicator size="small" color={isMine ? '#fff' : c.muted} /></View>
+      )}
+    </Pressable>
+  );
+}
+
 function DmBubble({
-  message, isMine, accent, onUnsend,
+  message, isMine, c, onUnsend, onOpenPhoto,
 }: {
   message: DmMessageRow;
   isMine: boolean;
-  accent: string;
+  c: ReturnType<typeof useThemeColors>;
   onUnsend: (m: DmMessageRow) => void;
+  onOpenPhoto: (url: string) => void;
 }) {
   const withdrawn = !!message.deleted_at;
 
@@ -240,6 +327,7 @@ function DmBubble({
     );
   }
 
+  const read = !!message.read_at;
   return (
     <View className={`flex-row ${isMine ? 'justify-end' : 'justify-start'}`}>
       <Pressable
@@ -248,14 +336,27 @@ function DmBubble({
         onLongPress={isMine ? () => onUnsend(message) : undefined}
         delayLongPress={350}
         accessibilityRole={isMine ? 'button' : undefined}
-        accessibilityLabel={isMine ? 'Withdraw this message' : undefined}
+        accessibilityLabel={isMine ? `Your message${read ? ', read' : ', sent'}. Long press to withdraw` : undefined}
         className={`max-w-[80%] rounded-2xl px-3 py-2 ${isMine ? 'rounded-br-md' : 'rounded-tl-md bg-inset'}`}
-        style={isMine ? { backgroundColor: accent } : undefined}
+        style={isMine ? { backgroundColor: c.accent } : undefined}
       >
-        <Text className={`text-[14px] leading-5 ${isMine ? 'text-white' : 'text-ink'}`}>{message.body}</Text>
-        <Text className={`mt-0.5 text-[10px] ${isMine ? 'text-right text-white/70' : 'text-faint'}`}>
-          {time(message.created_at)}
-        </Text>
+        {message.photo_path ? (
+          <View className={message.body ? 'mb-1.5' : 'mb-0.5'}>
+            <DmPhoto path={message.photo_path} isMine={isMine} onOpen={onOpenPhoto} />
+          </View>
+        ) : null}
+        {message.body ? (
+          <Text className={`text-[14px] leading-5 ${isMine ? 'text-white' : 'text-ink'}`}>{message.body}</Text>
+        ) : null}
+        <View className={`mt-0.5 flex-row items-center gap-1 ${isMine ? 'justify-end' : ''}`}>
+          <Text className={`text-[10px] ${isMine ? 'text-white/70' : 'text-faint'}`}>{time(message.created_at)}</Text>
+          {/* One tick: it left you. Two: they have seen it. The second tick
+              turns live, because their reading it is an update this screen
+              subscribes to. */}
+          {isMine ? (
+            <Ionicons name={read ? 'checkmark-done' : 'checkmark'} size={12} color={read ? '#fff' : 'rgba(255,255,255,0.7)'} />
+          ) : null}
+        </View>
       </Pressable>
     </View>
   );

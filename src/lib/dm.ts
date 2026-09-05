@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, supabase } from './supabase';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 // Direct messages (Phase 12b). 1:1 neighbour DMs scoped to a community.
 // Thread creation goes through the dm_get_or_create_thread RPC (atomic +
@@ -38,6 +39,8 @@ export interface DmMessageRow {
   read_at: string | null;
   /** Set when the sender withdrew it; the row stays, the words go (0131). */
   deleted_at?: string | null;
+  /** Object path in the private dm-photos bucket, '<thread>/<file>' (0138). */
+  photo_path?: string | null;
   created_at: string;
 }
 
@@ -123,14 +126,40 @@ export async function fetchMessages(threadId: string): Promise<DmMessageRow[]> {
   return (data ?? []) as DmMessageRow[];
 }
 
-export async function sendMessage(threadId: string, senderId: string, body: string): Promise<DmMessageRow> {
+export async function sendMessage(threadId: string, senderId: string, body: string, photoPath?: string | null): Promise<DmMessageRow> {
   const { data, error } = await supabase
     .from('dm_messages')
-    .insert({ thread_id: threadId, sender_id: senderId, body: body.trim() })
+    .insert({ thread_id: threadId, sender_id: senderId, body: body.trim(), photo_path: photoPath ?? null })
     .select('*')
     .single();
   if (error) throw error;
   return data as DmMessageRow;
+}
+
+export const DM_PHOTOS_BUCKET = 'dm-photos';
+export const DM_PHOTO_URL_TTL = 60 * 60; // seconds a signed URL stays good
+
+/**
+ * Compress and put a photo in the thread's folder of the private bucket.
+ * Returns the object path; the row stores that, never a URL, because the
+ * bucket is private and a URL is minted per view.
+ */
+export async function uploadDmPhoto(localUri: string, threadId: string): Promise<string> {
+  const m = await ImageManipulator.manipulateAsync(localUri, [{ resize: { width: 1400 } }], {
+    compress: 0.75, format: ImageManipulator.SaveFormat.JPEG,
+  });
+  const buf = await (await fetch(m.uri)).arrayBuffer();
+  const path = `${threadId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+  const { error } = await supabase.storage.from(DM_PHOTOS_BUCKET).upload(path, buf, { contentType: 'image/jpeg' });
+  if (error) throw error;
+  return path;
+}
+
+/** A short-lived URL for one photo; only a participant gets one. */
+export async function dmPhotoUrl(path: string): Promise<string> {
+  const { data, error } = await supabase.storage.from(DM_PHOTOS_BUCKET).createSignedUrl(path, DM_PHOTO_URL_TTL);
+  if (error) throw error;
+  return data.signedUrl;
 }
 
 /** Mark the other person's unread messages in a thread as read. */
