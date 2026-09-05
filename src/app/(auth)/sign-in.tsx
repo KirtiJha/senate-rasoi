@@ -11,7 +11,7 @@ import { Button, Container, KeyboardAvoider, PinInput, Segmented, useKeyboardIns
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { selfResetPin, signIn, signUp } from '../../lib/auth';
-import { Community, fetchCommunities, fetchCommunityBlocks, fetchCommunityById, searchCommunities, submitJoinRequest } from '../../lib/communities';
+import { Community, fetchCommunities, fetchCommunityBlocks, fetchCommunityById, searchCommunities } from '../../lib/communities';
 import { DirectoryEntry, PhoneDirectoryMatch, findDirectoryByPhone, findRosterMatch, reconcileDirectoryEntry } from '../../lib/directory';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { pinProblem } from '../../lib/pin';
@@ -78,10 +78,6 @@ export default function SignInScreen() {
   const params = useLocalSearchParams<{ communityId?: string; onboard?: string }>();
   const [showPicker, setShowPicker] = useState(false);
   const [communitySearch, setCommunitySearch] = useState('');
-  const [showJoinRequest, setShowJoinRequest] = useState(false);
-  const [jrSocietyName, setJrSocietyName] = useState('');
-  const [jrSocietyAddress, setJrSocietyAddress] = useState('');
-  const [jrSubmitting, setJrSubmitting] = useState(false);
 
   // The picker used to load EVERY society in the database and filter on the
   // device. That works while there is one; nationally it is a list PostgREST
@@ -254,29 +250,7 @@ export default function SignInScreen() {
     await refreshProfile();
   };
 
-  const submitJoinReq = async () => {
-    if (!jrSocietyName.trim() || !jrSocietyAddress.trim()) {
-      return toast.show('Please fill society name and address');
-    }
-    if (!name.trim() || !phone.trim()) {
-      return toast.show('Please fill your name and phone first');
-    }
-    setJrSubmitting(true);
-    try {
-      await submitJoinRequest({
-        societyName: jrSocietyName,
-        societyAddress: jrSocietyAddress,
-        requesterName: name,
-        requesterPhone: phone,
-      });
-      setShowJoinRequest(false);
-      toast.show("Request submitted! We'll add your society soon 🏘️");
-    } catch {
-      toast.show('Could not submit — try again');
-    } finally {
-      setJrSubmitting(false);
-    }
-  };
+
 
   return (
     <KeyboardAvoider>
@@ -587,31 +561,17 @@ export default function SignInScreen() {
               <Text className="font-sans py-6 text-center text-[14px] text-muted">No society found for “{communitySearch}”</Text>
             ) : null}
 
-            {/* Request to add society */}
-            {!showJoinRequest ? (
-              <Pressable
-                onPress={() => setShowJoinRequest(true)}
-                className="mt-4 flex-row items-center justify-center gap-2 rounded-2xl border border-dashed border-line py-4"
-              >
-                <Ionicons name="add-circle-outline" size={18} color={c.muted} />
-                <Text className="font-sans-md text-[14px] text-muted">My society isn't listed — request to add it</Text>
-              </Pressable>
-            ) : (
-              <View className="mt-4 card p-4">
-                <Text className="mb-3 font-sans-sb text-[15px] text-ink">Request to Add Society</Text>
-                <Field label="Society / Building name" required placeholder="Green Meadows CHS" value={jrSocietyName} onChangeText={setJrSocietyName} />
-                <Field label="Address" required placeholder="Sector 12, Andheri West, Mumbai" value={jrSocietyAddress} onChangeText={setJrSocietyAddress} />
-                <Text className="font-sans mb-3 text-[12px] text-faint">We'll use your name and phone from the sign-up form to contact you.</Text>
-                <View className="flex-row gap-2">
-                  <View className="flex-1">
-                    <Button label="Cancel" variant="outline" size="sm" onPress={() => setShowJoinRequest(false)} />
-                  </View>
-                  <View className="flex-1">
-                    <Button label={jrSubmitting ? 'Sending…' : 'Submit Request'} size="sm" loading={jrSubmitting} onPress={submitJoinReq} />
-                  </View>
-                </View>
-              </View>
-            )}
+            {/* "My society isn't listed" used to open a form that emailed a
+                queue somebody had to work through by hand. Onboarding now lets
+                a resident add the society themselves, in the same minute — a
+                strictly better ending, so this points there instead. */}
+            <Pressable
+              onPress={() => { setShowPicker(false); router.push('/onboard' as any); }}
+              className="mt-4 flex-row items-center justify-center gap-2 rounded-2xl border border-dashed border-line py-4"
+            >
+              <Ionicons name="add-circle-outline" size={18} color={c.muted} />
+              <Text className="font-sans-md text-[14px] text-muted">My society isn't listed — add it</Text>
+            </Pressable>
           </ScrollView>
         </View>
       </Modal>

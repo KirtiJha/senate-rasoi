@@ -11,33 +11,21 @@ import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import { adminResetUserPin } from '../lib/auth';
 import { adminUpdateMember, deleteMember, listCommunityMembers, setMemberBlocked, setUserRoles } from '../lib/admin';
+import { InviteNeighbours } from '../components/InviteNeighbours';
 import { getOrCreateThread } from '../lib/dm';
 import { ContentReport, ReportStatus, fetchReports, setReportStatus } from '../lib/moderation';
 import { supabase } from '../lib/supabase';
 import { DbProfile } from '../lib/types';
 import { useThemeColors } from '../theme';
 
-type AdminTab = 'members' | 'requests' | 'reports';
+type AdminTab = 'members' | 'reports';
 
 /** The pending count rides in the label rather than as a floating badge, so
  *  the three tabs stay the same shape whether or not anything is waiting. */
 const ADMIN_TABS = (pending: number): readonly SegmentedItem<AdminTab>[] => [
   { key: 'members', label: 'Members', icon: 'people-outline' },
-  { key: 'requests', label: 'Requests', icon: 'mail-open-outline', count: pending },
   { key: 'reports', label: 'Reports', icon: 'flag-outline' },
 ];
-
-interface JoinRequest {
-  id: string;
-  society_name: string;
-  society_address: string;
-  requester_name: string;
-  requester_phone: string;
-  requester_email: string | null;
-  status: 'pending' | 'approved' | 'rejected';
-  admin_note: string | null;
-  created_at: string;
-}
 
 export default function AdminScreen() {
   const router = useRouter();
@@ -45,12 +33,12 @@ export default function AdminScreen() {
   const confirmDialog = useConfirm();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
-  const { ready, isAdmin, userId, communityId, refreshProfile } = useAuth();
+  const { ready, isAdmin, userId, communityId, community, refreshProfile } = useAuth();
   // Notifications link here with ?tab=reports; honour it or the deep link
   // drops an admin on Members and makes them hunt for what was flagged.
   const { tab } = useLocalSearchParams<{ tab?: string }>();
   const [activeTab, setActiveTab] = useState<AdminTab>(
-    tab === 'reports' || tab === 'requests' ? tab : 'members',
+    tab === 'reports' ? tab : 'members',
   );
 
   // Members state
@@ -59,9 +47,6 @@ export default function AdminScreen() {
   const [busy, setBusy] = useState<string | null>(null);
   const [query, setQuery] = useState('');
 
-  // Join requests state
-  const [requests, setRequests] = useState<JoinRequest[]>([]);
-  const [requestsLoading, setRequestsLoading] = useState(false);
 
   // Edit member details. Joining is open by design, so the society needs a
   // way to correct what an open door lets through — a flat typed as "204"
@@ -109,28 +94,12 @@ export default function AdminScreen() {
     }
   }, [communityId, toast]);
 
-  const loadRequests = useCallback(async () => {
-    setRequestsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('society_join_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setRequests((data ?? []) as JoinRequest[]);
-    } catch {
-      toast.show('Could not load requests');
-    } finally {
-      setRequestsLoading(false);
-    }
-  }, [toast]);
 
   useEffect(() => {
     if (isAdmin) {
       loadMembers();
-      loadRequests();
     }
-  }, [isAdmin, loadMembers, loadRequests]);
+  }, [isAdmin, loadMembers]);
 
   // Above the redirect: a hook that runs only for admins changes the hook
   // count between renders.
@@ -152,8 +121,7 @@ export default function AdminScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    if (activeTab === 'members') await loadMembers();
-    else await loadRequests();
+    await loadMembers();
     setRefreshing(false);
   };
 
@@ -238,21 +206,7 @@ export default function AdminScreen() {
     );
   };
 
-  const updateRequestStatus = async (id: string, status: 'approved' | 'rejected', note?: string) => {
-    try {
-      const { error } = await supabase
-        .from('society_join_requests')
-        .update({ status, admin_note: note ?? null })
-        .eq('id', id);
-      if (error) throw error;
-      setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
-      toast.show(status === 'approved' ? 'Request approved' : 'Request rejected');
-    } catch {
-      toast.show('Could not update request');
-    }
-  };
 
-  const pendingCount = requests.filter((r) => r.status === 'pending').length;
 
   return (
     <View className="flex-1 bg-bg">
@@ -275,7 +229,7 @@ export default function AdminScreen() {
           </View>
 
           <Segmented
-            items={ADMIN_TABS(pendingCount)}
+            items={ADMIN_TABS(0)}
             value={activeTab}
             onChange={setActiveTab}
           />
@@ -290,6 +244,14 @@ export default function AdminScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <Container>
+            {/* Bringing people in is the admin's actual first job, and there
+                was nowhere in the app to do it from. */}
+            {communityId ? (
+              <View className="mb-4">
+                <InviteNeighbours communityId={communityId} societyName={community?.name ?? 'your society'} />
+              </View>
+            ) : null}
+
             {/* Search */}
             <View className="mb-4 flex-row items-center gap-2 card px-3 py-2.5">
               <Ionicons name="search-outline" size={16} color={c.faint} />
@@ -363,25 +325,6 @@ export default function AdminScreen() {
                 </View>
               );
             })}
-          </Container>
-        </ScrollView>
-      ) : activeTab === 'requests' ? (
-        <ScrollView
-          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-          refreshControl={<RefreshControl refreshing={requestsLoading} onRefresh={onRefresh} />}
-          showsVerticalScrollIndicator={false}
-        >
-          <Container>
-            {requests.length === 0 ? (
-              <View className="items-center py-16">
-                <Ionicons name="mail-open-outline" size={40} color={c.faint} />
-                <Text className="mt-3 font-sans-sb text-[15px] text-ink">No join requests</Text>
-                <Text className="font-sans mt-1 text-[13px] text-muted">Society join requests appear here</Text>
-              </View>
-            ) : null}
-            {requests.map((req) => (
-              <JoinRequestCard key={req.id} req={req} onUpdate={updateRequestStatus} c={c} />
-            ))}
           </Container>
         </ScrollView>
       ) : (
@@ -654,48 +597,3 @@ function ActionBtn({
   );
 }
 
-function JoinRequestCard({
-  req, onUpdate, c,
-}: {
-  req: JoinRequest;
-  onUpdate: (id: string, status: 'approved' | 'rejected', note?: string) => void;
-  c: ReturnType<typeof useThemeColors>;
-}) {
-  const statusColor = req.status === 'pending' ? c.highlight : req.status === 'approved' ? c.accent : c.danger;
-  const statusLabel = req.status === 'pending' ? 'Pending' : req.status === 'approved' ? 'Approved' : 'Rejected';
-
-  return (
-    <View className="mb-3 card p-4">
-      <View className="flex-row items-center justify-between mb-2">
-        <Text className="font-sans-sb text-[15px] text-ink flex-1 mr-2" numberOfLines={1}>{req.society_name}</Text>
-        <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: statusColor + '20' }}>
-          <Text className="text-[11px] font-sans-sb" style={{ color: statusColor }}>{statusLabel}</Text>
-        </View>
-      </View>
-
-      <Text className="font-sans text-[12px] text-muted mb-1">{req.society_address}</Text>
-
-      <View className="mt-2 rounded-2xl bg-inset p-3">
-        <Text className="text-[11px] font-sans-sb text-faint mb-1">REQUESTER</Text>
-        <Text className="text-[13px] font-sans-md text-ink">{req.requester_name}</Text>
-        <Text className="font-sans text-[12px] text-muted">{req.requester_phone}</Text>
-        {req.requester_email ? <Text className="font-sans text-[12px] text-muted">{req.requester_email}</Text> : null}
-      </View>
-
-      <Text className="font-sans mt-2 text-[11px] text-faint">
-        {new Date(req.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-      </Text>
-
-      {req.status === 'pending' ? (
-        <View className="mt-3 flex-row gap-2">
-          <Pressable onPress={() => onUpdate(req.id, 'rejected')} className="flex-1 items-center rounded-xl border border-danger/30 bg-danger-soft py-2.5">
-            <Text className="text-[13px] font-sans-sb text-danger">Reject</Text>
-          </Pressable>
-          <Pressable onPress={() => onUpdate(req.id, 'approved')} className="flex-1 items-center rounded-xl bg-accent py-2.5">
-            <Text className="text-[13px] font-sans-sb text-on-accent">Approve</Text>
-          </Pressable>
-        </View>
-      ) : null}
-    </View>
-  );
-}

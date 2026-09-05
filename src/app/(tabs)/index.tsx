@@ -14,6 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SaathiMark } from '../../components/SaathiMark';
 import { T } from '../../components/T';
 import { Avatar, Container, ErrorRow, ModuleTile, Rise, Touchable, useResponsive, VegMark } from '../../components/ui';
+import { InviteNeighbours } from '../../components/InviteNeighbours';
+import { fetchMemberCount } from '../../lib/admin';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useUnreadDms } from '../../context/unread';
@@ -198,7 +200,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { profile, communityId, userId } = useAuth();
+  const { profile, communityId, community, userId } = useAuth();
   const c = useThemeColors();
   const toast = useToast();
   const unread = useUnreadDms();
@@ -217,6 +219,9 @@ export default function HomeScreen() {
   const [borrowCount, setBorrowCount] = useState(0);
   const [recentLostFound, setRecentLostFound] = useState<LostFoundItem[]>([]);
   const [nextGame, setNextGame] = useState<NextGame | null>(null);
+  // A founder's society starts with one person in it. Until there are a few
+  // more, the most useful thing this screen can do is say so.
+  const [memberCount, setMemberCount] = useState<number | null>(null);
   const [groupUnread, setGroupUnread] = useState(0);
   const [lostFoundCount, setLostFoundCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -243,6 +248,7 @@ export default function HomeScreen() {
       fetchBorrowCounts(communityId).then((c) => setBorrowCount(c.offers + c.requests)),
       fetchLostFoundItems({ openOnly: true }, communityId).then((rows) => setRecentLostFound(rows.slice(0, 10))),
       fetchMyNextGame(userId).then(setNextGame),
+      fetchMemberCount(communityId).then(setMemberCount),
       fetchTotalGroupUnread().then(setGroupUnread),
       fetchLostFoundCounts(communityId).then(setLostFoundCount),
     ]);
@@ -602,6 +608,18 @@ export default function HomeScreen() {
                 </View>
               ))}
             </ScrollView>
+          </Rise>
+        ) : null}
+
+        {/* ── 2b. Nobody else is here yet ───────────────────────────────
+            Onboarding ends with a founder alone in an app whose every tile is
+            about neighbours. Nothing told them the first job, and there was no
+            invite anywhere to do it with. */}
+        {memberCount !== null && memberCount <= 3 && communityId ? (
+          <Rise index={1} style={{ marginBottom: 24 }}>
+            <View style={{ paddingHorizontal: isDesktop ? 0 : 16 }}>
+              <InviteNeighbours communityId={communityId} societyName={community?.name ?? 'your society'} tone="hero" />
+            </View>
           </Rise>
         ) : null}
 

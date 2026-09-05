@@ -82,3 +82,10 @@ export async function adminUpdateMember(
   if (error) throw error;
   return Boolean(data);
 }
+
+/** How many people are actually on Aangan in this society (not roster rows). */
+export async function fetchMemberCount(communityId: string): Promise<number> {
+  const { count } = await supabase
+    .from('profiles').select('id', { count: 'exact', head: true }).eq('community_id', communityId);
+  return count ?? 0;
+}
