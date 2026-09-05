@@ -31,13 +31,15 @@ const KEY = 'senate_theme';
  * alone never reached them, so the toggle only ever flipped the imperative
  * colours in src/theme.ts (icons, StatusBar) and left the UI half-light.
  *
- * Native only. On web this call THROWS when Tailwind's darkMode is `media`,
- * which is the NativeWind preset default and what this project uses — web is
- * driven by the data-theme attribute in syncDOM below instead.
+ * Every platform. This used to skip web because under Tailwind's `media`
+ * dark mode the call throws there — and it was still throwing on every
+ * launch, because the guard covered our one call site and nothing else.
+ * tailwind.config.js now sets darkMode: 'class', which is what NativeWind
+ * asks for when an app controls its own scheme, so the call is legal
+ * everywhere. Wrapped anyway: a theme preference must never take the app down.
  */
 function syncNativeWind(pref: ThemePreference) {
-  if (Platform.OS === 'web') return;
-  nativeWindColorScheme.set(pref);
+  try { nativeWindColorScheme.set(pref); } catch { /* cosmetic — never fatal */ }
 }
 
 function syncDOM(pref: ThemePreference) {

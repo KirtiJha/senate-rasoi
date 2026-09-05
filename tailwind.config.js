@@ -2,6 +2,16 @@
 module.exports = {
   content: ['./src/**/*.{js,jsx,ts,tsx}'],
   presets: [require('nativewind/preset')],
+  // The app has a user-facing theme toggle (system / light / dark), which
+  // means it must be able to SET the colour scheme. NativeWind's preset
+  // default is 'media', under which colorScheme.set() throws on web:
+  //   "Cannot manually set color scheme, as dark mode is type 'media'.
+  //    Please use StyleSheet.setFlag('darkMode', 'class')"
+  // That was the red error bubble on every launch. With 'class', set() is
+  // legal on every platform; 'system' still follows the OS, because the
+  // token blocks in global.css key on prefers-color-scheme, which NativeWind
+  // evaluates against its own scheme regardless of this setting.
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {

@@ -36,6 +36,8 @@ import { UnreadDmsProvider } from '../context/unread';
 import { BlocksProvider } from '../context/blocks';
 import { useAuth } from '../context/auth';
 import { useIsDark, useThemeColors } from '../theme';
+import { AppErrorBoundary } from '../components/AppErrorBoundary';
+import { useAppLifecycle } from '../lib/appLifecycle';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -70,7 +72,10 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <AppShell />
+      {/* Outside every provider: if one of THEM throws, this still draws. */}
+      <AppErrorBoundary>
+        <AppShell />
+      </AppErrorBoundary>
     </ThemeProvider>
   );
 }
@@ -78,6 +83,8 @@ export default function RootLayout() {
 function AppShell() {
   const c = useThemeColors();
   const isDark = useIsDark();
+  // Token refresh and realtime reconnect on wake; global error handlers.
+  useAppLifecycle();
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.bg }}>
       <SafeAreaProvider>
