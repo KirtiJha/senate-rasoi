@@ -236,7 +236,10 @@ export default function HomeScreen() {
       fetchProperties({ availableOnly: true }, communityId).then((r) => setRecentProps(r.slice(0, 12))),
       fetchPlaces({}, communityId).then((r) => setRecentPlaces(r.slice(0, 12))),
       fetchDishes(communityId).then(setDishes),
-      fetchBorrowItems({ availableOnly: false }, communityId).then((rows) => setRecentBorrow(rows.slice(0, 10))),
+      // Was `availableOnly: false`, i.e. no filter at all — so listings their
+      // owners had taken down still surfaced here. Same rule as the tile now:
+      // lent-out things show, withdrawn ones show only to their owner.
+      fetchBorrowItems({ publicOnly: true, viewerId: userId }, communityId).then((rows) => setRecentBorrow(rows.slice(0, 10))),
       fetchBorrowCounts(communityId).then((c) => setBorrowCount(c.offers + c.requests)),
       fetchLostFoundItems({ openOnly: true }, communityId).then((rows) => setRecentLostFound(rows.slice(0, 10))),
       fetchMyNextGame(userId).then(setNextGame),

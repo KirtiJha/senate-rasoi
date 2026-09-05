@@ -390,8 +390,21 @@ export default function LendItemDetailScreen() {
                   </>
                 ) : item.status === 'available' ? (
                   <Button label="Request to borrow" icon="hand-left-outline" size="lg" fullWidth onPress={() => setShowReq(true)} />
+                ) : item.status === 'lent' ? (
+                  /* Out with somebody today is not the same as gone. You can
+                     still put your name down for when it comes back, or just
+                     ask the owner when that might be. */
+                  <>
+                    <View className="flex-row items-center gap-2 rounded-xl px-3 py-2.5" style={{ backgroundColor: c.highlightSoft }}>
+                      <Ionicons name="time-outline" size={16} color={c.highlightInk} />
+                      <Text className="flex-1 font-sans text-[12.5px] leading-[18px]" style={{ color: c.highlightInk }}>
+                        Lent out at the moment. Ask for it and {ownerName} will have your request waiting when it comes back.
+                      </Text>
+                    </View>
+                    <Button label="Ask for it when it's free" icon="hand-left-outline" size="lg" fullWidth onPress={() => setShowReq(true)} />
+                  </>
                 ) : (
-                  <Text className="font-sans text-center text-[13px] text-muted">Currently {item.status === 'lent' ? 'lent out' : 'unavailable'}.</Text>
+                  <Text className="font-sans text-center text-[13px] text-muted">Not available just now.</Text>
                 )
               ) : (
                 /* kind='request' — owner needs to borrow; non-owner can offer to help */
@@ -424,7 +437,11 @@ export default function LendItemDetailScreen() {
 
       {/* Request to borrow sheet */}
       <Sheet visible={showReq} onClose={() => { setNote(''); setShowReq(false); }} title="Request to borrow">
-        <Text className="font-sans mb-3 text-[13px] leading-[19px] text-muted">Tell {ownerName} when you need it and for how long.</Text>
+        <Text className="font-sans mb-3 text-[13px] leading-[19px] text-muted">
+          {item.status === 'lent'
+            ? `It's with someone else at the moment. Tell ${ownerName} when you'd need it and they can come back to you.`
+            : `Tell ${ownerName} when you need it and for how long.`}
+        </Text>
         <TextInput value={note} onChangeText={setNote} placeholder="e.g. Need it this weekend for ~2 days" placeholderTextColor={c.faint} multiline className="mb-4 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ minHeight: 72, outline: 'none' } as any} />
         <Button label="Send request" icon="paper-plane" fullWidth onPress={async () => {
           if (!userId) return;

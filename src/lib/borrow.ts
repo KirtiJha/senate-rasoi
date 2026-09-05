@@ -63,23 +63,23 @@ const SELECT = '*, owner:profiles!lend_items_owner_user_id_fkey(name,flat,whatsa
 const REQ_SELECT = '*, requester:profiles!borrow_requests_requester_id_fkey(name,flat,whatsapp,phone)';
 
 export async function fetchItems(
-  opts: { category?: string; availableOnly?: boolean; mine?: string; kind?: LendKind; viewerId?: string | null } = {},
+  opts: { category?: string; publicOnly?: boolean; mine?: string; kind?: LendKind; viewerId?: string | null } = {},
   communityId: string = COMMUNITY_ID,
 ): Promise<LendItem[]> {
   let q = supabase.from('lend_items').select(SELECT).eq('community_id', communityId);
   if (opts.kind) q = q.eq('kind', opts.kind);
   if (opts.category && opts.category !== 'all') q = q.eq('category', opts.category);
-  if (opts.availableOnly) {
-    // "Available only" is about what other people should be shown. Your own
-    // things stay on your list whatever state they are in.
+  if (opts.publicOnly) {
+    // What the society is shown, versus what its owner is shown.
     //
-    // Since 0122 an item flips to 'lent' by itself the moment you accept a
-    // request — so a ladder somebody borrowed disappeared from its owner's
-    // view entirely, and "Mark returned" lives on the page they could no
-    // longer reach. The item would have stayed lent for good.
+    // A lent-out ladder is still worth knowing about: it tells you the thing
+    // exists two floors up and you can ask when it comes back. Only what the
+    // owner deliberately took down ('unavailable') leaves the list — and even
+    // that stays visible to them, so they can put it back. A "sorted" borrow
+    // request is the same state and disappears for the same reason.
     q = opts.viewerId
-      ? q.or(`status.eq.available,owner_user_id.eq.${opts.viewerId}`)
-      : q.eq('status', 'available');
+      ? q.or(`status.neq.unavailable,owner_user_id.eq.${opts.viewerId}`)
+      : q.neq('status', 'unavailable');
   }
   if (opts.mine) q = q.eq('owner_user_id', opts.mine);
   const { data, error } = await q.order('bump_at', { ascending: false }).limit(100);

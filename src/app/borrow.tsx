@@ -31,9 +31,9 @@ export default function BorrowScreen() {
       setRows(await fetchItems({
         kind: tab,
         category: cat,
-        // A sorted request and a lent-out item drop off the browse list — for
-        // everyone except the person whose item it is.
-        availableOnly: !mine,
+        // Lent-out things stay on the list for everyone; only what the owner
+        // took down leaves it, and only for other people.
+        publicOnly: !mine,
         viewerId: userId,
         mine: mine && userId ? userId : undefined,
       // The community was never passed, so every fetch fell back to the
