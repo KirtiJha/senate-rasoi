@@ -2,12 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { openPhotoPicker } from '../lib/photo';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../components/T';
 import { Avatar, Button, Chip, Container, ScreenHeader, Sheet } from '../components/ui';
 import { useAuth } from '../context/auth';
+import { qk } from '../lib/queryClient';
+import { useCachedList } from '../lib/useCachedList';
 import { useToast } from '../context/toast';
 import { RECO_CATEGORIES, RecoQuestion, askQuestion, fetchQuestions, recoCategory, subscribeQuestions } from '../lib/recommend';
 import { useThemeColors } from '../theme';
@@ -20,8 +22,6 @@ export default function RecommendScreen() {
   const toast = useToast();
   const { userId, communityId } = useAuth();
 
-  const [rows, setRows] = useState<RecoQuestion[]>([]);
-  const [loading, setLoading] = useState(true);
   const [cat, setCat] = useState<string>('all');
   const [showAsk, setShowAsk] = useState(false);
   /**
@@ -38,14 +38,13 @@ export default function RecommendScreen() {
   const seeded = typeof askParam === 'string' ? askParam.slice(0, 140) : '';
   useEffect(() => { if (seeded) setShowAsk(true); }, [seeded]);
 
-  const load = useCallback(async () => {
-    try { setRows(await fetchQuestions(cat)); } catch { /* keep */ } finally { setLoading(false); }
-  }, [cat]);
-
-  useFocusEffect(useCallback(() => {
-    setLoading(true); load();
-    return subscribeQuestions(communityId, load);
-  }, [load, communityId]));
+  // From the cache first, per category; see useCachedList.
+  const subscribe = useCallback((bump: () => void) => subscribeQuestions(communityId, bump), [communityId]);
+  const { rows, loading, load } = useCachedList<RecoQuestion>(
+    qk.recommend(communityId, cat),
+    () => fetchQuestions(cat, communityId),
+    { enabled: !!communityId, subscribe, prefix: ['recommend', communityId] },
+  );
 
   return (
     <View className="flex-1 bg-bg">

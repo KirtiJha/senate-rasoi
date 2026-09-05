@@ -71,4 +71,9 @@ export const qk = {
   borrow: (communityId: string, tab: string, cat: string, mine: boolean, userId: string | null) => ['borrow', communityId, 'list', tab, cat, mine, userId] as const,
   borrowWaiting: (communityId: string, userId: string | null) => ['borrow', communityId, 'waiting', userId] as const,
   lostFound: (communityId: string, tab: string, mine: boolean, userId: string | null) => ['lost-found', communityId, tab, mine, userId] as const,
+  sports: (communityId: string | null, userId: string | null) => ['sports', communityId, userId] as const,
+  events: (communityId: string | null) => ['events', communityId] as const,
+  properties: (communityId: string | null, type: string, availableOnly: boolean, mine: string | null) => ['properties', communityId, type, availableOnly, mine] as const,
+  recommend: (communityId: string | null, cat: string) => ['recommend', communityId, cat] as const,
+  documents: (communityId: string | null) => ['documents', communityId] as const,
 } as const;

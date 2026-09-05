@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { useEffect, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Avatar, Button, Container, RowSkeleton, ScreenHeader, Sheet } from '../components/ui';
 import { useAuth } from '../context/auth';
+import { qk } from '../lib/queryClient';
+import { useCachedList } from '../lib/useCachedList';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import { fetchDirectory } from '../lib/directory';
@@ -28,21 +30,18 @@ export default function DocumentsScreen() {
   const toast = useToast();
   const { userId, communityId, isAdmin } = useAuth();
 
-  const [docs, setDocs] = useState<DocRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>('all');
   const [showUpload, setShowUpload] = useState(false);
   const [manage, setManage] = useState<DocRow | null>(null);
   const [query, setQuery] = useState('');
 
-  const load = useCallback(async () => {
-    if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
-    try { setDocs(await fetchDocuments(communityId)); }
-    catch { toast.show('Could not load documents'); }
-    finally { setLoading(false); }
-  }, [communityId, toast]);
-
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  // From the cache first; see useCachedList.
+  const { rows: docs, loading, failed, load } = useCachedList<DocRow>(
+    qk.documents(communityId),
+    () => fetchDocuments(communityId),
+    { enabled: isSupabaseConfigured && !!communityId },
+  );
+  useEffect(() => { if (failed) toast.show('Could not load documents'); }, [failed, toast]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

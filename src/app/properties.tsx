@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { T } from '../components/T';
 import { Chip, Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
+import { qk } from '../lib/queryClient';
+import { useCachedList } from '../lib/useCachedList';
 import { IMAGE_CACHE_PROPS } from '../lib/image';
 import { ListingType, PropertyRow, fetchProperties, propertySubtitle, rupeesShort, subscribeProperties } from '../lib/properties';
 import { useThemeColors } from '../theme';
@@ -24,24 +26,18 @@ export default function PropertiesScreen() {
   const router = useRouter();
   const { userId, communityId } = useAuth();
 
-  const [rows, setRows] = useState<PropertyRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>('all');
   const [availableOnly, setAvailableOnly] = useState(true);
   const [mine, setMine] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      setRows(await fetchProperties({ type: filter, availableOnly: mine ? false : availableOnly, mine: mine && userId ? userId : undefined }));
-    } catch { /* keep previous */ }
-    finally { setLoading(false); }
-  }, [filter, availableOnly, mine, userId]);
-
-  useFocusEffect(useCallback(() => {
-    setLoading(true);
-    load();
-    return subscribeProperties(communityId, load);
-  }, [load, communityId]));
+  // From the cache first, per filter; see useCachedList. The community is
+  // passed now — it used to fall back to the built-in default id.
+  const subscribe = useCallback((bump: () => void) => subscribeProperties(communityId, bump), [communityId]);
+  const { rows, loading } = useCachedList<PropertyRow>(
+    qk.properties(communityId, filter, mine ? false : availableOnly, mine ? userId : null),
+    () => fetchProperties({ type: filter, availableOnly: mine ? false : availableOnly, mine: mine && userId ? userId : undefined }, communityId),
+    { enabled: !!communityId, subscribe, prefix: ['properties', communityId] },
+  );
 
   return (
     <View className="flex-1 bg-bg">

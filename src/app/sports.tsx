@@ -2,13 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { openPhotoPicker } from '../lib/photo';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Button, Container, RowSkeleton, ScreenHeader, Sheet, TimeField } from '../components/ui';
 import { SportGroupBody } from '../components/SportGroupBody';
 import { WeekdayChips } from '../components/WeekdayChips';
 import { useAuth } from '../context/auth';
+import { qk } from '../lib/queryClient';
+import { useCachedList } from '../lib/useCachedList';
 import { useToast } from '../context/toast';
 import { durationLabel, formatDays, formatTime, isValidTime } from '../lib/schedule';
 import { isSupabaseConfigured } from '../lib/supabase';
@@ -23,19 +25,16 @@ export default function SportsScreen() {
   const router = useRouter();
   const { userId, communityId } = useAuth();
 
-  const [groups, setGroups] = useState<SportGroupWithMeta[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [activeSport, setActiveSport] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
-    try { setGroups(await fetchGroups(communityId, userId)); }
-    catch { toast.show('Could not load sports'); }
-    finally { setLoading(false); }
-  }, [communityId, userId, toast]);
-
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  // From the cache first; see useCachedList.
+  const { rows: groups, loading, failed, load } = useCachedList<SportGroupWithMeta>(
+    qk.sports(communityId, userId),
+    () => fetchGroups(communityId, userId),
+    { enabled: isSupabaseConfigured && !!communityId },
+  );
+  useEffect(() => { if (failed) toast.show('Could not load sports'); }, [failed, toast]);
 
   // One group per sport — first group wins if duplicates ever exist.
   const groupBySport = useMemo(() => {

@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Container, ScreenHeader, useResponsive } from '../components/ui';
 import { useAuth } from '../context/auth';
+import { qk } from '../lib/queryClient';
+import { useCachedList } from '../lib/useCachedList';
 import { IMAGE_CACHE_PROPS } from '../lib/image';
 import { PLACE_TYPES, PlaceRow, fetchPlaces, placeTypeMeta, subscribePlaces } from '../lib/places';
 import { isSupabaseConfigured } from '../lib/supabase';
@@ -26,8 +28,6 @@ export default function PlacesScreen() {
   const router = useRouter();
   const { isDesktop } = useResponsive();
   const { communityId, community } = useAuth();
-  const [items, setItems] = useState<PlaceRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('az');
   const [expanded, setExpanded] = useState<Set<string>>(new Set()); // type keys the user opened
@@ -44,15 +44,15 @@ export default function PlacesScreen() {
     [community?.lat, community?.lon],
   );
 
-  const load = useCallback(() => {
-    if (!communityId || !isSupabaseConfigured) { setLoading(false); return; }
-    fetchPlaces({}, communityId).then(setItems).catch(() => {}).finally(() => setLoading(false));
-  }, [communityId]);
-
-  useFocusEffect(useCallback(() => {
-    load();
-    return communityId ? subscribePlaces(communityId, load) : undefined;
-  }, [load, communityId]));
+  // From the cache first; see useCachedList. Two hundred and sixty-five
+  // places in one society already — this is the list most worth not
+  // re-downloading on every visit.
+  const subscribe = useCallback((bump: () => void) => (communityId ? subscribePlaces(communityId, bump) : () => {}), [communityId]);
+  const { rows: items, loading } = useCachedList<PlaceRow>(
+    qk.places(communityId ?? ''),
+    () => fetchPlaces({}, communityId!),
+    { enabled: !!communityId && isSupabaseConfigured, subscribe },
+  );
 
   const q = query.trim().toLowerCase();
 

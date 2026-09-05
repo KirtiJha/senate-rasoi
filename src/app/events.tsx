@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { Container, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
+import { qk } from '../lib/queryClient';
+import { useCachedList } from '../lib/useCachedList';
 import {
   EVENT_STATUS_META, SocietyEvent, fetchEvents,
 } from '../lib/events';
@@ -16,15 +18,12 @@ export default function EventsScreen() {
   const router = useRouter();
   const { communityId, isAdmin } = useAuth();
 
-  const [rows, setRows] = useState<SocietyEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    try { setRows(await fetchEvents(communityId)); }
-    catch { /* keep */ } finally { setLoading(false); }
-  }, [communityId]);
-
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  // From the cache first; see useCachedList.
+  const { rows, loading } = useCachedList<SocietyEvent>(
+    qk.events(communityId),
+    () => fetchEvents(communityId),
+    { enabled: !!communityId },
+  );
 
   const today = new Date().toLocaleDateString('en-CA');
   const { upcoming, past } = useMemo(() => {
