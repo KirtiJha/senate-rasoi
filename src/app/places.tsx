@@ -10,10 +10,6 @@ import { PLACE_TYPES, PlaceRow, fetchPlaces, placeTypeMeta, subscribePlaces } fr
 import { isSupabaseConfigured } from '../lib/supabase';
 import { useThemeColors } from '../theme';
 
-// Society centre fallback (DS-MAX Senate) so "Nearest" works even if the
-// community row has no coordinates yet.
-const FALLBACK_CENTER = { lat: 12.8687464, lon: 77.6345485 };
-
 type SortKey = 'az' | 'near' | 'new';
 
 function distanceKm(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
@@ -35,8 +31,15 @@ export default function PlacesScreen() {
   const [sort, setSort] = useState<SortKey>('az');
   const [expanded, setExpanded] = useState<Set<string>>(new Set()); // type keys the user opened
 
+  // Where this society actually is, or nothing.
+  //
+  // There used to be a fallback here — one society's coordinates, hardcoded,
+  // used for whichever society was running. It made the distances right for
+  // that one society and quietly wrong for every other: "2.3 km" about a
+  // hospital in another state, with nothing to suggest a guess. A distance
+  // measured from a place we cannot name is not worth showing.
   const center = useMemo(
-    () => (community?.lat != null && community?.lon != null ? { lat: community.lat, lon: community.lon } : FALLBACK_CENTER),
+    () => (community?.lat != null && community?.lon != null ? { lat: community.lat, lon: community.lon } : null),
     [community?.lat, community?.lon],
   );
 
@@ -62,11 +65,12 @@ export default function PlacesScreen() {
     const arr = [...rows];
     if (sort === 'az') arr.sort((a, b) => a.name.localeCompare(b.name));
     else if (sort === 'new') arr.sort((a, b) => b.created_at.localeCompare(a.created_at));
-    else arr.sort((a, b) => {
+    else if (center) arr.sort((a, b) => {
       const da = a.lat != null && a.lng != null ? distanceKm(center, { lat: a.lat, lon: a.lng }) : Infinity;
       const db = b.lat != null && b.lng != null ? distanceKm(center, { lat: b.lat, lon: b.lng }) : Infinity;
       return da - db;
     });
+    else arr.sort((a, b) => a.name.localeCompare(b.name));
     return arr;
   }, [sort, center]);
 
@@ -117,7 +121,8 @@ export default function PlacesScreen() {
           <View className="flex-row items-center gap-1.5">
             <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-faint">Sort</Text>
             <SortChip label="A–Z" active={sort === 'az'} onPress={() => setSort('az')} c={c} />
-            <SortChip label="Nearest" active={sort === 'near'} onPress={() => setSort('near')} c={c} />
+            {/* Offered only when we know where the society is. */}
+            {center ? <SortChip label="Nearest" active={sort === 'near'} onPress={() => setSort('near')} c={c} /> : null}
             <SortChip label="Newest" active={sort === 'new'} onPress={() => setSort('new')} c={c} />
           </View>
           {!q ? (
@@ -159,7 +164,7 @@ export default function PlacesScreen() {
                   {open ? (
                     <View className="border-t border-line">
                       <View className="flex-row flex-wrap gap-2.5 p-2.5">
-                        {g.rows.map((p) => <Card key={p.id} p={p} isDesktop={isDesktop} center={center} showDist={sort === 'near'} c={c} onPress={() => router.push(`/place/${p.id}` as any)} />)}
+                        {g.rows.map((p) => <Card key={p.id} p={p} isDesktop={isDesktop} center={center} showDist={sort === 'near' && !!center} c={c} onPress={() => router.push(`/place/${p.id}` as any)} />)}
                       </View>
                     </View>
                   ) : null}
@@ -174,12 +179,12 @@ export default function PlacesScreen() {
 }
 
 function Card({ p, isDesktop, center, showDist, c, onPress }: {
-  p: PlaceRow; isDesktop: boolean; center: { lat: number; lon: number }; showDist: boolean;
+  p: PlaceRow; isDesktop: boolean; center: { lat: number; lon: number } | null; showDist: boolean;
   c: ReturnType<typeof useThemeColors>; onPress: () => void;
 }) {
   const m = placeTypeMeta(p.place_type);
   const photo = p.photos?.[0];
-  const dist = showDist && p.lat != null && p.lng != null ? distanceKm(center, { lat: p.lat, lon: p.lng }) : null;
+  const dist = showDist && center && p.lat != null && p.lng != null ? distanceKm(center, { lat: p.lat, lon: p.lng }) : null;
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="Open"
       onPress={onPress}

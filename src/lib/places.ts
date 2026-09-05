@@ -57,7 +57,10 @@ export async function fetchPlaces(
 ): Promise<PlaceRow[]> {
   let q = supabase.from('places').select(SELECT).eq('community_id', communityId);
   if (opts.type) q = q.eq('place_type', opts.type);
-  const { data, error } = await q.order('bump_at', { ascending: false }).limit(500);
+  // This society already has 265 places and the tile is a directory people
+  // add to, not a feed. A cap that is quietly reached would hide a hospital
+  // rather than a nicety, so it sits well above any plausible list.
+  const { data, error } = await q.order('bump_at', { ascending: false }).limit(2000);
   if (error) throw error;
   return (data ?? []) as PlaceRow[];
 }
