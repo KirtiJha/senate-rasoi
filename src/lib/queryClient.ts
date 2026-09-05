@@ -68,4 +68,7 @@ export const qk = {
   places: (communityId: string) => ['places', communityId] as const,
   polls: (communityId: string) => ['polls', communityId] as const,
   search: (communityId: string, q: string) => ['search', communityId, q] as const,
+  borrow: (communityId: string, tab: string, cat: string, mine: boolean, userId: string | null) => ['borrow', communityId, 'list', tab, cat, mine, userId] as const,
+  borrowWaiting: (communityId: string, userId: string | null) => ['borrow', communityId, 'waiting', userId] as const,
+  lostFound: (communityId: string, tab: string, mine: boolean, userId: string | null) => ['lost-found', communityId, tab, mine, userId] as const,
 } as const;

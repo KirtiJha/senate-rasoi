@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import { FlashList } from '@shopify/flash-list';
+import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../components/T';
-import { Chip, Container, ScreenHeader } from '../components/ui';
+import { Chip, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import {
   LOST_FOUND_CATEGORIES,
@@ -14,8 +16,10 @@ import {
   subscribeLostFoundItems,
 } from '../lib/lostFound';
 import { IMAGE_CACHE_PROPS } from '../lib/image';
+import { qk } from '../lib/queryClient';
 import { timeAgo } from '../lib/time';
-import { useThemeColors } from '../theme';
+import { useRefreshOnFocus } from '../lib/useRefreshOnFocus';
+import { layout, useThemeColors } from '../theme';
 
 const catMeta = (key: string | null) =>
   LOST_FOUND_CATEGORIES.find((c) => c.key === key) ?? LOST_FOUND_CATEGORIES[LOST_FOUND_CATEGORIES.length - 1];
@@ -27,27 +31,26 @@ export default function LostFoundScreen() {
   const { userId, communityId } = useAuth();
 
   const [tab, setTab] = useState<LostFoundKind>('lost');
-  const [rows, setRows] = useState<LostFoundItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [mine, setMine] = useState(false);
   const [cat, setCat] = useState<string>('all');
   const [query, setQuery] = useState('');
 
-  const load = useCallback(async () => {
-    try {
-      setRows(await fetchLostFoundItems({
-        kind: tab,
-        openOnly: !mine,
-        mine: mine && userId ? userId : undefined,
-      }));
-    } catch { /* keep */ } finally { setLoading(false); }
-  }, [tab, mine, userId]);
+  // Cached per tab and "Mine". The old screen reset to skeletons on every
+  // focus; now the last list paints at once and refreshes behind itself.
+  const items = useQuery({
+    queryKey: qk.lostFound(communityId, tab, mine, userId),
+    enabled: !!communityId,
+    queryFn: () => fetchLostFoundItems({
+      kind: tab,
+      openOnly: !mine,
+      mine: mine && userId ? userId : undefined,
+    }, communityId),
+  });
+  const subscribe = useCallback((bump: () => void) => subscribeLostFoundItems(communityId, bump), [communityId]);
+  useRefreshOnFocus(['lost-found', communityId], subscribe);
 
-  useFocusEffect(useCallback(() => {
-    setLoading(true);
-    load();
-    return subscribeLostFoundItems(communityId, load);
-  }, [load, communityId]));
+  const rows = items.data ?? [];
+  const loading = items.isPending;
 
   const isLost = tab === 'lost';
   const addHref = isLost ? '/lost-found/new?kind=lost' : '/lost-found/new?kind=found';
@@ -88,6 +91,8 @@ export default function LostFoundScreen() {
                   onPress={() => { setTab(k); setMine(false); }}
                   className="flex-1 items-center rounded-xl py-2"
                   style={{ backgroundColor: tab === k ? c.bg : 'transparent' }}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: tab === k }}
                 >
                   <Text className="text-[13px] font-sans-sb" style={{ color: tab === k ? ACCENT : c.muted }}>{label}</Text>
                 </Pressable>
@@ -105,10 +110,10 @@ export default function LostFoundScreen() {
         }
       />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
-        <Container>
-          {rows.length > 4 ? (
-            <View className="mb-3 flex-row items-center gap-2 rounded-full border border-line bg-surface px-3.5" style={{ height: 44 }}>
+      <View className="flex-1">
+        {rows.length > 4 ? (
+          <View className="w-full self-center px-4 pt-4" style={{ maxWidth: layout.maxContent }}>
+            <View className="flex-row items-center gap-2 rounded-full border border-line bg-surface px-3.5" style={{ height: 44 }}>
               <Ionicons name="search" size={16} color={c.faint} />
               <TextInput
                 value={query}
@@ -117,6 +122,9 @@ export default function LostFoundScreen() {
                 placeholderTextColor={c.faint}
                 className="flex-1 text-[14px] text-ink"
                 style={{ outline: 'none' } as never}
+                returnKeyType="search"
+                autoCorrect={false}
+                accessibilityLabel="Search this list"
               />
               {query ? (
                 <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Clear search">
@@ -124,46 +132,66 @@ export default function LostFoundScreen() {
                 </Pressable>
               ) : null}
             </View>
-          ) : null}
+          </View>
+        ) : null}
 
-          {loading ? (
-            <View className="gap-3">
-              {[0, 1, 2, 3].map((i) => (
-                <View key={i} className="h-24 rounded-2xl bg-inset animate-pulse" />
-              ))}
-            </View>
-          ) : rows.length > 0 && filtered.length === 0 ? (
-            <View className="items-center px-6 py-14">
-              <Ionicons name="search-outline" size={26} color={c.faint} />
-              <Text className="font-sans mt-2 text-center text-[13px] text-muted">
-                Nothing here{query ? ` matching “${query.trim()}”` : ' in that category'}.
-              </Text>
-              <Pressable onPress={() => { setQuery(''); setCat('all'); }} hitSlop={8} className="mt-2 px-3 py-1 active:opacity-60">
-                <Text className="text-[13px] font-sans-sb" style={{ color: ACCENT }}>Show everything</Text>
-              </Pressable>
-            </View>
-          ) : rows.length === 0 ? (
-            <View className="items-center py-20">
-              <Text style={{ fontSize: 44 }} className="mb-3">{isLost ? '🔍' : '📦'}</Text>
-              <Text className="font-display text-xl text-ink mb-1">{emptyTitle}</Text>
-              <Text className="font-sans text-[14px] text-muted text-center max-w-xs">{emptyBlurb}</Text>
-              <Pressable
-                onPress={() => router.push(addHref as any)}
-                className="mt-6 rounded-2xl px-5 py-3 active:opacity-80"
-                style={{ backgroundColor: ACCENT }}
-              >
-                <Text className="font-sans-sb text-[14px] text-white">
-                  Report {isLost ? 'a lost item' : 'a found item'}
+        <FlashList
+          data={filtered}
+          keyExtractor={(it) => it.id}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
+          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+          ListEmptyComponent={
+            loading ? (
+              <View className="w-full self-center gap-3" style={{ maxWidth: layout.maxContent }}>
+                {[0, 1, 2, 3].map((i) => (
+                  <View key={i} className="h-24 rounded-2xl bg-inset animate-pulse" />
+                ))}
+              </View>
+            ) : items.isError ? (
+              <View className="items-center px-6 py-14">
+                <Ionicons name="cloud-offline-outline" size={26} color={c.faint} />
+                <Text className="font-sans mt-2 text-center text-[13px] text-muted">Couldn't load this list.</Text>
+                <Pressable onPress={() => items.refetch()} hitSlop={8} className="mt-2 px-3 py-1 active:opacity-60" accessibilityRole="button">
+                  <Text className="text-[13px] font-sans-sb" style={{ color: ACCENT }}>Try again</Text>
+                </Pressable>
+              </View>
+            ) : rows.length > 0 ? (
+              <View className="items-center px-6 py-14">
+                <Ionicons name="search-outline" size={26} color={c.faint} />
+                <Text className="font-sans mt-2 text-center text-[13px] text-muted">
+                  Nothing here{query ? ` matching “${query.trim()}”` : ' in that category'}.
                 </Text>
-              </Pressable>
-            </View>
-          ) : (
-            <View className="gap-3">
-              {filtered.map((item) => <ItemCard key={item.id} item={item} />)}
+                <Pressable onPress={() => { setQuery(''); setCat('all'); }} hitSlop={8} className="mt-2 px-3 py-1 active:opacity-60" accessibilityRole="button">
+                  <Text className="text-[13px] font-sans-sb" style={{ color: ACCENT }}>Show everything</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View className="items-center py-20">
+                <Text style={{ fontSize: 44 }} className="mb-3">{isLost ? '🔍' : '📦'}</Text>
+                <Text className="font-display text-xl text-ink mb-1">{emptyTitle}</Text>
+                <Text className="font-sans text-[14px] text-muted text-center max-w-xs">{emptyBlurb}</Text>
+                <Pressable
+                  onPress={() => router.push(addHref as any)}
+                  className="mt-6 rounded-2xl px-5 py-3 active:opacity-80"
+                  style={{ backgroundColor: ACCENT }}
+                  accessibilityRole="button"
+                >
+                  <Text className="font-sans-sb text-[14px] text-white">
+                    Report {isLost ? 'a lost item' : 'a found item'}
+                  </Text>
+                </Pressable>
+              </View>
+            )
+          }
+          renderItem={({ item }) => (
+            <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
+              <ItemCard item={item} />
             </View>
           )}
-        </Container>
-      </ScrollView>
+        />
+      </View>
     </View>
   );
 }
@@ -180,6 +208,8 @@ function ItemCard({ item }: { item: LostFoundItem }) {
       onPress={() => router.push(`/lost-found/${item.id}` as any)}
       className="overflow-hidden rounded-2xl border bg-surface active:opacity-90"
       style={{ borderColor: c.line, opacity: isResolved ? 0.65 : 1 }}
+      accessibilityRole="button"
+      accessibilityLabel={item.title}
     >
       <View className="flex-row gap-3 p-3.5">
         <View className="h-16 w-16 overflow-hidden rounded-xl flex-shrink-0" style={{ backgroundColor: ACCENT + '18' }}>

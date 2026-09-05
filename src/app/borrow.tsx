@@ -1,14 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
+import { FlashList } from '@shopify/flash-list';
+import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../components/T';
-import { Chip, Container, ScreenHeader } from '../components/ui';
+import { Chip, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { BORROW_CATEGORIES, LendItem, LendKind, fetchItems, fetchWaitingCounts, subscribeItems } from '../lib/borrow';
 import { IMAGE_CACHE_PROPS } from '../lib/image';
-import { useThemeColors } from '../theme';
+import { qk } from '../lib/queryClient';
+import { useRefreshOnFocus } from '../lib/useRefreshOnFocus';
+import { layout, useThemeColors } from '../theme';
 
 const catMeta = (key: string | null) => BORROW_CATEGORIES.find((c) => c.key === key) ?? BORROW_CATEGORIES[BORROW_CATEGORIES.length - 1];
 
@@ -19,41 +23,36 @@ export default function BorrowScreen() {
   const { userId, communityId } = useAuth();
 
   const [tab, setTab] = useState<LendKind>('offer');
-  const [rows, setRows] = useState<LendItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [cat, setCat] = useState<string>('all');
   const [mine, setMine] = useState(false);
   const [query, setQuery] = useState('');
-  const [waitingOn, setWaitingOn] = useState<Record<string, number>>({});
 
-  const load = useCallback(async () => {
-    try {
-      setRows(await fetchItems({
-        kind: tab,
-        category: cat,
-        // Lent-out things stay on the list for everyone; only what the owner
-        // took down leaves it, and only for other people.
-        publicOnly: !mine,
-        viewerId: userId,
-        mine: mine && userId ? userId : undefined,
-      // The community was never passed, so every fetch fell back to the
-      // built-in default id. Right for this society by coincidence, wrong for
-      // the next one.
-      }, communityId));
-      if (userId) setWaitingOn(await fetchWaitingCounts(userId, communityId).catch(() => ({})));
-    } catch { /* keep */ } finally { setLoading(false); }
-  }, [tab, cat, mine, userId, communityId]);
+  // Cached per tab, category and "Mine": switching back to a list you have
+  // already seen paints it at once, and the refetch happens behind it.
+  const items = useQuery({
+    queryKey: qk.borrow(communityId, tab, cat, mine, userId),
+    enabled: !!communityId,
+    queryFn: () => fetchItems({
+      kind: tab,
+      category: cat,
+      // Lent-out things stay on the list for everyone; only what the owner
+      // took down leaves it, and only for other people.
+      publicOnly: !mine,
+      viewerId: userId,
+      mine: mine && userId ? userId : undefined,
+    }, communityId),
+  });
+  const waiting = useQuery({
+    queryKey: qk.borrowWaiting(communityId, userId),
+    enabled: !!communityId && !!userId,
+    queryFn: () => fetchWaitingCounts(userId!, communityId),
+  });
+  const subscribe = useCallback((bump: () => void) => subscribeItems(communityId, bump), [communityId]);
+  useRefreshOnFocus(['borrow', communityId], subscribe);
 
-  // Refetch whenever the inputs change — including userId, which is null for
-  // the first moments after a cold start. Without this the opening fetch is
-  // made as nobody, so your own lent-out things are filtered out and stay
-  // missing until you navigate away and come back.
-  useEffect(() => { load(); }, [load]);
-
-  useFocusEffect(useCallback(() => {
-    load();
-    return subscribeItems(communityId, load);
-  }, [load, communityId]));
+  const rows = items.data ?? [];
+  const waitingOn = waiting.data ?? {};
+  const loading = items.isPending;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -93,6 +92,8 @@ export default function BorrowScreen() {
                   onPress={() => { setTab(k); setCat('all'); setMine(false); }}
                   className="flex-1 items-center rounded-xl py-2"
                   style={{ backgroundColor: tab === k ? c.bg : 'transparent' }}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: tab === k }}
                 >
                   <Text className="text-[13px] font-sans-sb" style={{ color: tab === k ? ACCENT : c.muted }}>{label}</Text>
                 </Pressable>
@@ -120,10 +121,10 @@ export default function BorrowScreen() {
         }
       />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
-        <Container>
-          {rows.length > 4 ? (
-            <View className="mb-3 flex-row items-center gap-2 rounded-full border border-line bg-surface px-3.5" style={{ height: 44 }}>
+      <View className="flex-1">
+        {rows.length > 4 ? (
+          <View className="w-full self-center px-4 pt-4" style={{ maxWidth: layout.maxContent }}>
+            <View className="flex-row items-center gap-2 rounded-full border border-line bg-surface px-3.5" style={{ height: 44 }}>
               <Ionicons name="search" size={16} color={c.faint} />
               <TextInput
                 value={query}
@@ -132,6 +133,9 @@ export default function BorrowScreen() {
                 placeholderTextColor={c.faint}
                 className="flex-1 text-[14px] text-ink"
                 style={{ outline: 'none' } as never}
+                returnKeyType="search"
+                autoCorrect={false}
+                accessibilityLabel="Search this list"
               />
               {query ? (
                 <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Clear search">
@@ -139,36 +143,57 @@ export default function BorrowScreen() {
                 </Pressable>
               ) : null}
             </View>
-          ) : null}
+          </View>
+        ) : null}
 
-          {loading ? (
-            <Text className="font-sans px-1 py-10 text-center text-[13px] text-muted">Loading…</Text>
-          ) : query && filtered.length === 0 ? (
-            <View className="items-center px-6 py-14">
-              <Ionicons name="search-outline" size={26} color={c.faint} />
-              <Text className="font-sans mt-2 text-center text-[13px] text-muted">Nothing matching “{query.trim()}”.</Text>
-            </View>
-          ) : rows.length === 0 ? (
-            <View className="items-center px-6 py-16">
-              <View className="mb-3 h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: ACCENT + '18' }}>
-                <Ionicons name="swap-horizontal" size={26} color={ACCENT} />
+        {/* Virtualised: cards are recycled as you scroll rather than all drawn
+            at once, and the list keeps its place when a card updates. */}
+        <FlashList
+          data={filtered}
+          keyExtractor={(it) => it.id}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
+          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+          ListEmptyComponent={
+            loading ? (
+              <View className="w-full self-center gap-3" style={{ maxWidth: layout.maxContent }}>
+                {[0, 1, 2, 3].map((i) => <View key={i} className="h-[92px] rounded-2xl bg-inset animate-pulse" />)}
               </View>
-              <Text className="font-sans-bold text-[15px] text-ink">{emptyTitle}</Text>
-              <Text className="font-sans mt-1 max-w-[300px] text-center text-[13px] text-muted">{emptyBlurb}</Text>
-              <Pressable onPress={() => router.push(addHref as any)} className="mt-5 flex-row items-center gap-2 rounded-2xl px-5 py-3 active:opacity-90" style={{ backgroundColor: ACCENT }}>
-                <Ionicons name="add" size={18} color="#fff" />
-                <Text className="font-sans-bold text-[14px] text-white">{isOffer ? 'Lend something' : 'Post a request'}</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <View className="gap-3">
-              {filtered.map((it) => (
-                <ItemCard key={it.id} item={it} isOffer={isOffer} waiting={waitingOn[it.id] ?? 0} yours={!!userId && it.owner_user_id === userId} />
-              ))}
+            ) : items.isError ? (
+              <View className="items-center px-6 py-14">
+                <Ionicons name="cloud-offline-outline" size={26} color={c.faint} />
+                <Text className="font-sans mt-2 text-center text-[13px] text-muted">Couldn't load this list.</Text>
+                <Pressable onPress={() => items.refetch()} hitSlop={8} className="mt-2 px-3 py-1 active:opacity-60" accessibilityRole="button">
+                  <Text className="text-[13px] font-sans-sb" style={{ color: ACCENT }}>Try again</Text>
+                </Pressable>
+              </View>
+            ) : query && rows.length > 0 ? (
+              <View className="items-center px-6 py-14">
+                <Ionicons name="search-outline" size={26} color={c.faint} />
+                <Text className="font-sans mt-2 text-center text-[13px] text-muted">Nothing matching “{query.trim()}”.</Text>
+              </View>
+            ) : (
+              <View className="items-center px-6 py-16">
+                <View className="mb-3 h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: ACCENT + '18' }}>
+                  <Ionicons name="swap-horizontal" size={26} color={ACCENT} />
+                </View>
+                <Text className="font-sans-bold text-[15px] text-ink">{emptyTitle}</Text>
+                <Text className="font-sans mt-1 max-w-[300px] text-center text-[13px] text-muted">{emptyBlurb}</Text>
+                <Pressable onPress={() => router.push(addHref as any)} className="mt-5 flex-row items-center gap-2 rounded-2xl px-5 py-3 active:opacity-90" style={{ backgroundColor: ACCENT }} accessibilityRole="button">
+                  <Ionicons name="add" size={18} color="#fff" />
+                  <Text className="font-sans-bold text-[14px] text-white">{isOffer ? 'Lend something' : 'Post a request'}</Text>
+                </Pressable>
+              </View>
+            )
+          }
+          renderItem={({ item }) => (
+            <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
+              <ItemCard item={item} isOffer={isOffer} waiting={waitingOn[item.id] ?? 0} yours={!!userId && item.owner_user_id === userId} />
             </View>
           )}
-        </Container>
-      </ScrollView>
+        />
+      </View>
     </View>
   );
 }
@@ -181,7 +206,7 @@ function ItemCard({ item, isOffer, waiting = 0, yours = false }: { item: LendIte
   const lent = item.status !== 'available';
 
   return (
-    <Pressable onPress={() => router.push(`/borrow/${item.id}` as any)} className="flex-row overflow-hidden card active:opacity-90">
+    <Pressable onPress={() => router.push(`/borrow/${item.id}` as any)} className="flex-row overflow-hidden card active:opacity-90" accessibilityRole="button" accessibilityLabel={item.title}>
       <View style={{ width: 92, height: 92, backgroundColor: c.inset }} className="items-center justify-center flex-shrink-0">
         {item.photo_url
           ? <Image source={{ uri: item.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
