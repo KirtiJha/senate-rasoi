@@ -90,13 +90,16 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, read: next } : i)));
   };
 
-  const onMarkAll = async (read: boolean) => {
+  // Mark a set of rows — a day, a stack, or everything — read or unread.
+  const onMarkItems = (list: NotificationItem[], read: boolean) => {
     if (!userId) return;
-    const ids = items.filter((i) => i.read !== read).map((i) => i.id);
+    const ids = list.filter((i) => i.read !== read).map((i) => i.id);
     if (!ids.length) return;
+    const set = new Set(ids);
     (read ? markRead(userId, ids) : markUnread(userId, ids)).catch(() => {});
-    setItems((prev) => prev.map((i) => ({ ...i, read })));
+    setItems((prev) => prev.map((i) => (set.has(i.id) ? { ...i, read } : i)));
   };
+  const onMarkAll = (read: boolean) => onMarkItems(items, read);
 
   const onClearAll = async () => {
     if (!userId) return;
@@ -118,6 +121,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         onItemPress={onItemPress}
         onToggleRead={onToggleRead}
         onMarkAll={onMarkAll}
+        onMarkItems={onMarkItems}
         onClearAll={onClearAll}
       />
     </Ctx.Provider>
@@ -125,7 +129,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 }
 
 function NotificationsModal({
-  visible, items, unreadCount, onClose, onItemPress, onToggleRead, onMarkAll, onClearAll,
+  visible, items, unreadCount, onClose, onItemPress, onToggleRead, onMarkAll, onMarkItems, onClearAll,
 }: {
   visible: boolean;
   items: NotificationItem[];
@@ -134,11 +138,16 @@ function NotificationsModal({
   onItemPress: (i: NotificationItem) => void;
   onToggleRead: (i: NotificationItem) => void;
   onMarkAll: (read: boolean) => void;
+  onMarkItems: (list: NotificationItem[], read: boolean) => void;
   onClearAll: () => void;
 }) {
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
+  // Stacks the reader has opened, by key; reset when the panel closes.
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  useEffect(() => { if (!visible) setExpanded(new Set()); }, [visible]);
+  const sections = useMemo(() => groupNotifications(items, expanded), [items, expanded]);
 
   const panelStyle = isDesktop
     ? { position: 'absolute' as const, top: insets.top + 12, right: 16, width: 400, maxHeight: '80%' as const }
@@ -146,7 +155,7 @@ function NotificationsModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Close" style={{ flex: 1, backgroundColor: '#00000055' }} onPress={onClose}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Close" style={{ flex: 1, backgroundColor: c.scrim }} onPress={onClose}>
         <Pressable
           onPress={() => {}}
           style={[
@@ -185,7 +194,7 @@ function NotificationsModal({
                 )}
                 <Pressable onPress={onClearAll} hitSlop={4} className="flex-row items-center gap-1 rounded-full bg-inset px-2.5 py-1 active:opacity-70">
                   <Ionicons name="trash-outline" size={12} color={c.danger} />
-                  <Text className="text-[12px] font-sans-sb text-[#EF4444]">Clear all</Text>
+                  <Text className="text-[12px] font-sans-sb" style={{ color: c.danger }}>Clear all</Text>
                 </Pressable>
               </View>
             ) : null}
@@ -198,43 +207,142 @@ function NotificationsModal({
             </View>
           ) : (
             <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 8 }} showsVerticalScrollIndicator={false}>
-              {items.map((item) => {
-                const meta = TYPE_META[item.type] ?? TYPE_META.post;
-                return (
-                  <Pressable
-                    key={item.id}
-                    onPress={() => onItemPress(item)}
-                    className="flex-row items-start gap-3 border-b border-line px-4 py-3 active:bg-inset"
-                    style={{ backgroundColor: item.read ? undefined : c.accent + '08' }}
-                  >
-                    <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: c.accentSoft }}>
-                      <Ionicons name={meta.icon} size={17} color={c.accent} />
-                    </View>
-                    <View className="flex-1">
-                      <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{item.title}</Text>
-                      {item.body ? <Text className="font-sans text-[13px] text-muted" numberOfLines={2}>{item.body}</Text> : null}
-                      <Text className="font-sans mt-0.5 text-[11px] text-faint">{timeAgo(item.created_at)}</Text>
-                    </View>
-                    {/* Per-row read/unread toggle (doesn't navigate) */}
+              {sections.map((section) => (
+                <View key={section.key}>
+                  {/* A day at a time, with its own "mark read" — the shape
+                      every phone's notification shade has settled on. */}
+                  <View className="flex-row items-center justify-between bg-inset px-4 py-1.5">
+                    <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-muted">{section.label}</Text>
+                    {section.unread > 0 ? (
+                      <Pressable onPress={() => onMarkItems(section.items, true)} hitSlop={6} accessibilityRole="button" accessibilityLabel={`Mark ${section.label} read`}>
+                        <Text className="text-[11px] font-sans-sb text-accent">{section.unread} new · mark read</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                  {section.rows.map((row) => row.kind === 'one' ? (
+                    <NotificationRow key={row.item.id} item={row.item} c={c} onPress={() => onItemPress(row.item)} onToggleRead={() => onToggleRead(row.item)} />
+                  ) : (
+                    /* Three or more of a kind in one day fold into one row —
+                       "6 new posts" — rather than six rows of the same icon. */
                     <Pressable
-                      onPress={() => onToggleRead(item)}
-                      hitSlop={8}
-                      accessibilityLabel={item.read ? 'Mark as unread' : 'Mark as read'}
-                      className="ml-1 h-7 w-7 items-center justify-center rounded-full active:bg-inset"
+                      key={row.key}
+                      onPress={() => setExpanded((prev) => new Set(prev).add(row.key))}
+                      className="flex-row items-start gap-3 border-b border-line px-4 py-3 active:bg-inset"
+                      style={{ backgroundColor: row.unread ? c.accent + '08' : undefined }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${row.items.length} ${row.label}, show all`}
                     >
-                      {item.read
-                        ? <Ionicons name="ellipse-outline" size={14} color={c.faint} />
-                        : <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: c.accent }} />}
+                      <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: c.accentSoft }}>
+                        <Ionicons name={row.icon} size={17} color={c.accent} />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{row.items.length} {row.label}</Text>
+                        <Text className="font-sans text-[13px] text-muted" numberOfLines={1}>{row.items[0].title}</Text>
+                        <Text className="font-sans mt-0.5 text-[11px] text-faint">{timeAgo(row.items[0].created_at)} · tap to see all</Text>
+                      </View>
+                      <Ionicons name="chevron-down" size={16} color={c.faint} style={{ marginTop: 8 }} />
                     </Pressable>
-                  </Pressable>
-                );
-              })}
+                  ))}
+                </View>
+              ))}
             </ScrollView>
           )}
         </Pressable>
       </Pressable>
     </Modal>
   );
+}
+
+function NotificationRow({ item, c, onPress, onToggleRead }: {
+  item: NotificationItem; c: ReturnType<typeof useThemeColors>; onPress: () => void; onToggleRead: () => void;
+}) {
+  const meta = TYPE_META[item.type] ?? TYPE_META.post;
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-row items-start gap-3 border-b border-line px-4 py-3 active:bg-inset"
+      style={{ backgroundColor: item.read ? undefined : c.accent + '08' }}
+      accessibilityLabel={`${item.read ? '' : 'Unread. '}${item.title}`}
+    >
+      <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: c.accentSoft }}>
+        <Ionicons name={meta.icon} size={17} color={c.accent} />
+      </View>
+      <View className="flex-1">
+        <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{item.title}</Text>
+        {item.body ? <Text className="font-sans text-[13px] text-muted" numberOfLines={2}>{item.body}</Text> : null}
+        <Text className="font-sans mt-0.5 text-[11px] text-faint">{timeAgo(item.created_at)}</Text>
+      </View>
+      {/* Per-row read/unread toggle (doesn't navigate) */}
+      <Pressable
+        onPress={onToggleRead}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={item.read ? 'Mark as unread' : 'Mark as read'}
+        className="ml-1 h-7 w-7 items-center justify-center rounded-full active:bg-inset"
+      >
+        {item.read
+          ? <Ionicons name="ellipse-outline" size={14} color={c.faint} />
+          : <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: c.accent }} />}
+      </Pressable>
+    </Pressable>
+  );
+}
+
+// What a stack of one kind is called: "4 new posts", "3 orders".
+const TYPE_PLURAL: Partial<Record<NotificationType, string>> = {
+  announcement: 'announcements', post: 'new posts', listing: 'listing updates', poll: 'polls', message: 'messages',
+  dish: 'dishes', tiffin: 'tiffin updates', sport: 'sports updates', document: 'documents', payment: 'payments',
+  property: 'flat listings', recommend: 'recommendations', borrow: 'borrow updates', court: 'court bookings',
+  order: 'orders', place: 'places', lost_found: 'lost & found notices', report: 'reports', event: 'event updates',
+  saathi_watch: 'Saathi alerts', food_daily: 'food digests', feedback: 'feedback updates', pin_reset: 'PIN resets',
+  carpool: 'carpool updates', group_chat: 'group messages', member: 'new neighbours',
+};
+
+type Row =
+  | { kind: 'one'; item: NotificationItem }
+  | { kind: 'stack'; key: string; label: string; icon: keyof typeof Ionicons.glyphMap; items: NotificationItem[]; unread: boolean };
+type Section = { key: string; label: string; items: NotificationItem[]; unread: number; rows: Row[] };
+
+function dayOf(iso: string): { key: string; label: string } {
+  const d = new Date(iso);
+  const now = new Date();
+  const start = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((start(now) - start(d)) / 86400000);
+  if (days <= 0) return { key: 'today', label: 'Today' };
+  if (days === 1) return { key: 'yesterday', label: 'Yesterday' };
+  if (days < 7) return { key: 'd' + days, label: d.toLocaleDateString('en-IN', { weekday: 'long' }) };
+  return { key: 'earlier', label: 'Earlier' };
+}
+
+/**
+ * Newest-first rows, cut into days; within a day, a run of three or more of
+ * one kind folds into a stack until the reader opens it.
+ */
+function groupNotifications(items: NotificationItem[], expanded: Set<string>): Section[] {
+  const sections: Section[] = [];
+  for (const item of items) {
+    const d = dayOf(item.created_at);
+    let s = sections[sections.length - 1];
+    if (!s || s.key !== d.key) { s = { key: d.key, label: d.label, items: [], unread: 0, rows: [] }; sections.push(s); }
+    s.items.push(item);
+    if (!item.read) s.unread++;
+  }
+  for (const s of sections) {
+    let i = 0;
+    while (i < s.items.length) {
+      let j = i;
+      while (j < s.items.length && s.items[j].type === s.items[i].type) j++;
+      const run = s.items.slice(i, j);
+      const key = s.key + ':' + run[0].type + ':' + run[0].id;
+      if (run.length >= 3 && !expanded.has(key)) {
+        s.rows.push({ kind: 'stack', key, label: TYPE_PLURAL[run[0].type] ?? 'updates', icon: (TYPE_META[run[0].type] ?? TYPE_META.post).icon, items: run, unread: run.some((r) => !r.read) });
+      } else {
+        for (const it of run) s.rows.push({ kind: 'one', item: it });
+      }
+      i = j;
+    }
+  }
+  return sections;
 }
 
 function timeAgo(iso: string): string {
