@@ -1,9 +1,9 @@
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useProfile } from '../context/profile';
 import { DishRow, SLOT_EMOJI } from '../lib/types';
-import { Avatar, Button, IconButton, Stepper, VegMark, useResponsive } from './ui';
+import { Avatar, Button, Sheet, Stepper, VegMark } from './ui';
 
 /**
  * WHATSAPP IS NOT WHAT PLACES THE ORDER.
@@ -19,6 +19,9 @@ import { Avatar, Button, IconButton, Stepper, VegMark, useResponsive } from './u
  * failing outright for a chef who never added a number. Reserving is now the
  * primary action, and WhatsApp is an extra shown only when there is a number
  * to open it with — the same shape the marketplace settled on in InquiryModal.
+ *
+ * It is the shared Sheet now rather than its own Modal: the handle, the
+ * drag-to-dismiss, the desktop card and the keyboard are the Sheet's job.
  */
 interface OrderModalProps {
   dish: DishRow | null;
@@ -28,7 +31,6 @@ interface OrderModalProps {
 
 export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
   const { profile } = useProfile();
-  const { isDesktop } = useResponsive();
   const [qty, setQty] = useState(1);
 
   useEffect(() => {
@@ -39,53 +41,13 @@ export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
   const total = dish.price * qty;
 
   return (
-    <Modal visible transparent animationType={isDesktop ? 'fade' : 'slide'} onRequestClose={onClose}>
-      <Pressable className={`flex-1 bg-black/55 ${isDesktop ? 'items-center justify-center p-6' : 'justify-end'}`} onPress={onClose}>
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className={`w-full self-center bg-bg px-5 ${isDesktop ? 'rounded-[28px] pb-6 pt-5' : 'rounded-t-[28px] pb-9 pt-3'}`}
-          style={{ maxWidth: 460 }}
-        >
-          {!isDesktop ? <View className="mb-4 h-1.5 w-12 self-center rounded-full bg-line" /> : null}
-
-          <View className="mb-3 flex-row items-start justify-between">
-            <Text className="font-sans-sb text-[13px] uppercase tracking-wider text-accent">Place an order</Text>
-            <IconButton icon="close" label="Close" onPress={onClose} />
-          </View>
-
-          <View className="mb-4 flex-row items-center gap-3 card p-3">
-            <View className="h-16 w-16 items-center justify-center overflow-hidden rounded-xl bg-inset">
-              {dish.photo_url ? (
-                <Image source={{ uri: dish.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-              ) : (
-                <Text style={{ fontSize: 30 }}>{SLOT_EMOJI[dish.slot]}</Text>
-              )}
-            </View>
-            <View className="flex-1">
-              <View className="flex-row items-center gap-1.5">
-                <VegMark type={dish.veg_type} size={13} />
-                <Text className="flex-1 font-display text-[17px] text-ink" numberOfLines={1}>{dish.dish_name}</Text>
-              </View>
-              <View className="mt-1 flex-row items-center gap-1.5">
-                <Avatar name={dish.chef_name} size={18} />
-                <Text className="font-sans text-[12px] text-muted">{dish.chef_name} · Flat {dish.flat}</Text>
-              </View>
-            </View>
-          </View>
-
-          <View className="mb-4 flex-row items-center justify-between">
-            <View>
-              <Text className="font-sans-sb text-[15px] text-ink">How many plates?</Text>
-              <Text className="font-sans text-[12px] text-faint">{dish.plates_left} available</Text>
-            </View>
-            <Stepper value={qty} min={1} max={dish.plates_left} onChange={setQty} />
-          </View>
-
-          <View className="mb-5 flex-row items-center justify-between rounded-2xl bg-inset px-4 py-3">
-            <Text className="font-sans-md text-[14px] text-muted">{qty} × ₹{dish.price}</Text>
-            <Text className="font-display-x text-[22px] text-ink">₹{total}</Text>
-          </View>
-
+    <Sheet
+      visible
+      onClose={onClose}
+      title="Place an order"
+      maxWidth={460}
+      footer={
+        <View className="gap-2">
           <Button
             label={`Reserve ${qty} plate${qty !== 1 ? 's' : ''}`}
             icon="checkmark-circle-outline"
@@ -93,32 +55,62 @@ export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
             fullWidth
             onPress={() => onConfirm(dish, qty, 'app')}
           />
-
           {dish.whatsapp ? (
-            <View className="mt-2">
-              <Button
-                label="Reserve & message on WhatsApp"
-                icon="logo-whatsapp"
-                variant="whatsapp"
-                size="lg"
-                fullWidth
-                onPress={() => onConfirm(dish, qty, 'whatsapp')}
-              />
-            </View>
+            <Button
+              label="Reserve & message on WhatsApp"
+              icon="logo-whatsapp"
+              variant="whatsapp"
+              size="lg"
+              fullWidth
+              onPress={() => onConfirm(dish, qty, 'whatsapp')}
+            />
           ) : null}
+        </View>
+      }
+    >
+      <View className="mb-4 flex-row items-center gap-3 card p-3">
+        <View className="h-16 w-16 items-center justify-center overflow-hidden rounded-xl bg-inset">
+          {dish.photo_url ? (
+            <Image source={{ uri: dish.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+          ) : (
+            <Text style={{ fontSize: 30 }}>{SLOT_EMOJI[dish.slot]}</Text>
+          )}
+        </View>
+        <View className="flex-1">
+          <View className="flex-row items-center gap-1.5">
+            <VegMark type={dish.veg_type} size={13} />
+            <Text className="flex-1 font-display text-[17px] text-ink" numberOfLines={1}>{dish.dish_name}</Text>
+          </View>
+          <View className="mt-1 flex-row items-center gap-1.5">
+            <Avatar name={dish.chef_name} size={18} />
+            <Text className="font-sans text-[12px] text-muted">{dish.chef_name} · Flat {dish.flat}</Text>
+          </View>
+        </View>
+      </View>
 
-          <Text className="font-sans mt-2.5 text-center text-[11px] leading-4 text-faint">
-            Ordering as {profile.chefName || 'you'}. {dish.whatsapp ? 'Either way ' : ''}
-            {dish.chef_name} is notified in Aangan and confirms next; you can message them from your
-            Orders.
-            {dish.upi ? ` Pay via UPI ${dish.upi}.` : ''}
-          </Text>
-          <Text className="font-sans mt-2 text-center text-[11px] leading-4 text-faint">
-            This dish is cooked by a resident. Aangan only lists it and isn&apos;t responsible for the food,
-            payment, or delivery — your order is directly with the cook.
-          </Text>
-        </Pressable>
-      </Pressable>
-    </Modal>
+      <View className="mb-4 flex-row items-center justify-between">
+        <View>
+          <Text className="font-sans-sb text-[15px] text-ink">How many plates?</Text>
+          <Text className="font-sans text-[12px] text-faint">{dish.plates_left} available</Text>
+        </View>
+        <Stepper value={qty} min={1} max={dish.plates_left} onChange={setQty} />
+      </View>
+
+      <View className="mb-3 flex-row items-center justify-between rounded-2xl bg-inset px-4 py-3">
+        <Text className="font-sans-md text-[14px] text-muted">{qty} × ₹{dish.price}</Text>
+        <Text className="font-display-x text-[22px] text-ink">₹{total}</Text>
+      </View>
+
+      <Text className="font-sans text-center text-[11px] leading-4 text-faint">
+        Ordering as {profile.chefName || 'you'}. {dish.whatsapp ? 'Either way ' : ''}
+        {dish.chef_name} is notified in Aangan and confirms next; you can message them from your
+        Orders.
+        {dish.upi ? ` Pay via UPI ${dish.upi}.` : ''}
+      </Text>
+      <Text className="font-sans mt-2 text-center text-[11px] leading-4 text-faint">
+        This dish is cooked by a resident. Aangan only lists it and isn&apos;t responsible for the food,
+        payment, or delivery — your order is directly with the cook.
+      </Text>
+    </Sheet>
   );
 }

@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
-import { Avatar, Container, DetailSkeleton, ErrorState, KeyboardAvoider, useKeyboardInset } from '../../components/ui';
+import { Avatar, Button, Container, DetailSkeleton, ErrorState, KeyboardAvoider, Sheet } from '../../components/ui';
+import { Field } from '../../components/forms';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useBlocks } from '../../context/blocks';
@@ -623,8 +624,6 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
   onClose: () => void; onSaved: () => void; c: ReturnType<typeof useThemeColors>;
 }) {
   const toast = useToast();
-  const insets = useSafeAreaInsets();
-  const editKb = useKeyboardInset();
   const [category, setCategory] = useState<PostCategory>(post.category);
   const [title, setTitle] = useState(post.title ?? '');
   const [body, setBody] = useState(post.body);
@@ -667,58 +666,46 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 justify-end" style={{ backgroundColor: '#00000066' }}>
-        <View style={{ paddingBottom: editKb }}>
-          <View className="rounded-t-3xl bg-bg px-4 pt-3" style={{ paddingBottom: insets.bottom + 16 }}>
-            <View className="mb-3 flex-row items-center justify-between">
-              <Text className="font-display-x text-[18px] text-ink">Edit post</Text>
-              <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={8} className="h-8 w-8 items-center justify-center rounded-full active:bg-inset">
-                <Ionicons name="close" size={20} color={c.muted} />
-              </Pressable>
-            </View>
+    <Sheet
+      visible={visible}
+      onClose={onClose}
+      title="Edit post"
+      footer={<Button label={saving ? 'Saving…' : 'Save changes'} loading={saving} fullWidth onPress={save} />}
+    >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3 -mx-1" contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}>
+        {cats.map((k) => {
+          const on = category === k;
+          const color = POST_CATEGORY_COLORS[k] ?? c.accent;
+          return (
+            <Pressable key={k} onPress={() => setCategory(k)} className="flex-row items-center gap-1 rounded-full border px-3 py-1.5" style={{ borderColor: on ? color : c.line, backgroundColor: on ? color : c.surface }}>
+              <Ionicons name={POST_CATEGORY_ICONS[k] as any} size={12} color={on ? '#fff' : c.muted} />
+              <Text className="text-[12px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{POST_CATEGORY_LABELS[k]}</Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3 -mx-1" contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}>
-              {cats.map((k) => {
-                const on = category === k;
-                const color = POST_CATEGORY_COLORS[k] ?? c.accent;
-                return (
-                  <Pressable key={k} onPress={() => setCategory(k)} className="flex-row items-center gap-1 rounded-full border px-3 py-1.5" style={{ borderColor: on ? color : c.line, backgroundColor: on ? color : c.surface }}>
-                    <Ionicons name={POST_CATEGORY_ICONS[k] as any} size={12} color={on ? '#fff' : c.muted} />
-                    <Text className="text-[12px] font-sans-sb" style={{ color: on ? '#fff' : c.muted }}>{POST_CATEGORY_LABELS[k]}</Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+      <Field placeholder="Title (optional)" value={title} onChangeText={setTitle} />
+      <Field placeholder="What's on your mind?" value={body} onChangeText={setBody} multiline style={{ minHeight: 120 }} />
 
-            <TextInput value={title} onChangeText={setTitle} placeholder="Title (optional)" placeholderTextColor={c.faint} className="mb-2 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
-            <TextInput value={body} onChangeText={setBody} placeholder="What's on your mind?" placeholderTextColor={c.faint} multiline className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-3 text-[15px] text-ink" style={{ minHeight: 120, outline: 'none' } as any} />
-
-            {/* Photos */}
-            <View className="mb-4 flex-row flex-wrap gap-2">
-              {photos.map((p, i) => (
-                <View key={`${p.uri}-${i}`} className="overflow-hidden rounded-xl" style={{ width: 76, height: 76 }}>
-                  <Image source={{ uri: p.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-                  <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setPhotos((prev) => prev.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 h-5 w-5 items-center justify-center rounded-full bg-black/60">
-                    <Ionicons name="close" size={12} color="#fff" />
-                  </Pressable>
-                </View>
-              ))}
-              {photos.length < MAX_PHOTOS ? (
-                <Pressable onPress={pickPhotos} className="items-center justify-center rounded-xl border border-dashed border-line bg-inset active:opacity-70" style={{ width: 76, height: 76 }}>
-                  <Ionicons name="image-outline" size={20} color={c.muted} />
-                  <Text className="font-sans mt-0.5 text-[10px] text-muted">Add</Text>
-                </Pressable>
-              ) : null}
-            </View>
-
-            <Pressable onPress={save} disabled={saving} className="items-center rounded-2xl bg-accent py-3 active:opacity-80" style={{ opacity: saving ? 0.6 : 1 }}>
-              <Text className="font-sans-sb text-[15px]" style={{ color: c.onAccent }}>{saving ? 'Saving…' : 'Save changes'}</Text>
+      {/* Photos */}
+      <View className="mb-4 flex-row flex-wrap gap-2">
+        {photos.map((p, i) => (
+          <View key={`${p.uri}-${i}`} className="overflow-hidden rounded-xl" style={{ width: 76, height: 76 }}>
+            <Image source={{ uri: p.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+            <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setPhotos((prev) => prev.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 h-5 w-5 items-center justify-center rounded-full bg-black/60">
+              <Ionicons name="close" size={12} color="#fff" />
             </Pressable>
           </View>
-        </View>
+        ))}
+        {photos.length < MAX_PHOTOS ? (
+          <Pressable onPress={pickPhotos} className="items-center justify-center rounded-xl border border-dashed border-line bg-inset active:opacity-70" style={{ width: 76, height: 76 }}>
+            <Ionicons name="image-outline" size={20} color={c.muted} />
+            <Text className="font-sans mt-0.5 text-[10px] text-muted">Add</Text>
+          </Pressable>
+        ) : null}
       </View>
-    </Modal>
+    </Sheet>
   );
 }
 

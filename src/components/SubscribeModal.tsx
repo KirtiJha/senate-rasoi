@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { daysLabel } from './TiffinCard';
-import { Avatar, Button, IconButton, Stepper, VegMark } from './ui';
+import { Avatar, Button, Sheet, Stepper, VegMark } from './ui';
 import { SLOT_EMOJI, TiffinPlanWithChef } from '../lib/types';
 
 /**
@@ -31,52 +31,13 @@ export function SubscribeModal({ plan, onClose, onConfirm }: SubscribeModalProps
   if (!plan) return null;
 
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end bg-black/55" onPress={onClose}>
-        <Pressable onPress={(e) => e.stopPropagation()} className="w-full self-center rounded-t-[28px] bg-bg px-5 pb-9 pt-3" style={{ maxWidth: 560 }}>
-          <View className="mb-4 h-1.5 w-12 self-center rounded-full bg-line" />
-          <View className="mb-3 flex-row items-start justify-between">
-            <Text className="font-sans-sb text-[13px] uppercase tracking-wider text-accent">Subscribe to tiffin</Text>
-            <IconButton icon="close" label="Close" onPress={onClose} />
-          </View>
-
-          <View className="mb-4 card p-3">
-            <View className="flex-row items-center gap-1.5">
-              <VegMark type={plan.veg_type} size={13} />
-              <Text className="flex-1 font-display text-[17px] text-ink" numberOfLines={1}>{plan.title}</Text>
-            </View>
-            <View className="mt-1 flex-row items-center gap-1.5">
-              <Avatar name={plan.chef?.name ?? '?'} size={18} />
-              <Text className="font-sans text-[12px] text-muted">{plan.chef?.name ?? 'Chef'} · {SLOT_EMOJI[plan.slot]} {plan.slot} · {daysLabel(plan.days_of_week)}</Text>
-            </View>
-            {plan.description ? <Text className="font-sans mt-2 text-[13px] leading-5 text-muted">{plan.description}</Text> : null}
-          </View>
-
-          <View className="mb-4 flex-row items-center justify-between">
-            <View>
-              <Text className="font-sans-sb text-[15px] text-ink">Plates each day</Text>
-              <Text className="font-sans text-[12px] text-faint">Up to {plan.max_per_day} per day for your flat</Text>
-            </View>
-            <Stepper value={qty} min={1} max={plan.max_per_day} onChange={setQty} />
-          </View>
-
-          <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Start from</Text>
-          <View className="mb-4 flex-row gap-2">
-            {[{ k: true, l: 'Today' }, { k: false, l: 'Tomorrow' }].map((o) => {
-              const on = startToday === o.k;
-              return (
-                <Pressable key={o.l} onPress={() => setStartToday(o.k)} className={`rounded-full border px-4 py-2 ${on ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}>
-                  <Text className={`text-[13px] ${on ? 'font-sans-sb text-accent' : 'font-sans-md text-muted'}`}>{o.l}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <View className="mb-5 flex-row items-center justify-between rounded-2xl bg-inset px-4 py-3">
-            <Text className="font-sans-md text-[14px] text-muted">{qty} × ₹{plan.price} / day</Text>
-            <Text className="font-display-x text-[20px] text-ink">₹{plan.price * qty}<Text className="font-sans text-[12px] text-faint">/day</Text></Text>
-          </View>
-
+    <Sheet
+      visible
+      onClose={onClose}
+      title="Subscribe to tiffin"
+      maxWidth={560}
+      footer={
+        <View className="gap-2">
           <Button
             label="Subscribe"
             icon="checkmark-circle-outline"
@@ -84,31 +45,71 @@ export function SubscribeModal({ plan, onClose, onConfirm }: SubscribeModalProps
             fullWidth
             onPress={() => onConfirm(plan, qty, startToday, 'app')}
           />
-
           {plan.chef?.whatsapp ? (
-            <View className="mt-2">
-              <Button
-                label="Subscribe & message on WhatsApp"
-                icon="logo-whatsapp"
-                variant="whatsapp"
-                size="lg"
-                fullWidth
-                onPress={() => onConfirm(plan, qty, startToday, 'whatsapp')}
-              />
-            </View>
+            <Button
+              label="Subscribe & message on WhatsApp"
+              icon="logo-whatsapp"
+              variant="whatsapp"
+              size="lg"
+              fullWidth
+              onPress={() => onConfirm(plan, qty, startToday, 'whatsapp')}
+            />
           ) : null}
+        </View>
+      }
+    >
+      <View className="mb-4 card p-3">
+        <View className="flex-row items-center gap-1.5">
+          <VegMark type={plan.veg_type} size={13} />
+          <Text className="flex-1 font-display text-[17px] text-ink" numberOfLines={1}>{plan.title}</Text>
+        </View>
+        <View className="mt-1 flex-row items-center gap-1.5">
+          <Avatar name={plan.chef?.name ?? '?'} size={18} />
+          <Text className="font-sans text-[12px] text-muted">{plan.chef?.name ?? 'Chef'} · {SLOT_EMOJI[plan.slot]} {plan.slot} · {daysLabel(plan.days_of_week)}</Text>
+        </View>
+        {plan.description ? <Text className="font-sans mt-2 text-[13px] leading-5 text-muted">{plan.description}</Text> : null}
+      </View>
 
-          <Text className="font-sans mt-2.5 text-center text-[11px] leading-4 text-faint">
-            {plan.chef?.whatsapp ? 'Either way ' : ''}{plan.chef?.name ?? 'The cook'} is notified in
-            Aangan. You&apos;ll get this tiffin on {daysLabel(plan.days_of_week).toLowerCase()}. Pause
-            or cancel anytime in You → Tiffins.
-          </Text>
-          <Text className="font-sans mt-2 text-center text-[11px] leading-4 text-faint">
-            This tiffin is cooked by a resident. Aangan only lists it and isn&apos;t responsible for the food,
-            payment, or delivery — your subscription is directly with the cook.
-          </Text>
-        </Pressable>
-      </Pressable>
-    </Modal>
+      <View className="mb-4 flex-row items-center justify-between">
+        <View>
+          <Text className="font-sans-sb text-[15px] text-ink">Plates each day</Text>
+          <Text className="font-sans text-[12px] text-faint">Up to {plan.max_per_day} per day for your flat</Text>
+        </View>
+        <Stepper value={qty} min={1} max={plan.max_per_day} onChange={setQty} />
+      </View>
+
+      <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Start from</Text>
+      <View className="mb-4 flex-row gap-2">
+        {[{ k: true, l: 'Today' }, { k: false, l: 'Tomorrow' }].map((o) => {
+          const on = startToday === o.k;
+          return (
+            <Pressable
+              key={o.l}
+              onPress={() => setStartToday(o.k)}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: on }}
+              className={`rounded-full border px-4 py-2 ${on ? 'border-accent bg-accent-soft' : 'border-line bg-inset'}`}
+            >
+              <Text className={`text-[13px] ${on ? 'font-sans-sb text-accent' : 'font-sans-md text-muted'}`}>{o.l}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View className="mb-3 flex-row items-center justify-between rounded-2xl bg-inset px-4 py-3">
+        <Text className="font-sans-md text-[14px] text-muted">{qty} × ₹{plan.price} / day</Text>
+        <Text className="font-display-x text-[20px] text-ink">₹{plan.price * qty}<Text className="font-sans text-[12px] text-faint">/day</Text></Text>
+      </View>
+
+      <Text className="font-sans text-center text-[11px] leading-4 text-faint">
+        {plan.chef?.whatsapp ? 'Either way ' : ''}{plan.chef?.name ?? 'The cook'} is notified in
+        Aangan. You&apos;ll get this tiffin on {daysLabel(plan.days_of_week).toLowerCase()}. Pause
+        or cancel anytime in You → Tiffins.
+      </Text>
+      <Text className="font-sans mt-2 text-center text-[11px] leading-4 text-faint">
+        This tiffin is cooked by a resident. Aangan only lists it and isn&apos;t responsible for the food,
+        payment, or delivery — your subscription is directly with the cook.
+      </Text>
+    </Sheet>
   );
 }
