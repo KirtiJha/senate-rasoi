@@ -31,9 +31,10 @@ export default function BorrowScreen() {
       setRows(await fetchItems({
         kind: tab,
         category: cat,
-        // A request that's been sorted is history, not a live ask — it drops
-        // off the browse list the same way a lent-out item does.
+        // A sorted request and a lent-out item drop off the browse list — for
+        // everyone except the person whose item it is.
         availableOnly: !mine,
+        viewerId: userId,
         mine: mine && userId ? userId : undefined,
       }));
       if (userId) setWaitingOn(await fetchWaitingCounts(userId, communityId).catch(() => ({})));
@@ -153,7 +154,9 @@ export default function BorrowScreen() {
             </View>
           ) : (
             <View className="gap-3">
-              {filtered.map((it) => <ItemCard key={it.id} item={it} isOffer={isOffer} waiting={waitingOn[it.id] ?? 0} />)}
+              {filtered.map((it) => (
+                <ItemCard key={it.id} item={it} isOffer={isOffer} waiting={waitingOn[it.id] ?? 0} yours={!!userId && it.owner_user_id === userId} />
+              ))}
             </View>
           )}
         </Container>
@@ -162,7 +165,7 @@ export default function BorrowScreen() {
   );
 }
 
-function ItemCard({ item, isOffer, waiting = 0 }: { item: LendItem; isOffer: boolean; waiting?: number }) {
+function ItemCard({ item, isOffer, waiting = 0, yours = false }: { item: LendItem; isOffer: boolean; waiting?: number; yours?: boolean }) {
   const c = useThemeColors();
   const ACCENT = c.accent;
   const router = useRouter();
@@ -198,6 +201,14 @@ function ItemCard({ item, isOffer, waiting = 0 }: { item: LendItem; isOffer: boo
           {waiting > 0 ? (
             <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: ACCENT }}>
               <Text className="text-[10px] font-sans-sb text-white">{waiting} waiting</Text>
+            </View>
+          ) : null}
+          {/* Your own lent-out or hidden things stay on this list, where you
+              can still open them to mark a return. This says why they're here
+              when nobody else can see them. */}
+          {yours && item.status !== 'available' ? (
+            <View className="rounded-full border px-2 py-0.5" style={{ borderColor: ACCENT }}>
+              <Text className="text-[10px] font-sans-sb" style={{ color: ACCENT }}>Yours</Text>
             </View>
           ) : null}
         </View>

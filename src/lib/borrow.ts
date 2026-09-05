@@ -62,11 +62,25 @@ export interface BorrowRequest {
 const SELECT = '*, owner:profiles!lend_items_owner_user_id_fkey(name,flat,whatsapp,phone)';
 const REQ_SELECT = '*, requester:profiles!borrow_requests_requester_id_fkey(name,flat,whatsapp,phone)';
 
-export async function fetchItems(opts: { category?: string; availableOnly?: boolean; mine?: string; kind?: LendKind } = {}, communityId: string = COMMUNITY_ID): Promise<LendItem[]> {
+export async function fetchItems(
+  opts: { category?: string; availableOnly?: boolean; mine?: string; kind?: LendKind; viewerId?: string | null } = {},
+  communityId: string = COMMUNITY_ID,
+): Promise<LendItem[]> {
   let q = supabase.from('lend_items').select(SELECT).eq('community_id', communityId);
   if (opts.kind) q = q.eq('kind', opts.kind);
   if (opts.category && opts.category !== 'all') q = q.eq('category', opts.category);
-  if (opts.availableOnly) q = q.eq('status', 'available');
+  if (opts.availableOnly) {
+    // "Available only" is about what other people should be shown. Your own
+    // things stay on your list whatever state they are in.
+    //
+    // Since 0122 an item flips to 'lent' by itself the moment you accept a
+    // request — so a ladder somebody borrowed disappeared from its owner's
+    // view entirely, and "Mark returned" lives on the page they could no
+    // longer reach. The item would have stayed lent for good.
+    q = opts.viewerId
+      ? q.or(`status.eq.available,owner_user_id.eq.${opts.viewerId}`)
+      : q.eq('status', 'available');
+  }
   if (opts.mine) q = q.eq('owner_user_id', opts.mine);
   const { data, error } = await q.order('bump_at', { ascending: false }).limit(100);
   if (error) throw error;
