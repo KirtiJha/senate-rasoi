@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { dur, ease } from '../lib/motion';
 import { useIsDark, useThemeColors } from '../theme';
-import { DiversityEmblem, EmblemGloss } from './Brand';
+import { DiversityEmblem, SpinningEmblem } from './Brand';
 import { Rise, Touchable } from './ui';
 
 /**
@@ -92,46 +92,6 @@ export function PhoneWelcome() {
   // reachable without scrolling, not so much that what follows is invisible.
   const heroHeight = Math.max(540, height - insets.top - 28);
 
-  // ── The emblem, turning like an object rather than a picture ────────
-  //
-  // Three layers do the work. The petals carry their own shading, so it turns
-  // with them (correct — that is the body of the thing). A perspective tilt
-  // makes the disc lean in space instead of spinning flat, which is what
-  // separates a turning object from a rotating sticker. And the highlight
-  // above it does not move at all, so petals pass through the light one after
-  // another the way a real surface does.
-  const spin = useSharedValue(0);
-  const tilt = useSharedValue(0);
-  const sway = useSharedValue(0);
-  useEffect(() => {
-    if (reduced) return;
-    spin.set(withRepeat(withTiming(1, { duration: TURN_MS, easing: ease.linear }), -1, false));
-    // Two loops at different, non-multiple periods, so the lean never repeats
-    // on a beat the eye can catch and start predicting.
-    tilt.set(withRepeat(withTiming(1, { duration: 7300, easing: ease.standard }), -1, true));
-    sway.set(withRepeat(withTiming(1, { duration: 11000, easing: ease.standard }), -1, true));
-  }, [reduced, spin, tilt, sway]);
-
-  const emblemSpin = useAnimatedStyle(() => ({
-    transform: [
-      // Perspective must come first in the array or the rotations are flat.
-      { perspective: 900 },
-      { rotateX: `${(-9 + tilt.get() * 18).toFixed(2)}deg` },
-      { rotateY: `${(-11 + sway.get() * 22).toFixed(2)}deg` },
-      { rotate: `${(spin.get() * 360).toFixed(2)}deg` },
-    ],
-  }));
-
-  // The ground shadow tracks the lean: it slides the opposite way and tightens
-  // as the disc turns edge-on, which is what tells you it is above a surface.
-  const shadowStyle = useAnimatedStyle(() => {
-    const lean = sway.get() * 2 - 1;
-    return {
-      opacity: 0.16 - Math.abs(lean) * 0.05,
-      transform: [{ translateX: -lean * 14 }, { scaleX: 1 - Math.abs(lean) * 0.18 }],
-    };
-  });
-
   const [pitch, setPitch] = useState(0);
   useEffect(() => {
     if (reduced) return;
@@ -169,29 +129,7 @@ export function PhoneWelcome() {
           >
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
               <Rise index={0}>
-                <View style={{ alignItems: 'center' }}>
-                  <Animated.View style={emblemSpin}>
-                    <DiversityEmblem size={128} />
-                  </Animated.View>
-                  {/* Still while the emblem turns underneath. */}
-                  <View pointerEvents="none" style={{ position: 'absolute', top: 0 }}>
-                    <EmblemGloss size={128} />
-                  </View>
-                  <Animated.View
-                    pointerEvents="none"
-                    style={[
-                      shadowStyle,
-                      {
-                        position: 'absolute',
-                        bottom: -16,
-                        width: 96,
-                        height: 13,
-                        borderRadius: 999,
-                        backgroundColor: '#000',
-                      },
-                    ]}
-                  />
-                </View>
+                <SpinningEmblem size={128} turnMs={TURN_MS} />
               </Rise>
 
               <Rise index={1} style={{ marginTop: 20, alignItems: 'center' }}>

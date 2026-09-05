@@ -1,4 +1,8 @@
+import { useEffect } from 'react';
 import { Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming,
+} from 'react-native-reanimated';
 import Svg, {
   Circle,
   ClipPath,
@@ -9,6 +13,7 @@ import Svg, {
   RadialGradient,
   Stop,
 } from 'react-native-svg';
+import { ease } from '../lib/motion';
 import { BrandMark } from './BrandMark';
 
 /** Inline wordmark: the Aangan courtyard mark + name. */
@@ -197,5 +202,89 @@ export function EmblemGloss({ size }: { size: number }) {
         <Circle cx={118} cy={118} r={112} fill="url(#spec)" />
       </G>
     </Svg>
+  );
+}
+
+/**
+ * The emblem, turning like an object rather than a picture.
+ *
+ * Three layers do the work. The petals carry their own shading, so it turns
+ * with them — correct, that is the body of the thing. A perspective tilt makes
+ * the disc lean in space instead of spinning flat, which is what separates a
+ * turning object from a rotating sticker. And the highlight above it does not
+ * move at all, so petals pass through the light one after another the way a
+ * real surface does.
+ *
+ * Lifted out of the welcome screen so About can show the same mark rather than
+ * a stock house icon, and so the motion is described in one place.
+ */
+export function SpinningEmblem({
+  size = 128, turnMs = 26000, shadow = true,
+}: {
+  size?: number;
+  /** One full turn. Slow enough to read as weight, not as a spinner. */
+  turnMs?: number;
+  shadow?: boolean;
+}) {
+  const spin = useSharedValue(0);
+  const tilt = useSharedValue(0);
+  const sway = useSharedValue(0);
+  const reduced = useReducedMotion();
+
+  useEffect(() => {
+    if (reduced) return;
+    spin.set(withRepeat(withTiming(1, { duration: turnMs, easing: ease.linear }), -1, false));
+    // Two loops at different, non-multiple periods, so the lean never repeats
+    // on a beat the eye can catch and start predicting.
+    tilt.set(withRepeat(withTiming(1, { duration: 7300, easing: ease.standard }), -1, true));
+    sway.set(withRepeat(withTiming(1, { duration: 11000, easing: ease.standard }), -1, true));
+  }, [reduced, turnMs, spin, tilt, sway]);
+
+  const emblemSpin = useAnimatedStyle(() => ({
+    transform: [
+      // Perspective must come first in the array or the rotations are flat.
+      { perspective: 900 },
+      { rotateX: `${(-9 + tilt.get() * 18).toFixed(2)}deg` },
+      { rotateY: `${(-11 + sway.get() * 22).toFixed(2)}deg` },
+      { rotate: `${(spin.get() * 360).toFixed(2)}deg` },
+    ],
+  }));
+
+  // The ground shadow tracks the lean: it slides the opposite way and tightens
+  // as the disc turns edge-on, which is what tells you it is above a surface.
+  const shadowStyle = useAnimatedStyle(() => {
+    const lean = sway.get() * 2 - 1;
+    return {
+      opacity: 0.16 - Math.abs(lean) * 0.05,
+      transform: [{ translateX: -lean * (size * 0.11) }, { scaleX: 1 - Math.abs(lean) * 0.18 }],
+    };
+  });
+
+  return (
+    <View style={{ alignItems: 'center' }}>
+      <Animated.View style={emblemSpin}>
+        <DiversityEmblem size={size} />
+      </Animated.View>
+      {/* Still while the emblem turns underneath. */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0 }}>
+        <EmblemGloss size={size} />
+      </View>
+      {shadow ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            shadowStyle,
+            {
+              position: 'absolute',
+              bottom: -size * 0.125,
+              width: size * 0.75,
+              height: size * 0.1,
+              borderRadius: 999,
+              backgroundColor: '#000',
+            },
+          ]}
+        />
+      ) : null}
+    </View>
   );
 }

@@ -3,6 +3,7 @@ import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SpinningEmblem } from '../components/Brand';
 import { Container, ScreenHeader, useResponsive } from '../components/ui';
 import { SUPPORT_EMAIL, supportMailto } from '../lib/support';
 import { useThemeColors } from '../theme';
@@ -23,11 +24,14 @@ export default function AboutScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Container narrow>
-        {/* App Identity */}
+        {/* App Identity.
+
+            This was a stock Ionicons house in a green square — the one screen
+            in the app whose whole job is to say what Aangan is, and it showed
+            a symbol that is not Aangan's. It now carries the same turning
+            emblem as the welcome screen. */}
         <View className="mb-6 items-center py-6">
-          <View className="mb-4 h-20 w-20 items-center justify-center rounded-3xl bg-accent">
-            <Ionicons name="home" size={36} color={c.onAccent} />
-          </View>
+          <View className="mb-10 mt-2"><SpinningEmblem size={104} /></View>
           <Text className="font-display-x text-[28px] text-ink">Aangan</Text>
           <Text className="font-sans mt-1 text-[14px] text-muted">Your neighbourhood community hub</Text>
           <View className="mt-3 rounded-full border border-line bg-surface px-4 py-1.5">
