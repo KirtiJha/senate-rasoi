@@ -55,9 +55,32 @@ interface FieldProps extends TextInputProps {
  * toast, with no field-level message and nothing marking which input was
  * wrong. A three-second toast is not an error state.
  */
+/**
+ * The keyboard, autofill and return key a field deserves, inferred once here
+ * rather than on a hundred and eighty call sites. A phone field offers the
+ * phone from Contacts, an email field stops capitalising, a name field
+ * autofills from the device, a PIN offers to be remembered; a single-line
+ * field's return key says Done and closes the keyboard. Anything a call site
+ * passes explicitly still wins.
+ */
+function inferInputProps(label: string | undefined, p: TextInputProps): Partial<TextInputProps> {
+  const l = (label ?? '').trim().toLowerCase();
+  const out: Partial<TextInputProps> = {};
+  if (p.keyboardType === 'phone-pad') Object.assign(out, { autoComplete: 'tel', textContentType: 'telephoneNumber' });
+  else if (p.keyboardType === 'email-address') Object.assign(out, { autoComplete: 'email', textContentType: 'emailAddress', autoCapitalize: 'none', autoCorrect: false });
+  else if (p.secureTextEntry) Object.assign(out, { autoComplete: 'password', textContentType: 'password' });
+  else if (l === 'name' || l === 'your name' || l === 'chef name') Object.assign(out, { autoComplete: 'name', textContentType: 'name', autoCorrect: false });
+  else if (/^(pin ?code|postal code)$/.test(l)) Object.assign(out, { autoComplete: 'postal-code', textContentType: 'postalCode', keyboardType: 'number-pad' });
+  else if (l === 'city') Object.assign(out, { textContentType: 'addressCity', autoCorrect: false });
+  else if (/upi|flat|block|vehicle|plate/.test(l)) Object.assign(out, { autoCorrect: false });
+  if (!p.multiline && p.returnKeyType === undefined) out.returnKeyType = 'done';
+  return out;
+}
+
 export function Field({ label, required, hint, prefix, error, style, multiline, ...inputProps }: FieldProps) {
   const c = useThemeColors();
   const [focused, setFocused] = useState(false);
+  const inferred = inferInputProps(label, { ...inputProps, multiline });
 
   const ringColor = error ? c.danger : focused ? c.accent : 'transparent';
 
@@ -84,6 +107,7 @@ export function Field({ label, required, hint, prefix, error, style, multiline, 
             multiline ? { height: 84, textAlignVertical: 'top' } : null,
             style,
           ]}
+          {...inferred}
           {...inputProps}
         />
       </View>
