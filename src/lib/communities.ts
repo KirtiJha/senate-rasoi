@@ -9,6 +9,8 @@ export interface Community {
   lon?: number | null;
   osm_place_id?: string | null;
   city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
 }
 
 // `*` (not an explicit column list) so community reads keep working even before
@@ -37,14 +39,34 @@ export async function fetchCommunityById(id: string): Promise<Community | null> 
 /** Societies already on Aangan whose name matches the query (for the onboarding
  *  search — so a user instantly sees if theirs is here). */
 export async function searchCommunities(query: string): Promise<Community[]> {
-  const q = query.trim().replace(/[%_\\]/g, ' ');
+  // Commas and parentheses are PostgREST filter syntax inside or(); a society
+  // called "Prestige Shantiniketan, Whitefield" would have broken the query.
+  const q = query.trim().replace(/[%_\\(),]/g, ' ').trim();
   if (q.length < 2) return [];
   const { data, error } = await supabase
     .from('communities')
     .select(COMMUNITY_COLS)
-    .ilike('name', `%${q}%`)
+    // Name alone missed every search that started from the area — "Whitefield",
+    // "Baner", "Salt Lake" — which is how people describe where they live.
+    .or(`name.ilike.%${q}%,address.ilike.%${q}%,city.ilike.%${q}%`)
     .order('name')
     .limit(8);
+  if (error) throw error;
+  return (data ?? []) as Community[];
+}
+
+/**
+ * Societies near a point, for catching the duplicate a founder is about to
+ * create by hand. Cheap and approximate: a degree box, not a real radius.
+ */
+export async function communitiesNear(lat: number, lon: number, km = 3): Promise<Community[]> {
+  const d = km / 111; // ~111 km per degree of latitude; close enough to warn on
+  const { data, error } = await supabase
+    .from('communities')
+    .select(COMMUNITY_COLS)
+    .gte('lat', lat - d).lte('lat', lat + d)
+    .gte('lon', lon - d).lte('lon', lon + d)
+    .limit(10);
   if (error) throw error;
   return (data ?? []) as Community[];
 }
@@ -67,6 +89,8 @@ export interface NewCommunity {
   lon?: number | null;
   osmPlaceId?: string | null;
   city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
   createdBy: string;
 }
 
@@ -85,6 +109,8 @@ export async function createCommunity(input: NewCommunity): Promise<Community> {
       lon: input.lon ?? null,
       osm_place_id: input.osmPlaceId ?? null,
       city: input.city ?? null,
+      state: input.state ?? null,
+      pincode: input.pincode?.replace(/\D/g, '') || null,
       created_by: input.createdBy,
     })
     .select(COMMUNITY_COLS)

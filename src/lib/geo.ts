@@ -10,11 +10,24 @@ export interface Place {
   lat: number;
   lon: number;
   city: string | null;
+  /** For telling two societies of the same name in different places apart. */
+  state: string | null;
+  pincode: string | null;
 }
 
-// Bengaluru bounding box (lon/lat min,max) so results stay local.
-const BLR_VIEWBOX = '77.35,12.74,77.95,13.25';
-
+/**
+ * Search OpenStreetMap for a society, anywhere in India.
+ *
+ * This used to pass a Bengaluru bounding box with `bounded=1`, which tells
+ * Nominatim to return NOTHING outside that rectangle. Aangan is for the whole
+ * country: a resident in Pune, Kochi or Guwahati typed their society's name,
+ * got "No matches", and had no way to know the search had never looked. The
+ * only filter now is the country.
+ *
+ * Throws on a network or service failure rather than returning an empty list,
+ * because "we could not reach the map" and "your society is not on the map"
+ * lead to completely different next steps for the person reading the screen.
+ */
 export async function searchSocieties(query: string, signal?: AbortSignal): Promise<Place[]> {
   const q = query.trim();
   if (q.length < 3) return [];
@@ -24,26 +37,33 @@ export async function searchSocieties(query: string, signal?: AbortSignal): Prom
       q,
       format: 'jsonv2',
       addressdetails: '1',
-      limit: '8',
+      limit: '10',
       countrycodes: 'in',
-      viewbox: BLR_VIEWBOX,
-      bounded: '1',
     }).toString();
-  try {
-    const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'Aangan/1.0' }, signal });
-    if (!res.ok) return [];
-    const data = (await res.json()) as any[];
-    return data.map((r) => ({
+
+  const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'Aangan/1.0' }, signal });
+  if (!res.ok) throw new Error('place-search-unavailable');
+  const data = (await res.json()) as any[];
+  return data.map((r) => {
+    const a = r.address ?? {};
+    return {
       osmId: `${r.osm_type ?? 'n'}:${r.osm_id}`,
       name: r.name || (typeof r.display_name === 'string' ? r.display_name.split(',')[0] : 'Society'),
       address: r.display_name ?? '',
       lat: parseFloat(r.lat),
       lon: parseFloat(r.lon),
-      city: r.address?.city ?? r.address?.town ?? r.address?.suburb ?? 'Bengaluru',
-    }));
-  } catch {
-    return [];
-  }
+      // No default city any more. Guessing "Bengaluru" for a place in Jaipur
+      // is worse than leaving it unknown.
+      city: a.city ?? a.town ?? a.municipality ?? a.village ?? a.suburb ?? null,
+      state: a.state ?? null,
+      pincode: a.postcode ?? null,
+    };
+  });
+}
+
+/** "Whitefield, Bengaluru, Karnataka" — what tells two identical names apart. */
+export function placeWhere(p: { city: string | null; state: string | null; pincode?: string | null }): string {
+  return [p.city, p.state, p.pincode].filter(Boolean).join(', ');
 }
 
 // ── Slippy-map tile helpers (OpenStreetMap tile CDN) ────────────────
@@ -80,31 +100,48 @@ export function appleMapsLink(lat: number | null, lon: number | null, label?: st
 }
 
 /**
- * Forward-geocode a free-form place query (shops, hospitals, schools …) within
- * the Bengaluru viewbox. Like searchSocieties but not limited to residential
- * results, so it suits nearby-place lookups.
+ * Forward-geocode a free-form place query (shops, hospitals, schools …).
+ *
+ * This carried the same Bengaluru bounding box as the society search did, so a
+ * society in Pune could not add its own hospital to Nearby. "Nearby" is now
+ * measured from the society itself: pass its coordinates and results are kept
+ * within about 50 km of it, which is what the word means in every city. With
+ * no coordinates the search widens to the whole country rather than silently
+ * looking in the wrong one.
  */
-export async function searchPlaces(query: string, signal?: AbortSignal): Promise<Place[]> {
+export async function searchPlaces(
+  query: string,
+  signal?: AbortSignal,
+  near?: { lat: number; lon: number } | null,
+): Promise<Place[]> {
   const q = query.trim();
   if (q.length < 3) return [];
-  const url =
-    'https://nominatim.openstreetmap.org/search?' +
-    new URLSearchParams({
-      q, format: 'jsonv2', addressdetails: '1', limit: '8',
-      countrycodes: 'in', viewbox: BLR_VIEWBOX, bounded: '1',
-    }).toString();
+  const params: Record<string, string> = {
+    q, format: 'jsonv2', addressdetails: '1', limit: '10', countrycodes: 'in',
+  };
+  if (near) {
+    const d = 0.45; // ≈50 km
+    params.viewbox = `${near.lon - d},${near.lat - d},${near.lon + d},${near.lat + d}`;
+    params.bounded = '1';
+  }
+  const url = 'https://nominatim.openstreetmap.org/search?' + new URLSearchParams(params).toString();
   try {
     const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'Aangan/1.0' }, signal });
     if (!res.ok) return [];
     const data = (await res.json()) as any[];
-    return data.map((r) => ({
-      osmId: `${r.osm_type ?? 'n'}:${r.osm_id}`,
-      name: r.name || (typeof r.display_name === 'string' ? r.display_name.split(',')[0] : 'Place'),
-      address: r.display_name ?? '',
-      lat: parseFloat(r.lat),
-      lon: parseFloat(r.lon),
-      city: r.address?.city ?? r.address?.town ?? r.address?.suburb ?? 'Bengaluru',
-    }));
+    return data.map((r) => {
+      const a = r.address ?? {};
+      return {
+        osmId: `${r.osm_type ?? 'n'}:${r.osm_id}`,
+        name: r.name || (typeof r.display_name === 'string' ? r.display_name.split(',')[0] : 'Place'),
+        address: r.display_name ?? '',
+        lat: parseFloat(r.lat),
+        lon: parseFloat(r.lon),
+        city: a.city ?? a.town ?? a.municipality ?? a.village ?? a.suburb ?? null,
+        state: a.state ?? null,
+        pincode: a.postcode ?? null,
+      };
+    });
   } catch {
     return [];
   }

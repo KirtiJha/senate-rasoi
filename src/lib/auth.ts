@@ -16,7 +16,7 @@ export interface SignUpInput {
   roles: Role[];
   communityId?: string; // selected at sign-up; falls back to the seeded default
   // When onboarding a brand-new society: create it here; the founder becomes admin.
-  newCommunity?: { name: string; address: string; lat?: number | null; lon?: number | null; osmPlaceId?: string | null; city?: string | null };
+  newCommunity?: { name: string; address: string; lat?: number | null; lon?: number | null; osmPlaceId?: string | null; city?: string | null; state?: string | null; pincode?: string | null };
   residentType?: 'owner' | 'tenant' | null;
   profession?: string;
   vehicleNo?: string;

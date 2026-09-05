@@ -71,7 +71,7 @@ export default function SignInScreen() {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
   // From the onboarding flow: a brand-new society to create (founder = admin).
-  const [newCommunity, setNewCommunity] = useState<{ name: string; address: string; lat?: number | null; lon?: number | null; osmPlaceId?: string | null; city?: string | null } | null>(null);
+  const [newCommunity, setNewCommunity] = useState<{ name: string; address: string; lat?: number | null; lon?: number | null; osmPlaceId?: string | null; city?: string | null; state?: string | null; pincode?: string | null } | null>(null);
   const params = useLocalSearchParams<{ communityId?: string; onboard?: string }>();
   const [showPicker, setShowPicker] = useState(false);
   const [communitySearch, setCommunitySearch] = useState('');

@@ -29,7 +29,7 @@ export default function PlaceFormScreen() {
   const ACCENT = c.accent;
   const toast = useToast();
   const router = useRouter();
-  const { userId, communityId } = useAuth();
+  const { userId, communityId, community } = useAuth();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEdit = !!id;
 
@@ -80,12 +80,15 @@ export default function PlaceFormScreen() {
       const ac = new AbortController();
       abortRef.current = ac;
       setSearching(true);
-      const r = await searchPlaces(q, ac.signal);
+      // Keep results near this society rather than near one hardcoded city.
+      const near = community?.lat != null && community?.lon != null
+        ? { lat: community.lat, lon: community.lon } : null;
+      const r = await searchPlaces(q, ac.signal, near);
       setResults(r);
       setSearching(false);
     }, 450);
     return () => clearTimeout(t);
-  }, [query]);
+  }, [query, community?.lat, community?.lon]);
 
   const pickResult = (p: Place) => {
     setLat(p.lat); setLng(p.lon);
