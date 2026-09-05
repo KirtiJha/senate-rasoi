@@ -113,6 +113,8 @@ export interface DbProfile {
   blood_group: string | null;
   donor_available: boolean;
   helper_skills: string[];
+  /** Self-reported date of last blood donation; shows a donor as resting (0127). */
+  donor_last_donated?: string | null;
   preferred_lang: string | null;
   moved_in: boolean;
   alt_phone: string | null;
