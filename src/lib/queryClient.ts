@@ -67,4 +67,5 @@ export const qk = {
   directory: (communityId: string) => ['directory', communityId] as const,
   places: (communityId: string) => ['places', communityId] as const,
   polls: (communityId: string) => ['polls', communityId] as const,
+  search: (communityId: string, q: string) => ['search', communityId, q] as const,
 } as const;
