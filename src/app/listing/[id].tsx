@@ -10,7 +10,7 @@ import { ListingChat } from '../../components/listings/ListingChat';
 import { ListingRequests } from '../../components/listings/ListingRequests';
 import { PayButton } from '../../components/PayButton';
 import { T } from '../../components/T';
-import { Avatar, Badge, Button, Container, ErrorState, KeyboardAvoider, ParallaxHero, useResponsive } from '../../components/ui';
+import { Avatar, Badge, Button, Container, DetailSkeleton, ErrorState, KeyboardAvoider, ParallaxHero, useResponsive } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
@@ -159,9 +159,7 @@ export default function ListingDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-bg">
-        <Text className="text-muted">Loading…</Text>
-      </View>
+      <DetailSkeleton />
     );
   }
 

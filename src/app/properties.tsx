@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { T } from '../components/T';
-import { Badge, Chip, Container, ScreenHeader, type BadgeTone } from '../components/ui';
+import { Badge, Chip, Container, ListingCardSkeleton, ScreenHeader, type BadgeTone } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { qk } from '../lib/queryClient';
 import { useCachedList } from '../lib/useCachedList';
@@ -64,7 +64,7 @@ export default function PropertiesScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container>
           {loading ? (
-            <Text className="font-sans px-1 py-10 text-center text-[13px] text-muted">Loading…</Text>
+            <View className="gap-3">{[0, 1, 2].map((i) => <ListingCardSkeleton key={i} />)}</View>
           ) : rows.length === 0 ? (
             <View className="items-center px-6 py-16">
               <View className="mb-3 h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: ACCENT + '18' }}>

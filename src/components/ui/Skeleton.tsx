@@ -76,3 +76,25 @@ export function DishCardSkeleton() {
     </View>
   );
 }
+
+/**
+ * A detail screen before its row arrives: the shape of a hero, a title and
+ * a few lines, in place of the word "Loading…" centred on an empty page.
+ */
+export function DetailSkeleton({ hero = true }: { hero?: boolean }) {
+  return (
+    <View className="flex-1 bg-bg">
+      {hero ? <Skeleton style={{ height: 220 }} radius={0} /> : <View style={{ height: 56 }} />}
+      <View className="px-4 pt-4" style={{ gap: 10 }}>
+        <Skeleton style={{ height: 22, width: '70%' }} />
+        <Skeleton style={{ height: 14, width: '45%' }} />
+        <View style={{ height: 8 }} />
+        <Skeleton style={{ height: 12, width: '100%' }} />
+        <Skeleton style={{ height: 12, width: '92%' }} />
+        <Skeleton style={{ height: 12, width: '60%' }} />
+        <View style={{ height: 16 }} />
+        <Skeleton style={{ height: 48 }} radius={16} />
+      </View>
+    </View>
+  );
+}

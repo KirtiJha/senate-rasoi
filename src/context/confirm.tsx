@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useRef, useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Pressable, Text } from 'react-native';
+import { Dialog, DialogActions } from '../components/ui/Dialog';
 
 import { useThemeColors } from '../theme';
 
@@ -38,25 +39,17 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
   return (
     <ConfirmContext.Provider value={confirm}>
       {children}
-      <Modal visible={!!opts} transparent animationType="fade" onRequestClose={() => close(false)}>
-        <Pressable className="flex-1 items-center justify-center px-6" style={{ backgroundColor: '#0008' }} onPress={() => close(false)}>
-          <Pressable
-            onPress={() => {}}
-            style={{ width: '100%', maxWidth: 360, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}
-          >
-            <Text className="font-display-x text-[19px] text-ink">{opts?.title}</Text>
-            {opts?.message ? <Text className="font-sans mt-2 text-[14px] leading-[20px] text-muted">{opts.message}</Text> : null}
-            <View className="mt-5 flex-row justify-end gap-2.5">
-              <Pressable onPress={() => close(false)} className="rounded-xl border border-line bg-inset px-4 py-2.5 active:opacity-80">
-                <Text className="font-sans-sb text-[14px] text-muted">{opts?.cancelLabel ?? 'Cancel'}</Text>
-              </Pressable>
-              <Pressable onPress={() => close(true)} className="rounded-xl px-4 py-2.5 active:opacity-85" style={{ backgroundColor: confirmColor }}>
-                <Text className="font-sans-sb text-[14px] text-white">{opts?.confirmLabel ?? 'Confirm'}</Text>
-              </Pressable>
-            </View>
+      <Dialog visible={!!opts} onClose={() => close(false)} title={opts?.title}>
+        {opts?.message ? <Text className="font-sans mt-2 text-[14px] leading-[20px] text-muted">{opts.message}</Text> : null}
+        <DialogActions>
+          <Pressable onPress={() => close(false)} className="rounded-xl border border-line bg-inset px-4 py-2.5 active:opacity-80" accessibilityRole="button">
+            <Text className="font-sans-sb text-[14px] text-muted">{opts?.cancelLabel ?? 'Cancel'}</Text>
           </Pressable>
-        </Pressable>
-      </Modal>
+          <Pressable onPress={() => close(true)} className="rounded-xl px-4 py-2.5 active:opacity-85" style={{ backgroundColor: confirmColor }} accessibilityRole="button">
+            <Text className="font-sans-sb text-[14px]" style={{ color: opts?.destructive ? c.onDanger : c.onAccent }}>{opts?.confirmLabel ?? 'Confirm'}</Text>
+          </Pressable>
+        </DialogActions>
+      </Dialog>
     </ConfirmContext.Provider>
   );
 }

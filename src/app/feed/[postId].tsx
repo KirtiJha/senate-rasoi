@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
-import { Avatar, Container, ErrorState, KeyboardAvoider, useKeyboardInset } from '../../components/ui';
+import { Avatar, Container, DetailSkeleton, ErrorState, KeyboardAvoider, useKeyboardInset } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useBlocks } from '../../context/blocks';
@@ -189,9 +189,7 @@ export default function PostThreadScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-bg">
-        <Text className="text-muted">Loading…</Text>
-      </View>
+      <DetailSkeleton hero={false} />
     );
   }
 

@@ -6,7 +6,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../components/T';
-import { Avatar, Button, Chip, Container, ScreenHeader, Sheet } from '../components/ui';
+import { Avatar, Button, Chip, Container, RowSkeleton, ScreenHeader, Sheet } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { qk } from '../lib/queryClient';
 import { useCachedList } from '../lib/useCachedList';
@@ -71,7 +71,7 @@ export default function RecommendScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <Container>
           {loading ? (
-            <Text className="font-sans px-1 py-10 text-center text-[13px] text-muted">Loading…</Text>
+            <View className="overflow-hidden card"><RowSkeleton count={5} /></View>
           ) : rows.length === 0 ? (
             <View className="items-center px-6 py-16">
               <View className="mb-3 h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: ACCENT + '18' }}>

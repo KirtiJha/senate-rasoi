@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, Platform, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Avatar, Badge, Button, Container, ScreenHeader, Segmented, type SegmentedItem } from '../components/ui';
+import { Avatar, Badge, Button, Container, Dialog, ScreenHeader, Segmented, type SegmentedItem } from '../components/ui';
 import { ReindexCard } from '../components/saathi/ReindexCard';
+import { Field } from '../components/forms';
 import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
@@ -332,30 +333,19 @@ export default function AdminScreen() {
       )}
 
       {/* Edit member details */}
-      <Modal visible={!!editMember} transparent animationType="fade" onRequestClose={() => setEditMember(null)}>
-        <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: '#0008' }}>
-          <View style={{ width: '100%', maxWidth: 380, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}>
-            <Text className="font-display-x text-[19px] text-ink">Edit details</Text>
+      <Dialog visible={!!editMember} onClose={() => setEditMember(null)} title="Edit details">
             <Text className="font-sans mt-1.5 text-[13px] leading-[19px] text-muted">
               Correct what {editMember?.name || 'this member'} entered. They will be told you changed it.
             </Text>
 
-            <Text className="mb-1.5 mt-4 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Name</Text>
-            <TextInput value={edName} onChangeText={setEdName} placeholderTextColor={c.faint}
-              className="rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
+            <View className="mt-4"><Field label="Name" value={edName} onChangeText={setEdName} /></View>
 
-            <View className="mt-3 flex-row gap-3">
+            <View className="flex-row gap-3">
               <View className="w-24">
-                <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Block</Text>
-                <TextInput value={edBlock} onChangeText={setEdBlock} autoCapitalize="characters" maxLength={4}
-                  placeholder="A" placeholderTextColor={c.faint}
-                  className="rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
+                <Field label="Block" value={edBlock} onChangeText={setEdBlock} autoCapitalize="characters" maxLength={4} placeholder="A" />
               </View>
               <View className="flex-1">
-                <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Flat</Text>
-                <TextInput value={edFlat} onChangeText={setEdFlat} autoCapitalize="characters"
-                  placeholder="204" placeholderTextColor={c.faint}
-                  className="rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
+                <Field label="Flat" value={edFlat} onChangeText={setEdFlat} autoCapitalize="characters" placeholder="204" />
               </View>
             </View>
 
@@ -370,15 +360,10 @@ export default function AdminScreen() {
               <View className="flex-1"><Button label="Cancel" variant="outline" onPress={() => setEditMember(null)} /></View>
               <View className="flex-1"><Button label={edSaving ? 'Saving…' : 'Save'} loading={edSaving} disabled={!edName.trim()} onPress={saveEdit} /></View>
             </View>
-          </View>
-        </View>
-      </Modal>
+      </Dialog>
 
       {/* Reset PIN modal */}
-      <Modal visible={!!pinResetMember} transparent animationType="fade" onRequestClose={() => setPinResetMember(null)}>
-        <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: '#0008' }}>
-          <View style={{ width: '100%', maxWidth: 380, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}>
-            <Text className="font-display-x text-[19px] text-ink">Reset PIN</Text>
+      <Dialog visible={!!pinResetMember} onClose={() => setPinResetMember(null)} title="Reset PIN">
             <Text className="font-sans mt-1.5 text-[14px] text-muted">
               Set a new 6-digit PIN for{' '}
               <Text className="font-sans-sb text-ink">{pinResetMember?.name || 'this member'}</Text>.
@@ -410,9 +395,7 @@ export default function AdminScreen() {
                 />
               </View>
             </View>
-          </View>
-        </View>
-      </Modal>
+      </Dialog>
     </View>
   );
 }

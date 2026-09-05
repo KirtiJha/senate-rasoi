@@ -7,7 +7,7 @@ import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-nativ
 
 import { DiversityEmblem } from '../../components/Brand';
 import { Field } from '../../components/forms';
-import { Button, Container, KeyboardAvoider, PinInput, Segmented, useKeyboardInset } from '../../components/ui';
+import { Button, Container, Dialog, KeyboardAvoider, PinInput, Segmented } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { selfResetPin, signIn, signUp } from '../../lib/auth';
@@ -61,7 +61,6 @@ export default function SignInScreen() {
 
   // Forgot PIN flow
   const [showForgotPin, setShowForgotPin] = useState(false);
-  const pinKb = useKeyboardInset();
   const [resetPhone, setResetPhone] = useState('');
   const [resetNewPin, setResetNewPin] = useState('');
   const [resetConfirmPin, setResetConfirmPin] = useState('');
@@ -577,10 +576,7 @@ export default function SignInScreen() {
       </Modal>
 
       {/* Sign-up reconcile: an entry already exists for this flat with a different number */}
-      <Modal visible={!!reconcile} transparent animationType="fade" onRequestClose={() => finishReconcile('skip')}>
-        <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: '#0008' }}>
-          <View style={{ width: '100%', maxWidth: 380, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}>
-            <Text className="font-display-x text-[19px] text-ink">You're already in the directory</Text>
+      <Dialog visible={!!reconcile} onClose={() => finishReconcile('skip')} title="You're already in the directory" dismissable={false}>
             <Text className="font-sans mt-2 text-[14px] leading-[20px] text-muted">
               <Text className="font-sans-sb text-ink">{reconcile?.name}</Text>
               {reconcile?.flat ? ` (Flat ${[reconcile?.block, reconcile?.flat].filter(Boolean).join('-')})` : ''} is listed with the number{' '}
@@ -593,16 +589,9 @@ export default function SignInScreen() {
                 <Text className="font-sans-sb text-[13px] text-muted">That's not me</Text>
               </Pressable>
             </View>
-          </View>
-        </View>
-      </Modal>
+      </Dialog>
       {/* Forgot PIN modal */}
-      <Modal visible={showForgotPin} transparent animationType="fade" onRequestClose={() => setShowForgotPin(false)}>
-        {/* Nested Modals get their own native window on Android, so the
-            screen's KeyboardAvoider does not reach in here. */}
-        <View className="flex-1 items-center justify-center px-6"
-          style={{ backgroundColor: '#0008', paddingBottom: pinKb }}>
-          <View style={{ width: '100%', maxWidth: 380, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}>
+      <Dialog visible={showForgotPin} onClose={() => setShowForgotPin(false)}>
             {resetDone ? (
               <>
                 <View className="mb-4 items-center">
@@ -657,9 +646,7 @@ export default function SignInScreen() {
                 </View>
               </>
             )}
-          </View>
-        </View>
-      </Modal>
+      </Dialog>
     </KeyboardAvoider>
   );
 }

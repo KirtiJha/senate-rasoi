@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { OrderModal } from '../../components/OrderModal';
 import { PayButton } from '../../components/PayButton';
 import { T } from '../../components/T';
-import { Avatar, Badge, Button, Container, ParallaxHero, Sheet, useResponsive } from '../../components/ui';
+import { Avatar, Badge, Button, Container, DetailSkeleton, ParallaxHero, Sheet, useResponsive } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { DishFeedbackList } from '../../components/food/DishFeedbackList';
 import { useAuth } from '../../context/auth';
@@ -248,9 +248,7 @@ export default function DishDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-bg">
-        <Text className="text-muted">Loading…</Text>
-      </View>
+      <DetailSkeleton />
     );
   }
 
