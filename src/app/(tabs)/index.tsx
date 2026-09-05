@@ -15,6 +15,7 @@ import { SaathiMark } from '../../components/SaathiMark';
 import { T } from '../../components/T';
 import { Avatar, Container, ErrorRow, ModuleTile, Rise, Touchable, useResponsive, VegMark } from '../../components/ui';
 import { InviteNeighbours } from '../../components/InviteNeighbours';
+import { FounderChecklist } from '../../components/FounderChecklist';
 import { fetchMemberCount } from '../../lib/admin';
 import { useQuery } from '@tanstack/react-query';
 import { captureException } from '../../lib/crash';
@@ -203,7 +204,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
-  const { profile, communityId, community, userId } = useAuth();
+  const { profile, communityId, community, userId, isAdmin } = useAuth();
   const c = useThemeColors();
   const toast = useToast();
   const unread = useUnreadDms();
@@ -658,7 +659,15 @@ export default function HomeScreen() {
             Onboarding ends with a founder alone in an app whose every tile is
             about neighbours. Nothing told them the first job, and there was no
             invite anywhere to do it with. */}
-        {memberCount !== null && memberCount <= 3 && communityId ? (
+        {isAdmin && communityId ? (
+          /* The founder's list: five things that make an empty society a live
+             one, ticked from the data, gone when they are done. Renders
+             nothing for a society that has them. */
+          <View style={{ paddingHorizontal: isDesktop ? 0 : 16, marginBottom: 24 }}>
+            <FounderChecklist communityId={communityId} societyName={community?.name ?? 'your society'} />
+          </View>
+        ) : null}
+        {!isAdmin && memberCount !== null && memberCount <= 3 && communityId ? (
           <Rise index={1} style={{ marginBottom: 24 }}>
             <View style={{ paddingHorizontal: isDesktop ? 0 : 16 }}>
               <InviteNeighbours communityId={communityId} societyName={community?.name ?? 'your society'} tone="hero" />
