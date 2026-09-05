@@ -11,9 +11,10 @@ import { Button, Container, KeyboardAvoider, PinInput, Segmented, useKeyboardIns
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { selfResetPin, signIn, signUp } from '../../lib/auth';
-import { Community, fetchCommunities, fetchCommunityById, submitJoinRequest } from '../../lib/communities';
+import { Community, fetchCommunities, fetchCommunityBlocks, fetchCommunityById, searchCommunities, submitJoinRequest } from '../../lib/communities';
 import { DirectoryEntry, PhoneDirectoryMatch, findDirectoryByPhone, findRosterMatch, reconcileDirectoryEntry } from '../../lib/directory';
 import { isSupabaseConfigured } from '../../lib/supabase';
+import { pinProblem } from '../../lib/pin';
 import { useThemeColors } from '../../theme';
 
 const MODES = [
@@ -69,6 +70,8 @@ export default function SignInScreen() {
 
   // Society picker
   const [communities, setCommunities] = useState<Community[]>([]);
+  const [communitiesLoading, setCommunitiesLoading] = useState(false);
+  const [communityBlocks, setCommunityBlocks] = useState<string[]>([]);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
   // From the onboarding flow: a brand-new society to create (founder = admin).
   const [newCommunity, setNewCommunity] = useState<{ name: string; address: string; lat?: number | null; lon?: number | null; osmPlaceId?: string | null; city?: string | null; state?: string | null; pincode?: string | null } | null>(null);
@@ -80,11 +83,30 @@ export default function SignInScreen() {
   const [jrSocietyAddress, setJrSocietyAddress] = useState('');
   const [jrSubmitting, setJrSubmitting] = useState(false);
 
+  // The picker used to load EVERY society in the database and filter on the
+  // device. That works while there is one; nationally it is a list PostgREST
+  // caps at a thousand rows, so a resident whose society sorted past the cut
+  // would never see it. It searches the server now.
   useEffect(() => {
-    if (isSupabaseConfigured) {
-      fetchCommunities().then(setCommunities).catch(() => {});
-    }
-  }, []);
+    if (!isSupabaseConfigured || !showPicker) return;
+    const q = communitySearch.trim();
+    const t = setTimeout(() => {
+      setCommunitiesLoading(true);
+      (q.length >= 2 ? searchCommunities(q) : fetchCommunities(25))
+        .then(setCommunities)
+        .catch(() => setCommunities([]))
+        .finally(() => setCommunitiesLoading(false));
+    }, q ? 350 : 0);
+    return () => clearTimeout(t);
+  }, [showPicker, communitySearch]);
+
+  // Does this society have towers? If so the flat number alone is ambiguous
+  // and the form must ask which one (0121, 0133).
+  useEffect(() => {
+    const id = selectedCommunity?.id;
+    if (!id || !isSupabaseConfigured) { setCommunityBlocks([]); return; }
+    fetchCommunityBlocks(id).then(setCommunityBlocks).catch(() => setCommunityBlocks([]));
+  }, [selectedCommunity?.id]);
 
   // Coming from /onboard — preselect an existing society, or queue a new one.
   useEffect(() => {
@@ -147,7 +169,8 @@ export default function SignInScreen() {
 
   const submitReset = async () => {
     if (resetPhone.replace(/\D/g, '').length < 10) { toast.show('Enter a valid phone number'); return; }
-    if (!/^\d{6}$/.test(resetNewPin)) { toast.show('New PIN must be exactly 6 digits'); return; }
+    const pinIssue = pinProblem(resetNewPin);
+    if (pinIssue) { toast.show(pinIssue); return; }
     if (resetNewPin !== resetConfirmPin) { toast.show('PINs do not match'); return; }
     setResetBusy(true);
     try {
@@ -166,11 +189,10 @@ export default function SignInScreen() {
     }
   };
 
-  const filteredCommunities = communities.filter(
-    (comm: Community) =>
-      comm.name.toLowerCase().includes(communitySearch.toLowerCase()) ||
-      (comm.address ?? '').toLowerCase().includes(communitySearch.toLowerCase())
-  );
+  const filteredCommunities = communities;
+  // Self-configuring, exactly as the roster form does it: a single-tower
+  // society never sees the field as required.
+  const blockRequired = communityBlocks.length > 1;
 
   const submit = async () => {
     setError(null);
@@ -181,6 +203,9 @@ export default function SignInScreen() {
     const digits = phone.replace(/\D/g, '');
     if (digits.length < 10) return fail('Enter a valid phone number');
     if (!/^\d{6}$/.test(code)) return fail('Your code must be exactly 6 digits');
+    // Only when setting one. Signing in must never second-guess a PIN that
+    // already exists — that would lock people out of their own accounts.
+    if (mode === 'up') { const weak = pinProblem(code); if (weak) return fail(weak); }
 
     setBusy(true);
     try {
@@ -193,6 +218,11 @@ export default function SignInScreen() {
         }
         if (!name.trim()) { setBusy(false); return toast.show('Please enter your name'); }
         if (!newCommunity && !selectedCommunity) { setBusy(false); return toast.show('Please select your society'); }
+        // The flat is the identity in this app: it groups the directory, it is
+        // what a contribution sheet matches on, it is how a neighbour finds
+        // you. Signing up without one left a resident invisible.
+        if (!flat.trim()) { setBusy(false); return toast.show('Please add your flat number'); }
+        if (blockRequired && !block.trim()) { setBusy(false); return toast.show('Please choose your block'); }
         const profile = await signUp({
           phone, code, name, flat, whatsapp, upi, roles: ['foodie'],
           communityId: newCommunity ? undefined : selectedCommunity!.id,
@@ -386,12 +416,40 @@ export default function SignInScreen() {
               <Field label="Your name" required placeholder="Pratibha Priti" value={name} onChangeText={setName} />
               <View className="flex-row gap-3">
                 <View className="w-24">
-                  <Field label="Block" autoCapitalize="characters" placeholder="E" value={block} onChangeText={setBlock} />
+                  <Field
+                    label="Block"
+                    required={blockRequired}
+                    hint={blockRequired ? undefined : 'Optional'}
+                    autoCapitalize="characters"
+                    maxLength={4}
+                    placeholder={communityBlocks[0] ?? 'E'}
+                    value={block}
+                    onChangeText={setBlock}
+                  />
                 </View>
                 <View className="flex-1">
-                  <Field label="Flat number" placeholder="204" value={flat} onChangeText={setFlat} />
+                  {/* The flat is the identity here — it groups the directory,
+                      it is what a contribution sheet matches on, it is how a
+                      neighbour finds you. It was optional. */}
+                  <Field label="Flat number" required autoCapitalize="characters" placeholder="204" value={flat} onChangeText={setFlat} />
                 </View>
               </View>
+              {/* The blocks this society actually uses, so nobody has to guess
+                  whether it is "A" or "Tower A". */}
+              {communityBlocks.length > 1 ? (
+                <View className="-mt-1 mb-3 flex-row flex-wrap gap-1.5">
+                  {communityBlocks.map((b) => (
+                    <Pressable
+                      key={b}
+                      onPress={() => setBlock(b)}
+                      className="rounded-full px-2.5 py-1"
+                      style={{ backgroundColor: block.trim().toUpperCase() === b ? c.accent : c.inset }}
+                    >
+                      <Text className="text-[12px] font-sans-sb" style={{ color: block.trim().toUpperCase() === b ? c.onAccent : c.muted }}>{b}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ) : null}
               <Field label="WhatsApp" hint="For coordination with neighbours" placeholder="98765 43210" keyboardType="phone-pad" value={whatsapp} onChangeText={setWhatsapp} />
               <Field label="UPI ID" hint="Optional — so neighbours can pay you" autoCapitalize="none" placeholder="priya@ybl" value={upi} onChangeText={setUpi} />
 
@@ -523,8 +581,10 @@ export default function SignInScreen() {
               </Pressable>
             ))}
 
-            {filteredCommunities.length === 0 && communitySearch.length > 0 ? (
-              <Text className="font-sans py-6 text-center text-[14px] text-muted">No society found for "{communitySearch}"</Text>
+            {communitiesLoading && filteredCommunities.length === 0 ? (
+              <Text className="font-sans py-6 text-center text-[14px] text-muted">Searching…</Text>
+            ) : filteredCommunities.length === 0 && communitySearch.length > 0 ? (
+              <Text className="font-sans py-6 text-center text-[14px] text-muted">No society found for “{communitySearch}”</Text>
             ) : null}
 
             {/* Request to add society */}

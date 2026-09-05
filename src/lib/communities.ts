@@ -17,11 +17,14 @@ export interface Community {
 // migration 0035 adds the geo columns — the extra fields are optional on Community.
 const COMMUNITY_COLS = '*';
 
-export async function fetchCommunities(): Promise<Community[]> {
+export async function fetchCommunities(limit = 25): Promise<Community[]> {
   const { data, error } = await supabase
     .from('communities')
     .select(COMMUNITY_COLS)
-    .order('name');
+    .order('name')
+    // Nationally this is not a list to load whole. It is the first page the
+    // picker shows before anybody types; the search does the rest.
+    .limit(limit);
   if (error) throw error;
   return (data ?? []) as Community[];
 }
@@ -137,4 +140,16 @@ export async function submitJoinRequest(input: {
     requester_email: input.requesterEmail?.trim() || null,
   });
   if (error) throw error;
+}
+
+/**
+ * The block labels a society already uses, readable before sign-in.
+ *
+ * The sign-up form needs this to know whether to ask for a block at all: in a
+ * society that numbers per tower, "204" on its own names two homes.
+ */
+export async function fetchCommunityBlocks(communityId: string): Promise<string[]> {
+  const { data, error } = await supabase.rpc('community_blocks', { p_community: communityId });
+  if (error) throw error;
+  return ((data as string[] | null) ?? []).filter(Boolean);
 }
