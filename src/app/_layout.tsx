@@ -38,6 +38,8 @@ import { useAuth } from '../context/auth';
 import { useIsDark, useThemeColors } from '../theme';
 import { AppErrorBoundary } from '../components/AppErrorBoundary';
 import { PushPromptProvider } from '../components/PushPrompt';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { PERSIST_MAX_AGE, persister, queryClient } from '../lib/queryClient';
 import { useAppLifecycle } from '../lib/appLifecycle';
 
 SplashScreen.preventAutoHideAsync();
@@ -89,6 +91,9 @@ function AppShell() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.bg }}>
       <SafeAreaProvider>
+        {/* The cache. Screens paint from what they showed last time and
+            refetch behind it; see lib/queryClient.ts. */}
+        <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: PERSIST_MAX_AGE }}>
         <AuthProvider>
           <TranslationProvider>
             <UnreadDmsProvider>
@@ -107,6 +112,7 @@ function AppShell() {
             </UnreadDmsProvider>
           </TranslationProvider>
         </AuthProvider>
+        </PersistQueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

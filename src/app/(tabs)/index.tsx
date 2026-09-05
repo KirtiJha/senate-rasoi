@@ -16,6 +16,9 @@ import { T } from '../../components/T';
 import { Avatar, Container, ErrorRow, ModuleTile, Rise, Touchable, useResponsive, VegMark } from '../../components/ui';
 import { InviteNeighbours } from '../../components/InviteNeighbours';
 import { fetchMemberCount } from '../../lib/admin';
+import { useQuery } from '@tanstack/react-query';
+import { captureException } from '../../lib/crash';
+import { qk } from '../../lib/queryClient';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useUnreadDms } from '../../context/unread';
@@ -231,34 +234,74 @@ export default function HomeScreen() {
   // focus. Each fetch is independent: one failing must not blank the others,
   // so failures are counted rather than thrown. If every one fails we say so
   // and offer a retry, instead of rendering a wall of tiles over silence.
-  const loadHome = useCallback(async () => {
-    if (!communityId || !isSupabaseConfigured) return;
+  // Home, from the cache first.
+  //
+  // Thirteen fetches ran on every visit to this tab and their results lived in
+  // local state, so switching away and back meant thirteen round-trips and a
+  // flash of empty sections. They run as one query now: the result is
+  // persisted, painted in the same frame on the next visit, and refetched
+  // quietly behind it when it is older than a minute.
+  const home = useQuery({
+    queryKey: qk.home(communityId ?? '', userId),
+    enabled: !!communityId && isSupabaseConfigured,
+    queryFn: async () => {
+      const cid = communityId!;
+      const r = await Promise.allSettled([
+        fetchCategoryCounts(cid),
+        fetchHomeTileCounts(cid, userId),
+        fetchAllListings(cid, 0, 12, 'created_at'),
+        fetchProperties({ availableOnly: true }, cid).then((x) => x.slice(0, 12)),
+        fetchPlaces({}, cid).then((x) => x.slice(0, 12)),
+        fetchDishes(cid),
+        // Same rule as the tile: lent-out things show, withdrawn ones only to
+        // their owner.
+        fetchBorrowItems({ publicOnly: true, viewerId: userId }, cid).then((x) => x.slice(0, 10)),
+        fetchBorrowCounts(cid).then((x) => x.offers + x.requests),
+        fetchLostFoundItems({ openOnly: true }, cid).then((x) => x.slice(0, 10)),
+        fetchMyNextGame(userId),
+        fetchMemberCount(cid),
+        fetchTotalGroupUnread(),
+        fetchLostFoundCounts(cid),
+      ] as const);
+      const failed = r.filter((x) => x.status === 'rejected').length;
+      if (failed) captureException(new Error('home: ' + failed + ' section(s) failed'), { source: 'home' });
+      if (failed === r.length) throw new Error('home: nothing loaded');
+      const v = <T,>(i: number, fallback: T): T => (r[i].status === 'fulfilled' ? ((r[i] as PromiseFulfilledResult<T>).value ?? fallback) : fallback);
+      return {
+        counts: v<Record<string, number>>(0, {}),
+        tileCounts: v<Record<string, number>>(1, {}),
+        recent: v<ListingRow[]>(2, []),
+        recentProps: v<PropertyRow[]>(3, []),
+        recentPlaces: v<PlaceRow[]>(4, []),
+        dishes: v<DishRow[]>(5, []),
+        recentBorrow: v<LendItem[]>(6, []),
+        borrowCount: v<number>(7, 0),
+        recentLostFound: v<LostFoundItem[]>(8, []),
+        nextGame: v<NextGame | null>(9, null),
+        memberCount: v<number | null>(10, null),
+        groupUnread: v<number>(11, 0),
+        lostFoundCount: v<number>(12, 0),
+      };
+    },
+  });
 
-    const results = await Promise.allSettled([
-      fetchCategoryCounts(communityId).then(setCounts),
-      fetchHomeTileCounts(communityId, userId).then(setTileCounts),
-      fetchAllListings(communityId, 0, 12, 'created_at').then(setRecent),
-      fetchProperties({ availableOnly: true }, communityId).then((r) => setRecentProps(r.slice(0, 12))),
-      fetchPlaces({}, communityId).then((r) => setRecentPlaces(r.slice(0, 12))),
-      fetchDishes(communityId).then(setDishes),
-      // Was `availableOnly: false`, i.e. no filter at all — so listings their
-      // owners had taken down still surfaced here. Same rule as the tile now:
-      // lent-out things show, withdrawn ones show only to their owner.
-      fetchBorrowItems({ publicOnly: true, viewerId: userId }, communityId).then((rows) => setRecentBorrow(rows.slice(0, 10))),
-      fetchBorrowCounts(communityId).then((c) => setBorrowCount(c.offers + c.requests)),
-      fetchLostFoundItems({ openOnly: true }, communityId).then((rows) => setRecentLostFound(rows.slice(0, 10))),
-      fetchMyNextGame(userId).then(setNextGame),
-      fetchMemberCount(communityId).then(setMemberCount),
-      fetchTotalGroupUnread().then(setGroupUnread),
-      fetchLostFoundCounts(communityId).then(setLostFoundCount),
-    ]);
+  // The screen below reads these as before; they are fed from the query so the
+  // rest of a 950-line file did not have to change today.
+  useEffect(() => {
+    const d = home.data;
+    if (!d) return;
+    setCounts(d.counts); setTileCounts(d.tileCounts); setRecent(d.recent);
+    setRecentProps(d.recentProps); setRecentPlaces(d.recentPlaces); setDishes(d.dishes);
+    setRecentBorrow(d.recentBorrow); setBorrowCount(d.borrowCount);
+    setRecentLostFound(d.recentLostFound); setNextGame(d.nextGame);
+    setMemberCount(d.memberCount); setGroupUnread(d.groupUnread); setLostFoundCount(d.lostFoundCount);
+    setLoadFailed(false);
+  }, [home.data]);
+  useEffect(() => { if (home.isError && !home.data) setLoadFailed(true); }, [home.isError, home.data]);
 
-    const failed = results.filter((r) => r.status === 'rejected');
-    if (failed.length) console.error('home: ' + failed.length + ' section(s) failed to load', failed);
-    setLoadFailed(failed.length === results.length);
-  }, [communityId, userId]);
+  const loadHome = useCallback(async () => { await home.refetch(); }, [home]);
 
-  useFocusEffect(useCallback(() => { loadHome(); }, [loadHome]));
+  // Refetch-on-focus is the query's job now (refetchOnMount when stale).
 
   const refresh = useCallback(async () => {
     setRefreshing(true);

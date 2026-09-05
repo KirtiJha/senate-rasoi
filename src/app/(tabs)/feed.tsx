@@ -4,6 +4,8 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { openPhotoPicker } from '../../lib/photo';
 import { useRouter } from 'expo-router';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { qk } from '../../lib/queryClient';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator, Animated, Modal, Platform, Pressable,
@@ -51,15 +53,32 @@ export default function FeedScreen() {
 
   const PAGE = 20;
 
-  const [posts, setPosts] = useState<PostRow[]>([]);
   const [activeFilter, setActiveFilter] = useState<PostCategory | 'all'>('all');
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
-  const [page, setPage] = useState(0);
   const [showCompose, setShowCompose] = useState(false);
+  const queryClient = useQueryClient();
+
+  // The feed, from the cache first, one page at a time.
+  //
+  // It used to fetch page 0 on every mount and hold the pages in local state,
+  // so returning to the tab meant a skeleton and a round-trip before the same
+  // posts came back. useInfiniteQuery keeps every page it has loaded, paints
+  // them in the same frame, and refetches the first page quietly behind.
+  const cat = activeFilter === 'all' ? undefined : activeFilter;
+  const feedKey = qk.feed(communityId ?? '', activeFilter);
+  const feed = useInfiniteQuery({
+    queryKey: feedKey,
+    enabled: !!communityId && isSupabaseConfigured,
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => fetchPosts(communityId!, cat, pageParam * PAGE, PAGE),
+    getNextPageParam: (last, pages) => (last.length === PAGE ? pages.length : undefined),
+  });
+
+  const posts: PostRow[] = useMemo(() => feed.data?.pages.flat() ?? [], [feed.data]);
+  const loading = feed.isPending;
+  const loadFailed = feed.isError && !feed.data;
+  const refreshing = feed.isRefetching && !feed.isFetchingNextPage;
+  const loadingMore = feed.isFetchingNextPage;
+  const hasMore = !!feed.hasNextPage;
 
   // Posts by blocked members never reach the list.
   const visiblePosts = useMemo(
@@ -67,39 +86,17 @@ export default function FeedScreen() {
     [posts, filterBlocked],
   );
 
+  // Anything that used to call load() — composing a post, realtime — now
+  // invalidates the key and lets the query decide.
   const load = useCallback(async () => {
-    if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
-    try {
-      const cat = activeFilter === 'all' ? undefined : activeFilter;
-      const rows = await fetchPosts(communityId, cat, 0, PAGE);
-      setPosts(rows);
-      setPage(0);
-      setHasMore(rows.length === PAGE);
-      setLoadFailed(false);
-    } catch (e) {
-      console.error('feed: load failed', e);
-      setLoadFailed(true);
-    } finally { setLoading(false); }
-  }, [communityId, activeFilter, toast]);
+    await queryClient.invalidateQueries({ queryKey: feedKey });
+  }, [queryClient, feedKey]);
 
   const loadMore = useCallback(async () => {
-    if (!communityId || loadingMore || !hasMore) return;
-    setLoadingMore(true);
-    try {
-      const cat = activeFilter === 'all' ? undefined : activeFilter;
-      const nextPage = page + 1;
-      const rows = await fetchPosts(communityId, cat, nextPage * PAGE, PAGE);
-      setPosts((prev) => [...prev, ...rows]);
-      setPage(nextPage);
-      setHasMore(rows.length === PAGE);
-    } catch { toast.show('Could not load more posts'); }
-    finally { setLoadingMore(false); }
-  }, [communityId, activeFilter, loadingMore, hasMore, page]);
-
-  useEffect(() => {
-    setLoading(true);
-    load();
-  }, [load]);
+    if (!feed.hasNextPage || feed.isFetchingNextPage) return;
+    try { await feed.fetchNextPage(); }
+    catch { toast.show('Could not load more posts'); }
+  }, [feed, toast]);
 
   useEffect(() => {
     if (!communityId) return;
@@ -108,10 +105,8 @@ export default function FeedScreen() {
   }, [communityId, load]);
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await load();
-    setRefreshing(false);
-  }, [load]);
+    await feed.refetch();
+  }, [feed]);
 
   return (
     <View className="flex-1 bg-bg">

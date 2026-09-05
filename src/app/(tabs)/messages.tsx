@@ -1,37 +1,47 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { Avatar, Button, Container, RowSkeleton, ScreenHeader } from '../../components/ui';
+import { useCallback } from 'react';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Avatar, Button, Container, ErrorState, RowSkeleton, ScreenHeader } from '../../components/ui';
 import { Empty } from '../../components/Empty';
 import { useAuth } from '../../context/auth';
-import { useToast } from '../../context/toast';
 import { InboxThread, fetchInbox, subscribeToInbox } from '../../lib/dm';
+import { qk } from '../../lib/queryClient';
 import { useThemeColors } from '../../theme';
 
+/**
+ * The inbox, from the cache first.
+ *
+ * This screen used to fetch on every focus and hold the result in local
+ * state, so coming back from a thread meant a skeleton and a round-trip
+ * before the list you had just been looking at reappeared. It reads the
+ * cache now: the list is on screen in the same frame, and a refetch runs
+ * behind it. Realtime no longer refetches by hand — it invalidates the key
+ * and the query does the rest.
+ */
 export default function MessagesInboxScreen() {
   const router = useRouter();
-  const toast = useToast();
   const c = useThemeColors();
   const { userId } = useAuth();
+  const queryClient = useQueryClient();
 
-  const [threads, setThreads] = useState<InboxThread[]>([]);
-  const [loading, setLoading] = useState(true);
+  const inbox = useQuery({
+    queryKey: qk.inbox(userId ?? ''),
+    queryFn: () => fetchInbox(userId!),
+    enabled: !!userId,
+  });
 
-  const load = useCallback(async () => {
-    if (!userId) { setLoading(false); return; }
-    try {
-      setThreads(await fetchInbox(userId));
-    } catch { toast.show('Could not load messages'); }
-    finally { setLoading(false); }
-  }, [userId, toast]);
-
-  // Reload whenever the inbox regains focus (e.g. back from a thread).
   useFocusEffect(useCallback(() => {
-    load();
-    const unsub = subscribeToInbox(load);
-    return unsub;
-  }, [load]));
+    if (!userId) return undefined;
+    const key = qk.inbox(userId);
+    queryClient.invalidateQueries({ queryKey: key });
+    return subscribeToInbox(() => queryClient.invalidateQueries({ queryKey: key }));
+  }, [userId, queryClient]));
+
+  const threads: InboxThread[] = inbox.data ?? [];
+  const loading = inbox.isPending;
+  const failed = inbox.isError && !inbox.data;
 
   return (
     <View className="flex-1 bg-bg">
@@ -43,10 +53,21 @@ export default function MessagesInboxScreen() {
         addLabel="New message"
       />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={inbox.isFetching && !loading} onRefresh={() => inbox.refetch()} />}
+      >
         <Container>
           {loading ? (
             <View className="overflow-hidden card"><RowSkeleton count={6} /></View>
+          ) : failed ? (
+            <ErrorState
+              title="Couldn't load your messages"
+              message="Nothing has been lost — we just couldn't reach them. Try again."
+              onRetry={() => inbox.refetch()}
+              retrying={inbox.isFetching}
+            />
           ) : threads.length === 0 ? (
             <Empty
               icon="chatbubbles-outline"
@@ -75,6 +96,7 @@ export default function MessagesInboxScreen() {
                       {t.lastMessage ?? 'Say hello 👋'}
                     </Text>
                   </View>
+                  <Ionicons name="chevron-forward" size={16} color={c.faint} />
                 </Pressable>
               ))}
             </View>
