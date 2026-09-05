@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
@@ -8,7 +9,7 @@ import { useAuth } from '../context/auth';
 import { IMAGE_CACHE_PROPS } from '../lib/image';
 import { PLACE_TYPES, PlaceRow, fetchPlaces, placeTypeMeta, subscribePlaces } from '../lib/places';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { useThemeColors } from '../theme';
+import { layout, useThemeColors } from '../theme';
 
 type SortKey = 'az' | 'near' | 'new';
 
@@ -92,6 +93,21 @@ export default function PlacesScreen() {
   const allOpen = groups.length > 0 && groups.every((g) => isOpen(g.type.key));
   const toggleAll = () => setExpanded(allOpen ? new Set() : new Set(groups.map((g) => g.type.key)));
 
+  // One flat array for FlashList: a header per type, and its places only when
+  // that section is open (or a search is forcing every match to show).
+  type ListItem =
+    | { kind: 'header'; key: string; group: (typeof groups)[number]; open: boolean }
+    | { kind: 'place'; key: string; place: PlaceRow; first: boolean; last: boolean };
+  const listItems = useMemo<ListItem[]>(() => {
+    const out: ListItem[] = [];
+    for (const g of groups) {
+      const open = !!q || expanded.has(g.type.key);
+      out.push({ kind: 'header', key: 'h:' + g.type.key, group: g, open });
+      if (open) g.rows.forEach((p, i) => out.push({ kind: 'place', key: 'p:' + p.id, place: p, first: i === 0, last: i === g.rows.length - 1 }));
+    }
+    return out;
+  }, [groups, q, expanded]);
+
   return (
     <View className="flex-1 bg-bg">
       <ScreenHeader
@@ -134,23 +150,43 @@ export default function PlacesScreen() {
         </View>
       ) : null}
 
-      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingTop: 8, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
-        <Container>
-          {loading ? (
+      {/* Virtualised. Two hundred and sixty-five places in one society already;
+          a ScrollView drew every open section's cards at once. Sections are
+          flattened into a header item and, when open, one item per place, so
+          FlashList can recycle them as you scroll. */}
+      <FlashList
+        data={listItems}
+        keyExtractor={(it) => it.key}
+        getItemType={(it) => it.kind}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 16, paddingTop: 8, paddingBottom: 48 }}
+        ListEmptyComponent={
+          loading ? (
             <View className="items-center justify-center py-20"><ActivityIndicator color={c.muted} /></View>
           ) : items.length === 0 ? (
             <EmptyState onAdd={() => router.push('/place/new' as any)} c={c} />
-          ) : groups.length === 0 ? (
+          ) : (
             <View className="items-center justify-center py-16">
               <Ionicons name="search" size={40} color={c.faint} />
               <Text className="mt-3 text-center font-sans-bold text-[15px] text-ink">No matches</Text>
               <Text className="font-sans mt-1 text-center text-[13px] text-muted">Try a different search or filter.</Text>
             </View>
-          ) : (
-            groups.map((g) => {
-              const open = isOpen(g.type.key);
-              return (
-                <View key={g.type.key} className="mb-2.5 overflow-hidden card">
+          )
+        }
+        renderItem={({ item }) => {
+          if (item.kind === 'header') {
+            const g = item.group;
+            const open = item.open;
+            return (
+              <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
+                <View
+                  className="overflow-hidden card"
+                  style={{
+                    marginBottom: open ? 0 : 10,
+                    borderBottomLeftRadius: open ? 0 : undefined,
+                    borderBottomRightRadius: open ? 0 : undefined,
+                  }}
+                >
                   <Pressable onPress={() => toggle(g.type.key)} disabled={!!q} className="flex-row items-center gap-2.5 px-3.5 py-3 active:bg-inset">
                     <View className="h-8 w-8 items-center justify-center rounded-xl" style={{ backgroundColor: c.accentSoft }}>
                       <Ionicons name={g.type.icon as any} size={17} color={c.accent} />
@@ -161,19 +197,29 @@ export default function PlacesScreen() {
                     </View>
                     {!q ? <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={c.faint} /> : null}
                   </Pressable>
-                  {open ? (
-                    <View className="border-t border-line">
-                      <View className="flex-row flex-wrap gap-2.5 p-2.5">
-                        {g.rows.map((p) => <Card key={p.id} p={p} isDesktop={isDesktop} center={center} showDist={sort === 'near' && !!center} c={c} onPress={() => router.push(`/place/${p.id}` as any)} />)}
-                      </View>
-                    </View>
-                  ) : null}
                 </View>
-              );
-            })
-          )}
-        </Container>
-      </ScrollView>
+              </View>
+            );
+          }
+          return (
+            <View
+              className="w-full self-center bg-surface border-x border-line px-2.5"
+              style={{
+                maxWidth: layout.maxContent,
+                paddingTop: item.first ? 10 : 5,
+                paddingBottom: item.last ? 10 : 5,
+                borderTopWidth: item.first ? 1 : 0,
+                borderBottomWidth: item.last ? 1 : 0,
+                borderBottomLeftRadius: item.last ? 16 : 0,
+                borderBottomRightRadius: item.last ? 16 : 0,
+                marginBottom: item.last ? 10 : 0,
+              }}
+            >
+              <Card p={item.place} isDesktop={false} center={center} showDist={sort === 'near' && !!center} c={c} onPress={() => router.push(`/place/${item.place.id}` as any)} />
+            </View>
+          );
+        }}
+      />
     </View>
   );
 }

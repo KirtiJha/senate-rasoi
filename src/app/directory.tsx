@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -133,6 +134,20 @@ export default function DirectoryScreen() {
     }
     return out;
   }, [filtered, sort]);
+
+  // One flat array for FlashList: a header per group, then its rows, each row
+  // knowing whether it opens or closes the card so the edges draw right.
+  type ListItem =
+    | { kind: 'header'; key: string; group: Group }
+    | { kind: 'row'; key: string; row: Resident; first: boolean; last: boolean };
+  const listItems = useMemo<ListItem[]>(() => {
+    const out: ListItem[] = [];
+    for (const g of groups) {
+      out.push({ kind: 'header', key: 'h:' + g.key, group: g });
+      g.rows.forEach((r, i) => out.push({ kind: 'row', key: 'r:' + g.key + ':' + r.key, row: r, first: i === 0, last: i === g.rows.length - 1 }));
+    }
+    return out;
+  }, [groups]);
 
   const call = async (r: Resident) => {
     const d = (r.phone ?? '').replace(/\D/g, '');
@@ -286,9 +301,20 @@ export default function DirectoryScreen() {
       />
 
       <View className={isDesktop ? 'flex-1 flex-row' : 'flex-1'}>
-      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <View className="w-full self-center" style={{ maxWidth: DIR_MAX }}>
-          {loading ? (
+      {/* Virtualised. This was a ScrollView drawing every household in the
+          society at once — the app's largest screen after Home, and at three
+          hundred rows a visible stutter on a mid-range phone and a memory
+          spike on open. Groups are flattened into header and row items so
+          FlashList can recycle them; each row carries its own card edges. */}
+      <FlashList
+        data={listItems}
+        keyExtractor={(it) => it.key}
+        getItemType={(it) => it.kind}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+        ListEmptyComponent={
+          loading ? (
             <View className="overflow-hidden card"><RowSkeleton count={6} /></View>
           ) : loadFailed ? (
             <ErrorState
@@ -296,7 +322,7 @@ export default function DirectoryScreen() {
               message="Your neighbours are still listed — we just couldn't reach them. Try again."
               onRetry={load}
             />
-          ) : groups.length === 0 ? (
+          ) : (
             <View className="items-center py-16">
               <Ionicons name="people-outline" size={40} color={c.faint} />
               <Text className="mt-3 font-display text-xl text-ink mb-1">No residents found</Text>
@@ -304,9 +330,13 @@ export default function DirectoryScreen() {
                 {query || filter !== 'all' ? 'Try a different search or filter.' : 'Add a neighbour with the Add button.'}
               </Text>
             </View>
-          ) : (
-            groups.map((g) => (
-              <View key={g.key} className="mb-5">
+          )
+        }
+        renderItem={({ item }) => {
+          if (item.kind === 'header') {
+            const g = item.group;
+            return (
+              <View className="w-full self-center" style={{ maxWidth: DIR_MAX }}>
                 {g.byName ? (
                   <View className="mb-2 flex-row items-center gap-2">
                     <Ionicons name="text-outline" size={14} color={c.muted} />
@@ -330,26 +360,38 @@ export default function DirectoryScreen() {
                     {g.rows.length > 1 ? <Text className="font-sans text-[12px] text-faint">· {g.rows.length} residents</Text> : null}
                   </View>
                 )}
-                <View className="overflow-hidden card">
-                  {g.rows.map((r, i) => (
-                    <ResidentRow
-                      key={r.key}
-                      r={r}
-                      first={i === 0}
-                      showFlat={sort === 'name'}
-                      c={c}
-                      onOpen={() => setSelected(r)}
-                      onCall={() => call(r)}
-                      onWhatsApp={() => whatsapp(r)}
-                      onMessage={() => message(r)}
-                    />
-                  ))}
-                </View>
               </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
+            );
+          }
+          const r = item.row;
+          return (
+            <View
+              className="w-full self-center overflow-hidden bg-surface border-x border-line"
+              style={{
+                maxWidth: DIR_MAX,
+                borderTopWidth: item.first ? 1 : 0,
+                borderBottomWidth: item.last ? 1 : 0,
+                borderTopLeftRadius: item.first ? 16 : 0,
+                borderTopRightRadius: item.first ? 16 : 0,
+                borderBottomLeftRadius: item.last ? 16 : 0,
+                borderBottomRightRadius: item.last ? 16 : 0,
+                marginBottom: item.last ? 20 : 0,
+              }}
+            >
+              <ResidentRow
+                r={r}
+                first={item.first}
+                showFlat={sort === 'name'}
+                c={c}
+                onOpen={() => setSelected(r)}
+                onCall={() => call(r)}
+                onWhatsApp={() => whatsapp(r)}
+                onMessage={() => message(r)}
+              />
+            </View>
+          );
+        }}
+      />
 
       {/* Desktop: filter/sort opens as a right-hand panel that shrinks the list. */}
       {isDesktop && showFilters ? (
