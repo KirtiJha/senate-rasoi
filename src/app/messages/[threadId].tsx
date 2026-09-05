@@ -7,12 +7,13 @@ import { Avatar, ErrorState, KeyboardAvoider } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useBlocks } from '../../context/blocks';
+import { useConfirm } from '../../context/confirm';
 import { useToast } from '../../context/toast';
 import { useDraft } from '../../lib/draft';
 import { haptics } from '../../lib/haptics';
 import {
   DmMessageRow, InboxThread, fetchMessages, fetchThread,
-  markThreadRead, sendMessage, subscribeToThread,
+  markThreadRead, sendMessage, subscribeToThread, unsendMessage,
 } from '../../lib/dm';
 import { useThemeColors } from '../../theme';
 
@@ -24,6 +25,7 @@ export default function DmThreadScreen() {
   const insets = useSafeAreaInsets();
   const { userId } = useAuth();
   const { isBlocked } = useBlocks();
+  const confirm = useConfirm();
 
   const [thread, setThread] = useState<InboxThread | null>(null);
   const [messages, setMessages] = useState<DmMessageRow[]>([]);
@@ -84,6 +86,20 @@ export default function DmThreadScreen() {
     } catch { toast.show('Could not send'); }
     finally { setSending(false); }
   };
+
+  const onUnsend = useCallback(async (m: DmMessageRow) => {
+    haptics.tap();
+    if (!(await confirm({
+      title: 'Withdraw this message?',
+      message: `${thread?.other.name ?? 'They'} will see that a message was withdrawn, not what it said.`,
+      confirmLabel: 'Withdraw',
+      destructive: true,
+    }))) return;
+    try {
+      await unsendMessage(m.id);
+      setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, body: '', deleted_at: new Date().toISOString() } : x)));
+    } catch { toast.show('Could not withdraw — try again'); }
+  }, [confirm, thread?.other.name, toast]);
 
   if (loading) {
     return (
@@ -146,7 +162,7 @@ export default function DmThreadScreen() {
         ) : (
           <View style={{ gap: 8 }}>
             {messages.map((m) => (
-              <DmBubble key={m.id} message={m} isMine={m.sender_id === userId} accent={c.accent} />
+              <DmBubble key={m.id} message={m} isMine={m.sender_id === userId} accent={c.accent} onUnsend={onUnsend} />
             ))}
           </View>
         )}
@@ -196,10 +212,39 @@ export default function DmThreadScreen() {
   );
 }
 
-function DmBubble({ message, isMine, accent }: { message: DmMessageRow; isMine: boolean; accent: string }) {
+function DmBubble({
+  message, isMine, accent, onUnsend,
+}: {
+  message: DmMessageRow;
+  isMine: boolean;
+  accent: string;
+  onUnsend: (m: DmMessageRow) => void;
+}) {
+  const withdrawn = !!message.deleted_at;
+
+  // A withdrawn message keeps its place and loses its words, so the thread
+  // still reads as the conversation it was rather than quietly closing up.
+  if (withdrawn) {
+    return (
+      <View className={`flex-row ${isMine ? 'justify-end' : 'justify-start'}`}>
+        <View className="max-w-[80%] rounded-2xl border border-line px-3 py-2">
+          <Text className="font-sans text-[13px] italic text-faint">
+            {isMine ? 'You withdrew this' : 'This message was withdrawn'}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View className={`flex-row ${isMine ? 'justify-end' : 'justify-start'}`}>
-      <View
+      <Pressable
+        // Long press is the one gesture people already try on a message they
+        // regret. Only on your own — nobody edits or removes anyone else's.
+        onLongPress={isMine ? () => onUnsend(message) : undefined}
+        delayLongPress={350}
+        accessibilityRole={isMine ? 'button' : undefined}
+        accessibilityLabel={isMine ? 'Withdraw this message' : undefined}
         className={`max-w-[80%] rounded-2xl px-3 py-2 ${isMine ? 'rounded-br-md' : 'rounded-tl-md bg-inset'}`}
         style={isMine ? { backgroundColor: accent } : undefined}
       >
@@ -207,7 +252,7 @@ function DmBubble({ message, isMine, accent }: { message: DmMessageRow; isMine: 
         <Text className={`mt-0.5 text-[10px] ${isMine ? 'text-right text-white/70' : 'text-faint'}`}>
           {time(message.created_at)}
         </Text>
-      </View>
+      </Pressable>
     </View>
   );
 }

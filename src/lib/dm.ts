@@ -36,6 +36,8 @@ export interface DmMessageRow {
   sender_id: string;
   body: string;
   read_at: string | null;
+  /** Set when the sender withdrew it; the row stays, the words go (0131). */
+  deleted_at?: string | null;
   created_at: string;
 }
 
@@ -52,9 +54,29 @@ export async function fetchCommunityMembers(
     .select('id, name, flat')
     .eq('community_id', communityId)
     .neq('id', excludeUserId)
-    .order('name', { ascending: true });
+    .order('name', { ascending: true })
+    // A society larger than PostgREST's default page would have lost the end
+    // of its own address book — silently, and alphabetically.
+    .limit(5000);
   if (error) throw error;
   return (data ?? []) as DmParticipant[];
+}
+
+/**
+ * Withdraw a message you sent.
+ *
+ * Nothing said in a private conversation could be taken back by anyone: there
+ * was no DELETE policy on either table, so a line sent to the wrong thread or
+ * in anger stayed there for good. This is an update, not a delete — the row
+ * keeps its place and the server empties the text itself (0131), so the other
+ * person sees that something was withdrawn instead of finding a silent gap.
+ */
+export async function unsendMessage(messageId: string): Promise<void> {
+  const { error } = await supabase
+    .from('dm_messages')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', messageId);
+  if (error) throw error;
 }
 
 /** Get (or create) the 1:1 thread with another user; returns its id. */
@@ -128,7 +150,8 @@ export async function fetchUnreadThreadCount(userId: string): Promise<number> {
     .from('dm_messages')
     .select('thread_id')
     .neq('sender_id', userId)
-    .is('read_at', null);
+    .is('read_at', null)
+    .limit(5000);
   if (error) throw error;
   return new Set((data ?? []).map((r) => (r as { thread_id: string }).thread_id)).size;
 }
