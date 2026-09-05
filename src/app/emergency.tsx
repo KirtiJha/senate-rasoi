@@ -11,6 +11,7 @@ import {
   ALL_EMERGENCY_ROLES, EMERGENCY_ROLE_COLORS, EMERGENCY_ROLE_ICONS, EMERGENCY_ROLE_LABELS,
   EmergencyContact, EmergencyRole,
   addEmergencyContact, deleteEmergencyContact, fetchEmergencyContacts, updateEmergencyContact,
+  NATIONAL_NUMBERS,
 } from '../lib/emergency';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { useThemeColors } from '../theme';
@@ -68,6 +69,40 @@ export default function EmergencyScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container>
+          {/* Every number on this screen used to come from the society's own
+              admin. A society that had just onboarded, or one whose admin
+              never got round to it, opened this tile in an emergency and found
+              "No contacts yet". These do not depend on anybody. */}
+          <View className="mb-5">
+            <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Always available</Text>
+            <View className="flex-row flex-wrap gap-2">
+              {NATIONAL_NUMBERS.map((n) => {
+                const color = EMERGENCY_ROLE_COLORS[n.role];
+                return (
+                  <Pressable
+                    key={n.phone}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Call ${n.name} on ${n.phone}`}
+                    onPress={() => handleCall(n.phone)}
+                    className="flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5 active:opacity-80"
+                    style={{ minWidth: 150, flexGrow: 1, flexBasis: 0 }}
+                  >
+                    <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: color + '18' }}>
+                      <Ionicons name={EMERGENCY_ROLE_ICONS[n.role] as never} size={17} color={color} />
+                    </View>
+                    <View className="min-w-0 flex-1">
+                      <Text className="font-sans-sb text-[13.5px] text-ink" numberOfLines={1}>{n.name}</Text>
+                      <Text className="font-sans text-[11px] text-muted" numberOfLines={1}>{n.blurb}</Text>
+                    </View>
+                    <Text className="font-sans-bold text-[15px]" style={{ color }}>{n.phone}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Your society</Text>
+
           {loading ? (
             <View className="gap-3">
               {[1, 2, 3].map((i) => (
@@ -77,7 +112,7 @@ export default function EmergencyScreen() {
           ) : contacts.length === 0 ? (
             <View className="items-center py-20">
               <Ionicons name="call-outline" size={44} color={c.faint} />
-              <Text className="mt-3 font-display text-xl text-ink">No contacts yet</Text>
+              <Text className="mt-3 font-display text-xl text-ink">No society numbers yet</Text>
               <Text className="font-sans mt-1 text-center text-[14px] text-muted max-w-xs">
                 {isAdmin
                   ? 'Add important numbers like security, maintenance, and emergency services.'

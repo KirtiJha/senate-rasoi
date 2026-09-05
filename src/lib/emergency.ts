@@ -47,6 +47,43 @@ export const ALL_EMERGENCY_ROLES: EmergencyRole[] = [
   'security', 'maintenance', 'medical', 'fire', 'electricity', 'water', 'other',
 ];
 
+/**
+ * The numbers that do not depend on anybody having filled this screen in.
+ *
+ * Every contact here used to come from the society's own admin. A society that
+ * had just onboarded — or one whose admin never got round to it — opened this
+ * tile during an emergency and found "No contacts yet". These are national and
+ * always present, above whatever the society adds.
+ */
+export interface NationalNumber { name: string; phone: string; role: EmergencyRole; blurb: string }
+export const NATIONAL_NUMBERS: NationalNumber[] = [
+  { name: 'Emergency', phone: '112', role: 'other', blurb: 'Police, fire and ambulance — one number' },
+  { name: 'Ambulance', phone: '108', role: 'medical', blurb: 'Free emergency ambulance' },
+  { name: 'Fire', phone: '101', role: 'fire', blurb: 'Fire brigade' },
+  { name: 'Police', phone: '100', role: 'security', blurb: 'Police control room' },
+  { name: 'Women’s helpline', phone: '1091', role: 'other', blurb: 'Round the clock' },
+  { name: 'Child helpline', phone: '1098', role: 'other', blurb: 'Childline India' },
+];
+
+/**
+ * The order the list is read in during an emergency.
+ *
+ * order_pos was never set by anything — every row was inserted with 0 — so
+ * "order by order_pos" was no ordering at all, and the guard could sit below
+ * the plumber. Security and medical lead now; order_pos still separates
+ * contacts within a role for anyone who sets it.
+ */
+const ROLE_RANK: Record<EmergencyRole, number> = {
+  security: 0, medical: 1, fire: 2, maintenance: 3, electricity: 4, water: 5, other: 6,
+};
+
+export function sortContacts(list: EmergencyContact[]): EmergencyContact[] {
+  return [...list].sort((a, b) =>
+    (ROLE_RANK[a.role] - ROLE_RANK[b.role])
+    || (a.order_pos - b.order_pos)
+    || a.name.localeCompare(b.name));
+}
+
 export async function fetchEmergencyContacts(communityId: string): Promise<EmergencyContact[]> {
   const { data, error } = await supabase
     .from('emergency_contacts')
@@ -54,7 +91,7 @@ export async function fetchEmergencyContacts(communityId: string): Promise<Emerg
     .eq('community_id', communityId)
     .order('order_pos', { ascending: true });
   if (error) throw error;
-  return (data ?? []) as EmergencyContact[];
+  return sortContacts((data ?? []) as EmergencyContact[]);
 }
 
 export async function addEmergencyContact(input: {
