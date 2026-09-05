@@ -9,6 +9,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Empty } from '../components/Empty';
+import { usePushPrompt } from '../components/PushPrompt';
 import { Field, Label, SectionCard } from '../components/forms';
 import { CreateListingForm } from '../components/listings/CreateListingForm';
 import { Avatar, Button, ChoiceTiles, Container, KeyboardAvoider, ModuleTile, Stepper, TimeField, useResponsive, VegMark } from '../components/ui';
@@ -57,6 +58,7 @@ export default function PostScreen({
   // Set after a dish posts, to offer "every week" at the only moment the
   // answer is obvious — you have just decided to cook it.
   const [justPosted, setJustPosted] = useState<DishRow | null>(null);
+  const { offer: offerPush } = usePushPrompt();
   const [mode, setMode] = useState<'dish' | 'tiffin'>(forceKind === 'tiffin' ? 'tiffin' : 'dish');
 
   const [chefName, setChefName] = useState('');
@@ -229,6 +231,8 @@ export default function PostScreen({
       // settings screen, it needs the dish described all over again — which is
       // the friction the feature exists to remove.
       setJustPosted(dish);
+      // Orders will follow. Ask now, not at sign-in.
+      offerPush('post');
     } catch (e) {
       console.error(e);
       toast.show(e instanceof Error && e.message ? `Could not post: ${e.message}` : 'Could not post — check your connection');

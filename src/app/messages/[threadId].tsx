@@ -9,6 +9,7 @@ import { useAuth } from '../../context/auth';
 import { useBlocks } from '../../context/blocks';
 import { useConfirm } from '../../context/confirm';
 import { useToast } from '../../context/toast';
+import { usePushPrompt } from '../../components/PushPrompt';
 import { useDraft } from '../../lib/draft';
 import { haptics } from '../../lib/haptics';
 import {
@@ -26,6 +27,7 @@ export default function DmThreadScreen() {
   const { userId } = useAuth();
   const { isBlocked } = useBlocks();
   const confirm = useConfirm();
+  const { offer: offerPush } = usePushPrompt();
 
   const [thread, setThread] = useState<InboxThread | null>(null);
   const [messages, setMessages] = useState<DmMessageRow[]>([]);
@@ -82,6 +84,8 @@ export default function DmThreadScreen() {
       setMessages((prev) => [...prev, msg]);
       setBody('');
       haptics.tap();
+      // They will reply. This is the moment a notification makes sense.
+      offerPush('message');
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
     } catch { toast.show('Could not send'); }
     finally { setSending(false); }

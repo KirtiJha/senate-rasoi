@@ -37,6 +37,7 @@ import { BlocksProvider } from '../context/blocks';
 import { useAuth } from '../context/auth';
 import { useIsDark, useThemeColors } from '../theme';
 import { AppErrorBoundary } from '../components/AppErrorBoundary';
+import { PushPromptProvider } from '../components/PushPrompt';
 import { useAppLifecycle } from '../lib/appLifecycle';
 
 SplashScreen.preventAutoHideAsync();
@@ -95,8 +96,10 @@ function AppShell() {
                 <NotificationsProvider>
                   <ToastProvider>
                     <ConfirmProvider>
-                      <StatusBar style={isDark ? 'light' : 'dark'} />
-                      <DesktopShell />
+                      <PushPromptProvider>
+                        <StatusBar style={isDark ? 'light' : 'dark'} />
+                        <DesktopShell />
+                      </PushPromptProvider>
                     </ConfirmProvider>
                   </ToastProvider>
                 </NotificationsProvider>

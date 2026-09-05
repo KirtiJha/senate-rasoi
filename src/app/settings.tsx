@@ -13,6 +13,8 @@ import { ThemePreference, useThemePreference } from '../context/theme';
 import { updateProfile } from '../lib/auth';
 import { updateResidentInfo } from '../lib/auth';
 import { MUTABLE_CATEGORIES, fetchMutedTypes, setMuted } from '../lib/notificationPrefs';
+import { openSystemNotificationSettings } from '../components/PushPrompt';
+import { hasPushPermission } from '../lib/push';
 import { supportMailto } from '../lib/support';
 import { SUPPORTED_LANGS, langByCode } from '../lib/translate';
 import { useThemeColors } from '../theme';
@@ -52,6 +54,12 @@ export default function SettingsScreen() {
   const toast = useToast();
   const [savingLang, setSavingLang] = useState<string | null>(null);
   const [muted, setMutedState] = useState<Set<string> | null>(null);
+  // null = not applicable (web / not a device); false = the OS has them off.
+  const [pushAllowed, setPushAllowed] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    hasPushPermission().then(setPushAllowed).catch(() => setPushAllowed(null));
+  }, []);
   const [pendingMute, setPendingMute] = useState<string | null>(null);
   const [savingPrivacy, setSavingPrivacy] = useState(false);
   const { preference, setPreference } = useThemePreference();
@@ -170,6 +178,20 @@ export default function SettingsScreen() {
 
           {/* ── Notifications ──────────────────────────────────── */}
           <SectionLabel>Notifications</SectionLabel>
+          {/* Every switch below is pointless while the phone itself has
+              notifications off for Aangan — and nothing used to say so. */}
+          {pushAllowed === false ? (
+            <Pressable onPress={openSystemNotificationSettings} accessibilityRole="button"
+              className="mb-3 flex-row items-center gap-3 rounded-2xl border px-4 py-3 active:opacity-80"
+              style={{ borderColor: c.highlight + '66', backgroundColor: c.highlightSoft }}>
+              <Ionicons name="notifications-off-outline" size={20} color={c.highlightInk} />
+              <View className="flex-1">
+                <Text className="font-sans-sb text-[14px]" style={{ color: c.highlightInk }}>Notifications are off for Aangan</Text>
+                <Text className="font-sans text-[12px]" style={{ color: c.highlightInk }}>Turn them on in your phone's settings to get messages and requests.</Text>
+              </View>
+              <Ionicons name="open-outline" size={16} color={c.highlightInk} />
+            </Pressable>
+          ) : null}
           <Card>
             {MUTABLE_CATEGORIES.map((cat, i) => {
               const on = !muted?.has(cat.type);

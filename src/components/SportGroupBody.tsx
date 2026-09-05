@@ -21,6 +21,7 @@ import {
 } from '../lib/sports';
 import { useThemeColors } from '../theme';
 import { CourtBookings } from './CourtBookings';
+import { usePushPrompt } from './PushPrompt';
 import { WeekdayChips } from './WeekdayChips';
 import { Avatar, Button, DateField, RowSkeleton, Sheet, TimeField } from './ui';
 
@@ -42,6 +43,7 @@ export function SportGroupBody({
   const toast = useToast();
   const { userId, communityId, isAdmin } = useAuth();
   const confirm = useConfirm();
+  const { offer: offerPush } = usePushPrompt();
 
   const [group, setGroup] = useState<SportGroup | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
@@ -79,7 +81,7 @@ export function SportGroupBody({
   const toggleJoin = async () => {
     if (!userId || !group) return;
     if (!isMember) {
-      try { await joinGroup(group.id, userId); await reload(); }
+      try { await joinGroup(group.id, userId); await reload(); offerPush('group'); }
       catch { toast.show('Could not update — try again'); }
       return;
     }
