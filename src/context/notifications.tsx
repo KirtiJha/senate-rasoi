@@ -155,7 +155,8 @@ function NotificationsModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Close" style={{ flex: 1, backgroundColor: c.scrim }} onPress={onClose}>
+      {/* The scrim closes the panel but is not a button: everything inside it is, and a button may not hold buttons. */}
+      <Pressable accessibilityLabel="Close notifications" style={{ flex: 1, backgroundColor: c.scrim }} onPress={onClose}>
         <Pressable
           onPress={() => {}}
           style={[
