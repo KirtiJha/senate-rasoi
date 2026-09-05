@@ -46,3 +46,39 @@ export async function deleteMember(targetId: string): Promise<boolean> {
   if (error) throw error;
   return Boolean(data);
 }
+
+/**
+ * Correct a member's directory details.
+ *
+ * Joining a society is open — no approval — which only works if the people who
+ * run it can put things right afterwards: a flat typed as "204" in a society
+ * with towers, a name spelt wrong on the day. Until now the only admin actions
+ * were role, block, PIN and delete.
+ *
+ * The phone number is deliberately not here. It is the account's identity, so
+ * changing it would leave the member unable to sign in with the number their
+ * own society shows for them.
+ */
+export async function adminUpdateMember(
+  targetId: string,
+  patch: {
+    name?: string;
+    flat?: string | null;
+    block?: string | null;
+    residentType?: 'owner' | 'tenant' | null;
+    profession?: string | null;
+    vehicleNo?: string | null;
+  },
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc('admin_update_member', {
+    p_target: targetId,
+    p_name: patch.name ?? null,
+    p_flat: patch.flat ?? null,
+    p_block: patch.block ?? null,
+    p_resident_type: patch.residentType === undefined ? null : (patch.residentType ?? ''),
+    p_profession: patch.profession ?? null,
+    p_vehicle_no: patch.vehicleNo ?? null,
+  });
+  if (error) throw error;
+  return Boolean(data);
+}

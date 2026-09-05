@@ -11,7 +11,9 @@ export type NotificationType =
   // Inserted by 0053 when a resident asks an admin to reset their PIN.
   | 'pin_reset'
   // Seat requests, confirmations and the evening-before reminder (0098–0101).
-  | 'carpool';
+  | 'carpool'
+  // Somebody joined the society, or an admin corrected their details (0134).
+  | 'member';
 
 export interface NotificationRow {
   id: string;

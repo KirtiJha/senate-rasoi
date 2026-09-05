@@ -10,7 +10,7 @@ import { useAuth } from '../context/auth';
 import { useConfirm } from '../context/confirm';
 import { useToast } from '../context/toast';
 import { adminResetUserPin } from '../lib/auth';
-import { deleteMember, listCommunityMembers, setMemberBlocked, setUserRoles } from '../lib/admin';
+import { adminUpdateMember, deleteMember, listCommunityMembers, setMemberBlocked, setUserRoles } from '../lib/admin';
 import { getOrCreateThread } from '../lib/dm';
 import { ContentReport, ReportStatus, fetchReports, setReportStatus } from '../lib/moderation';
 import { supabase } from '../lib/supabase';
@@ -62,6 +62,37 @@ export default function AdminScreen() {
   // Join requests state
   const [requests, setRequests] = useState<JoinRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
+
+  // Edit member details. Joining is open by design, so the society needs a
+  // way to correct what an open door lets through — a flat typed as "204"
+  // where there are towers, a name spelt wrong on the day.
+  const [editMember, setEditMember] = useState<DbProfile | null>(null);
+  const [edName, setEdName] = useState('');
+  const [edFlat, setEdFlat] = useState('');
+  const [edBlock, setEdBlock] = useState('');
+  const [edSaving, setEdSaving] = useState(false);
+
+  const openEdit = (m: DbProfile) => {
+    setEditMember(m);
+    setEdName(m.name ?? '');
+    setEdFlat(m.flat ?? '');
+    setEdBlock(m.block ?? '');
+  };
+
+  const saveEdit = async () => {
+    if (!editMember || !edName.trim()) return;
+    setEdSaving(true);
+    try {
+      const ok = await adminUpdateMember(editMember.id, {
+        name: edName.trim(), flat: edFlat.trim(), block: edBlock.trim(),
+      });
+      if (!ok) { toast.show('Not allowed'); return; }
+      setEditMember(null);
+      toast.show('Updated — they have been told');
+      await loadMembers();
+    } catch { toast.show('Could not save — try again'); }
+    finally { setEdSaving(false); }
+  };
 
   // Reset PIN modal
   const [pinResetMember, setPinResetMember] = useState<DbProfile | null>(null);
@@ -324,6 +355,7 @@ export default function AdminScreen() {
                         onPress={() => toggleBlock(m)}
                         c={c}
                       />
+                      <ActionBtn icon="create-outline" label="Edit details" disabled={busy === m.id} onPress={() => openEdit(m)} c={c} />
                       <ActionBtn icon="key-outline" label="Reset PIN" disabled={busy === m.id} onPress={() => { setNewPin(''); setPinResetMember(m); }} c={c} />
                       <ActionBtn icon="trash-outline" label="Delete" danger disabled={busy === m.id} onPress={() => removeMember(m)} c={c} />
                     </View>
@@ -355,6 +387,49 @@ export default function AdminScreen() {
       ) : (
         <ReportsTab communityId={communityId} reviewerId={userId} c={c} />
       )}
+
+      {/* Edit member details */}
+      <Modal visible={!!editMember} transparent animationType="fade" onRequestClose={() => setEditMember(null)}>
+        <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: '#0008' }}>
+          <View style={{ width: '100%', maxWidth: 380, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, padding: 22 }}>
+            <Text className="font-display-x text-[19px] text-ink">Edit details</Text>
+            <Text className="font-sans mt-1.5 text-[13px] leading-[19px] text-muted">
+              Correct what {editMember?.name || 'this member'} entered. They will be told you changed it.
+            </Text>
+
+            <Text className="mb-1.5 mt-4 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Name</Text>
+            <TextInput value={edName} onChangeText={setEdName} placeholderTextColor={c.faint}
+              className="rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
+
+            <View className="mt-3 flex-row gap-3">
+              <View className="w-24">
+                <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Block</Text>
+                <TextInput value={edBlock} onChangeText={setEdBlock} autoCapitalize="characters" maxLength={4}
+                  placeholder="A" placeholderTextColor={c.faint}
+                  className="rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
+              </View>
+              <View className="flex-1">
+                <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Flat</Text>
+                <TextInput value={edFlat} onChangeText={setEdFlat} autoCapitalize="characters"
+                  placeholder="204" placeholderTextColor={c.faint}
+                  className="rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
+              </View>
+            </View>
+
+            {/* The phone is the account itself — changing it here would leave
+                them unable to sign in with the number their society shows. */}
+            <Text className="font-sans mt-3 text-[11px] leading-[16px] text-faint">
+              The phone number can't be changed here — it's how they sign in. Ask them to update it in
+              their own profile.
+            </Text>
+
+            <View className="mt-4 flex-row gap-2">
+              <View className="flex-1"><Button label="Cancel" variant="outline" onPress={() => setEditMember(null)} /></View>
+              <View className="flex-1"><Button label={edSaving ? 'Saving…' : 'Save'} loading={edSaving} disabled={!edName.trim()} onPress={saveEdit} /></View>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Reset PIN modal */}
       <Modal visible={!!pinResetMember} transparent animationType="fade" onRequestClose={() => setPinResetMember(null)}>

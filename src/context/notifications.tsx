@@ -46,6 +46,7 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   pin_reset: { icon: 'key', color: '#B45309' },
   carpool: { icon: 'car', color: '#0EA5E9' },
   group_chat: { icon: 'chatbubbles', color: '#16A34A' },
+  member: { icon: 'person-add', color: '#0F6E56' },
 };
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
