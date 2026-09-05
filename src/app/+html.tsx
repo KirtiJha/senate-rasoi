@@ -39,6 +39,28 @@ export default function Root({ children }: PropsWithChildren) {
 
         {/* Disable body scrolling on web so ScrollViews behave like native. */}
         <ScrollViewStyleReset />
+        {/*
+          The shell must be exactly as tall as what the browser is showing.
+
+          ScrollViewStyleReset sizes html/body/#root with `height: 100%`, which
+          on iOS Safari resolves against a viewport that is not always the one
+          you can see: with the address bar and toolbar drawn, the percentage
+          can settle on a box shorter than the visible page, and the whole app
+          — the floating tab bar included — is laid out inside it. What you get
+          is a bar sitting well above the bottom of the screen with a dead
+          strip of background beneath it.
+
+          `100dvh` is the *dynamic* viewport: the area actually on screen right
+          now, whatever the browser chrome is doing. Because body scrolling is
+          off above, iOS never collapses its toolbars here, so this value does
+          not thrash mid-scroll the way dvh can on an ordinary page. `100%`
+          stays as the fallback for anything older than Safari 15.4.
+        */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: '@supports (height: 100dvh) { html, body, #root { height: 100dvh; } }',
+          }}
+        />
         {/* Apply saved theme before React mounts to avoid a flash of wrong color. */}
         <script
           dangerouslySetInnerHTML={{
