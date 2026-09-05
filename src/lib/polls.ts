@@ -24,6 +24,17 @@ export interface PollRow {
   author?: { name: string; flat: string | null };
 }
 
+/**
+ * Closed, or past its own deadline.
+ *
+ * is_closed was the only thing the screens looked at, so a poll with a
+ * deadline kept offering its buttons until somebody closed it by hand. The
+ * server now refuses those votes and a job closes expired polls twice an
+ * hour; this keeps the screen honest in between.
+ */
+export const pollEnded = (p: { is_closed: boolean; expires_at: string | null }): boolean =>
+  p.is_closed || (!!p.expires_at && new Date(p.expires_at).getTime() <= Date.now());
+
 export async function fetchPolls(communityId: string): Promise<PollRow[]> {
   const { data: { user } } = await supabase.auth.getUser();
   const userId = user?.id;
@@ -41,21 +52,29 @@ export async function fetchPolls(communityId: string): Promise<PollRow[]> {
 
   const pollIds = polls.map((p: any) => p.id as string);
 
-  const [votesRes, myVotesRes] = await Promise.all([
-    supabase.from('poll_votes').select('poll_id, option_id').in('poll_id', pollIds),
+  // Counts come from an aggregate that returns no identities (0128).
+  //
+  // They used to be tallied here, from every ballot in the society fetched row
+  // by row. Two things were wrong with that. It read other people's votes —
+  // which the database now refuses — and it was capped at 1000 rows by
+  // PostgREST, so a society past a thousand votes would have been shown a
+  // wrong result with no sign that anything was missing.
+  const [tallyRes, myVotesRes] = await Promise.all([
+    supabase.rpc('poll_tallies', { p_polls: pollIds }),
     userId
       ? supabase.from('poll_votes').select('poll_id, option_id').in('poll_id', pollIds).eq('user_id', userId)
       : Promise.resolve({ data: null }),
   ]);
 
-  const allVotes = (votesRes.data ?? []) as { poll_id: string; option_id: string }[];
+  const tallies = (tallyRes.data ?? []) as { poll_id: string; option_id: string; votes: number }[];
   const myVotes = (myVotesRes.data ?? []) as { poll_id: string; option_id: string }[];
 
   const voteCounts: Record<string, number> = {};
   const totalVotes: Record<string, number> = {};
-  for (const v of allVotes) {
-    voteCounts[v.option_id] = (voteCounts[v.option_id] ?? 0) + 1;
-    totalVotes[v.poll_id] = (totalVotes[v.poll_id] ?? 0) + 1;
+  for (const t of tallies) {
+    const n = Number(t.votes) || 0;
+    voteCounts[t.option_id] = n;
+    totalVotes[t.poll_id] = (totalVotes[t.poll_id] ?? 0) + n;
   }
   const myVoteMap: Record<string, string> = {};
   for (const v of myVotes) {
@@ -132,11 +151,21 @@ export async function updatePoll(pollId: string, patch: { question?: string; ima
   if (error) throw error;
 }
 
+/**
+ * Live changes to this society's polls.
+ *
+ * It used to listen to every vote row in the database, unfiltered — which is
+ * how a vote in another society refreshed this screen. It also cannot work
+ * any more: ballots are readable only by the person who cast them (0128), so
+ * Realtime would never deliver anybody else's. Counts refresh when the screen
+ * regains focus and after your own vote; what is live is the thing that
+ * changes the screen's shape — a poll opening or closing.
+ */
 export function subscribeToPolls(communityId: string, onChange: () => void): () => void {
   if (!isSupabaseConfigured) return () => {};
   const ch = supabase
     .channel(`polls-${communityId}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'poll_votes' }, onChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'polls', filter: `community_id=eq.${communityId}` }, onChange)
     .subscribe();
   return () => { supabase.removeChannel(ch); };
 }

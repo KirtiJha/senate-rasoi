@@ -10,7 +10,7 @@ import { Avatar, Container, ErrorState, ScreenHeader, Sheet, Skeleton, useRespon
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
-import { PollRow, closePoll, createPoll, deletePoll, fetchPolls, subscribeToPolls, updatePoll, votePoll } from '../lib/polls';
+import { PollRow, closePoll, createPoll, deletePoll, fetchPolls, pollEnded, subscribeToPolls, updatePoll, votePoll } from '../lib/polls';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { useThemeColors } from '../theme';
 
@@ -53,7 +53,7 @@ export default function PollsScreen() {
 
   const handleVote = async (poll: PollRow, optionId: string) => {
     if (!userId) { toast.show('Sign in to vote'); return; }
-    if (poll.my_vote || poll.is_closed || votingOn) return;
+    if (poll.my_vote || pollEnded(poll) || votingOn) return;
     setVotingOn(poll.id);
     try {
       await votePoll(poll.id, optionId, userId);
@@ -69,7 +69,13 @@ export default function PollsScreen() {
           }
         )
       );
-    } catch { toast.show('Could not record vote'); }
+    } catch (e) {
+      // The server has the last word on whether a poll is still open (0128).
+      // Its refusals are sentences already — show them rather than a shrug.
+      const m = (e as { message?: string })?.message ?? '';
+      toast.show(/closed|ended|belong/i.test(m) ? m : 'Could not record vote');
+      await load();
+    }
     finally { setVotingOn(null); }
   };
 
@@ -173,7 +179,8 @@ function PollCard({
 }) {
   const toast = useToast();
   const hasVoted = !!poll.my_vote;
-  const showResults = hasVoted || poll.is_closed;
+  const ended = pollEnded(poll);
+  const showResults = hasVoted || ended;
   const isAuthor = poll.author_id === userId;
   const [showEdit, setShowEdit] = useState(false);
   const [editQ, setEditQ] = useState(poll.question);
@@ -204,7 +211,7 @@ function PollCard({
             {poll.author?.name ?? 'Someone'}
             {poll.author?.flat ? ` · Flat ${poll.author.flat}` : ''}
           </Text>
-          {poll.is_closed ? (
+          {ended ? (
             <View className="rounded-full bg-inset px-2 py-0.5">
               <Text className="text-[10px] font-sans-sb text-muted">Closed</Text>
             </View>
@@ -214,7 +221,7 @@ function PollCard({
               <Pressable accessibilityRole="button" accessibilityLabel="Edit" onPress={openEdit} hitSlop={8} className="h-7 w-7 items-center justify-center rounded-full active:bg-inset">
                 <Ionicons name="create-outline" size={14} color={c.faint} />
               </Pressable>
-              {!poll.is_closed ? (
+              {!ended ? (
                 <Pressable onPress={onClose} hitSlop={8} className="h-7 w-7 items-center justify-center rounded-full active:bg-inset">
                   <Ionicons name="lock-closed-outline" size={14} color={c.faint} />
                 </Pressable>
@@ -259,8 +266,8 @@ function PollCard({
             return (
               <Pressable
                 key={opt.id}
-                onPress={() => { if (!hasVoted && !poll.is_closed) onVote(opt.id); }}
-                disabled={hasVoted || poll.is_closed}
+                onPress={() => { if (!hasVoted && !ended) onVote(opt.id); }}
+                disabled={hasVoted || ended}
                 className="rounded-xl overflow-hidden"
                 style={{ borderWidth: 1, borderColor: isMyVote ? '#8B5CF6' : c.line }}
               >
@@ -288,7 +295,7 @@ function PollCard({
 
         <Text className="font-sans mt-2.5 text-[11px] text-faint">
           {poll.total_votes} vote{poll.total_votes !== 1 ? 's' : ''}
-          {!hasVoted && !poll.is_closed ? ' · Tap to vote' : ''}
+          {!hasVoted && !ended ? ' · Tap to vote' : ''}
         </Text>
       </View>
     </View>
