@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { MessageIconButton } from '../components/MessageNeighbour';
-import { Avatar, Button, Chip, Container, ErrorState, ScreenHeader, Sheet, Stepper } from '../components/ui';
+import { Avatar, Button, Chip, Container, ErrorState, Refresher, ScreenHeader, Sheet, Stepper, Touchable } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useCached, useCachedList } from '../lib/useCachedList';
 import { useConfirm } from '../context/confirm';
@@ -121,7 +121,9 @@ export default function HelpersScreen() {
   return (
     <View className="flex-1 bg-bg">
       <ScreenHeader icon="heart-outline" title="Blood & emergency help" showBack />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}
+        refreshControl={<Refresher onRefresh={load} busy={registry.fetching && !registry.loading} />}
+      >
         <Container narrow>
           {/* The ask.
 
@@ -131,13 +133,8 @@ export default function HelpersScreen() {
               at once — the compatible groups, not just the exact one, so a
               request for AB+ wakes everybody and a request for B− wakes the
               B− and O− donors who can answer it. */}
-          <Pressable
-            onPress={() => setShowAsk(true)}
-            accessibilityRole="button"
-            accessibilityLabel="Ask the society for blood"
-            className="mb-5 flex-row items-center gap-3 rounded-2xl px-4 py-3.5 active:opacity-90"
-            style={{ backgroundColor: c.danger }}
-          >
+          <Touchable feel="card" haptic={null} onPress={() => setShowAsk(true)} accessibilityRole="button" accessibilityLabel="Ask the society for blood">
+            <View pointerEvents="none" className="mb-5 flex-row items-center gap-3 rounded-2xl px-4 py-3.5" style={{ backgroundColor: c.danger }}>
             <Ionicons name="water" size={20} color={c.onDanger} />
             <View className="flex-1">
               <Text className="font-sans-bold text-[15px]" style={{ color: c.onDanger }}>Ask the society for blood</Text>
@@ -146,7 +143,9 @@ export default function HelpersScreen() {
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={17} color={c.onDanger} />
-          </Pressable>
+          
+            </View>
+          </Touchable>
 
           {requests.length > 0 ? (
             <View className="mb-5 gap-2.5">
@@ -390,9 +389,12 @@ function RequestCard({
       ) : (
         <View className="mt-2.5 gap-2">
           {canGive ? (
-            <Pressable onPress={onOffer} className="items-center rounded-xl py-2.5 active:opacity-90" style={{ backgroundColor: c.danger }}>
+            <Touchable feel="card" haptic={null} onPress={onOffer}>
+              <View pointerEvents="none" className="items-center rounded-xl py-2.5" style={{ backgroundColor: c.danger }}>
               <Text className="text-[13px] font-sans-sb text-white">I can give — tell them now</Text>
-            </Pressable>
+            
+              </View>
+            </Touchable>
           ) : (
             <Text className="font-sans text-[12px] text-muted">
               {myGroup
@@ -401,9 +403,12 @@ function RequestCard({
             </Text>
           )}
           {phone ? (
-            <Pressable onPress={() => openUrl(`tel:${phone}`)} className="items-center rounded-xl border border-line py-2.5 active:opacity-80">
+            <Touchable feel="card" haptic={null} onPress={() => openUrl(`tel:${phone}`)}>
+              <View pointerEvents="none" className="items-center rounded-xl border border-line py-2.5">
               <Text className="text-[12.5px] font-sans-sb text-ink">Call {r.requester?.name ?? 'them'}</Text>
-            </Pressable>
+            
+              </View>
+            </Touchable>
           ) : null}
         </View>
       )}

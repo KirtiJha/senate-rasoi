@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
-import { Badge, Container, ScreenHeader } from '../components/ui';
+import { Badge, Container, Refresher, ScreenHeader, Touchable } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { qk } from '../lib/queryClient';
 import { useCachedList } from '../lib/useCachedList';
@@ -19,7 +19,7 @@ export default function EventsScreen() {
   const { communityId, isAdmin } = useAuth();
 
   // From the cache first; see useCachedList.
-  const { rows, loading } = useCachedList<SocietyEvent>(
+  const { rows, loading, load, fetching } = useCachedList<SocietyEvent>(
     qk.events(communityId),
     () => fetchEvents(communityId),
     { enabled: !!communityId },
@@ -49,7 +49,9 @@ export default function EventsScreen() {
         addLabel="New"
       />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}
+        refreshControl={<Refresher onRefresh={load} busy={fetching && !loading} />}
+      >
         <Container>
           {loading ? (
             <View className="items-center py-16"><ActivityIndicator color={c.muted} /></View>
@@ -62,13 +64,12 @@ export default function EventsScreen() {
                 track every bill, and publish the accounts to everyone.
               </Text>
               {isAdmin ? (
-                <Pressable
-                  onPress={() => router.push('/events/new' as any)}
-                  className="mt-6 rounded-2xl px-5 py-3 active:opacity-80"
-                  style={{ backgroundColor: ACCENT }}
-                >
+                <Touchable feel="card" haptic={null} onPress={() => router.push('/events/new' as any)}>
+                  <View pointerEvents="none" className="mt-6 rounded-2xl px-5 py-3" style={{ backgroundColor: ACCENT }}>
                   <Text className="font-sans-sb text-[14px] text-white">Plan a celebration</Text>
-                </Pressable>
+                
+                  </View>
+                </Touchable>
               ) : (
                 <Text className="font-sans mt-4 text-[12px] text-faint">Your society admin can start one.</Text>
               )}
@@ -111,11 +112,8 @@ function EventCard({ e }: { e: SocietyEvent }) {
   const meta = EVENT_STATUS_META[e.status];
 
   return (
-    <Pressable
-      onPress={() => router.push(`/events/${e.id}` as any)}
-      className="overflow-hidden rounded-2xl border bg-surface active:opacity-90"
-      style={{ borderColor: c.line }}
-    >
+    <Touchable feel="card" haptic={null} onPress={() => router.push(`/events/${e.id}` as any)}>
+      <View pointerEvents="none" className="overflow-hidden rounded-2xl border bg-surface" style={{ borderColor: c.line }}>
       <View style={{ height: 4, backgroundColor: c.accent }} />
       <View className="p-4">
         <View className="mb-1.5 flex-row flex-wrap items-center gap-1.5">
@@ -145,7 +143,9 @@ function EventCard({ e }: { e: SocietyEvent }) {
           ) : null}
         </View>
       </View>
-    </Pressable>
+    
+      </View>
+    </Touchable>
   );
 }
 

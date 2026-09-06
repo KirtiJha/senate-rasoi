@@ -11,7 +11,7 @@ import { DishRow, SLOT_EMOJI } from '../lib/types';
 import { T } from './T';
 import { ChefStanding } from './food/FeedbackPrompt';
 import { ChefReputation } from '../lib/dishes';
-import { Avatar, Badge, Button, VegMark } from './ui';
+import { Avatar, Badge, Button, Touchable, VegMark } from './ui';
 
 // Accent colour per meal slot — for the slot chip on the card.
 const SLOT_COLOR: Record<string, string> = {
@@ -69,12 +69,8 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare, reputatio
   const serveLabel = futureServeLabel(dish.serve_date);
 
   return (
-    <Pressable
-      onPress={openDetail}
-      accessibilityRole="button"
-      accessibilityLabel={`View ${dish.dish_name} details`}
-      className="overflow-hidden card shadow-card active:opacity-95"
-    >
+    <Touchable feel="card" haptic={null} onPress={openDetail} accessibilityRole="button" accessibilityLabel={`View ${dish.dish_name} details`}>
+      <View className="overflow-hidden card shadow-card">
       {/* ── Photo ─────────────────────────────────────────────────── */}
       <View style={{ height: hero ? 230 : 180 }} className="w-full">
         {dish.photo_url ? (
@@ -185,10 +181,13 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare, reputatio
           </View>
 
           {owned ? (
-            <Pressable onPress={() => onRemove(dish)} className="flex-row items-center gap-1.5 rounded-2xl border-[1.5px] border-line px-3.5 py-2.5 active:bg-inset">
+            <Touchable feel="card" haptic={null} onPress={() => onRemove(dish)}>
+              <View pointerEvents="none" className="flex-row items-center gap-1.5 rounded-2xl border-[1.5px] border-line px-3.5 py-2.5">
               <Ionicons name="trash-outline" size={16} color={c.nonveg} />
               <Text className="font-sans-sb text-[13px] text-nonveg">Remove</Text>
-            </Pressable>
+            
+              </View>
+            </Touchable>
           ) : unavailable ? (
             <View className="rounded-2xl bg-inset px-4 py-2.5">
               <Text className="font-sans-sb text-[13px] text-muted">{closed ? 'Closed' : 'Sold out'}</Text>
@@ -198,7 +197,9 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare, reputatio
           )}
         </View>
       </View>
-    </Pressable>
+    
+      </View>
+    </Touchable>
   );
 }
 

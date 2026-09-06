@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../components/T';
-import { Badge, Chip, ScreenHeader } from '../components/ui';
+import { Badge, Chip, Refresher, ScreenHeader, Touchable } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { BORROW_CATEGORIES, LendItem, LendKind, fetchItems, fetchWaitingCounts, subscribeItems } from '../lib/borrow';
 import { IMAGE_CACHE_PROPS } from '../lib/image';
@@ -149,6 +149,7 @@ export default function BorrowScreen() {
         {/* Virtualised: cards are recycled as you scroll rather than all drawn
             at once, and the list keeps its place when a card updates. */}
         <FlashList
+          refreshControl={<Refresher onRefresh={() => { items.refetch(); waiting.refetch(); }} busy={items.isFetching && !loading} />}
           data={filtered}
           keyExtractor={(it) => it.id}
           keyboardShouldPersistTaps="handled"
@@ -180,10 +181,13 @@ export default function BorrowScreen() {
                 </View>
                 <Text className="font-sans-bold text-[15px] text-ink">{emptyTitle}</Text>
                 <Text className="font-sans mt-1 max-w-[300px] text-center text-[13px] text-muted">{emptyBlurb}</Text>
-                <Pressable onPress={() => router.push(addHref as any)} className="mt-5 flex-row items-center gap-2 rounded-2xl px-5 py-3 active:opacity-90" style={{ backgroundColor: ACCENT }} accessibilityRole="button">
+                <Touchable feel="card" haptic={null} onPress={() => router.push(addHref as any)} accessibilityRole="button">
+                  <View pointerEvents="none" className="mt-5 flex-row items-center gap-2 rounded-2xl px-5 py-3" style={{ backgroundColor: ACCENT }}>
                   <Ionicons name="add" size={18} color="#fff" />
                   <Text className="font-sans-bold text-[14px] text-white">{isOffer ? 'Lend something' : 'Post a request'}</Text>
-                </Pressable>
+                
+                  </View>
+                </Touchable>
               </View>
             )
           }
@@ -206,7 +210,8 @@ function ItemCard({ item, isOffer, waiting = 0, yours = false }: { item: LendIte
   const lent = item.status !== 'available';
 
   return (
-    <Pressable onPress={() => router.push(`/borrow/${item.id}` as any)} className="flex-row overflow-hidden card active:opacity-90" accessibilityRole="button" accessibilityLabel={item.title}>
+    <Touchable feel="card" haptic={null} onPress={() => router.push(`/borrow/${item.id}` as any)} accessibilityRole="button" accessibilityLabel={item.title}>
+      <View pointerEvents="none" className="flex-row overflow-hidden card">
       <View style={{ width: 92, height: 92, backgroundColor: c.inset }} className="items-center justify-center flex-shrink-0">
         {item.photo_url
           ? <Image source={{ uri: item.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
@@ -253,6 +258,8 @@ function ItemCard({ item, isOffer, waiting = 0, yours = false }: { item: LendIte
             : `${item.owner?.name ?? 'A neighbour'}${item.owner?.flat ? ` · Flat ${item.owner.flat}` : ''}`}
         </Text>
       </View>
-    </Pressable>
+    
+      </View>
+    </Touchable>
   );
 }

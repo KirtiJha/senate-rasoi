@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { Pressable, RefreshControl, Text, View } from 'react-native';
-import { Avatar, Button, ErrorState, RowSkeleton, ScreenHeader } from '../../components/ui';
+import { Avatar, Button, ErrorState, RowSkeleton, ScreenHeader, Touchable } from '../../components/ui';
 import { Empty } from '../../components/Empty';
 import { useAuth } from '../../context/auth';
 import { InboxThread, fetchInbox, subscribeToInbox } from '../../lib/dm';
@@ -87,12 +87,8 @@ export default function MessagesInboxScreen() {
         }
         renderItem={({ item: t }) => (
           <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
-            <Pressable
-              onPress={() => router.push(`/messages/${t.id}` as any)}
-              className="flex-row items-center gap-3 rounded-2xl p-3 active:bg-inset"
-              accessibilityRole="button"
-              accessibilityLabel={`Conversation with ${t.other.name}`}
-            >
+            <Touchable feel="card" haptic={null} onPress={() => router.push(`/messages/${t.id}` as any)} accessibilityRole="button" accessibilityLabel={`Conversation with ${t.other.name}`}>
+              <View pointerEvents="none" className="flex-row items-center gap-3 rounded-2xl p-3">
               <Avatar name={t.other.name} userId={t.other.id} size={46} />
               <View className="flex-1">
                 <View className="flex-row items-center">
@@ -106,7 +102,9 @@ export default function MessagesInboxScreen() {
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color={c.faint} />
-            </Pressable>
+            
+              </View>
+            </Touchable>
           </View>
         )}
       />

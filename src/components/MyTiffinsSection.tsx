@@ -8,7 +8,7 @@ import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, TextInp
 import { daysLabel } from './TiffinCard';
 import { TiffinEditSheet } from './TiffinEditSheet';
 import { PayButton } from './PayButton';
-import { Avatar, Badge, Button, Container, Sheet, VegMark } from './ui';
+import { Avatar, Badge, Button, Container, Sheet, Touchable, VegMark } from './ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
@@ -128,13 +128,13 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
                 onChanged={load}
               />
             ))}
-            <Pressable
-              onPress={postTiffin}
-              className="mb-4 flex-row items-center justify-center gap-1.5 rounded-2xl border border-line py-3 active:bg-inset"
-            >
+            <Touchable feel="card" haptic={null} onPress={postTiffin}>
+              <View pointerEvents="none" className="mb-4 flex-row items-center justify-center gap-1.5 rounded-2xl border border-line py-3">
               <Ionicons name="add" size={16} color={c.muted} />
               <Text className="font-sans-sb text-[13px] text-muted">Post a tiffin service</Text>
-            </Pressable>
+            
+              </View>
+            </Touchable>
 
             {/* Eater side — tiffins I subscribe to */}
             {subs.length > 0 ? (

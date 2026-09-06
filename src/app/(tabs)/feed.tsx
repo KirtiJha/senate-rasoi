@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../components/T';
-import { Avatar, Button, Chip, ErrorState, ScreenHeader, useKeyboardInset, useResponsive } from '../../components/ui';
+import { Avatar, Button, Chip, ErrorState, ScreenHeader, Touchable, useKeyboardInset, useResponsive } from '../../components/ui';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useAuth } from '../../context/auth';
 import { useConfirm } from '../../context/confirm';
@@ -165,15 +165,14 @@ export default function FeedScreen() {
         }
         ListFooterComponent={
           hasMore ? (
-            <Pressable
-              onPress={loadMore}
-              disabled={loadingMore}
-              className="mt-3 items-center card py-3.5 active:opacity-70"
-            >
+            <Touchable feel="card" haptic={null} onPress={loadMore} disabled={loadingMore}>
+              <View pointerEvents="none" className="mt-3 items-center card py-3.5">
               {loadingMore
                 ? <ActivityIndicator size="small" color={c.muted} />
                 : <Text className="font-sans-sb text-[14px] text-muted">Load more</Text>}
-            </Pressable>
+            
+              </View>
+            </Touchable>
           ) : posts.length > 0 ? (
             <Text className="font-sans py-4 text-center text-[12px] text-faint">You're all caught up</Text>
           ) : null
@@ -249,11 +248,8 @@ const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userI
   const timeAgo = formatTimeAgo(post.created_at);
 
   return (
-    <Pressable
-      onPress={() => router.push(`/feed/${post.id}` as any)}
-      className="overflow-hidden rounded-2xl bg-surface active:opacity-85"
-      style={{ borderWidth: 1, borderColor: c.line }}
-    >
+    <Touchable feel="card" haptic={null} onPress={() => router.push(`/feed/${post.id}` as any)}>
+      <View pointerEvents="none" className="overflow-hidden rounded-2xl bg-surface" style={{ borderWidth: 1, borderColor: c.line }}>
       {/* Accent rule — clipped by the card, so it follows the corner instead
           of guessing at it. */}
       <View style={{ height: 3, backgroundColor: c.accent }} />
@@ -316,7 +312,9 @@ const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userI
           <Ionicons name="chevron-forward" size={14} color={c.faint} />
         </View>
       </View>
-    </Pressable>
+    
+      </View>
+    </Touchable>
   );
 });
 
@@ -478,15 +476,12 @@ function ComposeModal({ visible, onClose, onPosted, communityId, authorId, autho
 
         {/* Sticky footer — add-photo + Post button, just above the keyboard */}
         <View className="flex-row items-center gap-2 border-t border-line px-4 py-3">
-          <Pressable
-            onPress={pickPhotos}
-            disabled={photos.length >= MAX_PHOTOS}
-            className="h-12 w-12 items-center justify-center rounded-2xl border border-line active:bg-inset"
-            style={{ opacity: photos.length >= MAX_PHOTOS ? 0.4 : 1 }}
-            accessibilityLabel="Add photos"
-          >
+          <Touchable feel="card" haptic={null} onPress={pickPhotos} disabled={photos.length>= MAX_PHOTOS} accessibilityLabel="Add photos" >
+            <View pointerEvents="none" className="h-12 w-12 items-center justify-center rounded-2xl border border-line" style={{ opacity: photos.length >= MAX_PHOTOS ? 0.4 : 1 }}>
             <Ionicons name="image-outline" size={22} color={c.muted} />
-          </Pressable>
+          
+            </View>
+          </Touchable>
           <View className="flex-1">
             <Button
               label={posting ? 'Posting…' : 'Post to feed'}

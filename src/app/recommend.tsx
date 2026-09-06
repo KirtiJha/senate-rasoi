@@ -6,7 +6,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../components/T';
-import { Avatar, Button, Chip, Container, RowSkeleton, ScreenHeader, Sheet } from '../components/ui';
+import { Avatar, Button, Chip, Container, Refresher, RowSkeleton, ScreenHeader, Sheet, Touchable } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { qk } from '../lib/queryClient';
 import { useCachedList } from '../lib/useCachedList';
@@ -40,7 +40,7 @@ export default function RecommendScreen() {
 
   // From the cache first, per category; see useCachedList.
   const subscribe = useCallback((bump: () => void) => subscribeQuestions(communityId, bump), [communityId]);
-  const { rows, loading, load } = useCachedList<RecoQuestion>(
+  const { rows, loading, load, fetching } = useCachedList<RecoQuestion>(
     qk.recommend(communityId, cat),
     () => fetchQuestions(cat, communityId),
     { enabled: !!communityId, subscribe, prefix: ['recommend', communityId] },
@@ -68,7 +68,9 @@ export default function RecommendScreen() {
         }
       />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}
+        refreshControl={<Refresher onRefresh={load} busy={fetching && !loading} />}
+      >
         <Container>
           {loading ? (
             <View className="overflow-hidden card"><RowSkeleton count={5} /></View>
@@ -81,17 +83,21 @@ export default function RecommendScreen() {
               <Text className="font-sans mt-1 max-w-[280px] text-center text-[13px] text-muted">
                 Looking for a good doctor, tutor, plumber or vendor? Ask your neighbours.
               </Text>
-              <Pressable onPress={() => setShowAsk(true)} className="mt-5 flex-row items-center gap-2 rounded-2xl px-5 py-3 active:opacity-90" style={{ backgroundColor: ACCENT }}>
+              <Touchable feel="card" haptic={null} onPress={() => setShowAsk(true)}>
+                <View pointerEvents="none" className="mt-5 flex-row items-center gap-2 rounded-2xl px-5 py-3" style={{ backgroundColor: ACCENT }}>
                 <Ionicons name="add" size={18} color="#fff" />
                 <Text className="font-sans-bold text-[14px] text-white">Ask a question</Text>
-              </Pressable>
+              
+                </View>
+              </Touchable>
             </View>
           ) : (
             <View className="gap-3">
               {rows.map((q) => {
                 const meta = recoCategory(q.category);
                 return (
-                  <Pressable key={q.id} onPress={() => router.push(`/recommend/${q.id}` as any)} className="card p-4 active:opacity-90">
+                  <Touchable feel="card" haptic={null} key={q.id} onPress={() => router.push(`/recommend/${q.id}` as any)}>
+                    <View pointerEvents="none" className="card p-4">
                     <View className="mb-1.5 flex-row items-center gap-1.5">
                       <View className="flex-row items-center gap-1 rounded-full px-2 py-0.5" style={{ backgroundColor: c.accentSoft }}>
                         <Ionicons name={meta.icon as any} size={11} color={c.accent} />
@@ -105,7 +111,9 @@ export default function RecommendScreen() {
                       <Avatar name={q.author?.name ?? '?'} userId={q.author?.id} size={20} />
                       <Text className="font-sans text-[11px] text-faint">{q.author?.name ?? 'A neighbour'}{q.author?.flat ? ` · Flat ${q.author.flat}` : ''}</Text>
                     </View>
-                  </Pressable>
+                  
+                    </View>
+                  </Touchable>
                 );
               })}
             </View>
@@ -166,9 +174,12 @@ function AskSheet({ visible, onClose, onSubmit, c, initialTitle = '' }: {
       <TextInput value={detail} onChangeText={setDetail} placeholder="Any specifics — budget, area, timing…" placeholderTextColor={c.faint} multiline className={`mb-3 ${input}`} style={{ minHeight: 64, outline: 'none' } as any} />
       <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Photo (optional)</Text>
       <View className="mb-4 flex-row items-center gap-3">
-        <Pressable onPress={pickPhoto} className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface active:opacity-70">
+        <Touchable feel="card" haptic={null} onPress={pickPhoto}>
+          <View pointerEvents="none" className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface">
           {photo ? <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : <Ionicons name="image-outline" size={22} color={c.faint} />}
-        </Pressable>
+        
+          </View>
+        </Touchable>
         {photo ? <Pressable onPress={() => setPhoto(null)} hitSlop={6}><Text className="text-[13px] font-sans-sb text-nonveg">Remove</Text></Pressable> : null}
       </View>
       <Button label="Post question" icon="send" fullWidth disabled={!title.trim()} onPress={() => onSubmit({ category, title, detail: detail || null, photoUri: photo })} />

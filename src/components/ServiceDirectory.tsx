@@ -11,7 +11,7 @@ import { ServiceCategory } from '../lib/services';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { ListingRow } from '../lib/types';
 import { layout, useThemeColors } from '../theme';
-import { Avatar, Button, RowSkeleton, ScreenHeader, Sheet, useResponsive } from './ui';
+import { Avatar, Button, RowSkeleton, ScreenHeader, Sheet, Touchable, useResponsive } from './ui';
 
 type SortKey = 'trade' | 'name';
 const tradeOf = (l: ListingRow) => (l.attributes?.trade as string) || 'Other';
@@ -207,7 +207,8 @@ function ContactRow({
   const phone = phoneOf(l);
   const note = l.description || (l.attributes?.area as string) || '';
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Call" onPress={onOpen} className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'} active:bg-inset`}>
+    <Touchable feel="card" haptic={null} accessibilityRole="button" accessibilityLabel="Call" onPress={onOpen}>
+      <View className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'}`}>
       <Avatar name={name} size={40} />
       <View className="flex-1" style={{ minWidth: 0 }}>
         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{name}</Text>
@@ -225,6 +226,8 @@ function ContactRow({
       ) : (
         <Ionicons name="chevron-forward" size={16} color={c.faint} />
       )}
-    </Pressable>
+    
+      </View>
+    </Touchable>
   );
 }

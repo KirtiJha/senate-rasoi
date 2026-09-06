@@ -3,7 +3,7 @@ import * as DocumentPicker from 'expo-document-picker';
 
 import { useEffect, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Avatar, Button, Container, RowSkeleton, ScreenHeader, Sheet } from '../components/ui';
+import { Avatar, Button, Container, Refresher, RowSkeleton, ScreenHeader, Sheet, Touchable } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { qk } from '../lib/queryClient';
 import { useCachedList } from '../lib/useCachedList';
@@ -36,7 +36,7 @@ export default function DocumentsScreen() {
   const [query, setQuery] = useState('');
 
   // From the cache first; see useCachedList.
-  const { rows: docs, loading, failed, load } = useCachedList<DocRow>(
+  const { rows: docs, loading, failed, load, fetching } = useCachedList<DocRow>(
     qk.documents(communityId),
     () => fetchDocuments(communityId),
     { enabled: isSupabaseConfigured && !!communityId },
@@ -87,7 +87,9 @@ export default function DocumentsScreen() {
         }
       />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}
+        refreshControl={<Refresher onRefresh={load} busy={fetching && !loading} />}
+      >
         <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
           {docs.length > 3 ? (
             <View className="mb-3 flex-row items-center gap-2 rounded-full border border-line bg-surface px-3.5"
@@ -280,7 +282,8 @@ function UploadSheet({
   return (
     <Sheet visible={visible} onClose={onClose} title="Upload document" footer={<Button label={busy ? 'Uploading…' : 'Upload'} loading={busy} fullWidth disabled={!file || !name.trim()} onPress={submit} />}>
       {file && g ? (
-        <Pressable onPress={pick} className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-inset p-3.5 active:opacity-80">
+        <Touchable feel="card" haptic={null} onPress={pick}>
+          <View pointerEvents="none" className="mb-4 flex-row items-center gap-3 rounded-2xl border border-line bg-inset p-3.5">
           <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: c.accentSoft }}>
             <Ionicons name={g.icon as any} size={20} color={c.accent} />
           </View>
@@ -288,13 +291,18 @@ function UploadSheet({
             <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{file.name}</Text>
             <Text className="font-sans text-[12px] text-muted">{formatBytes(file.size)} · Tap to change</Text>
           </View>
-        </Pressable>
+        
+          </View>
+        </Touchable>
       ) : (
-        <Pressable onPress={pick} className="mb-4 items-center rounded-2xl border border-dashed border-line bg-inset py-7 active:opacity-80">
+        <Touchable feel="card" haptic={null} onPress={pick}>
+          <View pointerEvents="none" className="mb-4 items-center rounded-2xl border border-dashed border-line bg-inset py-7">
           <Ionicons name="cloud-upload-outline" size={28} color={c.muted} />
           <Text className="mt-2 font-sans-sb text-[14px] text-ink">Choose a file</Text>
           <Text className="font-sans text-[12px] text-muted">Any file up to {MAX_DOCUMENT_MB} MB</Text>
-        </Pressable>
+        
+          </View>
+        </Touchable>
       )}
 
       <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Name</Text>
@@ -378,9 +386,12 @@ function ManageSheet({
       <TextInput value={name} onChangeText={setName} className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ outline: 'none' } as any} />
       <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Description</Text>
       <TextInput value={desc} onChangeText={setDesc} multiline className="mb-2 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ minHeight: 54, outline: 'none' } as any} />
-      <Pressable onPress={saveMeta} disabled={savingMeta} className="mb-4 items-center rounded-2xl border border-line py-2.5 active:bg-inset" style={{ opacity: savingMeta ? 0.6 : 1 }}>
+      <Touchable feel="card" haptic={null} onPress={saveMeta} disabled={savingMeta}>
+        <View pointerEvents="none" className="mb-4 items-center rounded-2xl border border-line py-2.5" style={{ opacity: savingMeta ? 0.6 : 1 }}>
         <Text className="font-sans-sb text-[13px] text-ink">{savingMeta ? 'Saving…' : 'Save details'}</Text>
-      </Pressable>
+      
+        </View>
+      </Touchable>
 
       <PublicToggle value={isPublic} onToggle={togglePublic} c={c} />
 
@@ -409,14 +420,17 @@ function ManageSheet({
           </View>
           <View className="gap-1">
             {filteredPeople.slice(0, 30).map((p) => (
-              <Pressable accessibilityRole="button" accessibilityLabel="Add a document" key={p.id} onPress={() => addPerson(p.id)} className="flex-row items-center gap-3 rounded-xl px-2 py-2 active:bg-inset">
+              <Touchable feel="card" haptic={null} accessibilityRole="button" accessibilityLabel="Add a document" key={p.id} onPress={() => addPerson(p.id)}>
+                <View pointerEvents="none" className="flex-row items-center gap-3 rounded-xl px-2 py-2">
                 <Avatar name={p.name} size={32} userId={p.id} />
                 <View className="flex-1">
                   <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{p.name}</Text>
                   {p.flat ? <Text className="font-sans text-[12px] text-faint">Flat {p.flat}</Text> : null}
                 </View>
                 <Ionicons name="add-circle" size={22} color={c.accent} />
-              </Pressable>
+              
+                </View>
+              </Touchable>
             ))}
           </View>
         </>

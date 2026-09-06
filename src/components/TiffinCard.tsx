@@ -4,7 +4,7 @@ import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { DOW_LABELS, SLOT_EMOJI, TiffinPlanWithChef } from '../lib/types';
 import { T } from './T';
-import { Avatar, Badge, VegMark } from './ui';
+import { Avatar, Badge, Touchable, VegMark } from './ui';
 
 export function daysLabel(days: number[]): string {
   const set = new Set(days);
@@ -24,11 +24,8 @@ interface TiffinCardProps {
 
 function TiffinCardBase({ plan, subscribed, onPress, onEdit, width }: TiffinCardProps) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Edit"
-      onPress={() => onPress(plan)}
-      style={width ? { width } : undefined}
-      className="overflow-hidden card active:opacity-90"
-    >
+    <Touchable feel="card" haptic={null} accessibilityRole="button" accessibilityLabel="Edit" onPress={() => onPress(plan)}>
+      <View style={width ? { width } : undefined} className="overflow-hidden card">
       <View className="h-24 w-full bg-inset">
         {plan.photo_url ? (
           <Image source={{ uri: plan.photo_url }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
@@ -76,7 +73,9 @@ function TiffinCardBase({ plan, subscribed, onPress, onEdit, width }: TiffinCard
           )}
         </View>
       </View>
-    </Pressable>
+    
+      </View>
+    </Touchable>
   );
 }
 

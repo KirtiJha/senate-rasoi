@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ActionMenu, Avatar, Container, ErrorState, ScreenHeader, Sheet, Skeleton, useResponsive } from '../components/ui';
+import { ActionMenu, Avatar, Container, ErrorState, ScreenHeader, Sheet, Skeleton, Touchable, useResponsive } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
@@ -233,15 +233,21 @@ function PollCard({
             <TextInput value={editQ} onChangeText={setEditQ} multiline className="mb-3 rounded-2xl border border-line bg-inset px-3.5 py-2.5 text-[15px] text-ink" style={{ minHeight: 60, outline: 'none' } as any} />
             <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Image (optional)</Text>
             <View className="mb-3 flex-row items-center gap-3">
-              <Pressable onPress={pickImg} className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface active:opacity-70">
+              <Touchable feel="card" haptic={null} onPress={pickImg}>
+                <View pointerEvents="none" className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface">
                 {editImg ? <Image source={{ uri: editImg.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : <Ionicons name="image-outline" size={22} color={c.faint} />}
-              </Pressable>
+              
+                </View>
+              </Touchable>
               {editImg ? <Pressable onPress={() => setEditImg(null)} hitSlop={6}><Text className="text-[13px] font-sans-sb text-nonveg">Remove</Text></Pressable> : null}
             </View>
             <Text className="font-sans mb-4 text-[12px] text-faint">Options stay the same so existing votes are preserved.</Text>
-            <Pressable onPress={saveEdit} disabled={saving} className="items-center rounded-2xl bg-accent py-3 active:opacity-80" style={{ opacity: saving ? 0.6 : 1 }}>
+            <Touchable feel="card" haptic={null} onPress={saveEdit} disabled={saving}>
+              <View pointerEvents="none" className="items-center rounded-2xl bg-accent py-3" style={{ opacity: saving ? 0.6 : 1 }}>
               <Text className="font-sans-sb text-[15px]" style={{ color: c.onAccent }}>{saving ? 'Saving…' : 'Save changes'}</Text>
-            </Pressable>
+            
+              </View>
+            </Touchable>
           </Sheet>
         </View>
 
@@ -351,15 +357,14 @@ function CreatePollModal({
       onClose={onClose}
       title="Create poll"
       footer={
-        <Pressable
-          onPress={submit}
-          disabled={saving || !canSubmit}
-          className={`items-center rounded-2xl py-3.5 ${saving || !canSubmit ? 'bg-inset' : 'bg-accent active:bg-accent-press'}`}
-        >
+        <Touchable feel="card" haptic={null} onPress={submit} disabled={saving || !canSubmit}>
+          <View pointerEvents="none" className={`items-center rounded-2xl py-3.5 ${saving || !canSubmit ? 'bg-inset' : 'bg-accent'}`}>
           <Text className={`font-sans-sb text-[15px] ${saving || !canSubmit ? 'text-faint' : 'text-on-accent'}`}>
             {saving ? 'Creating…' : 'Create Poll'}
           </Text>
-        </Pressable>
+        
+          </View>
+        </Touchable>
       }
     >
       <View className="mb-4">
@@ -378,9 +383,12 @@ function CreatePollModal({
       <View className="mb-4">
         <Text className="mb-1.5 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Image (optional)</Text>
         <View className="flex-row items-center gap-3">
-          <Pressable onPress={pickImage} className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface active:opacity-70">
+          <Touchable feel="card" haptic={null} onPress={pickImage}>
+            <View pointerEvents="none" className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-surface">
             {image ? <Image source={{ uri: image }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : <Ionicons name="image-outline" size={22} color={c.faint} />}
-          </Pressable>
+          
+            </View>
+          </Touchable>
           {image ? <Pressable onPress={() => setImage(null)} hitSlop={6}><Text className="text-[13px] font-sans-sb text-nonveg">Remove</Text></Pressable> : null}
         </View>
       </View>

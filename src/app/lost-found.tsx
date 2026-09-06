@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { T } from '../components/T';
-import { Badge, Chip, ScreenHeader } from '../components/ui';
+import { Badge, Chip, Refresher, ScreenHeader, Touchable } from '../components/ui';
 import { useAuth } from '../context/auth';
 import {
   LOST_FOUND_CATEGORIES,
@@ -136,6 +136,7 @@ export default function LostFoundScreen() {
         ) : null}
 
         <FlashList
+          refreshControl={<Refresher onRefresh={() => items.refetch()} busy={items.isFetching && !loading} />}
           data={filtered}
           keyExtractor={(it) => it.id}
           keyboardShouldPersistTaps="handled"
@@ -172,16 +173,14 @@ export default function LostFoundScreen() {
                 <Text style={{ fontSize: 44 }} className="mb-3">{isLost ? '🔍' : '📦'}</Text>
                 <Text className="font-display text-xl text-ink mb-1">{emptyTitle}</Text>
                 <Text className="font-sans text-[14px] text-muted text-center max-w-xs">{emptyBlurb}</Text>
-                <Pressable
-                  onPress={() => router.push(addHref as any)}
-                  className="mt-6 rounded-2xl px-5 py-3 active:opacity-80"
-                  style={{ backgroundColor: ACCENT }}
-                  accessibilityRole="button"
-                >
+                <Touchable feel="card" haptic={null} onPress={() => router.push(addHref as any)} accessibilityRole="button">
+                  <View pointerEvents="none" className="mt-6 rounded-2xl px-5 py-3" style={{ backgroundColor: ACCENT }}>
                   <Text className="font-sans-sb text-[14px] text-white">
                     Report {isLost ? 'a lost item' : 'a found item'}
                   </Text>
-                </Pressable>
+                
+                  </View>
+                </Touchable>
               </View>
             )
           }
@@ -204,13 +203,8 @@ function ItemCard({ item }: { item: LostFoundItem }) {
   const isResolved = item.status === 'resolved';
 
   return (
-    <Pressable
-      onPress={() => router.push(`/lost-found/${item.id}` as any)}
-      className="overflow-hidden rounded-2xl border bg-surface active:opacity-90"
-      style={{ borderColor: c.line, opacity: isResolved ? 0.65 : 1 }}
-      accessibilityRole="button"
-      accessibilityLabel={item.title}
-    >
+    <Touchable feel="card" haptic={null} onPress={() => router.push(`/lost-found/${item.id}` as any)} accessibilityRole="button" accessibilityLabel={item.title}>
+      <View pointerEvents="none" className="overflow-hidden rounded-2xl border bg-surface" style={{ borderColor: c.line, opacity: isResolved ? 0.65 : 1 }}>
       <View className="flex-row gap-3 p-3.5">
         <View className="h-16 w-16 overflow-hidden rounded-xl flex-shrink-0" style={{ backgroundColor: ACCENT + '18' }}>
           {item.photo_url
@@ -239,6 +233,8 @@ function ItemCard({ item }: { item: LostFoundItem }) {
           </Text>
         </View>
       </View>
-    </Pressable>
+    
+      </View>
+    </Touchable>
   );
 }

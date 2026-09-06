@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Button, Chip, ErrorState, RowSkeleton, ScreenHeader, Sheet, useResponsive } from '../components/ui';
+import { Avatar, Button, Chip, ErrorState, Refresher, RowSkeleton, ScreenHeader, Sheet, Touchable, useResponsive } from '../components/ui';
 import { Field } from '../components/forms';
 import { useAuth } from '../context/auth';
 import { qk } from '../lib/queryClient';
@@ -67,7 +67,7 @@ export default function DirectoryScreen() {
 
   // From the cache first; see useCachedList. The largest list in the app,
   // and the one most often reopened.
-  const { rows: residents, loading, failed: loadFailed, load } = useCachedList<Resident>(
+  const { rows: residents, loading, failed: loadFailed, load, fetching } = useCachedList<Resident>(
     qk.directory(communityId, userId, !!isAdmin),
     () => fetchDirectory(communityId, userId, !!isAdmin),
     { enabled: isSupabaseConfigured && !!communityId },
@@ -301,6 +301,7 @@ export default function DirectoryScreen() {
           spike on open. Groups are flattened into header and row items so
           FlashList can recycle them; each row carries its own card edges. */}
       <FlashList
+        refreshControl={<Refresher onRefresh={load} busy={fetching && !loading} />}
         data={listItems}
         keyExtractor={(it) => it.key}
         getItemType={(it) => it.kind}
@@ -706,10 +707,8 @@ function ResidentRow({
   ].filter(Boolean).join(' · ');
 
   return (
-    <Pressable
-      onPress={onOpen}
-      className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'} active:bg-inset`}
-    >
+    <Touchable feel="card" haptic={null} onPress={onOpen}>
+      <View pointerEvents="none" className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'}`}>
       <Avatar name={r.name} size={40} userId={r.userId} />
       <View className="flex-1" style={{ minWidth: 0 }}>
         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{r.name}</Text>
@@ -742,7 +741,9 @@ function ResidentRow({
       ) : (
         <Ionicons name="chevron-forward" size={16} color={c.faint} />
       )}
-    </Pressable>
+    
+      </View>
+    </Touchable>
   );
 }
 

@@ -5,7 +5,7 @@ import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } 
 
 import { Empty } from './Empty';
 import { MessageIconButton } from './MessageNeighbour';
-import { Avatar, Badge, Button, Container, VegMark } from './ui';
+import { Avatar, Badge, Button, Container, Touchable, VegMark } from './ui';
 import { useAuth } from '../context/auth';
 import { ChefFeedbackList } from './food/ChefFeedbackList';
 import { RepeatList } from './food/RepeatDish';
@@ -182,13 +182,13 @@ export function KitchenSection({ onPost }: { onPost?: () => void } = {}) {
                 onWithdraw={withdraw}
               />
             ))}
-            <Pressable
-              onPress={postDish}
-              className="mb-2 flex-row items-center justify-center gap-1.5 rounded-2xl border border-line py-3 active:bg-inset"
-            >
+            <Touchable feel="card" haptic={null} onPress={postDish}>
+              <View pointerEvents="none" className="mb-2 flex-row items-center justify-center gap-1.5 rounded-2xl border border-line py-3">
               <Ionicons name="add" size={16} color="#9CA3AF" />
               <Text className="font-sans-sb text-[13px] text-muted">Post a dish</Text>
-            </Pressable>
+            
+              </View>
+            </Touchable>
 
             {/* Reviews, where the cook will actually see them. */}
             <ChefFeedbackList />
@@ -345,13 +345,13 @@ function KitchenDishCard({
       </View>
 
       {canWithdraw ? (
-        <Pressable
-          onPress={() => onWithdraw(dish)}
-          className="mt-3 flex-row items-center justify-center gap-1.5 rounded-xl border border-line py-2.5 active:bg-inset"
-        >
+        <Touchable feel="card" haptic={null} onPress={() => onWithdraw(dish)}>
+          <View pointerEvents="none" className="mt-3 flex-row items-center justify-center gap-1.5 rounded-xl border border-line py-2.5">
           <Ionicons name="pause-circle-outline" size={15} color={c.muted} />
           <Text className="font-sans-sb text-[12px] text-muted">Stop taking orders</Text>
-        </Pressable>
+        
+          </View>
+        </Touchable>
       ) : null}
     </View>
   );

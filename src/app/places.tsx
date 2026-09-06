@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Container, ScreenHeader, useResponsive } from '../components/ui';
+import { Container, Refresher, ScreenHeader, Touchable, useResponsive } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { qk } from '../lib/queryClient';
 import { useCachedList } from '../lib/useCachedList';
@@ -48,7 +48,7 @@ export default function PlacesScreen() {
   // places in one society already — this is the list most worth not
   // re-downloading on every visit.
   const subscribe = useCallback((bump: () => void) => (communityId ? subscribePlaces(communityId, bump) : () => {}), [communityId]);
-  const { rows: items, loading } = useCachedList<PlaceRow>(
+  const { rows: items, loading, load, fetching } = useCachedList<PlaceRow>(
     qk.places(communityId ?? ''),
     () => fetchPlaces({}, communityId!),
     { enabled: !!communityId && isSupabaseConfigured, subscribe },
@@ -155,6 +155,7 @@ export default function PlacesScreen() {
           flattened into a header item and, when open, one item per place, so
           FlashList can recycle them as you scroll. */}
       <FlashList
+        refreshControl={<Refresher onRefresh={load} busy={fetching && !loading} />}
         data={listItems}
         keyExtractor={(it) => it.key}
         getItemType={(it) => it.kind}
@@ -187,7 +188,8 @@ export default function PlacesScreen() {
                     borderBottomRightRadius: open ? 0 : undefined,
                   }}
                 >
-                  <Pressable onPress={() => toggle(g.type.key)} disabled={!!q} className="flex-row items-center gap-2.5 px-3.5 py-3 active:bg-inset">
+                  <Touchable feel="card" haptic={null} onPress={() => toggle(g.type.key)} disabled={!!q}>
+                    <View pointerEvents="none" className="flex-row items-center gap-2.5 px-3.5 py-3">
                     <View className="h-8 w-8 items-center justify-center rounded-xl" style={{ backgroundColor: c.accentSoft }}>
                       <Ionicons name={g.type.icon as any} size={17} color={c.accent} />
                     </View>
@@ -196,7 +198,9 @@ export default function PlacesScreen() {
                       <Text className="text-[12px] font-sans-bold" style={{ color: c.accent }}>{g.rows.length}</Text>
                     </View>
                     {!q ? <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={c.faint} /> : null}
-                  </Pressable>
+                  
+                    </View>
+                  </Touchable>
                 </View>
               </View>
             );
@@ -232,11 +236,8 @@ function Card({ p, isDesktop, center, showDist, c, onPress }: {
   const photo = p.photos?.[0];
   const dist = showDist && center && p.lat != null && p.lng != null ? distanceKm(center, { lat: p.lat, lon: p.lng }) : null;
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Open"
-      onPress={onPress}
-      className="flex-row items-center gap-3 overflow-hidden rounded-xl bg-bg p-2.5 active:opacity-90"
-      style={{ borderWidth: 1, borderColor: c.line, width: isDesktop ? '48.5%' : '100%' }}
-    >
+    <Touchable feel="card" haptic={null} accessibilityRole="button" accessibilityLabel="Open" onPress={onPress}>
+      <View pointerEvents="none" className="flex-row items-center gap-3 overflow-hidden rounded-xl bg-bg p-2.5" style={{ borderWidth: 1, borderColor: c.line, width: isDesktop ? '48.5%' : '100%' }}>
       <View className="overflow-hidden rounded-xl" style={{ width: 52, height: 52, backgroundColor: c.accentSoft }}>
         {photo
           ? <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
@@ -251,7 +252,9 @@ function Card({ p, isDesktop, center, showDist, c, onPress }: {
         </View>
       </View>
       <Ionicons name="chevron-forward" size={18} color={c.faint} />
-    </Pressable>
+    
+      </View>
+    </Touchable>
   );
 }
 
@@ -261,9 +264,12 @@ function EmptyState({ onAdd, c }: { onAdd: () => void; c: ReturnType<typeof useT
       <Ionicons name="location-outline" size={48} color={c.faint} />
       <Text className="mt-3 text-center font-sans-bold text-[16px] text-ink">No places yet</Text>
       <Text className="font-sans mt-1.5 text-center text-[13px] leading-[19px] text-muted">Be the first to add a handy nearby contact — a hospital, clinic, school, supermarket, salon and more.</Text>
-      <Pressable onPress={onAdd} className="mt-5 flex-row items-center gap-1.5 rounded-2xl px-5 py-2.5 active:opacity-80" style={{ backgroundColor: c.accent }}>
+      <Touchable feel="card" haptic={null} onPress={onAdd}>
+        <View pointerEvents="none" className="mt-5 flex-row items-center gap-1.5 rounded-2xl px-5 py-2.5" style={{ backgroundColor: c.accent }}>
         <Ionicons name="add" size={18} color="#fff" /><Text className="font-sans-sb text-[14px] text-white">Add a place</Text>
-      </Pressable>
+      
+        </View>
+      </Touchable>
     </View>
   );
 }

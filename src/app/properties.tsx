@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { T } from '../components/T';
-import { Badge, Chip, Container, ListingCardSkeleton, ScreenHeader, type BadgeTone } from '../components/ui';
+import { Badge, Chip, Container, ListingCardSkeleton, Refresher, ScreenHeader, Touchable, type BadgeTone } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { qk } from '../lib/queryClient';
 import { useCachedList } from '../lib/useCachedList';
@@ -33,7 +33,7 @@ export default function PropertiesScreen() {
   // From the cache first, per filter; see useCachedList. The community is
   // passed now — it used to fall back to the built-in default id.
   const subscribe = useCallback((bump: () => void) => subscribeProperties(communityId, bump), [communityId]);
-  const { rows, loading } = useCachedList<PropertyRow>(
+  const { rows, loading, load, fetching } = useCachedList<PropertyRow>(
     qk.properties(communityId, filter, mine ? false : availableOnly, mine ? userId : null),
     () => fetchProperties({ type: filter, availableOnly: mine ? false : availableOnly, mine: mine && userId ? userId : undefined }, communityId),
     { enabled: !!communityId, subscribe, prefix: ['properties', communityId] },
@@ -61,7 +61,9 @@ export default function PropertiesScreen() {
         }
       />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}
+        refreshControl={<Refresher onRefresh={load} busy={fetching && !loading} />}
+      >
         <Container>
           {loading ? (
             <View className="gap-3">{[0, 1, 2].map((i) => <ListingCardSkeleton key={i} />)}</View>
@@ -74,10 +76,13 @@ export default function PropertiesScreen() {
               <Text className="font-sans mt-1 max-w-[280px] text-center text-[13px] text-muted">
                 {mine ? 'Post your flat for sale or rent — neighbours can ask details and recommend buyers.' : 'Be the first to list your flat for sale or rent in your society.'}
               </Text>
-              <Pressable onPress={() => router.push('/property/new' as any)} className="mt-5 flex-row items-center gap-2 rounded-2xl px-5 py-3 active:opacity-90" style={{ backgroundColor: ACCENT }}>
+              <Touchable feel="card" haptic={null} onPress={() => router.push('/property/new' as any)}>
+                <View pointerEvents="none" className="mt-5 flex-row items-center gap-2 rounded-2xl px-5 py-3" style={{ backgroundColor: ACCENT }}>
                 <Ionicons name="add" size={18} color="#fff" />
                 <Text className="font-sans-bold text-[14px] text-white">Post your flat</Text>
-              </Pressable>
+              
+                </View>
+              </Touchable>
             </View>
           ) : (
             <View className="gap-3">
@@ -98,7 +103,8 @@ function PropertyCard({ p, onPress, c }: { p: PropertyRow; onPress: () => void; 
   const sub = propertySubtitle(p);
   const isRent = p.listing_type === 'rent';
   return (
-    <Pressable onPress={onPress} className="flex-row overflow-hidden card active:opacity-90">
+    <Touchable feel="card" haptic={null} onPress={onPress}>
+      <View pointerEvents="none" className="flex-row overflow-hidden card">
       <View style={{ width: 108, height: 108, backgroundColor: c.inset }} className="items-center justify-center">
         {p.photos[0] ? (
           <Image source={{ uri: p.photos[0] }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} />
@@ -132,6 +138,8 @@ function PropertyCard({ p, onPress, c }: { p: PropertyRow; onPress: () => void; 
           )}
         </View>
       </View>
-    </Pressable>
+    
+      </View>
+    </Touchable>
   );
 }

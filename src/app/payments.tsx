@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
-import { Avatar, Container, RowSkeleton, ScreenHeader } from '../components/ui';
+import { Avatar, Container, Refresher, RowSkeleton, ScreenHeader } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useCachedList } from '../lib/useCachedList';
 import { useToast } from '../context/toast';
@@ -47,7 +47,7 @@ export default function PaymentsScreen() {
   const [filter, setFilter] = useState<Filter>('all');
 
   // From the cache first; see useCachedList.
-  const { rows, loading, failed, load } = useCachedList<PaymentRow>(
+  const { rows, loading, failed, load, fetching } = useCachedList<PaymentRow>(
     ['payments', userId],
     () => fetchMyPayments(),
     { enabled: isSupabaseConfigured && !!userId, subscribe: subscribePayments },
@@ -119,7 +119,9 @@ export default function PaymentsScreen() {
         }
       />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}
+        refreshControl={<Refresher onRefresh={load} busy={fetching && !loading} />}
+      >
         <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
           {!loading && rows.length > 0 ? (
             <View className="mb-3 flex-row gap-3">

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
-import { Avatar, Container, ScreenHeader } from '../../components/ui';
+import { Avatar, Container, Refresher, ScreenHeader } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCachedList } from '../../lib/useCachedList';
@@ -24,7 +24,7 @@ export default function BlockedMembersScreen() {
 
   // From the cache first; see useCachedList.
   const qc = useQueryClient();
-  const { rows, loading } = useCachedList<BlockedUser>(['blocks', userId], () => fetchMyBlocks(userId!), { enabled: !!userId });
+  const { rows, loading, load, fetching } = useCachedList<BlockedUser>(['blocks', userId], () => fetchMyBlocks(userId!), { enabled: !!userId });
 
   const undo = async (row: BlockedUser) => {
     if (!userId) return;
@@ -47,7 +47,9 @@ export default function BlockedMembersScreen() {
     <View className="flex-1 bg-bg">
       <ScreenHeader icon="ban-outline" title="Blocked members" showBack hideSociety />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}
+        refreshControl={<Refresher onRefresh={load} busy={fetching && !loading} />}
+      >
         <Container narrow>
           {loading ? (
             <View className="items-center py-16"><ActivityIndicator color={c.muted} /></View>

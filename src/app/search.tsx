@@ -3,7 +3,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Avatar, ErrorState, RowSkeleton, ScreenHeader } from '../components/ui';
+import { Avatar, ErrorState, RowSkeleton, ScreenHeader, Touchable } from '../components/ui';
 import { SaathiMark } from '../components/SaathiMark';
 import { useAuth } from '../context/auth';
 import { qk } from '../lib/queryClient';
@@ -116,11 +116,8 @@ export default function SearchScreen() {
         <View className="w-full self-center" style={{ maxWidth: SEARCH_MAX }}>
           {!typed ? (
             <>
-              <Pressable
-                onPress={() => router.push('/ask' as any)}
-                className="mb-5 flex-row items-center gap-3 rounded-2xl border active:opacity-90"
-                style={{ borderColor: c.accent + '55', backgroundColor: c.accent + '12' }}
-              >
+              <Touchable feel="card" haptic={null} onPress={() => router.push('/ask' as any)}>
+                <View pointerEvents="none" className="mb-5 flex-row items-center gap-3 rounded-2xl border" style={{ borderColor: c.accent + '55', backgroundColor: c.accent + '12' }}>
                 <View style={{ marginLeft: 12, marginVertical: 11 }}>
                   <SaathiMark size={38} />
                 </View>
@@ -129,7 +126,9 @@ export default function SearchScreen() {
                   <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>“Any veg tiffin?” · “2 BHK for rent?” · “Borrow a drill?”</Text>
                 </View>
                 <Ionicons name="arrow-forward" size={16} color={c.accent} style={{ marginRight: 14 }} />
-              </Pressable>
+              
+                </View>
+              </Touchable>
               <RecentsOrHint recents={recents} onPick={(q) => setQuery(q)} onClear={() => { clearRecentSearches(); setRecents([]); }} c={c} />
             </>
           ) : typed.length < SEARCH_MIN_CHARS ? (
@@ -171,12 +170,8 @@ export default function SearchScreen() {
 
 function ResultRow({ hit, first, c, onPress }: { hit: SearchHit; first: boolean; c: ReturnType<typeof useThemeColors>; onPress: () => void }) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${hit.title}, ${hit.subtitle}`}
-      onPress={onPress}
-      className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'} active:bg-inset`}
-    >
+    <Touchable feel="card" haptic={null} accessibilityRole="button" accessibilityLabel={`${hit.title}, ${hit.subtitle}`} onPress={onPress}>
+      <View pointerEvents="none" className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'}`}>
       {hit.kind === 'resident' ? (
         <Avatar name={hit.title} size={36} userId={hit.id} />
       ) : (
@@ -189,7 +184,9 @@ function ResultRow({ hit, first, c, onPress }: { hit: SearchHit; first: boolean;
         <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{hit.subtitle}</Text>
       </View>
       <Ionicons name="chevron-forward" size={16} color={c.faint} />
-    </Pressable>
+    
+      </View>
+    </Touchable>
   );
 }
 

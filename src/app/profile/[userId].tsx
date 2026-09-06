@@ -5,7 +5,7 @@ import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ModerationMenu } from '../../components/ModerationMenu';
 import { useOpenThread } from '../../components/MessageNeighbour';
-import { Avatar, Badge, Button, Container, DetailSkeleton, ErrorState } from '../../components/ui';
+import { Avatar, Badge, Button, Container, DetailSkeleton, ErrorState, Touchable } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useBlocks } from '../../context/blocks';
 import { useConfirm } from '../../context/confirm';
@@ -214,17 +214,13 @@ function ContactAction({ icon, label, onPress, primary, disabled, c }: {
   icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void; primary?: boolean; disabled?: boolean; c: ReturnType<typeof useThemeColors>;
 }) {
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      className="flex-1 items-center rounded-2xl py-3 active:opacity-80"
-      style={{ backgroundColor: primary ? c.accent : c.surface, borderWidth: primary ? 0 : 1, borderColor: c.line, opacity: disabled ? 0.7 : 1 }}
-    >
+    <Touchable feel="card" haptic={null} onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={label}>
+      <View pointerEvents="none" className="flex-1 items-center rounded-2xl py-3" style={{ backgroundColor: primary ? c.accent : c.surface, borderWidth: primary ? 0 : 1, borderColor: c.line, opacity: disabled ? 0.7 : 1 }}>
       <Ionicons name={icon} size={20} color={primary ? c.onAccent : c.accent} />
       <Text className="mt-1 text-[12px] font-sans-sb" style={{ color: primary ? c.onAccent : c.ink }}>{label}</Text>
-    </Pressable>
+    
+      </View>
+    </Touchable>
   );
 }
 
@@ -241,7 +237,8 @@ function Row({ icon, title, subtitle, photo, onPress, c }: {
   icon: keyof typeof Ionicons.glyphMap; title: string; subtitle: string; photo?: string | null; onPress: () => void; c: ReturnType<typeof useThemeColors>;
 }) {
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={title} className="flex-row items-center gap-3 border-b border-line px-3.5 py-3 active:bg-inset">
+    <Touchable feel="card" haptic={null} onPress={onPress} accessibilityRole="button" accessibilityLabel={title}>
+      <View pointerEvents="none" className="flex-row items-center gap-3 border-b border-line px-3.5 py-3">
       <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-xl" style={{ backgroundColor: c.accentSoft }}>
         {photo ? <Image source={{ uri: photo }} style={{ width: '100%', height: '100%' }} contentFit="cover" {...IMAGE_CACHE_PROPS} /> : <Ionicons name={icon} size={20} color={c.accent} />}
       </View>
@@ -250,6 +247,8 @@ function Row({ icon, title, subtitle, photo, onPress, c }: {
         <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{subtitle}</Text>
       </View>
       <Ionicons name="chevron-forward" size={16} color={c.faint} />
-    </Pressable>
+    
+      </View>
+    </Touchable>
   );
 }

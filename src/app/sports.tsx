@@ -5,7 +5,7 @@ import { openPhotoPicker } from '../lib/photo';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Button, Container, RowSkeleton, ScreenHeader, Sheet, TimeField } from '../components/ui';
+import { Button, Container, Refresher, RowSkeleton, ScreenHeader, Sheet, TimeField, Touchable } from '../components/ui';
 import { SportGroupBody } from '../components/SportGroupBody';
 import { WeekdayChips } from '../components/WeekdayChips';
 import { useAuth } from '../context/auth';
@@ -29,7 +29,7 @@ export default function SportsScreen() {
   const [activeSport, setActiveSport] = useState<string | null>(null);
 
   // From the cache first; see useCachedList.
-  const { rows: groups, loading, failed, load } = useCachedList<SportGroupWithMeta>(
+  const { rows: groups, loading, failed, load, fetching } = useCachedList<SportGroupWithMeta>(
     qk.sports(communityId, userId),
     () => fetchGroups(communityId, userId),
     { enabled: isSupabaseConfigured && !!communityId },
@@ -95,7 +95,9 @@ export default function SportsScreen() {
         </View>
       ) : null}
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}
+        refreshControl={<Refresher onRefresh={load} busy={fetching && !loading} />}
+      >
         <Container>
           {loading ? (
             <View className="overflow-hidden card"><RowSkeleton count={4} /></View>
@@ -210,9 +212,12 @@ function CreateGroupSheet({
 
       <Text className={lbl}>Logo (optional)</Text>
       <View className="mb-4 flex-row items-center gap-3">
-        <Pressable onPress={pickLogo} className="h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-inset active:opacity-80">
+        <Touchable feel="card" haptic={null} onPress={pickLogo}>
+          <View pointerEvents="none" className="h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-inset">
           {logoUri ? <Image source={{ uri: logoUri }} style={{ width: 64, height: 64 }} contentFit="cover" /> : <Ionicons name="camera-outline" size={22} color={c.faint} />}
-        </Pressable>
+        
+          </View>
+        </Touchable>
         <Text className="font-sans flex-1 text-[12px] text-muted">Upload a team photo or logo, or just use the emoji badge below.</Text>
         {logoUri ? <Pressable accessibilityRole="button" accessibilityLabel="Clear" onPress={() => setLogoUri(null)} hitSlop={8}><Ionicons name="close-circle" size={20} color={c.faint} /></Pressable> : null}
       </View>
