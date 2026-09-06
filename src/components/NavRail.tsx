@@ -30,7 +30,7 @@ const PRIMARY_ITEMS: NavItem[] = [
   { href: '/search', label: 'Search', icon: 'search-outline', activeIcon: 'search' },
   // The icon fields are unused for this row — NavRail draws SaathiMark for
   // /ask instead. They stay because NavItem requires them.
-  { href: '/ask', label: 'Saathi', icon: 'sparkles-outline', activeIcon: 'sparkles', color: '#0F6E56' },
+  { href: '/ask', label: 'Saathi', icon: 'sparkles-outline', activeIcon: 'sparkles' },
   { href: '/listings', label: 'Listings', icon: 'pricetags-outline', activeIcon: 'pricetags' },
   { href: '/messages', label: 'Messages', icon: 'mail-outline', activeIcon: 'mail' },
   { href: '/you', label: 'You', icon: 'person-outline', activeIcon: 'person' },
@@ -38,16 +38,16 @@ const PRIMARY_ITEMS: NavItem[] = [
 
 const COMMUNITY_ITEMS: NavItem[] = [
   { href: '/directory', label: 'Residents', icon: 'people-outline', activeIcon: 'people' },
-  { href: '/sports', label: 'Sports', icon: 'football-outline', activeIcon: 'football', color: '#16A34A' },
-  { href: '/documents', label: 'Documents', icon: 'folder-outline', activeIcon: 'folder', color: '#0EA5E9' },
-  { href: '/payments', label: 'Payments', icon: 'wallet-outline', activeIcon: 'wallet', color: '#16A34A' },
-  { href: '/properties', label: 'Flats', icon: 'key-outline', activeIcon: 'key', color: '#7C3AED' },
-  { href: '/recommend', label: 'Ask & Recommend', icon: 'sparkles-outline', activeIcon: 'sparkles', color: '#CA8A04' },
-  { href: '/borrow', label: 'Borrow & Lend', icon: 'swap-horizontal-outline', activeIcon: 'swap-horizontal', color: '#0891B2' },
-  { href: '/helpers', label: 'Blood & SOS', icon: 'heart-outline', activeIcon: 'heart', color: '#DC2626' },
-  { href: '/places', label: 'Nearby', icon: 'location-outline', activeIcon: 'location', color: '#0D9488' },
+  { href: '/sports', label: 'Sports', icon: 'football-outline', activeIcon: 'football' },
+  { href: '/documents', label: 'Documents', icon: 'folder-outline', activeIcon: 'folder' },
+  { href: '/payments', label: 'Payments', icon: 'wallet-outline', activeIcon: 'wallet' },
+  { href: '/properties', label: 'Flats', icon: 'key-outline', activeIcon: 'key' },
+  { href: '/recommend', label: 'Ask & Recommend', icon: 'sparkles-outline', activeIcon: 'sparkles' },
+  { href: '/borrow', label: 'Borrow & Lend', icon: 'swap-horizontal-outline', activeIcon: 'swap-horizontal' },
+  { href: '/helpers', label: 'Blood & SOS', icon: 'heart-outline', activeIcon: 'heart' },
+  { href: '/places', label: 'Nearby', icon: 'location-outline', activeIcon: 'location' },
   { href: '/polls', label: 'Polls', icon: 'stats-chart-outline', activeIcon: 'stats-chart' },
-  { href: '/emergency', label: 'Emergency', icon: 'call-outline', activeIcon: 'call', color: '#EF4444' },
+  { href: '/emergency', label: 'Emergency', icon: 'call-outline', activeIcon: 'call' },
 ];
 
 const ADMIN_ITEM: NavItem = {
@@ -138,7 +138,7 @@ function NavItemRow({
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ color: '#fff', fontSize: 9, fontFamily: 'HankenGrotesk_700Bold' }}>
+                <Text style={{ color: colors.onAccent, fontSize: 9, fontFamily: 'HankenGrotesk_700Bold' }}>
                   {badge > 9 ? '9+' : badge}
                 </Text>
               </View>
@@ -186,7 +186,6 @@ function SectionLabel({
           fontFamily: 'HankenGrotesk_600SemiBold',
           letterSpacing: 1.2,
           textTransform: 'uppercase',
-          color: '#9CA3AF',
         }}
       >
         {label}
@@ -316,10 +315,10 @@ export function NavRail() {
           <Animated.View style={{ opacity: labelOpacity, height: collapsed ? 0 : undefined, marginBottom: collapsed ? 0 : 16, paddingHorizontal: 12, overflow: 'hidden' }}>
             <View
               className="flex-row items-center gap-1.5 self-start rounded-full px-2.5 py-1.5"
-              style={{ backgroundColor: '#0D948822', borderWidth: 1, borderColor: '#0D948855', maxWidth: '100%' }}
+              style={{ backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accentLine, maxWidth: '100%' }}
             >
-              <Ionicons name="business" size={12} color="#0D9488" />
-              <Text className="text-[12px] font-sans-sb" numberOfLines={1} style={{ color: '#0D9488', flexShrink: 1 }}>{community.name}</Text>
+              <Ionicons name="business" size={12} color={colors.accent} />
+              <Text className="text-[12px] font-sans-sb" numberOfLines={1} style={{ color: colors.accent, flexShrink: 1 }}>{community.name}</Text>
             </View>
           </Animated.View>
         ) : null}
@@ -380,7 +379,7 @@ export function NavRail() {
                       borderRadius: 8, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center',
                     }}
                   >
-                    <Text style={{ color: '#fff', fontSize: 9, fontFamily: 'HankenGrotesk_700Bold' }}>
+                    <Text style={{ color: colors.onAccent, fontSize: 9, fontFamily: 'HankenGrotesk_700Bold' }}>
                       {notifCount > 9 ? '9+' : notifCount}
                     </Text>
                   </View>
@@ -544,8 +543,8 @@ function AccountMenuRow({
 }) {
   return (
     <Pressable onPress={onPress} className="active:bg-inset" style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 11 }}>
-      <Ionicons name={icon} size={18} color={danger ? '#DC2626' : colors.muted} />
-      <Text style={{ fontFamily: 'HankenGrotesk_500Medium', fontSize: 14, color: danger ? '#DC2626' : colors.ink }}>{label}</Text>
+      <Ionicons name={icon} size={18} color={danger ? colors.danger : colors.muted} />
+      <Text style={{ fontFamily: 'HankenGrotesk_500Medium', fontSize: 14, color: danger ? colors.danger : colors.ink }}>{label}</Text>
     </Pressable>
   );
 }

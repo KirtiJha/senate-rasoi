@@ -29,7 +29,7 @@ import { IMAGE_CACHE_PROPS } from '../../lib/image';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { layout, useThemeColors } from '../../theme';
 
-const FEED_MAX = layout.maxContent; // same content width as every other tab
+const FEED_MAX = layout.maxRead; // a measure: the feed is read down, not scanned across
 
 const FILTER_TABS: { key: PostCategory | 'all'; label: string }[] = [
   { key: 'all', label: 'All' },

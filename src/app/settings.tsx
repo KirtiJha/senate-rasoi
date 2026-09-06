@@ -146,7 +146,7 @@ export default function SettingsScreen() {
       <ScreenHeader icon="settings-outline" title="Settings" showBack />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        <Container>
+        <Container read>
           {/* ── Appearance ─────────────────────────────────────── */}
           <SectionLabel>Appearance</SectionLabel>
           <View className="mb-6 overflow-hidden card">

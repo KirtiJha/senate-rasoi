@@ -64,7 +64,7 @@ export default function MessagesInboxScreen() {
         refreshControl={<RefreshControl refreshing={inbox.isFetching && !loading} onRefresh={() => inbox.refetch()} />}
         ItemSeparatorComponent={() => <View style={{ height: 4 }} />}
         ListEmptyComponent={
-          <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
+          <View className="w-full self-center" style={{ maxWidth: layout.maxRead }}>
             {loading ? (
               <View className="overflow-hidden card"><RowSkeleton count={6} /></View>
             ) : failed ? (
@@ -86,7 +86,7 @@ export default function MessagesInboxScreen() {
           </View>
         }
         renderItem={({ item: t }) => (
-          <View className="w-full self-center" style={{ maxWidth: layout.maxContent }}>
+          <View className="w-full self-center" style={{ maxWidth: layout.maxRead }}>
             <Touchable feel="card" haptic={null} onPress={() => router.push(`/messages/${t.id}` as any)} accessibilityRole="button" accessibilityLabel={`Conversation with ${t.other.name}`}>
               <View pointerEvents="none" className="flex-row items-center gap-3 rounded-2xl p-3">
               <Avatar name={t.other.name} userId={t.other.id} size={46} />

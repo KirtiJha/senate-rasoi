@@ -137,7 +137,17 @@ export const fonts = {
 } as const;
 
 export const layout = {
+  /** Grids and directories: as wide as the window allows. */
   maxContent: 1180,
+  /**
+   * Prose and cards you read down: a measure, not a canvas.
+   *
+   * maxContent never engaged on a 1280 laptop once the 220px rail was
+   * taken out, so Feed, Settings, You and Saathi rendered as one 1020px
+   * column — about 175 characters a line, with a control and its label
+   * nine hundred pixels apart.
+   */
+  maxRead: 760,
   maxNarrow: 600,
   rail: 240,
 } as const;

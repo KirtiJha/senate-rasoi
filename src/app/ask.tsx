@@ -16,7 +16,7 @@ import { AskMessage, clearAskConversation, getAskConversation, setAskConversatio
 import { appendMessage, createSession, fetchMessages } from '../lib/askSessions';
 import { HistorySheet } from '../components/saathi/HistorySheet';
 import { haptics } from '../lib/haptics';
-import { useThemeColors } from '../theme';
+import { layout, useThemeColors } from '../theme';
 
 
 /**
@@ -222,7 +222,7 @@ export default function AskScreen() {
         // scroller sizes to its content, so a short thread pulls the composer
         // up into the middle of the screen.
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 24, width: '100%', maxWidth: layout.maxRead, alignSelf: 'center' }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         onContentSizeChange={scrollDown}
@@ -281,7 +281,7 @@ export default function AskScreen() {
             // result cards below collapsed to their padding on native. CSS
             // sizes the same tree from the text, which is why web looked fine.
             <View key={i} className="mb-4 w-[92%]">
-              <View className="flex-row items-end gap-2">
+              <View className="w-full self-center flex-row items-end gap-2" style={{ maxWidth: layout.maxRead }}>
                 <SaathiMark size={24} />
                 <View className="flex-shrink rounded-2xl rounded-bl-md border border-line bg-surface px-3.5 py-2.5">
                   {m.text ? (

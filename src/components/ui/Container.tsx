@@ -22,14 +22,18 @@ export function useResponsive() {
 export function Container({
   children,
   narrow,
+  read,
   className = '',
 }: {
   children: ReactNode;
+  /** A form or an article: 600. */
   narrow?: boolean;
+  /** Cards you read down rather than scan across: 760. */
+  read?: boolean;
   className?: string;
 }) {
   return (
-    <View className={`w-full self-center ${className}`} style={{ maxWidth: narrow ? layout.maxNarrow : layout.maxContent }}>
+    <View className={`w-full self-center ${className}`} style={{ maxWidth: narrow ? layout.maxNarrow : read ? layout.maxRead : layout.maxContent }}>
       {children}
     </View>
   );

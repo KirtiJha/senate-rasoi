@@ -43,7 +43,7 @@ export default function YouScreen() {
   return (
     <View className="flex-1 bg-bg">
       <View style={{ paddingHorizontal: 20, paddingTop: isDesktop ? 24 : 16 }}>
-        <Container>
+        <Container read>
           {/* ── Who you are ──────────────────────────────────────────
               Nothing tappable in here. An identity that is also a button
               makes you guess what tapping your own face does. */}
