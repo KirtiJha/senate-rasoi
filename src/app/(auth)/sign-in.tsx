@@ -7,10 +7,10 @@ import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-nativ
 
 import { DiversityEmblem } from '../../components/Brand';
 import { Field } from '../../components/forms';
-import { Button, Container, Dialog, KeyboardAvoider, PinInput, Segmented } from '../../components/ui';
+import { Button, Container, Dialog, KeyboardAvoider, PinInput, Segmented, Touchable } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
-import { selfResetPin, signIn, signUp } from '../../lib/auth';
+import { requestPinReset, signIn, signUp } from '../../lib/auth';
 import { Community, fetchCommunities, fetchCommunityBlocks, fetchCommunityById, searchCommunities } from '../../lib/communities';
 import { DirectoryEntry, PhoneDirectoryMatch, findDirectoryByPhone, findRosterMatch, reconcileDirectoryEntry } from '../../lib/directory';
 import { isSupabaseConfigured } from '../../lib/supabase';
@@ -29,6 +29,7 @@ export default function SignInScreen() {
   const { refreshProfile } = useAuth();
 
   const [mode, setMode] = useState<'in' | 'up'>('in');
+  const [moreDetails, setMoreDetails] = useState(false);
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -62,8 +63,6 @@ export default function SignInScreen() {
   // Forgot PIN flow
   const [showForgotPin, setShowForgotPin] = useState(false);
   const [resetPhone, setResetPhone] = useState('');
-  const [resetNewPin, setResetNewPin] = useState('');
-  const [resetConfirmPin, setResetConfirmPin] = useState('');
   const [resetBusy, setResetBusy] = useState(false);
   const [resetDone, setResetDone] = useState(false);
 
@@ -156,29 +155,20 @@ export default function SignInScreen() {
 
   const openForgotPin = () => {
     setResetPhone(phone);
-    setResetNewPin('');
-    setResetConfirmPin('');
     setResetDone(false);
     setShowForgotPin(true);
   };
 
   const submitReset = async () => {
     if (resetPhone.replace(/\D/g, '').length < 10) { toast.show('Enter a valid phone number'); return; }
-    const pinIssue = pinProblem(resetNewPin);
-    if (pinIssue) { toast.show(pinIssue); return; }
-    if (resetNewPin !== resetConfirmPin) { toast.show('PINs do not match'); return; }
     setResetBusy(true);
     try {
-      const ok = await selfResetPin(resetPhone, resetNewPin);
-      if (!ok) {
-        toast.show('No account found with that number');
-      } else {
-        setResetDone(true);
-        // Pre-fill the sign-in code field with the new PIN for convenience.
-        setCode(resetNewPin);
-      }
+      await requestPinReset(resetPhone);
+      // Always the same answer, whether or not that number has an account:
+      // anything else is a way to find out who is on Aangan.
+      setResetDone(true);
     } catch {
-      toast.show('Could not reset — try again');
+      toast.show('Could not send that — try again');
     } finally {
       setResetBusy(false);
     }
@@ -423,6 +413,25 @@ export default function SignInScreen() {
                   ))}
                 </View>
               ) : null}
+              {/* Six of the twelve fields were optional, and every one of them
+                  stood between a new resident and the society. They are behind
+                  a disclosure now: name, flat and a PIN get you in, the rest
+                  can wait for the profile — which Home and You both prompt for. */}
+              <Touchable
+                haptic={null}
+                onPress={() => setMoreDetails((v) => !v)}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: moreDetails }}
+                accessibilityLabel="Add more details, optional"
+              >
+                <View pointerEvents="none" className="mb-3 flex-row items-center gap-2 rounded-2xl px-3.5 py-3" style={{ backgroundColor: c.inset }}>
+                  <Ionicons name={moreDetails ? 'chevron-down' : 'chevron-forward'} size={16} color={c.muted} />
+                  <Text className="flex-1 font-sans-sb text-[14px] text-ink">Add more details</Text>
+                  <Text className="font-sans text-[12px] text-muted">Optional</Text>
+                </View>
+              </Touchable>
+              {moreDetails ? (
+                <>
               <Field label="WhatsApp" hint="For coordination with neighbours" placeholder="98765 43210" keyboardType="phone-pad" value={whatsapp} onChangeText={setWhatsapp} />
               <Field label="UPI ID" hint="Optional — so neighbours can pay you" autoCapitalize="none" placeholder="priya@ybl" value={upi} onChangeText={setUpi} />
 
@@ -458,6 +467,8 @@ export default function SignInScreen() {
               </View>
               <Field label="Profession" hint="Optional — helps neighbours connect" placeholder="e.g. Doctor, CA, Teacher" value={profession} onChangeText={setProfession} />
               <Field label="Vehicle number" hint="Optional — for the resident directory" autoCapitalize="characters" placeholder="MH 12 AB 1234" value={vehicleNo} onChangeText={setVehicleNo} />
+                </>
+              ) : null}
             </>
           ) : null}
 
@@ -595,23 +606,26 @@ export default function SignInScreen() {
             {resetDone ? (
               <>
                 <View className="mb-4 items-center">
-                  <View className="h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: c.accent + '20' }}>
-                    <Ionicons name="checkmark-circle" size={32} color={c.accent} />
+                  <View className="h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: c.accentSoft }}>
+                    <Ionicons name="paper-plane" size={30} color={c.accent} />
                   </View>
                 </View>
-                <Text className="text-center font-display-x text-[19px] text-ink">PIN reset!</Text>
+                <Text className="text-center font-display-x text-[19px] text-ink">Your admins have been told</Text>
                 <Text className="font-sans mt-2 text-center text-[14px] leading-5 text-muted">
-                  Your PIN has been updated. Sign in with your new PIN.
+                  If that number belongs to a society on Aangan, its admins can now set you a
+                  temporary PIN. They will pass it on the way they normally reach you.
                 </Text>
                 <View className="mt-5">
-                  <Button label="Sign in now" fullWidth onPress={() => { setShowForgotPin(false); setMode('in'); }} />
+                  <Button label="Back to sign in" fullWidth onPress={() => { setShowForgotPin(false); setMode('in'); }} />
                 </View>
               </>
             ) : (
               <>
-                <Text className="font-display-x text-[19px] text-ink">Reset PIN</Text>
+                <Text className="font-display-x text-[19px] text-ink">Forgotten your PIN?</Text>
                 <Text className="font-sans mt-1.5 mb-4 text-[13px] leading-5 text-muted">
-                  Enter your registered phone and choose a new 6-digit PIN.
+                  A PIN used to be resettable from a phone number alone — and every number is in
+                  the resident directory. So an admin of your society confirms it instead. Tell us
+                  the number you signed up with and they will be asked to set you a temporary one.
                 </Text>
                 <Field
                   label="Phone number"
@@ -621,27 +635,12 @@ export default function SignInScreen() {
                   value={resetPhone}
                   onChangeText={setResetPhone}
                 />
-                <View className="mb-4">
-                  <Text className="mb-2 text-[13px] font-sans-sb text-ink">
-                    New PIN <Text style={{ color: c.danger }}>*</Text>
-                  </Text>
-                  <PinInput value={resetNewPin} onChange={setResetNewPin} accessibilityLabel="New PIN" />
-                </View>
-                <View className="mb-4">
-                  <Text className="mb-2 text-[13px] font-sans-sb text-ink">
-                    Confirm new PIN <Text style={{ color: c.danger }}>*</Text>
-                  </Text>
-                  <PinInput value={resetConfirmPin} onChange={setResetConfirmPin} accessibilityLabel="Confirm new PIN" />
-                </View>
-                <Text className="font-sans mb-4 text-[11px] leading-4 text-faint">
-                  Can't reset? Ask your society admin to set a temporary PIN for you. You can then sign in and change it from your profile.
-                </Text>
                 <View className="flex-row gap-2">
                   <View className="flex-1">
                     <Button label="Cancel" variant="outline" onPress={() => setShowForgotPin(false)} />
                   </View>
                   <View className="flex-1">
-                    <Button label={resetBusy ? 'Resetting…' : 'Reset PIN'} loading={resetBusy} onPress={submitReset} />
+                    <Button label={resetBusy ? 'Sending…' : 'Ask an admin'} loading={resetBusy} onPress={submitReset} />
                   </View>
                 </View>
               </>
