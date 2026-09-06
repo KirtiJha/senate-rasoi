@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useT } from '../context/chromeLang';
 import { usePathname, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Keyboard, Platform, Text, View } from 'react-native';
@@ -79,6 +80,7 @@ export function BottomBar() {
   const unread = useUnreadDms();
   const keyboardUp = useKeyboardVisible();
   const [createOpen, setCreateOpen] = useState(false);
+  const t = useT();
 
   // Keep the bar out of focused, input-heavy flows only.
   if (pathname.startsWith('/messages/')) return null;
@@ -114,7 +116,7 @@ export function BottomBar() {
                 onPress={() => { haptics.tap(); setCreateOpen(true); }}
                 className="flex-1 items-center justify-center"
                 accessibilityRole="button"
-                accessibilityLabel="Add something"
+                accessibilityLabel={t('Add something')}
               >
                 <View
                   style={{
@@ -146,7 +148,7 @@ export function BottomBar() {
               className="flex-1 items-center"
               accessibilityRole="tab"
               accessibilityState={{ selected: active }}
-              accessibilityLabel={it.unread && unread > 0 ? `${it.label}, ${unread} unread` : it.label}
+              accessibilityLabel={it.unread && unread > 0 ? `${t(it.label)}, ${unread} unread` : t(it.label)}
             >
               {/* A 26x3 bar pinned to the item's top edge — the colonnade note. */}
               <View
@@ -180,7 +182,7 @@ export function BottomBar() {
                 style={{ fontSize: 11, lineHeight: 14, color: active ? c.accent : c.muted }}
                 numberOfLines={1}
               >
-                {it.label}
+                {t(it.label)}
               </Text>
             </Touchable>
           );

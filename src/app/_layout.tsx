@@ -27,6 +27,7 @@ import { useResponsive } from '../components/ui';
 import { AuthProvider } from '../context/auth';
 import { AvatarProvider } from '../context/avatars';
 import { ConfirmProvider } from '../context/confirm';
+import { ChromeLangProvider } from '../context/chromeLang';
 import { TranslationProvider } from '../context/translations';
 import { NotificationsProvider } from '../context/notifications';
 import { ThemeProvider } from '../context/theme';
@@ -97,6 +98,7 @@ function AppShell() {
         <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: PERSIST_MAX_AGE }}>
         <AuthProvider>
           <AvatarProvider>
+          <ChromeLangProvider>
           <TranslationProvider>
             <UnreadDmsProvider>
               <BlocksProvider>
@@ -113,6 +115,7 @@ function AppShell() {
               </BlocksProvider>
             </UnreadDmsProvider>
           </TranslationProvider>
+          </ChromeLangProvider>
           </AvatarProvider>
         </AuthProvider>
         </PersistQueryClientProvider>

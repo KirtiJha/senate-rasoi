@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useT } from '../context/chromeLang';
 import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +15,7 @@ export function TopBar({ live = false }: { live?: boolean }) {
   const insets = useSafeAreaInsets();
   const c = useThemeColors();
   const { unreadCount, open } = useNotifications();
+  const t = useT();
   const { community } = useAuth();
 
   return (
@@ -51,7 +53,7 @@ export function TopBar({ live = false }: { live?: boolean }) {
               hitSlop={8}
               className="h-9 w-9 items-center justify-center rounded-full active:opacity-70"
               style={{ backgroundColor: c.accentSoft }}
-              accessibilityRole="button" accessibilityLabel="Ask Saathi"
+              accessibilityRole="button" accessibilityLabel={t('Ask Saathi')}
             >
               <SaathiMark size={19} />
             </Pressable>
@@ -60,7 +62,7 @@ export function TopBar({ live = false }: { live?: boolean }) {
             onPress={open}
             hitSlop={8}
             className="h-9 w-9 items-center justify-center rounded-full bg-inset active:opacity-70"
-            accessibilityRole="button" accessibilityLabel="Notifications"
+            accessibilityRole="button" accessibilityLabel={t('Notifications')}
           >
             <Ionicons name="notifications-outline" size={18} color={c.muted} />
             {unreadCount > 0 ? (

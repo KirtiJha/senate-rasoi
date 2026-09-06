@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useT } from '../context/chromeLang';
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import { useAuth } from '../context/auth';
@@ -41,10 +42,11 @@ export function CreateSheet({ visible, onClose }: { visible: boolean; onClose: (
   const c = useThemeColors();
   const router = useRouter();
   const { isAdmin } = useAuth();
+  const t = useT();
   const items = ITEMS.filter((i) => !i.adminOnly || isAdmin);
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="What would you like to add?">
+    <Sheet visible={visible} onClose={onClose} title={t('What would you like to add?')}>
       <View style={{ gap: 8 }}>
         {items.map((it) => (
           <Touchable
@@ -52,7 +54,7 @@ export function CreateSheet({ visible, onClose }: { visible: boolean; onClose: (
             haptic={null}
             onPress={() => { onClose(); router.push(it.href as never); }}
             accessibilityRole="button"
-            accessibilityLabel={it.label}
+            accessibilityLabel={t(it.label)}
           >
             <View
               pointerEvents="none"
@@ -63,7 +65,7 @@ export function CreateSheet({ visible, onClose }: { visible: boolean; onClose: (
                 <Ionicons name={it.icon} size={19} color={c.accent} />
               </View>
               <View className="min-w-0 flex-1">
-                <Text className="font-sans-sb text-[14px] text-ink">{it.label}</Text>
+                <Text className="font-sans-sb text-[14px] text-ink">{t(it.label)}</Text>
                 <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{it.detail}</Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color={c.faint} />

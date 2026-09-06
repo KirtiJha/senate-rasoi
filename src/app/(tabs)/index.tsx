@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useT } from '../../context/chromeLang';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
@@ -404,6 +405,8 @@ export default function HomeScreen() {
     .filter(Boolean)
     .map((t) => ({ ...(t as CommunityTile), short: SHORT_LABEL[(t as CommunityTile).key] ?? (t as CommunityTile).label }));
 
+  const t = useT();
+
   const openTile = (key: string, href: string) => {
     noteTileOpened(key);
     router.push(href as any);
@@ -548,7 +551,7 @@ export default function HomeScreen() {
             haptic={null}
             onPress={() => router.push('/search' as any)}
             accessibilityRole="search"
-            accessibilityLabel="Search your society"
+            accessibilityLabel={t('Search your society')}
           >
             <View
               style={{
@@ -569,7 +572,7 @@ export default function HomeScreen() {
                 style={{ flex: 1, minWidth: 0, marginLeft: 10 }}
                 numberOfLines={1}
               >
-                Search your society
+                {t('Search your society')}
               </Text>
               <SaathiMark size={22} />
             </View>
@@ -598,7 +601,7 @@ export default function HomeScreen() {
             <Avatar name={profile?.name ?? '?'} userId={profile?.id} size={44} />
             <View style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
               <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>
-                {greeting}
+                {t(greeting)}
               </Text>
               <Text
                 className="font-display-x text-[26px] leading-[30px]"
@@ -620,7 +623,7 @@ export default function HomeScreen() {
             phone at all. The field is search; the mark beside it is Saathi. */}
         <View className="mt-5 flex-row items-center gap-2">
           <View className="min-w-0 flex-1">
-            <Touchable haptic={null} onPress={() => router.push('/search' as any)} accessibilityRole="search" accessibilityLabel="Search your society">
+            <Touchable haptic={null} onPress={() => router.push('/search' as any)} accessibilityRole="search" accessibilityLabel={t('Search your society')}>
               <View
                 pointerEvents="none"
                 className="flex-row items-center gap-3 rounded-full px-4"
@@ -628,12 +631,12 @@ export default function HomeScreen() {
               >
                 <Ionicons name="search" size={19} color={c.muted} />
                 <Text className="min-w-0 flex-1 text-[15px] font-sans-md text-subtle" numberOfLines={1}>
-                  Search your society
+                  {t('Search your society')}
                 </Text>
               </View>
             </Touchable>
           </View>
-          <Touchable haptic={null} onPress={() => router.push('/ask' as any)} accessibilityRole="button" accessibilityLabel="Ask Saathi">
+          <Touchable haptic={null} onPress={() => router.push('/ask' as any)} accessibilityRole="button" accessibilityLabel={t('Ask Saathi')}>
             <View
               pointerEvents="none"
               className="items-center justify-center rounded-full"
@@ -714,18 +717,18 @@ export default function HomeScreen() {
         {/* Four doors, before anything else. Which four is learned from
             this device alone — see lib/quickTiles. */}
         <View className="mt-3 flex-row" style={{ marginHorizontal: -4 }}>
-          {quickTiles.map((t) => (
-            <View key={t.key} style={{ flex: 1, paddingHorizontal: 4 }}>
-              <Touchable haptic={null} onPress={() => openTile(t.key, t.href)} accessibilityRole="button" accessibilityLabel={t.label}>
+          {quickTiles.map((tile) => (
+            <View key={tile.key} style={{ flex: 1, paddingHorizontal: 4 }}>
+              <Touchable haptic={null} onPress={() => openTile(tile.key, tile.href)} accessibilityRole="button" accessibilityLabel={t(tile.label)}>
                 <View
                   pointerEvents="none"
                   className="items-center rounded-2xl px-1 py-3"
                   style={{ backgroundColor: c.surface, borderWidth: 1, borderColor: c.line }}
                 >
                   <View className="items-center justify-center rounded-xl" style={{ width: 34, height: 34, backgroundColor: c.accentSoft }}>
-                    <Ionicons name={t.icon as any} size={17} color={c.accent} />
+                    <Ionicons name={tile.icon as any} size={17} color={c.accent} />
                   </View>
-                  <Text className="mt-1.5 text-[11px] font-sans-sb text-ink" numberOfLines={1}>{t.short}</Text>
+                  <Text className="mt-1.5 text-[11px] font-sans-sb text-ink" numberOfLines={1}>{t(tile.short)}</Text>
                 </View>
               </Touchable>
             </View>
@@ -757,7 +760,7 @@ export default function HomeScreen() {
             What IS happening, rather than a menu of what could. */}
         {around.length ? (
           <Rise index={3} style={{ marginBottom: 32 }}>
-            <SectionHead label="Around the aangan" actionLabel="See all" onAction={() => router.push('/listings' as any)} c={c} />
+            <SectionHead label={t('Around the aangan')} actionLabel={t('See all')} onAction={() => router.push('/listings' as any)} c={c} />
             {isDesktop ? (
               <View className="flex-row flex-wrap gap-3">
                 {around.map((a) => (
@@ -793,8 +796,8 @@ export default function HomeScreen() {
           return (
             <View key={zone.title}>
               <SectionHead
-                label={zone.title}
-                actionLabel={zone.title === 'Buy, sell & borrow' ? 'All categories' : undefined}
+                label={t(zone.title)}
+                actionLabel={zone.title === 'Buy, sell & borrow' ? t('All categories') : undefined}
                 onAction={zone.title === 'Buy, sell & borrow' ? () => router.push('/listings' as any) : undefined}
                 c={c}
               />
@@ -978,6 +981,7 @@ function freshServeLabel(serveDate: string): string | null {
 
 /** Horizontal carousel (mobile) / wrapped row (desktop) of the freshest dishes. */
 function FreshFoodStrip({ items, isDesktop }: { items: DishRow[]; isDesktop: boolean }) {
+  const t = useT();
   const router = useRouter();
   const c = useThemeColors();
   if (!items.length) return null;
@@ -1071,7 +1075,7 @@ function FreshFoodStrip({ items, isDesktop }: { items: DishRow[]; isDesktop: boo
 
   return (
     <View className="mb-2">
-      <SectionHead label="Fresh from kitchens" actionLabel="See all" onAction={() => router.push('/food' as any)} c={c} />
+      <SectionHead label={t('Fresh from kitchens')} actionLabel={t('See all')} onAction={() => router.push('/food' as any)} c={c} />
       {isDesktop ? (
         <View className="flex-row flex-wrap gap-3">{items.slice(0, 6).map((d) => <Card key={d.id} d={d} />)}</View>
       ) : (
