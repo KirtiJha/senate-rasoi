@@ -11,6 +11,7 @@ import { useUnreadDms } from '../context/unread';
 import { haptics } from '../lib/haptics';
 import { AView, dur, ease, spring } from '../lib/motion';
 import { useThemeColors } from '../theme';
+import { CreateSheet } from './CreateSheet';
 import { Touchable } from './ui';
 
 type Item = {
@@ -43,7 +44,7 @@ type Item = {
 const ITEMS: Item[] = [
   { route: '/', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
   { route: '/feed', label: 'Feed', icon: 'chatbubbles-outline', activeIcon: 'chatbubbles' },
-  { route: '/post', label: 'Post', icon: 'add', activeIcon: 'add', fab: true },
+  { route: '__create', label: 'Add', icon: 'add', activeIcon: 'add', fab: true },
   { route: '/messages', label: 'Inbox', icon: 'mail-outline', activeIcon: 'mail', unread: true },
   { route: '/you', label: 'You', icon: 'person-outline', activeIcon: 'person' },
 ];
@@ -77,6 +78,7 @@ export function BottomBar() {
   const insets = useSafeAreaInsets();
   const unread = useUnreadDms();
   const keyboardUp = useKeyboardVisible();
+  const [createOpen, setCreateOpen] = useState(false);
 
   // Keep the bar out of focused, input-heavy flows only.
   if (pathname.startsWith('/messages/')) return null;
@@ -91,6 +93,7 @@ export function BottomBar() {
     route === '/' ? pathname === '/' : pathname.startsWith(route);
 
   return (
+    <>
     <View style={{ paddingHorizontal: 12, paddingBottom: liftBottom, backgroundColor: 'transparent' }}>
       <View
         className="flex-row items-stretch justify-around rounded-[28px] border border-line bg-surface"
@@ -108,10 +111,10 @@ export function BottomBar() {
               <Touchable
                 key={it.route}
                 feel="icon"
-                onPress={() => router.navigate(it.route as any)}
+                onPress={() => { haptics.tap(); setCreateOpen(true); }}
                 className="flex-1 items-center justify-center"
                 accessibilityRole="button"
-                accessibilityLabel="Post something"
+                accessibilityLabel="Add something"
               >
                 <View
                   style={{
@@ -174,7 +177,7 @@ export function BottomBar() {
               </View>
               <Text
                 className="mt-1 font-sans-sb"
-                style={{ fontSize: 10.5, lineHeight: 14, color: active ? c.accent : c.muted }}
+                style={{ fontSize: 11, lineHeight: 14, color: active ? c.accent : c.muted }}
                 numberOfLines={1}
               >
                 {it.label}
@@ -184,6 +187,11 @@ export function BottomBar() {
         })}
       </View>
     </View>
+    {/* The centre button used to go straight to the marketplace composer —
+        one of ten things somebody might want to add, and no way out to the
+        other nine. It asks now. */}
+    <CreateSheet visible={createOpen} onClose={() => setCreateOpen(false)} />
+    </>
   );
 }
 

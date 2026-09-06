@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { openPhotoPicker } from '../../lib/photo';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { qk } from '../../lib/queryClient';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -55,6 +55,14 @@ export default function FeedScreen() {
 
   const [activeFilter, setActiveFilter] = useState<PostCategory | 'all'>('all');
   const [showCompose, setShowCompose] = useState(false);
+  // ?compose=1 — so the Add sheet can land straight in the composer.
+  const { compose: composeParam } = useLocalSearchParams<{ compose?: string }>();
+  const composeHandled = useRef(false);
+  useEffect(() => {
+    if (composeParam !== '1' || composeHandled.current) return;
+    composeHandled.current = true;
+    setShowCompose(true);
+  }, [composeParam]);
   const queryClient = useQueryClient();
 
   // The feed, from the cache first, one page at a time.

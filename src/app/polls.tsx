@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { openPhotoPicker } from '../lib/photo';
-import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActionMenu, Avatar, Container, ErrorState, ScreenHeader, Sheet, Skeleton, Touchable, useResponsive } from '../components/ui';
@@ -29,6 +29,14 @@ export default function PollsScreen() {
   const [votingOn, setVotingOn] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  // ?compose=1 — so the Add sheet can land straight in the composer.
+  const { compose: composeParam } = useLocalSearchParams<{ compose?: string }>();
+  const composeHandled = useRef(false);
+  useEffect(() => {
+    if (composeParam !== '1' || composeHandled.current) return;
+    composeHandled.current = true;
+    setShowCreate(true);
+  }, [composeParam]);
 
   const load = useCallback(async () => {
     if (!isSupabaseConfigured || !communityId) { setLoading(false); return; }
