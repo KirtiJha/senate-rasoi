@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Container, ErrorState, ScreenHeader, Sheet, Skeleton, useResponsive } from '../components/ui';
+import { ActionMenu, Avatar, Container, ErrorState, ScreenHeader, Sheet, Skeleton, useResponsive } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
@@ -217,19 +217,15 @@ function PollCard({
             </View>
           ) : null}
           {(isAuthor || isAdmin) ? (
-            <View className="flex-row gap-1">
-              <Pressable accessibilityRole="button" accessibilityLabel="Edit" onPress={openEdit} hitSlop={8} className="h-7 w-7 items-center justify-center rounded-full active:bg-inset">
-                <Ionicons name="create-outline" size={14} color={c.faint} />
-              </Pressable>
-              {!ended ? (
-                <Pressable onPress={onClose} hitSlop={8} className="h-7 w-7 items-center justify-center rounded-full active:bg-inset">
-                  <Ionicons name="lock-closed-outline" size={14} color={c.faint} />
-                </Pressable>
-              ) : null}
-              <Pressable accessibilityRole="button" accessibilityLabel="Delete" onPress={onDelete} hitSlop={8} className="h-7 w-7 items-center justify-center rounded-full active:bg-inset">
-                <Ionicons name="trash-outline" size={14} color={c.faint} />
-              </Pressable>
-            </View>
+            <ActionMenu
+              label="Poll options"
+              title="This poll"
+              items={[
+                { icon: 'create-outline', label: 'Edit the question', detail: 'Votes stay as they are', onPress: openEdit },
+                ...(!ended ? [{ icon: 'lock-closed-outline' as const, label: 'Close voting', detail: 'Ends the poll now and shows the result', onPress: onClose }] : []),
+                { icon: 'trash-outline', label: 'Delete poll', detail: 'Gone for everyone, votes included', onPress: onDelete, destructive: true },
+              ]}
+            />
           ) : null}
 
           <Sheet visible={showEdit} onClose={() => setShowEdit(false)} title="Edit poll question">

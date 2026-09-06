@@ -5,6 +5,7 @@ export { ChoiceTiles, type Choice } from './ChoiceTiles';
 export { Container, useResponsive } from './Container';
 export { ScreenHeader } from './ScreenHeader';
 export { Sheet } from './Sheet';
+export { ActionMenu, type ActionMenuItem } from './ActionMenu';
 export { Dialog, DialogActions } from './Dialog';
 export { Skeleton, DetailSkeleton, DishCardSkeleton, ListingCardSkeleton, RowSkeleton } from './Skeleton';
 export { Stepper } from './Stepper';

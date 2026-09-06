@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Container, ScreenHeader, useResponsive } from '../components/ui';
+import { ActionMenu, Container, ScreenHeader, useResponsive } from '../components/ui';
 import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
@@ -148,20 +148,14 @@ export default function EmergencyScreen() {
                           <Ionicons name="call" size={18} color={color} />
                         </Pressable>
                         {isAdmin ? (
-                          <>
-                            <Pressable accessibilityRole="button" accessibilityLabel={`Edit ${contact.name}`}
-                              onPress={() => setEditing(contact)}
-                              className="h-10 w-10 items-center justify-center rounded-full active:bg-inset"
-                            >
-                              <Ionicons name="pencil" size={15} color={c.faint} />
-                            </Pressable>
-                            <Pressable accessibilityRole="button" accessibilityLabel={`Delete ${contact.name}`}
-                              onPress={() => handleDelete(contact)}
-                              className="h-10 w-10 items-center justify-center rounded-full active:bg-inset"
-                            >
-                              <Ionicons name="trash-outline" size={16} color={c.faint} />
-                            </Pressable>
-                          </>
+                          <ActionMenu
+                            label={`Options for ${contact.name}`}
+                            title={contact.name}
+                            items={[
+                              { icon: 'create-outline', label: 'Edit details', detail: 'Name, role or number', onPress: () => setEditing(contact) },
+                              { icon: 'trash-outline', label: 'Remove contact', detail: 'Everyone stops seeing it', onPress: () => handleDelete(contact), destructive: true },
+                            ]}
+                          />
                         ) : null}
                       </View>
                     </View>
