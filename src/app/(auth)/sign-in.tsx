@@ -264,7 +264,7 @@ export default function SignInScreen() {
             <Text className="font-display-x mt-3 text-center text-[26px] leading-[32px] text-ink">
               {mode === 'in' ? 'Welcome back' : 'Join your society'}
             </Text>
-            <Text className="font-sans-md mt-1.5 max-w-[290px] text-center text-[13.5px] leading-[19px] text-subtle">
+            <Text className="font-sans-md mt-1.5 max-w-[290px] text-center text-[13px] leading-[19px] text-subtle">
               {mode === 'in'
                 ? 'Your phone number and the 6-digit code you chose.'
                 : 'Pick a 6-digit code — it is how you sign in. No SMS, no OTP.'}
@@ -504,7 +504,7 @@ export default function SignInScreen() {
               "it does nothing", the first question is which of those they
               are looking at, and there was no way to answer it from the
               device. Embedded means the update has not applied yet. */}
-          <Text className="mt-6 text-center text-[10px] font-sans text-subtle" selectable>
+          <Text className="mt-6 text-center text-[11px] font-sans text-subtle" selectable>
             v{Constants.expoConfig?.version ?? '?'} · {Updates.isEmbeddedLaunch ? 'embedded' : (Updates.updateId ?? 'no-update').slice(0, 8)}
           </Text>
         </Container>

@@ -100,10 +100,10 @@ export function ProposalCard({
       <View className="gap-2 px-3.5 py-3">
         {meta.lines.map(([label, value]) => (
           <View key={label}>
-            <Text className="text-[10.5px] font-sans-sb uppercase" style={{ color: c.subtle, letterSpacing: 1 }}>
+            <Text className="text-[11px] font-sans-sb uppercase" style={{ color: c.subtle, letterSpacing: 1 }}>
               {label}
             </Text>
-            <Text className="mt-0.5 font-sans text-[13.5px] leading-[19px] text-ink">{value}</Text>
+            <Text className="mt-0.5 font-sans text-[13px] leading-[19px] text-ink">{value}</Text>
           </View>
         ))}
       </View>
@@ -168,7 +168,7 @@ export function StepsTrail({ steps }: { steps: { tool: string; summary: string }
       >
         <View pointerEvents="none" className="flex-row items-center gap-1 self-start">
           <Ionicons name={open ? 'chevron-down' : 'chevron-forward'} size={12} color={c.subtle} />
-          <Text className="text-[11.5px] font-sans-md" style={{ color: c.subtle }}>
+          <Text className="text-[11px] font-sans-md" style={{ color: c.subtle }}>
             {open ? 'How I checked' : `Checked ${steps.length} thing${steps.length === 1 ? '' : 's'}`}
           </Text>
         </View>
@@ -179,7 +179,7 @@ export function StepsTrail({ steps }: { steps: { tool: string; summary: string }
           {steps.map((s, i) => (
             <View key={i} className="flex-row items-start gap-2">
               <Text className="text-[11px] font-sans-sb" style={{ color: c.accent, marginTop: 1 }}>{i + 1}</Text>
-              <Text className="flex-1 text-[11.5px] font-sans leading-[16px]" style={{ color: c.muted }}>
+              <Text className="flex-1 text-[11px] font-sans leading-[16px]" style={{ color: c.muted }}>
                 {s.summary}
               </Text>
             </View>

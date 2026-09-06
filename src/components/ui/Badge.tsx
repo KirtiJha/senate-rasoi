@@ -46,7 +46,7 @@ export function Badge({
       style={{ backgroundColor: t.bg }}
     >
       {icon ? <Ionicons name={icon} size={sm ? 10 : 12} color={t.fg} /> : null}
-      <Text className={`${sm ? 'text-[10px]' : 'text-[11px]'} font-sans-sb`} style={{ color: t.fg }}>{label}</Text>
+      <Text className={'text-[11px] font-sans-sb'} style={{ color: t.fg }}>{label}</Text>
     </View>
   );
 }

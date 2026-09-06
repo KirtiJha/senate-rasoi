@@ -244,7 +244,7 @@ export default function NewRideScreen() {
                   accessibilityLabel={PREFERENCE_LABELS[p]}>
                   <View pointerEvents="none" className="items-center rounded-xl py-2.5"
                     style={{ backgroundColor: preference === p ? c.accent : c.inset }}>
-                    <Text className="text-[12.5px] font-sans-sb"
+                    <Text className="text-[12px] font-sans-sb"
                       style={{ color: preference === p ? c.onAccent : c.muted }}>
                       {PREFERENCE_LABELS[p]}
                     </Text>

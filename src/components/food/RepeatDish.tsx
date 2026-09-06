@@ -65,7 +65,7 @@ export function RepeatDish({ dish, onDone }: { dish: DishRow; onDone?: () => voi
         <Ionicons name="repeat" size={17} color={c.accent} />
         <Text className="font-sans-sb text-[14px] text-ink">Cook this every week?</Text>
       </View>
-      <Text className="font-sans mt-1 text-[12.5px] leading-[18px]" style={{ color: c.subtle }}>
+      <Text className="font-sans mt-1 text-[12px] leading-[18px]" style={{ color: c.subtle }}>
         We will post it for you the night before, so you never have to type it again.
         You can change or stop it any time.
       </Text>
@@ -114,7 +114,7 @@ export function RepeatDish({ dish, onDone }: { dish: DishRow; onDone?: () => voi
               backgroundColor: days.length ? c.accent : c.inset,
             }}
           >
-            <Text className="font-sans-sb text-[13.5px]" style={{ color: days.length ? c.onAccent : c.muted }}>
+            <Text className="font-sans-sb text-[13px]" style={{ color: days.length ? c.onAccent : c.muted }}>
               {busy ? 'Saving…' : days.length ? 'Repeat on these days' : 'Pick a day'}
             </Text>
           </View>
@@ -177,8 +177,8 @@ export function RepeatList() {
             {i > 0 ? <View className="ml-4 h-px bg-line" /> : null}
             <View className="flex-row items-center gap-3 px-4 py-3">
               <View className="min-w-0 flex-1">
-                <Text className="font-sans-md text-[14.5px] text-ink" numberOfLines={1}>{t.dish_name}</Text>
-                <Text className="mt-0.5 text-[11.5px] font-sans" style={{ color: c.subtle }} numberOfLines={1}>
+                <Text className="font-sans-md text-[14px] text-ink" numberOfLines={1}>{t.dish_name}</Text>
+                <Text className="mt-0.5 text-[11px] font-sans" style={{ color: c.subtle }} numberOfLines={1}>
                   {t.slot} · {t.days_of_week.map((d) => DAY_NAMES[d].slice(0, 3)).join(', ')} · ₹{t.price}
                 </Text>
               </View>

@@ -147,6 +147,38 @@ for (const file of files) {
   }
 }
 
+// ── Type scale: no half-pixels, nothing under 11px ──────────────────
+//
+// Twenty-five distinct font sizes had accumulated, six of them halves
+// (11.5px, 12.5px, 13.5px) that exist for no reason a reader could name,
+// and text down to 9px on the resident directory — unreadable for the
+// older neighbours the app is partly for. The scale's floor is 11.
+const typeProblems = [];
+for (const file of files) {
+  const code = stripComments(readFileSync(file, "utf8"));
+  const rel = file.slice(SRC.length + 1).split("\\").join("/");
+  const re = /text-\[([0-9.]+)px\]/g;
+  let hit;
+  while ((hit = re.exec(code))) {
+    const n = Number(hit[1]);
+    if (Number.isInteger(n) && n >= 11) continue;
+    typeProblems.push({
+      file: rel,
+      line: code.slice(0, hit.index).split("\n").length,
+      value: hit[0],
+      why: Number.isInteger(n) ? "below the 11px floor" : "a half-pixel size",
+    });
+  }
+}
+if (typeProblems.length) {
+  console.error(`check-ui: ${typeProblems.length} type-scale problem(s).\n`);
+  for (const t of typeProblems) {
+    console.error(`  ${t.file}:${t.line}`);
+    console.error(`    ${t.value} — ${t.why}. Use 11, 12, 13, 14 or 15.\n`);
+  }
+  process.exit(1);
+}
+
 if (problems.length === 0) {
   console.log(`check-ui: ${files.length} files, no animated components carrying layout or paint in a className.`);
   process.exit(0);

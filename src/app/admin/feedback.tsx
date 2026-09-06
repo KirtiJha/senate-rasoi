@@ -64,7 +64,7 @@ export default function AdminFeedbackScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
-          <Text className="font-sans mb-3 text-[13.5px]" style={{ color: c.subtle }}>
+          <Text className="font-sans mb-3 text-[13px]" style={{ color: c.subtle }}>
             {open === 0
               ? 'Nothing waiting on you.'
               : `${open} report${open === 1 ? '' : 's'} waiting on a reply.`}
@@ -85,7 +85,7 @@ export default function AdminFeedbackScreen() {
                       borderWidth: 1,
                       borderColor: on ? c.accent : c.line,
                     }}>
-                    <Text className="font-sans-sb text-[12.5px]" style={{ color: on ? c.onAccent : c.muted }}>
+                    <Text className="font-sans-sb text-[12px]" style={{ color: on ? c.onAccent : c.muted }}>
                       {label}{n !== null ? ` ${n}` : ''}
                     </Text>
                   </View>
@@ -107,7 +107,7 @@ export default function AdminFeedbackScreen() {
                 <View pointerEvents="none" className="mb-2 card p-3.5">
                   <View className="flex-row items-start gap-2">
                     <View style={{ flex: 1 }}>
-                      <Text className="font-sans-sb text-[14.5px] text-ink" numberOfLines={2}>{it.title}</Text>
+                      <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={2}>{it.title}</Text>
                       <Text className="font-sans mt-0.5 text-[12px]" style={{ color: c.faint }}>
                         {FEEDBACK_KINDS.find((k) => k.key === it.kind)?.label}
                         {it.author?.name ? ` · ${it.author.name}` : ''}

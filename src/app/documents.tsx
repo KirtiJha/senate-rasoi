@@ -197,7 +197,7 @@ function DocRowView({
         <View className="flex-row items-center gap-1.5">
           <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{doc.name}</Text>
           <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: doc.is_public ? c.successSoft : c.inset }}>
-            <Text className="text-[9px] font-sans-sb uppercase" style={{ color: doc.is_public ? c.success : c.muted }}>{doc.is_public ? 'Public' : 'Private'}</Text>
+            <Text className="text-[11px] font-sans-sb uppercase" style={{ color: doc.is_public ? c.success : c.muted }}>{doc.is_public ? 'Public' : 'Private'}</Text>
           </View>
         </View>
         <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>{meta}</Text>

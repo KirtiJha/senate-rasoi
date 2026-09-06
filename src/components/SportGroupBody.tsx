@@ -226,7 +226,7 @@ export function SportGroupBody({
               className="mt-3 flex-row items-center gap-1.5 rounded-full px-3 py-1.5 active:opacity-70"
             >
               <Ionicons name="exit-outline" size={13} color={c.muted} />
-              <Text className="text-[12.5px] font-sans-sb text-muted">Leave group</Text>
+              <Text className="text-[12px] font-sans-sb text-muted">Leave group</Text>
             </Pressable>
           </>
         ) : (
@@ -293,7 +293,7 @@ export function SportGroupBody({
                       {m.is_captain ? (
                         <View className="flex-row items-center gap-0.5 rounded-full bg-inset px-1.5 py-0.5">
                           <Text style={{ fontSize: 9 }}>👑</Text>
-                          <Text className="text-[9px] font-sans-sb uppercase text-muted">Captain</Text>
+                          <Text className="text-[11px] font-sans-sb uppercase text-muted">Captain</Text>
                         </View>
                       ) : null}
                     </View>
@@ -379,7 +379,7 @@ export function SportGroupBody({
           className="mt-4 flex-row items-center justify-center gap-1.5 rounded-2xl border border-dashed border-line py-3 active:bg-inset"
         >
           <Ionicons name="trophy-outline" size={15} color={c.muted} />
-          <Text className="text-[12.5px] font-sans-sb text-muted">Add a tournament</Text>
+          <Text className="text-[12px] font-sans-sb text-muted">Add a tournament</Text>
         </Pressable>
       ) : null}
 

@@ -53,7 +53,7 @@ export function InviteNeighbours({
           <Text className="font-sans-bold text-[15px] text-ink">
             {hero ? 'Aangan works once your neighbours are here' : 'Invite your neighbours'}
           </Text>
-          <Text className="font-sans mt-0.5 text-[12.5px] leading-[18px] text-muted">
+          <Text className="font-sans mt-0.5 text-[12px] leading-[18px] text-muted">
             {hero
               ? `Send this to your society group. It opens sign-up with ${societyName} already chosen, so nobody lands in the wrong one.`
               : `Opens sign-up with ${societyName} already chosen.`}

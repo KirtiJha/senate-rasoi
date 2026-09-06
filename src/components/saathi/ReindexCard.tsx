@@ -64,7 +64,7 @@ export function ReindexCard() {
         <Ionicons name="sparkles-outline" size={17} color={c.accent} />
         <Text className="font-sans-sb text-[14px] text-ink">Saathi search index</Text>
       </View>
-      <Text className="font-sans mt-1 text-[12.5px] leading-[18px] text-subtle">
+      <Text className="font-sans mt-1 text-[12px] leading-[18px] text-subtle">
         Saathi can only find what has been indexed. New posts and listings are added
         automatically — rebuild only after a bulk import, or if answers seem to be
         missing things that exist.
@@ -97,7 +97,7 @@ export function ReindexCard() {
               borderColor: running ? c.line : c.accentLine,
             }}
           >
-            <Text className="font-sans-sb text-[13.5px]" style={{ color: running ? c.muted : c.accent }}>
+            <Text className="font-sans-sb text-[13px]" style={{ color: running ? c.muted : c.accent }}>
               {running ? 'Indexing…' : 'Rebuild index'}
             </Text>
           </View>

@@ -147,7 +147,7 @@ export function HistorySheet({
                         >
                           {s.title ?? 'Untitled chat'}
                         </Text>
-                        <Text className="mt-0.5 text-[11.5px] font-sans" style={{ color: c.subtle }}>
+                        <Text className="mt-0.5 text-[11px] font-sans" style={{ color: c.subtle }}>
                           {relativeDay(s.updated_at)}
                         </Text>
                       </View>

@@ -98,13 +98,13 @@ export function ListingRequests({
                   ) : null}
                 </Text>
               ) : (
-                <Text className="font-sans-sb text-[13.5px]" style={{ color: c.accent }}>
+                <Text className="font-sans-sb text-[13px]" style={{ color: c.accent }}>
                   Sent — the owner has been notified
                 </Text>
               )}
 
               {r.message ? (
-                <Text className="font-sans mt-1 text-[13.5px] leading-[20px] text-ink">
+                <Text className="font-sans mt-1 text-[13px] leading-[20px] text-ink">
                   {r.message}
                 </Text>
               ) : (

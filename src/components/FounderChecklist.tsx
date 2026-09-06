@@ -85,7 +85,7 @@ export function FounderChecklist({ communityId, societyName }: { communityId: st
         </View>
         <View className="min-w-0 flex-1">
           <Text className="font-sans-bold text-[15px] text-ink">Set up {societyName}</Text>
-          <Text className="font-sans mt-0.5 text-[12.5px] leading-[18px] text-muted">
+          <Text className="font-sans mt-0.5 text-[12px] leading-[18px] text-muted">
             {done} of {steps.length} done. Five small things, and the aangan is alive.
           </Text>
         </View>

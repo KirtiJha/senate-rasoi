@@ -701,7 +701,7 @@ function EditPostModal({ visible, post, isAdmin, onClose, onSaved, c }: {
         {photos.length < MAX_PHOTOS ? (
           <Pressable onPress={pickPhotos} className="items-center justify-center rounded-xl border border-dashed border-line bg-inset active:opacity-70" style={{ width: 76, height: 76 }}>
             <Ionicons name="image-outline" size={20} color={c.muted} />
-            <Text className="font-sans mt-0.5 text-[10px] text-muted">Add</Text>
+            <Text className="font-sans mt-0.5 text-[11px] text-muted">Add</Text>
           </Pressable>
         ) : null}
       </View>

@@ -224,7 +224,7 @@ export default function AdminScreen() {
               <View key={s.label} className="flex-1 items-center rounded-2xl bg-inset py-2.5 px-1">
                 <Ionicons name={s.icon} size={15} color={c.muted} />
                 <Text className="font-sans-bold text-[16px] text-ink mt-0.5">{s.value}</Text>
-                <Text className="font-sans text-[10px] text-faint">{s.label}</Text>
+                <Text className="font-sans text-[11px] text-faint">{s.label}</Text>
               </View>
             ))}
           </View>
@@ -505,7 +505,7 @@ function ReportsTab({
               <View key={r.id} className="card p-3.5">
                 <View className="mb-1.5 flex-row flex-wrap items-center gap-1.5">
                   <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: color + '20' }}>
-                    <Text className="text-[10px] font-sans-sb uppercase" style={{ color }}>{r.status}</Text>
+                    <Text className="text-[11px] font-sans-sb uppercase" style={{ color }}>{r.status}</Text>
                   </View>
                   <Badge tone="neutral" size="sm" label={r.target_type} />
                   <Badge tone="danger" size="sm" label={r.reason} />

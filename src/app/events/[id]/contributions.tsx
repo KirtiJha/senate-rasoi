@@ -296,7 +296,7 @@ export default function ContributionsScreen() {
                         </Text>
                         <View className="mt-0.5 flex-row items-center gap-1.5">
                           <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: c.accentSoft }}>
-                            <Text className="text-[10px] font-sans-sb" style={{ color: c.accent }}>{m.label}</Text>
+                            <Text className="text-[11px] font-sans-sb" style={{ color: c.accent }}>{m.label}</Text>
                           </View>
                           {row.method ? <Text className="font-sans text-[11px] text-faint">{row.method}</Text> : null}
                           {row.receipt_url ? (

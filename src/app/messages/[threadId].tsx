@@ -349,7 +349,7 @@ function DmBubble({
           <Text className={`text-[14px] leading-5 ${isMine ? 'text-white' : 'text-ink'}`}>{message.body}</Text>
         ) : null}
         <View className={`mt-0.5 flex-row items-center gap-1 ${isMine ? 'justify-end' : ''}`}>
-          <Text className={`text-[10px] ${isMine ? 'text-white/70' : 'text-faint'}`}>{time(message.created_at)}</Text>
+          <Text className={`text-[11px] ${isMine ? 'text-white/70' : 'text-faint'}`}>{time(message.created_at)}</Text>
           {/* One tick: it left you. Two: they have seen it. The second tick
               turns live, because their reading it is an update this screen
               subscribes to. */}

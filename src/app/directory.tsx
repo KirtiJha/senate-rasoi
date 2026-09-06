@@ -349,7 +349,7 @@ export default function DirectoryScreen() {
                     </Text>
                     {g.block ? (
                       <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: c.infoSoft }}>
-                        <Text className="text-[10px] font-sans-sb uppercase" style={{ color: c.info }}>Block {g.block}</Text>
+                        <Text className="text-[11px] font-sans-sb uppercase" style={{ color: c.info }}>Block {g.block}</Text>
                       </View>
                     ) : null}
                     {g.rows.length > 1 ? <Text className="font-sans text-[12px] text-faint">· {g.rows.length} residents</Text> : null}
@@ -715,17 +715,17 @@ function ResidentRow({
         <View className="mt-0.5 flex-row items-center gap-1.5">
           {r.resident_type ? (
             <View className="rounded px-1.5 py-0.5" style={{ backgroundColor: typeColor + '20' }}>
-              <Text className="text-[9px] font-sans-sb uppercase" style={{ color: typeColor }}>{r.resident_type}</Text>
+              <Text className="text-[11px] font-sans-sb uppercase" style={{ color: typeColor }}>{r.resident_type}</Text>
             </View>
           ) : null}
           {!r.onboarded ? (
             <View className="rounded px-1.5 py-0.5" style={{ backgroundColor: c.warnSoft }}>
-              <Text className="text-[9px] font-sans-sb uppercase" style={{ color: '#A16207' }}>Not on Aangan</Text>
+              <Text className="text-[11px] font-sans-sb uppercase" style={{ color: '#A16207' }}>Not on Aangan</Text>
             </View>
           ) : null}
           {!r.shifted ? (
             <View className="rounded px-1.5 py-0.5" style={{ backgroundColor: c.inset }}>
-              <Text className="text-[9px] font-sans-sb uppercase text-muted">Not moved in</Text>
+              <Text className="text-[11px] font-sans-sb uppercase text-muted">Not moved in</Text>
             </View>
           ) : null}
           {sub ? <Text className="font-sans flex-1 text-[12px] text-muted" numberOfLines={1}>{sub}</Text> : null}

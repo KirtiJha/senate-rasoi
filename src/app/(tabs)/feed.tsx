@@ -264,13 +264,13 @@ const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userI
           {post.pinned ? (
             <View className="flex-row items-center gap-1 rounded-full bg-highlight-soft px-2 py-0.5">
               <Ionicons name="pin" size={10} color={c.highlightInk} />
-              <Text className="text-[10px] font-sans-sb text-highlight-ink">Pinned</Text>
+              <Text className="text-[11px] font-sans-sb text-highlight-ink">Pinned</Text>
             </View>
           ) : null}
           {post.resolved ? (
             <View className="flex-row items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5">
               <Ionicons name="checkmark-circle" size={10} color={c.accent} />
-              <Text className="text-[10px] font-sans-sb text-accent">Resolved</Text>
+              <Text className="text-[11px] font-sans-sb text-accent">Resolved</Text>
             </View>
           ) : null}
           <Text className="font-sans ml-auto text-[11px] text-faint">{timeAgo}</Text>

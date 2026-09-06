@@ -329,12 +329,12 @@ function RequestCard({
           </Text>
         </View>
         <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: urgent ? c.danger : c.inset }}>
-          <Text className="text-[10px] font-sans-sb" style={{ color: urgent ? '#fff' : c.muted }}>{URGENCY_LABELS[r.urgency]}</Text>
+          <Text className="text-[11px] font-sans-sb" style={{ color: urgent ? '#fff' : c.muted }}>{URGENCY_LABELS[r.urgency]}</Text>
         </View>
       </View>
 
       {r.hospital ? <Text className="font-sans mt-2 text-[13px] text-ink">🏥 {r.hospital}</Text> : null}
-      {r.note ? <Text className="font-sans mt-0.5 text-[12.5px] leading-[18px] text-muted">{r.note}</Text> : null}
+      {r.note ? <Text className="font-sans mt-0.5 text-[12px] leading-[18px] text-muted">{r.note}</Text> : null}
 
       {mine ? (
         <>
@@ -371,17 +371,17 @@ function RequestCard({
           )}
           <View className="mt-2.5 flex-row gap-2">
             <Pressable onPress={() => onClose('fulfilled')} className="flex-1 items-center rounded-xl py-2.5" style={{ backgroundColor: c.accent }}>
-              <Text className="text-[12.5px] font-sans-sb" style={{ color: c.onAccent }}>Got the blood</Text>
+              <Text className="text-[12px] font-sans-sb" style={{ color: c.onAccent }}>Got the blood</Text>
             </Pressable>
             <Pressable onPress={() => onClose('cancelled')} className="flex-1 items-center rounded-xl py-2.5" style={{ backgroundColor: c.inset }}>
-              <Text className="text-[12.5px] font-sans-sb text-muted">No longer needed</Text>
+              <Text className="text-[12px] font-sans-sb text-muted">No longer needed</Text>
             </Pressable>
           </View>
         </>
       ) : iOffered ? (
         <View className="mt-2.5 flex-row items-center gap-2 rounded-xl bg-inset px-3 py-2.5">
           <Ionicons name="checkmark-circle" size={16} color={c.accent} />
-          <Text className="flex-1 font-sans-sb text-[12.5px] text-ink">You have offered — they have your number</Text>
+          <Text className="flex-1 font-sans-sb text-[12px] text-ink">You have offered — they have your number</Text>
           <Pressable onPress={onWithdraw} hitSlop={6} className="px-2 py-1 active:opacity-60">
             <Text className="text-[12px] font-sans-sb text-muted">Undo</Text>
           </Pressable>
@@ -405,7 +405,7 @@ function RequestCard({
           {phone ? (
             <Touchable feel="card" haptic={null} onPress={() => openUrl(`tel:${phone}`)}>
               <View pointerEvents="none" className="items-center rounded-xl border border-line py-2.5">
-              <Text className="text-[12.5px] font-sans-sb text-ink">Call {r.requester?.name ?? 'them'}</Text>
+              <Text className="text-[12px] font-sans-sb text-ink">Call {r.requester?.name ?? 'them'}</Text>
             
               </View>
             </Touchable>
@@ -455,7 +455,7 @@ function AskSheet({
         />
       )}
     >
-      <Text className="font-sans mb-3 text-[12.5px] leading-[18px] text-muted">
+      <Text className="font-sans mb-3 text-[12px] leading-[18px] text-muted">
         This reaches every neighbour whose blood can be given to this group — not only the same
         group — as a notification they cannot have switched off.
       </Text>
@@ -467,7 +467,7 @@ function AskSheet({
           return (
             <Pressable key={g} onPress={() => setGroup(g)} className="rounded-xl border px-3.5 py-2"
               style={{ borderColor: on ? c.danger : c.line, backgroundColor: on ? c.danger : c.surface }}>
-              <Text className="text-[13.5px] font-sans-bold" style={{ color: on ? '#fff' : c.muted }}>{g}</Text>
+              <Text className="text-[13px] font-sans-bold" style={{ color: on ? '#fff' : c.muted }}>{g}</Text>
             </Pressable>
           );
         })}

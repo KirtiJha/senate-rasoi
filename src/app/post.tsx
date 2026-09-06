@@ -353,7 +353,7 @@ export default function PostScreen({
               <Text className="font-display-x mt-2 text-center text-[22px] text-ink">
                 {justPosted.dish_name} is live
               </Text>
-              <Text className="font-sans mt-1 text-center text-[13.5px] leading-5 text-subtle">
+              <Text className="font-sans mt-1 text-center text-[13px] leading-5 text-subtle">
                 Neighbours can order it now.
               </Text>
             </View>

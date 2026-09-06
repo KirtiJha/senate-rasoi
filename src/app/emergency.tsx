@@ -109,7 +109,7 @@ export default function EmergencyScreen() {
                           "Child helpline" both truncated to "Women'…" at 390px
                           when four of these shared two columns. */}
                       <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={2}>{n.name}</Text>
-                      <Text className="font-sans text-[11.5px] text-muted" numberOfLines={1}>{n.blurb}</Text>
+                      <Text className="font-sans text-[11px] text-muted" numberOfLines={1}>{n.blurb}</Text>
                     </View>
                     <Text className="font-sans-bold text-[17px]" style={{ color: tone.ink }}>{n.phone}</Text>
                   </Pressable>

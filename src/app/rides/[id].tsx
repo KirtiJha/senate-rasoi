@@ -292,20 +292,20 @@ export default function RideDetailScreen() {
 
             <View className="mt-2 flex-row flex-wrap items-center gap-x-2 gap-y-1">
               <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.inset }}>
-                <Text className="text-[11.5px] font-sans-sb" style={{ color: c.muted }}>
+                <Text className="text-[11px] font-sans-sb" style={{ color: c.muted }}>
                   {ride.seats_total} seat{ride.seats_total === 1 ? '' : 's'}
                 </Text>
               </View>
               {ride.price_per_seat != null ? (
                 <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.inset }}>
-                  <Text className="text-[11.5px] font-sans-sb" style={{ color: c.muted }}>
+                  <Text className="text-[11px] font-sans-sb" style={{ color: c.muted }}>
                     {ride.price_per_seat === 0 ? 'Free' : `₹${ride.price_per_seat} a seat`}
                   </Text>
                 </View>
               ) : null}
               {ride.preference !== 'all' ? (
                 <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.accentSoft }}>
-                  <Text className="text-[11.5px] font-sans-sb" style={{ color: c.accent }}>
+                  <Text className="text-[11px] font-sans-sb" style={{ color: c.accent }}>
                     {PREFERENCE_LABELS[ride.preference]}
                   </Text>
                 </View>
@@ -316,7 +316,7 @@ export default function RideDetailScreen() {
             </View>
 
             {ride.note ? (
-              <Text className="font-sans mt-2.5 text-[13.5px] leading-[20px] text-ink">{ride.note}</Text>
+              <Text className="font-sans mt-2.5 text-[13px] leading-[20px] text-ink">{ride.note}</Text>
             ) : null}
 
             <View className="mt-3 flex-row items-center gap-2.5 border-t border-line pt-3">
@@ -382,7 +382,7 @@ export default function RideDetailScreen() {
                           borderColor: !away && on ? c.accent : c.line,
                           opacity: away ? 0.6 : 1,
                         }}>
-                        <Text className="font-sans-sb text-[12.5px]"
+                        <Text className="font-sans-sb text-[12px]"
                           style={{
                             color: !away && on ? c.onAccent : c.muted,
                             textDecorationLine: away ? 'line-through' : 'none',
@@ -404,7 +404,7 @@ export default function RideDetailScreen() {
                 <>
                   <View className="flex-row items-center gap-2">
                     <Ionicons name="repeat" size={15} color={c.accent} />
-                    <Text className="flex-1 font-sans-sb text-[14.5px] text-ink">
+                    <Text className="flex-1 font-sans-sb text-[14px] text-ink">
                       {myStanding.status === 'accepted' ? 'You have a regular seat'
                         : myStanding.status === 'declined' ? 'No regular seat on this ride'
                           : 'Regular seat requested'}
@@ -415,7 +415,7 @@ export default function RideDetailScreen() {
                       tone={myStanding.status === 'accepted' ? 'success' : 'neutral'}
                     />
                   </View>
-                  <Text className="font-sans mt-1 text-[12.5px]" style={{ color: c.subtle }}>
+                  <Text className="font-sans mt-1 text-[12px]" style={{ color: c.subtle }}>
                     {myStanding.seats} seat{myStanding.seats === 1 ? '' : 's'}
                     {myStanding.ends_on ? ` · until ${formatRideDate(myStanding.ends_on)}` : ''}
                     {myStanding.status === 'accepted'
@@ -438,7 +438,7 @@ export default function RideDetailScreen() {
                 <>
                   <View className="flex-row items-center gap-2">
                     <Ionicons name="repeat-outline" size={15} color={c.accent} />
-                    <Text className="flex-1 font-sans-sb text-[14.5px] text-ink">Travel this way every week?</Text>
+                    <Text className="flex-1 font-sans-sb text-[14px] text-ink">Travel this way every week?</Text>
                   </View>
                   <Text className="font-sans mt-1 text-[13px] leading-[19px]" style={{ color: c.subtle }}>
                     Agree it once and the seat is yours on every one of these days.
@@ -468,7 +468,7 @@ export default function RideDetailScreen() {
               {myForDate ? (
                 <>
                   <View className="flex-row items-center gap-2">
-                    <Text className="flex-1 font-sans-sb text-[14.5px] text-ink">
+                    <Text className="flex-1 font-sans-sb text-[14px] text-ink">
                       {myForDate.status === 'accepted' ? 'Your seat is confirmed'
                         : myForDate.status === 'declined' ? 'The driver could not fit you in'
                           : 'Waiting for the driver'}
@@ -479,7 +479,7 @@ export default function RideDetailScreen() {
                       tone={myForDate.status === 'accepted' ? 'success' : 'neutral'}
                     />
                   </View>
-                  <Text className="font-sans mt-1 text-[12.5px]" style={{ color: c.subtle }}>
+                  <Text className="font-sans mt-1 text-[12px]" style={{ color: c.subtle }}>
                     {formatRideDate(myForDate.ride_date)} · {myForDate.seats} seat{myForDate.seats === 1 ? '' : 's'}
                   </Text>
                   {myForDate.status !== 'declined' ? (

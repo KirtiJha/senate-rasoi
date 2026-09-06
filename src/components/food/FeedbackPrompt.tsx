@@ -78,7 +78,7 @@ export function FeedbackPrompt() {
         <Text className="mt-1 font-sans-sb text-[15px] text-ink">
           {item.dish_name}
         </Text>
-        <Text className="font-sans text-[12.5px]" style={{ color: c.subtle }}>
+        <Text className="font-sans text-[12px]" style={{ color: c.subtle }}>
           from {item.chef_name}
         </Text>
       </View>
@@ -91,7 +91,7 @@ export function FeedbackPrompt() {
               <View pointerEvents="none" className="flex-row items-center justify-center gap-2 rounded-xl py-2.5"
                 style={{ backgroundColor: c.accentSoft, borderWidth: 1, borderColor: c.accentLine }}>
                 <Ionicons name="thumbs-up-outline" size={16} color={c.accent} />
-                <Text className="font-sans-sb text-[13.5px]" style={{ color: c.accent }}>Would order again</Text>
+                <Text className="font-sans-sb text-[13px]" style={{ color: c.accent }}>Would order again</Text>
               </View>
             </Touchable>
           </View>
@@ -100,14 +100,14 @@ export function FeedbackPrompt() {
               accessibilityRole="button" accessibilityLabel="No, I would not order again">
               <View pointerEvents="none" className="items-center justify-center rounded-xl py-2.5"
                 style={{ backgroundColor: c.inset }}>
-                <Text className="font-sans-sb text-[13.5px]" style={{ color: c.muted }}>Not this time</Text>
+                <Text className="font-sans-sb text-[13px]" style={{ color: c.muted }}>Not this time</Text>
               </View>
             </Touchable>
           </View>
         </View>
       ) : (
         <View className="px-4 py-3.5">
-          <Text className="font-sans mb-2 text-[12.5px] leading-[18px]" style={{ color: c.subtle }}>
+          <Text className="font-sans mb-2 text-[12px] leading-[18px]" style={{ color: c.subtle }}>
             {answer
               ? 'Anything to add? This shows on the dish with your name.'
               : 'What would you tell them? This shows on the dish with your name, for the whole society.'}
@@ -127,7 +127,7 @@ export function FeedbackPrompt() {
               <Touchable onPress={() => submit(answer)} disabled={busy} accessibilityRole="button" accessibilityLabel="Send">
                 <View pointerEvents="none" className="items-center justify-center rounded-xl py-2.5"
                   style={{ backgroundColor: c.accent, opacity: busy ? 0.6 : 1 }}>
-                  <Text className="font-sans-sb text-[13.5px]" style={{ color: c.onAccent }}>
+                  <Text className="font-sans-sb text-[13px]" style={{ color: c.onAccent }}>
                     {busy ? 'Sending…' : note.trim() ? 'Send' : 'Skip the note'}
                   </Text>
                 </View>
@@ -137,7 +137,7 @@ export function FeedbackPrompt() {
               accessibilityRole="button" accessibilityLabel="Back">
               <View pointerEvents="none" className="items-center justify-center rounded-xl px-4 py-2.5"
                 style={{ backgroundColor: c.inset }}>
-                <Text className="font-sans-sb text-[13.5px]" style={{ color: c.muted }}>Back</Text>
+                <Text className="font-sans-sb text-[13px]" style={{ color: c.muted }}>Back</Text>
               </View>
             </Touchable>
           </View>

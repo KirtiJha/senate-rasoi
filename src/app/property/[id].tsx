@@ -301,7 +301,7 @@ function ReferralRow({ r, isOwner, c }: { r: PropertyReferralRow; isOwner: boole
         <Ionicons name="person-circle-outline" size={18} color={c.faint} />
         <Text className="flex-1 font-sans-bold text-[14px] text-ink">{r.candidate_name}</Text>
         <Pressable disabled={!isOwner} onPress={() => isOwner && setReferralStatus(r.id, NEXT[r.status])} className="rounded-full px-2.5 py-1" style={{ backgroundColor: m.bg }}>
-          <Text className="text-[10px] font-sans-sb" style={{ color: m.fg }}>{m.label}</Text>
+          <Text className="text-[11px] font-sans-sb" style={{ color: m.fg }}>{m.label}</Text>
         </Pressable>
       </View>
       <Text className="font-sans mt-0.5 text-[11px] text-muted">Recommended by {r.referrer?.name ?? 'a neighbour'}{r.referrer?.flat ? ` · Flat ${r.referrer.flat}` : ''}</Text>

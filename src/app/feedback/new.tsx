@@ -159,7 +159,7 @@ export default function NewFeedbackScreen() {
                   style={{ width: 78, height: 78, backgroundColor: c.inset, borderWidth: 1, borderColor: c.line }}
                 >
                   <Ionicons name="image-outline" size={19} color={c.muted} />
-                  <Text className="font-sans mt-1 text-[10px]" style={{ color: c.faint }}>Screenshot</Text>
+                  <Text className="font-sans mt-1 text-[11px]" style={{ color: c.faint }}>Screenshot</Text>
                 </View>
               </Touchable>
             ) : null}

@@ -101,7 +101,7 @@ export default function RecommendScreen() {
                     <View className="mb-1.5 flex-row items-center gap-1.5">
                       <View className="flex-row items-center gap-1 rounded-full px-2 py-0.5" style={{ backgroundColor: c.accentSoft }}>
                         <Ionicons name={meta.icon as any} size={11} color={c.accent} />
-                        <Text className="text-[10px] font-sans-sb" style={{ color: c.accent }}>{meta.label}</Text>
+                        <Text className="text-[11px] font-sans-sb" style={{ color: c.accent }}>{meta.label}</Text>
                       </View>
                       <Text className="font-sans ml-auto text-[11px] text-faint">{q.answer_count} {q.answer_count === 1 ? 'answer' : 'answers'}</Text>
                     </View>

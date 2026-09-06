@@ -161,7 +161,7 @@ export function CourtBookings({
             <View key={b.id} className="flex-row items-center gap-2.5 rounded-2xl border border-line bg-inset px-3.5 py-3">
               <Ionicons name="calendar-outline" size={17} color={c.muted} />
               <View className="min-w-0 flex-1">
-                <Text className="font-sans-sb text-[13.5px] text-ink" numberOfLines={1}>
+                <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>
                   {b.title || `Weekly ${noun}`} has run out of dates
                 </Text>
                 <Text className="font-sans text-[12px] text-muted">
@@ -196,7 +196,7 @@ export function CourtBookings({
           ))}
           {recent.length ? (
             <>
-              <Text className="mt-1 text-[10px] font-sans-sb uppercase tracking-wider text-faint">Recent</Text>
+              <Text className="mt-1 text-[11px] font-sans-sb uppercase tracking-wider text-faint">Recent</Text>
               {recent.map((s) => (
                 <SessionCard key={s.id} s={s} userId={userId} accent={accent} c={c} busy={busy === s.id}
                   onRespond={respond} onCancel={onCancelSession} onManage={setManageSession} onEdit={setEditSession} />

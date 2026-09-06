@@ -393,7 +393,7 @@ export default function LendItemDetailScreen() {
                   <>
                     <View className="flex-row items-center gap-2 rounded-xl px-3 py-2.5" style={{ backgroundColor: c.highlightSoft }}>
                       <Ionicons name="time-outline" size={16} color={c.highlightInk} />
-                      <Text className="flex-1 font-sans text-[12.5px] leading-[18px]" style={{ color: c.highlightInk }}>
+                      <Text className="flex-1 font-sans text-[12px] leading-[18px]" style={{ color: c.highlightInk }}>
                         Lent out at the moment. Ask for it and {ownerName} will have your request waiting when it comes back.
                       </Text>
                     </View>

@@ -79,7 +79,7 @@ export function WatchList() {
   if (watches.length === 0) {
     return (
       <View className="card px-4 py-5">
-        <Text className="font-sans-md text-[13.5px] leading-[19px] text-subtle">
+        <Text className="font-sans-md text-[13px] leading-[19px] text-subtle">
           Nothing yet. Ask Saathi to tell you when something appears — “let me know when a 2 BHK
           comes up” — and it will show here.
         </Text>
@@ -111,8 +111,8 @@ export function WatchList() {
             {i > 0 ? <View className="ml-4 h-px bg-line" /> : null}
             <View className="flex-row items-center gap-3 px-4 py-3">
               <View className="min-w-0 flex-1">
-                <Text className="font-sans-md text-[14.5px] text-ink" numberOfLines={1}>{w.label}</Text>
-                <Text className="mt-0.5 text-[11.5px] font-sans" style={{ color: c.subtle }} numberOfLines={1}>
+                <Text className="font-sans-md text-[14px] text-ink" numberOfLines={1}>{w.label}</Text>
+                <Text className="mt-0.5 text-[11px] font-sans" style={{ color: c.subtle }} numberOfLines={1}>
                   {w.keywords.join(' + ')}
                   {w.last_fired_at ? ' · matched before' : ''}
                 </Text>

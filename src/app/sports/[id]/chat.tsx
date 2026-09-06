@@ -284,7 +284,7 @@ function Bubble({
             <Text className={`text-[14px] leading-5 ${mine ? 'text-white' : 'text-ink'}`}>{message.body}</Text>
           ) : null}
           <View className="mt-0.5 flex-row items-center justify-end gap-2">
-            <Text className={`text-[10px] ${mine ? 'text-white/70' : 'text-faint'}`}>{time(message.created_at)}</Text>
+            <Text className={`text-[11px] ${mine ? 'text-white/70' : 'text-faint'}`}>{time(message.created_at)}</Text>
             {canDelete ? (
               <Pressable onPress={onDelete} hitSlop={8} accessibilityRole="button" accessibilityLabel="Delete message">
                 <Ionicons name="trash-outline" size={12} color={mine ? '#ffffffaa' : c.faint} />

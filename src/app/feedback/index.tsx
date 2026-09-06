@@ -37,7 +37,7 @@ export default function MyFeedbackScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Container narrow>
-          <Text className="font-sans mb-4 text-[13.5px] leading-[20px]" style={{ color: c.subtle }}>
+          <Text className="font-sans mb-4 text-[13px] leading-[20px]" style={{ color: c.subtle }}>
             Found something broken, or wish Aangan did something it does not? Tell us here rather than
             in the group chat — you will see the reply on this screen.
           </Text>
@@ -62,8 +62,8 @@ export default function MyFeedbackScreen() {
                     <Ionicons name={k.icon as never} size={17} color={c.accent} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text className="font-sans-sb text-[14.5px] text-ink">{k.label}</Text>
-                    <Text className="font-sans text-[12.5px]" style={{ color: c.subtle }}>{k.blurb}</Text>
+                    <Text className="font-sans-sb text-[14px] text-ink">{k.label}</Text>
+                    <Text className="font-sans text-[12px]" style={{ color: c.subtle }}>{k.blurb}</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={c.faint} />
                 </View>
@@ -114,7 +114,7 @@ export default function MyFeedbackScreen() {
                 <View pointerEvents="none" className="mb-2 card p-3.5">
                   <View className="flex-row items-start gap-2">
                     <View style={{ flex: 1 }}>
-                      <Text className="font-sans-sb text-[14.5px] text-ink" numberOfLines={2}>{it.title}</Text>
+                      <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={2}>{it.title}</Text>
                       <Text className="font-sans mt-0.5 text-[12px]" style={{ color: c.faint }}>
                         {FEEDBACK_KINDS.find((k) => k.key === it.kind)?.label}
                       </Text>

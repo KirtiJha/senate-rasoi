@@ -242,7 +242,7 @@ function ItemCard({ item, isOffer, waiting = 0, yours = false }: { item: LendIte
               open each card to discover somebody had asked. */}
           {waiting > 0 ? (
             <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: ACCENT }}>
-              <Text className="text-[10px] font-sans-sb text-white">{waiting} waiting</Text>
+              <Text className="text-[11px] font-sans-sb text-white">{waiting} waiting</Text>
             </View>
           ) : null}
         </View>

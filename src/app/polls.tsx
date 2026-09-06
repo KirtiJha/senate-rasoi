@@ -213,7 +213,7 @@ function PollCard({
           </Text>
           {ended ? (
             <View className="rounded-full bg-inset px-2 py-0.5">
-              <Text className="text-[10px] font-sans-sb text-muted">Closed</Text>
+              <Text className="text-[11px] font-sans-sb text-muted">Closed</Text>
             </View>
           ) : null}
           {(isAuthor || isAdmin) ? (

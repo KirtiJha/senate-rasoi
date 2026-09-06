@@ -181,7 +181,7 @@ function MessageBubble({ message, isMine, isOwner, canDelete, accent, onDelete, 
         ) : null}
         <View className="max-w-[80%] rounded-2xl rounded-br-md px-3 py-2" style={{ backgroundColor: accent }}>
           <Text className="font-sans text-[13px] leading-5 text-white">{message.body}</Text>
-          <Text className="font-sans mt-0.5 text-right text-[10px] text-white/70">{timeAgo(message.created_at)}</Text>
+          <Text className="font-sans mt-0.5 text-right text-[11px] text-white/70">{timeAgo(message.created_at)}</Text>
         </View>
       </View>
     );
@@ -194,12 +194,12 @@ function MessageBubble({ message, isMine, isOwner, canDelete, accent, onDelete, 
           <Text className="font-sans-sb text-[12px] text-ink">{message.author?.name ?? 'Someone'}</Text>
           {isOwner ? (
             <View className="rounded-full px-1.5 py-0.5" style={{ backgroundColor: accent + '20' }}>
-              <Text className="text-[9px] font-sans-sb uppercase tracking-wide" style={{ color: accent }}>Owner</Text>
+              <Text className="text-[11px] font-sans-sb uppercase tracking-wide" style={{ color: accent }}>Owner</Text>
             </View>
           ) : message.author?.flat ? (
             <Text className="font-sans text-[11px] text-faint">Flat {message.author.flat}</Text>
           ) : null}
-          <Text className="font-sans ml-auto text-[10px] text-faint">{timeAgo(message.created_at)}</Text>
+          <Text className="font-sans ml-auto text-[11px] text-faint">{timeAgo(message.created_at)}</Text>
         </View>
         <View className="self-start max-w-[88%] rounded-2xl rounded-tl-md bg-inset px-3 py-2">
           <Text className="font-sans text-[13px] leading-5 text-ink">{message.body}</Text>

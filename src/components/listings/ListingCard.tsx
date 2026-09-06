@@ -104,7 +104,7 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
                 color={photo ? '#FFFFFF' : c.muted}
               />
               <Text
-                className="text-[10px] font-sans-sb uppercase tracking-[0.05em]"
+                className="text-[11px] font-sans-sb uppercase tracking-[0.05em]"
                 style={{ color: photo ? '#FFFFFF' : c.muted, flexShrink: 1 }}
                 numberOfLines={1}
               >
@@ -118,7 +118,7 @@ export const ListingCard = memo(function ListingCard({ listing, onPress }: Listi
               className="absolute rounded-full px-2 py-0.5"
               style={{ top: 10, right: 10, backgroundColor: 'rgba(10,14,11,0.62)' }}
             >
-              <Text className="text-[10px] font-sans-sb uppercase text-white">{listing.status}</Text>
+              <Text className="text-[11px] font-sans-sb uppercase text-white">{listing.status}</Text>
             </View>
           ) : null}
 

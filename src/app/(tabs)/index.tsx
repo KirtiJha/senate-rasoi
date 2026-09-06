@@ -830,7 +830,7 @@ function AroundCard({
             )}
             <View className="min-w-0 flex-1">
               <Text
-                className="text-[10px] font-sans-sb uppercase tracking-[0.06em]"
+                className="text-[11px] font-sans-sb uppercase tracking-[0.06em]"
                 style={{ color: item.tint }}
                 numberOfLines={1}
               >
@@ -951,7 +951,7 @@ function FreshFoodStrip({ items, isDesktop }: { items: DishRow[]; isDesktop: boo
             </View>
             {serveLabel ? (
               <View className="absolute right-2 top-2 rounded-full px-2 py-0.5" style={{ backgroundColor: 'rgba(10,14,11,0.62)' }}>
-                <Text className="text-[10px] font-sans-sb text-white">{serveLabel}</Text>
+                <Text className="text-[11px] font-sans-sb text-white">{serveLabel}</Text>
               </View>
             ) : null}
 

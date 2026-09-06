@@ -103,7 +103,7 @@ export function TasksTab({
       {tasks.length === 0 ? (
         <View className="card items-center px-5 py-7">
           <Ionicons name="checkbox-outline" size={28} color={c.subtle} />
-          <Text className="mt-2 font-sans-sb text-[14.5px] text-ink">Nothing assigned yet</Text>
+          <Text className="mt-2 font-sans-sb text-[14px] text-ink">Nothing assigned yet</Text>
           <Text className="font-sans mt-1 text-center text-[13px] leading-[19px]" style={{ color: c.subtle }}>
             Break the celebration into jobs — pandal, prasad, sound, prizes — and give each one an owner
             and a date.
@@ -121,13 +121,13 @@ export function TasksTab({
                     <Ionicons name={STATUS_META[t.status].icon as never} size={19} color={tone(t.status)} />
                     <View className="min-w-0 flex-1">
                       <Text
-                        className="font-sans-md text-[14.5px] text-ink"
+                        className="font-sans-md text-[14px] text-ink"
                         numberOfLines={1}
                         style={t.status === 'done' ? { textDecorationLine: 'line-through', color: c.subtle } : undefined}
                       >
                         {t.title}
                       </Text>
-                      <Text className="mt-0.5 text-[11.5px] font-sans" numberOfLines={1}
+                      <Text className="mt-0.5 text-[11px] font-sans" numberOfLines={1}
                         style={{ color: overdue ? c.danger : c.subtle }}>
                         {t.assignee?.name ?? 'Unassigned'}
                         {t.due_date ? ` · ${overdue ? 'overdue — ' : ''}${formatDay(t.due_date)}` : ''}
@@ -257,7 +257,7 @@ function AddTask({
                 <View pointerEvents="none" className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1.5"
                   style={{ backgroundColor: on ? c.accentSoft : c.inset, borderWidth: 1, borderColor: on ? c.accentLine : 'transparent' }}>
                   <Avatar name={m.profile?.name ?? '?'} userId={m.profile?.id} size={18} />
-                  <Text className="text-[12.5px] font-sans-md" style={{ color: on ? c.accent : c.muted }}>
+                  <Text className="text-[12px] font-sans-md" style={{ color: on ? c.accent : c.muted }}>
                     {m.profile?.name ?? 'Member'}
                   </Text>
                 </View>
@@ -281,7 +281,7 @@ function AddTask({
                   accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={label}>
                   <View pointerEvents="none" className="items-center rounded-xl py-2"
                     style={{ backgroundColor: on ? c.accent : c.inset }}>
-                    <Text className="text-[12.5px] font-sans-sb" style={{ color: on ? c.onAccent : c.muted }}>{label}</Text>
+                    <Text className="text-[12px] font-sans-sb" style={{ color: on ? c.onAccent : c.muted }}>{label}</Text>
                   </View>
                 </Touchable>
               </View>
@@ -354,7 +354,7 @@ function TaskDetail({
   return (
     <Sheet visible={!!task} onClose={onClose} title={task.title}>
       <View className="px-4 pb-2">
-        <Text className="text-[12.5px] font-sans" style={{ color: c.subtle }}>
+        <Text className="text-[12px] font-sans" style={{ color: c.subtle }}>
           {task.assignee?.name ?? 'Unassigned'}
           {task.due_date ? ` · due ${formatDay(task.due_date)}` : ''} · {STATUS_META[task.status].label}
         </Text>
@@ -374,7 +374,7 @@ function TaskDetail({
                   <Text style={{ color: c.accent }}> · moved to {STATUS_META[u.status_after].label.toLowerCase()}</Text>
                 ) : null}
               </Text>
-              {u.note ? <Text className="font-sans mt-1 text-[13.5px] leading-5 text-ink">{u.note}</Text> : null}
+              {u.note ? <Text className="font-sans mt-1 text-[13px] leading-5 text-ink">{u.note}</Text> : null}
               {u.photo_url ? (
                 <Image source={{ uri: u.photo_url }} style={{ width: '100%', height: 160, borderRadius: 10, marginTop: 8 }} resizeMode="cover" />
               ) : null}
@@ -402,7 +402,7 @@ function TaskDetail({
               <Touchable haptic={null} onPress={pick} accessibilityRole="button" accessibilityLabel="Add a photo">
                 <View pointerEvents="none" className="flex-row items-center gap-1.5 rounded-xl px-3 py-2" style={{ backgroundColor: c.inset }}>
                   <Ionicons name="camera-outline" size={15} color={c.muted} />
-                  <Text className="text-[12.5px] font-sans-sb" style={{ color: c.muted }}>{photo ? 'Change' : 'Photo'}</Text>
+                  <Text className="text-[12px] font-sans-sb" style={{ color: c.muted }}>{photo ? 'Change' : 'Photo'}</Text>
                 </View>
               </Touchable>
               <View style={{ flex: 1 }}>
@@ -417,7 +417,7 @@ function TaskDetail({
                     accessibilityRole="button" accessibilityLabel={`Mark ${STATUS_META[st].label}`}>
                     <View pointerEvents="none" className="items-center rounded-xl py-2"
                       style={{ backgroundColor: task.status === st ? c.accentSoft : c.inset }}>
-                      <Text className="text-[12.5px] font-sans-sb"
+                      <Text className="text-[12px] font-sans-sb"
                         style={{ color: task.status === st ? c.accent : c.muted }}>
                         {STATUS_META[st].label}
                       </Text>

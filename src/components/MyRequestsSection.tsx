@@ -86,7 +86,7 @@ export function MyRequestsSection() {
                   </View>
 
                   <View style={{ flex: 1 }}>
-                    <Text className="font-sans-sb text-[14.5px] text-ink" numberOfLines={1}>
+                    <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>
                       {l?.title ?? 'Listing removed'}
                     </Text>
                     <Text className="font-sans text-[12px]" style={{ color: c.faint }}>

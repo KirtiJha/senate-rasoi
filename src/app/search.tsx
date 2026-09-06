@@ -185,8 +185,8 @@ function AskSaathiRow({ query, c, onPress }: { query: string; c: ReturnType<type
       >
         <SaathiMark size={26} />
         <View className="min-w-0 flex-1">
-          <Text className="font-sans-sb text-[13.5px]" style={{ color: c.accent }} numberOfLines={1}>Ask Saathi about “{query}”</Text>
-          <Text className="font-sans text-[11.5px] text-muted" numberOfLines={1}>It reads the posts and replies, not just the titles</Text>
+          <Text className="font-sans-sb text-[13px]" style={{ color: c.accent }} numberOfLines={1}>Ask Saathi about “{query}”</Text>
+          <Text className="font-sans text-[11px] text-muted" numberOfLines={1}>It reads the posts and replies, not just the titles</Text>
         </View>
         <Ionicons name="arrow-forward" size={15} color={c.accent} />
       </View>

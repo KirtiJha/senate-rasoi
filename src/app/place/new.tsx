@@ -256,7 +256,7 @@ export default function PlaceFormScreen() {
             {photos.length < MAX_PHOTOS ? (
               <Pressable onPress={pickPhoto} className="items-center justify-center rounded-2xl border border-dashed border-line bg-surface active:opacity-70" style={{ width: 88, height: 88 }}>
                 <Ionicons name="camera-outline" size={22} color={ACCENT} />
-                <Text className="font-sans mt-1 text-[10px] text-muted">Add</Text>
+                <Text className="font-sans mt-1 text-[11px] text-muted">Add</Text>
               </Pressable>
             ) : null}
           </View>

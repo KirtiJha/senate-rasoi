@@ -149,7 +149,7 @@ export default function EditEventScreen() {
               ) : (
                 <View className="flex-1 items-center justify-center">
                   <Ionicons name="image-outline" size={26} color={c.faint} />
-                  <Text className="font-sans mt-1.5 text-[12.5px]" style={{ color: c.faint }}>
+                  <Text className="font-sans mt-1.5 text-[12px]" style={{ color: c.faint }}>
                     Add a photo or poster
                   </Text>
                 </View>

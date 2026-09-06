@@ -70,9 +70,9 @@ export function PushPromptProvider({ children }: { children: ReactNode }) {
           <View className="h-11 w-11 items-center justify-center rounded-2xl" style={{ backgroundColor: c.accent + '1A' }}>
             <Ionicons name="notifications-outline" size={22} color={c.accent} />
           </View>
-          <Text className="font-sans flex-1 text-[14.5px] leading-[21px] text-muted">{copy.body}</Text>
+          <Text className="font-sans flex-1 text-[14px] leading-[21px] text-muted">{copy.body}</Text>
         </View>
-        <Text className="font-sans mb-4 text-[12.5px] leading-[18px] text-faint">
+        <Text className="font-sans mb-4 text-[12px] leading-[18px] text-faint">
           You can mute any category later in Settings. Emergency and blood requests always come through.
         </Text>
         <Button label="Turn on notifications" icon="notifications" fullWidth loading={busy} onPress={accept} />

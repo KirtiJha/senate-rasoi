@@ -149,7 +149,7 @@ export function ProgrammeTab({
                         borderWidth: 1,
                         borderColor: on ? c.accent : c.line,
                       }}>
-                      <Text className="font-sans-sb text-[12.5px]" style={{ color: on ? c.onAccent : c.muted }}>
+                      <Text className="font-sans-sb text-[12px]" style={{ color: on ? c.onAccent : c.muted }}>
                         {a ? AUD_META[a].label : 'Everything'}
                       </Text>
                     </View>
@@ -268,7 +268,7 @@ function ActivityCard({
           </View>
 
           {a.description ? (
-            <Text className="font-sans mt-1.5 text-[13.5px] leading-[20px] text-ink">{a.description}</Text>
+            <Text className="font-sans mt-1.5 text-[13px] leading-[20px] text-ink">{a.description}</Text>
           ) : null}
         </View>
 
@@ -300,7 +300,7 @@ function ActivityCard({
           >
             <View pointerEvents="none" className="flex-row items-center gap-1.5">
               <Ionicons name="people" size={14} color={c.muted} />
-              <Text className="font-sans-sb text-[12.5px]" style={{ color: c.muted }}>
+              <Text className="font-sans-sb text-[12px]" style={{ color: c.muted }}>
                 {participants.length}
                 {a.max_participants != null ? ` of ${a.max_participants}` : ''} entered
               </Text>
@@ -311,13 +311,13 @@ function ActivityCard({
 
         {full && mine.length === 0 ? (
           <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: c.inset }}>
-            <Text className="font-sans-sb text-[12.5px]" style={{ color: c.muted }}>Full</Text>
+            <Text className="font-sans-sb text-[12px]" style={{ color: c.muted }}>Full</Text>
           </View>
         ) : (
           <Touchable onPress={onJoin} accessibilityRole="button" accessibilityLabel={`Enter ${a.title}`}>
             <View pointerEvents="none" className="rounded-full px-3.5 py-1.5"
               style={{ backgroundColor: c.accentSoft, borderWidth: 1, borderColor: c.accentLine }}>
-              <Text className="font-sans-sb text-[12.5px]" style={{ color: c.accent }}>
+              <Text className="font-sans-sb text-[12px]" style={{ color: c.accent }}>
                 {mine.length ? 'Add another' : 'Take part'}
               </Text>
             </View>
@@ -327,7 +327,7 @@ function ActivityCard({
 
       {showList ? (
         participants.length === 0 ? (
-          <Text className="font-sans mt-2.5 text-[12.5px]" style={{ color: c.faint }}>
+          <Text className="font-sans mt-2.5 text-[12px]" style={{ color: c.faint }}>
             Nobody yet — be the first.
           </Text>
         ) : (
@@ -473,7 +473,7 @@ function AddActivity({
                         borderColor: on ? c.accent : c.line,
                       }}>
                       <Ionicons name={a.icon as never} size={13} color={on ? c.onAccent : c.muted} />
-                      <Text className="font-sans-sb text-[12.5px]" style={{ color: on ? c.onAccent : c.muted }}>
+                      <Text className="font-sans-sb text-[12px]" style={{ color: on ? c.onAccent : c.muted }}>
                         {a.label}
                       </Text>
                     </View>

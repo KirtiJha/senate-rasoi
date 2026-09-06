@@ -290,7 +290,7 @@ export default function FoodScreen() {
                     </Text>
                     {w === 'upcoming' && upcomingCount > 0 ? (
                       <View className={`rounded-full px-1.5 ${on ? 'bg-bg/25' : 'bg-accent'}`}>
-                        <Text className={`text-[10px] font-sans-bold ${on ? 'text-bg' : 'text-on-accent'}`}>{upcomingCount}</Text>
+                        <Text className={`text-[11px] font-sans-bold ${on ? 'text-bg' : 'text-on-accent'}`}>{upcomingCount}</Text>
                       </View>
                     ) : null}
                   </Pressable>

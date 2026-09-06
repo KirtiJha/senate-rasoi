@@ -93,9 +93,9 @@ export function MyFlatCard({
     <View className="mb-4 card p-4">
       <View className="flex-row items-center gap-2">
         <Ionicons name="home-outline" size={16} color={c.accent} />
-        <Text className="flex-1 font-sans-sb text-[14.5px] text-ink">Your flat · {flat}</Text>
+        <Text className="flex-1 font-sans-sb text-[14px] text-ink">Your flat · {flat}</Text>
         {current ? (
-          <Text className="font-sans text-[12.5px]" style={{ color: paid ? c.accent : c.faint }}>
+          <Text className="font-sans text-[12px]" style={{ color: paid ? c.accent : c.faint }}>
             {paid ? `Paid ${rupees(Number(current.amount))}` : optedOut ? 'Not taking part' : 'Listed'}
           </Text>
         ) : null}

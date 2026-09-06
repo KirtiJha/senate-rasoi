@@ -232,11 +232,11 @@ export default function AskScreen() {
             <Text className="font-display-x mb-2 text-[24px] leading-[28px] text-ink">
               Namaste{firstName ? `, ${firstName}` : ''} 👋
             </Text>
-            <Text className="font-sans-md mb-1.5 text-[14.5px] leading-[21px] text-ink">
+            <Text className="font-sans-md mb-1.5 text-[14px] leading-[21px] text-ink">
               Saathi knows your society — the food, the flats, the notices and every reply under
               them. Ask in plain words, follow-ups and all.
             </Text>
-            <Text className="font-sans mb-4 text-[13.5px] leading-[20px] text-subtle">
+            <Text className="font-sans mb-4 text-[13px] leading-[20px] text-subtle">
               It can also do things for you: draft a notice, open a poll, reserve plates, message a
               neighbour, or keep watching for something and tell you when it turns up. You will see
               exactly what it is about to do — nothing happens until you tap Confirm.
@@ -328,7 +328,7 @@ export default function AskScreen() {
               {loading && i === messages.length - 1 && m.steps?.length ? (
                 <View className="ml-8 mt-1.5 flex-row items-center gap-1.5">
                   <ActivityIndicator size="small" color={c.subtle} />
-                  <Text className="flex-1 text-[11.5px] font-sans-md" style={{ color: c.subtle }} numberOfLines={1}>
+                  <Text className="flex-1 text-[11px] font-sans-md" style={{ color: c.subtle }} numberOfLines={1}>
                     {m.steps[m.steps.length - 1].summary}
                   </Text>
                 </View>
@@ -354,7 +354,7 @@ export default function AskScreen() {
                   <Touchable haptic={null} onPress={retry} accessibilityRole="button" accessibilityLabel="Try again">
                     <View pointerEvents="none" className="flex-row items-center gap-2 self-start rounded-full px-3.5 py-2" style={{ backgroundColor: c.accentSoft, borderWidth: 1, borderColor: c.accentLine }}>
                       <Ionicons name="refresh" size={14} color={c.accent} />
-                      <Text className="text-[12.5px] font-sans-sb" style={{ color: c.accent }}>Try again</Text>
+                      <Text className="text-[12px] font-sans-sb" style={{ color: c.accent }}>Try again</Text>
                     </View>
                   </Touchable>
                 </View>
@@ -373,7 +373,7 @@ export default function AskScreen() {
                       style={{ backgroundColor: c.surface, borderWidth: 1, borderColor: c.line }}
                     >
                       <Ionicons name="people-outline" size={14} color={c.muted} />
-                      <Text className="text-[12.5px] font-sans-sb" style={{ color: c.muted }}>
+                      <Text className="text-[12px] font-sans-sb" style={{ color: c.muted }}>
                         Ask your neighbours this
                       </Text>
                     </View>
@@ -390,7 +390,7 @@ export default function AskScreen() {
                         className="rounded-full px-3 py-1.5"
                         style={{ backgroundColor: c.accentSoft, borderWidth: 1, borderColor: c.accentLine }}
                       >
-                        <Text className="text-[12.5px] font-sans-md" style={{ color: c.accent }}>{q}</Text>
+                        <Text className="text-[12px] font-sans-md" style={{ color: c.accent }}>{q}</Text>
                       </View>
                     </Touchable>
                   ))}

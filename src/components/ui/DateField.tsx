@@ -258,7 +258,7 @@ export function DateField({
                 accessibilityRole="button" accessibilityLabel="Today">
                 <View pointerEvents="none" className="items-center rounded-xl py-2.5"
                   style={{ backgroundColor: c.inset }}>
-                  <Text className="font-sans-sb text-[13.5px]" style={{ color: c.ink }}>Today</Text>
+                  <Text className="font-sans-sb text-[13px]" style={{ color: c.ink }}>Today</Text>
                 </View>
               </Touchable>
             </View>
@@ -275,7 +275,7 @@ export function DateField({
               >
                 <View pointerEvents="none" className="items-center rounded-xl py-2.5"
                   style={{ backgroundColor: c.inset }}>
-                  <Text className="font-sans-sb text-[13.5px]" style={{ color: c.ink }}>Tomorrow</Text>
+                  <Text className="font-sans-sb text-[13px]" style={{ color: c.ink }}>Tomorrow</Text>
                 </View>
               </Touchable>
             </View>

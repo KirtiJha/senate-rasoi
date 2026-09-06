@@ -374,7 +374,7 @@ function NoteEditor({
                 >
                   <View pointerEvents="none" className="rounded-full px-3.5 py-2"
                     style={{ backgroundColor: c.inset, borderWidth: 1, borderColor: c.line }}>
-                    <Text className="font-sans-sb text-[12.5px]" style={{ color: c.muted }}>{t.label}</Text>
+                    <Text className="font-sans-sb text-[12px]" style={{ color: c.muted }}>{t.label}</Text>
                   </View>
                 </Touchable>
               ))}

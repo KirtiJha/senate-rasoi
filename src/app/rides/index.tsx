@@ -98,10 +98,10 @@ export default function RidesScreen() {
                       <View pointerEvents="none" className="mb-2 card p-3.5">
                         <View className="flex-row items-center gap-2">
                           <View style={{ flex: 1 }}>
-                            <Text className="font-sans-sb text-[14.5px] text-ink" numberOfLines={1}>
+                            <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>
                               {r.ride?.from_text} → {r.ride?.to_text}
                             </Text>
-                            <Text className="font-sans mt-0.5 text-[12.5px]" style={{ color: c.subtle }}>
+                            <Text className="font-sans mt-0.5 text-[12px]" style={{ color: c.subtle }}>
                               Every week · {formatRideTime(r.ride?.depart_time)}
                               {r.seats > 1 ? ` · ${r.seats} seats` : ''}
                               {r.ends_on ? ` · until ${formatRideDate(r.ends_on)}` : ''}
@@ -121,10 +121,10 @@ export default function RidesScreen() {
                       <View pointerEvents="none" className="mb-2 card p-3.5">
                         <View className="flex-row items-center gap-2">
                           <View style={{ flex: 1 }}>
-                            <Text className="font-sans-sb text-[14.5px] text-ink" numberOfLines={1}>
+                            <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>
                               {r.ride?.from_text} → {r.ride?.to_text}
                             </Text>
-                            <Text className="font-sans mt-0.5 text-[12.5px]" style={{ color: c.subtle }}>
+                            <Text className="font-sans mt-0.5 text-[12px]" style={{ color: c.subtle }}>
                               {formatRideDate(r.ride_date)} · {formatRideTime(r.ride?.depart_time)}
                               {r.seats > 1 ? ` · ${r.seats} seats` : ''}
                             </Text>
@@ -203,7 +203,7 @@ function RideCard({
             <Text className="font-display-sb text-[16px] text-ink" numberOfLines={1}>
               {ride.from_text} → {ride.to_text}
             </Text>
-            <Text className="font-sans mt-0.5 text-[12.5px]" style={{ color: c.subtle }}>
+            <Text className="font-sans mt-0.5 text-[12px]" style={{ color: c.subtle }}>
               {formatRideTime(ride.depart_time)}
               {next ? ` · next ${formatRideDate(next)}` : ' · nothing scheduled'}
               {ride.duration_min ? ` · ~${ride.duration_min} min` : ''}

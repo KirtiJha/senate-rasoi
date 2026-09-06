@@ -109,7 +109,7 @@ export function MoneyTab({
                         — 200 plates". fetchBudgetItems has always selected it;
                         nothing rendered it, so the one thing a planning list is
                         for was invisible. */}
-                    <Text className="text-[11.5px] font-sans" style={{ color: c.subtle }} numberOfLines={1}>
+                    <Text className="text-[11px] font-sans" style={{ color: c.subtle }} numberOfLines={1}>
                       {b.category}{b.note ? ` · ${b.note}` : ''}
                     </Text>
                   </View>
@@ -142,7 +142,7 @@ export function MoneyTab({
         <CarryForward event={event} onChanged={onChanged} />
       ) : Number(event.carry_in_used ?? 0) > 0 ? (
         <View className="card px-4 py-3">
-          <Text className="text-[12.5px] font-sans" style={{ color: c.subtle }}>
+          <Text className="text-[12px] font-sans" style={{ color: c.subtle }}>
             {rupees(Number(event.carry_in_used))} carried forward from a previous celebration
             {event.carry_in_note ? ` · ${event.carry_in_note}` : ''}
           </Text>
@@ -157,7 +157,7 @@ export function MoneyTab({
         <View className="mb-4 flex-row items-start gap-2 rounded-2xl px-3.5 py-3"
           style={{ borderWidth: 1, borderColor: c.accentLine, backgroundColor: c.accentSoft }}>
           <Ionicons name="lock-closed-outline" size={16} color={c.accent} />
-          <Text className="font-sans flex-1 text-[12.5px] leading-[18px]" style={{ color: c.accent }}>
+          <Text className="font-sans flex-1 text-[12px] leading-[18px]" style={{ color: c.accent }}>
             The accounts are published and closed. Nothing here can be changed —
             reopen the celebration first if something is wrong.
           </Text>
@@ -218,7 +218,7 @@ export function MoneyTab({
                       {s.kind === 'money' ? rupees(Number(s.amount ?? 0)) : s.item}
                       {s.quantity ? ` · ${s.quantity}` : ''}
                     </Text>
-                    <Text className="text-[11.5px] font-sans" style={{ color: c.subtle }} numberOfLines={1}>
+                    <Text className="text-[11px] font-sans" style={{ color: c.subtle }} numberOfLines={1}>
                       {s.sponsor_name}{s.sponsor_flat ? ` · ${s.sponsor_flat}` : ''}
                       {s.status === 'pledged' ? ' · pledged' : ''}
                       {s.note ? ` · ${s.note}` : ''}
@@ -556,7 +556,7 @@ function SectionHead({ title, hint, right }: { title: string; hint?: string; rig
     <View className="mb-2 flex-row items-end justify-between px-1">
       <View className="min-w-0 flex-1">
         <Text className="text-[11px] font-sans-sb uppercase tracking-wider text-muted">{title}</Text>
-        {hint ? <Text className="font-sans mt-0.5 text-[11.5px]" style={{ color: c.subtle }}>{hint}</Text> : null}
+        {hint ? <Text className="font-sans mt-0.5 text-[11px]" style={{ color: c.subtle }}>{hint}</Text> : null}
       </View>
       {right ? <Text className="font-sans-sb text-[14px] text-ink">{right}</Text> : null}
     </View>
@@ -567,9 +567,9 @@ function Row({ label, value, bold, tone }: { label: string; value: string; bold?
   const c = useThemeColors();
   return (
     <View className="flex-row items-center justify-between py-1">
-      <Text className={bold ? 'font-sans-sb text-[14px] text-ink' : 'font-sans text-[13.5px]'}
+      <Text className={bold ? 'font-sans-sb text-[14px] text-ink' : 'font-sans text-[13px]'}
         style={bold ? undefined : { color: c.muted }}>{label}</Text>
-      <Text className={bold ? 'font-sans-sb text-[14px]' : 'font-sans-md text-[13.5px]'}
+      <Text className={bold ? 'font-sans-sb text-[14px]' : 'font-sans-md text-[13px]'}
         style={{ color: tone === 'accent' ? c.accent : c.ink }}>{value}</Text>
     </View>
   );
@@ -579,7 +579,7 @@ function EmptyLine({ text }: { text: string }) {
   const c = useThemeColors();
   return (
     <View className="card px-4 py-3.5">
-      <Text className="font-sans text-[12.5px] leading-[18px]" style={{ color: c.subtle }}>{text}</Text>
+      <Text className="font-sans text-[12px] leading-[18px]" style={{ color: c.subtle }}>{text}</Text>
     </View>
   );
 }

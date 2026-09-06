@@ -160,7 +160,7 @@ export default function FeedbackDetailScreen() {
 
             {/* Shown to admins only: useful for triage, clutter for everyone else. */}
             {isAdmin && (item.app_version || item.platform) ? (
-              <Text className="font-sans mt-3 text-[11.5px]" style={{ color: c.faint }}>
+              <Text className="font-sans mt-3 text-[11px]" style={{ color: c.faint }}>
                 {item.author?.name ?? 'A resident'}
                 {item.author?.flat ? ` · ${item.author.flat}` : ''}
                 {item.app_version ? ` · v${item.app_version}` : ''}
@@ -187,13 +187,13 @@ export default function FeedbackDetailScreen() {
                         />
                       ) : null}
                     </View>
-                    <Text className="font-sans mt-1 text-[13.5px] leading-[20px] text-ink">{cm.body}</Text>
+                    <Text className="font-sans mt-1 text-[13px] leading-[20px] text-ink">{cm.body}</Text>
                   </View>
                 </View>
               ))}
             </View>
           ) : (
-            <Text className="font-sans mt-4 text-center text-[12.5px]" style={{ color: c.faint }}>
+            <Text className="font-sans mt-4 text-center text-[12px]" style={{ color: c.faint }}>
               No replies yet.
             </Text>
           )}
@@ -216,7 +216,7 @@ export default function FeedbackDetailScreen() {
                           borderWidth: 1,
                           borderColor: on ? c.accent : c.line,
                         }}>
-                        <Text className="font-sans-sb text-[12.5px]" style={{ color: on ? c.onAccent : c.muted }}>
+                        <Text className="font-sans-sb text-[12px]" style={{ color: on ? c.onAccent : c.muted }}>
                           {FEEDBACK_STATUS[s].label}
                         </Text>
                       </View>

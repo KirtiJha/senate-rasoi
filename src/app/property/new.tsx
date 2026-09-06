@@ -172,7 +172,7 @@ export default function NewPropertyScreen() {
             {photos.length < 8 ? (
               <Pressable onPress={pickPhotos} style={{ width: 84, height: 84 }} className="items-center justify-center rounded-xl border border-dashed border-line bg-surface active:opacity-70">
                 <Ionicons name="camera-outline" size={22} color={ACCENT} />
-                <Text className="font-sans mt-0.5 text-[10px] text-muted">Add</Text>
+                <Text className="font-sans mt-0.5 text-[11px] text-muted">Add</Text>
               </Pressable>
             ) : null}
           </View>
