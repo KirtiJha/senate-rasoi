@@ -8,13 +8,27 @@ import { useAuth } from '../context/auth';
 import { useToast } from '../context/toast';
 import { useConfirm } from '../context/confirm';
 import {
-  ALL_EMERGENCY_ROLES, EMERGENCY_ROLE_COLORS, EMERGENCY_ROLE_ICONS, EMERGENCY_ROLE_LABELS,
+  ALL_EMERGENCY_ROLES, EMERGENCY_ROLE_ICONS, EMERGENCY_ROLE_LABELS, EMERGENCY_ROLE_TONES,
   EmergencyContact, EmergencyRole,
   addEmergencyContact, deleteEmergencyContact, fetchEmergencyContacts, updateEmergencyContact,
   NATIONAL_NUMBERS,
 } from '../lib/emergency';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { useThemeColors } from '../theme';
+
+/**
+ * The theme colours a role draws with. Contrast-checked in both themes, which
+ * the seven raw hexes this replaced were not — two of them were unreadable on
+ * the light ground, on the screen people open in an emergency.
+ */
+function toneOf(role: EmergencyRole, c: ReturnType<typeof useThemeColors>) {
+  switch (EMERGENCY_ROLE_TONES[role]) {
+    case 'danger': return { ink: c.dangerInk, soft: c.dangerSoft, plate: c.danger };
+    case 'warn': return { ink: c.warnInk, soft: c.warnSoft, plate: c.warn };
+    case 'info': return { ink: c.infoInk, soft: c.infoSoft, plate: c.info };
+    default: return { ink: c.muted, soft: c.inset, plate: c.muted };
+  }
+}
 
 export default function EmergencyScreen() {
   const router = useRouter();
@@ -77,24 +91,27 @@ export default function EmergencyScreen() {
             <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Always available</Text>
             <View className="flex-row flex-wrap gap-2">
               {NATIONAL_NUMBERS.map((n) => {
-                const color = EMERGENCY_ROLE_COLORS[n.role];
+                const tone = toneOf(n.role, c);
                 return (
                   <Pressable
                     key={n.phone}
                     accessibilityRole="button"
                     accessibilityLabel={`Call ${n.name} on ${n.phone}`}
                     onPress={() => handleCall(n.phone)}
-                    className="flex-row items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5 active:opacity-80"
-                    style={{ minWidth: 150, flexGrow: 1, flexBasis: 0 }}
+                    className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface px-3.5 py-3 active:opacity-80"
+                    style={{ width: isDesktop ? undefined : '100%', minWidth: isDesktop ? 220 : undefined, flexGrow: isDesktop ? 1 : 0 }}
                   >
-                    <View className="h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: color + '18' }}>
-                      <Ionicons name={EMERGENCY_ROLE_ICONS[n.role] as never} size={17} color={color} />
+                    <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: tone.soft }}>
+                      <Ionicons name={EMERGENCY_ROLE_ICONS[n.role] as never} size={18} color={tone.ink} />
                     </View>
                     <View className="min-w-0 flex-1">
-                      <Text className="font-sans-sb text-[13.5px] text-ink" numberOfLines={1}>{n.name}</Text>
-                      <Text className="font-sans text-[11px] text-muted" numberOfLines={1}>{n.blurb}</Text>
+                      {/* Two lines, not one clipped one. "Women's helpline" and
+                          "Child helpline" both truncated to "Women'…" at 390px
+                          when four of these shared two columns. */}
+                      <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={2}>{n.name}</Text>
+                      <Text className="font-sans text-[11.5px] text-muted" numberOfLines={1}>{n.blurb}</Text>
                     </View>
-                    <Text className="font-sans-bold text-[15px]" style={{ color }}>{n.phone}</Text>
+                    <Text className="font-sans-bold text-[17px]" style={{ color: tone.ink }}>{n.phone}</Text>
                   </Pressable>
                 );
               })}
@@ -122,17 +139,17 @@ export default function EmergencyScreen() {
           ) : (
             <View className="gap-3">
               {contacts.map((contact: EmergencyContact) => {
-                const color = EMERGENCY_ROLE_COLORS[contact.role];
+                const tone = toneOf(contact.role, c);
                 const icon = EMERGENCY_ROLE_ICONS[contact.role];
                 return (
                   <View key={contact.id} className="card overflow-hidden">
-                    <View style={{ height: 3, backgroundColor: color }} />
+                    <View style={{ height: 3, backgroundColor: tone.plate }} />
                     <View className="flex-row items-center gap-3 p-4">
                       <View
                         className="h-11 w-11 items-center justify-center rounded-2xl"
-                        style={{ backgroundColor: color + '18' }}
+                        style={{ backgroundColor: tone.soft }}
                       >
-                        <Ionicons name={icon as any} size={22} color={color} />
+                        <Ionicons name={icon as any} size={22} color={tone.ink} />
                       </View>
                       <View className="flex-1">
                         <Text className="font-sans-sb text-[15px] text-ink">{contact.name}</Text>
@@ -143,9 +160,9 @@ export default function EmergencyScreen() {
                         <Pressable accessibilityRole="button" accessibilityLabel="Call"
                           onPress={() => handleCall(contact.phone)}
                           className="h-10 w-10 items-center justify-center rounded-full active:opacity-70"
-                          style={{ backgroundColor: color + '18' }}
+                          style={{ backgroundColor: tone.soft }}
                         >
-                          <Ionicons name="call" size={18} color={color} />
+                          <Ionicons name="call" size={18} color={tone.ink} />
                         </Pressable>
                         {isAdmin ? (
                           <ActionMenu

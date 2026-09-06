@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { SaathiMark } from '../components/SaathiMark';
@@ -56,6 +56,8 @@ export default function AskScreen() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { userId, communityId, profile } = useAuth();
+  /** Handed over from Search: /ask?q=… asks it straight away. */
+  const { q: handedOver } = useLocalSearchParams<{ q?: string }>();
   const firstName = (profile?.name ?? '').trim().split(/\s+/)[0] || null;
   // Stops the current answer; what has streamed so far stays on screen.
   const stopRef = useRef<AbortController | null>(null);
@@ -172,6 +174,16 @@ export default function AskScreen() {
   };
 
   const newChat = () => { clearAskConversation(); setMessages([]); setInput(''); sessionId.current = null; };
+
+  // Ask it once, on arrival, when Search handed a question over.
+  const asked = useRef(false);
+  useEffect(() => {
+    const q = typeof handedOver === 'string' ? handedOver.trim() : '';
+    if (!q || asked.current) return;
+    asked.current = true;
+    send(q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handedOver]);
 
   const empty = messages.length === 0;
   /** What to carry over when handing the question to the neighbours. */

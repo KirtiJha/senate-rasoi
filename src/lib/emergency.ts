@@ -33,14 +33,26 @@ export const EMERGENCY_ROLE_ICONS: Record<EmergencyRole, string> = {
   other: 'call-outline',
 };
 
-export const EMERGENCY_ROLE_COLORS: Record<EmergencyRole, string> = {
-  security: '#3B82F6',
-  maintenance: '#F59E0B',
-  medical: '#EF4444',
-  fire: '#F97316',
-  electricity: '#EAB308',
-  water: '#06B6D4',
-  other: '#64748B',
+/**
+ * A role's tone, not its colour.
+ *
+ * These were seven raw Tailwind hexes used as TEXT on a pale surface — the
+ * amber (#F59E0B) and yellow (#EAB308) failed contrast in light mode, on the
+ * one screen somebody reads in a panic, and none of them had a dark-mode
+ * value at all. They map onto the theme's contrast-checked status tones now:
+ * legibility beats identity here, and four tones still tell police from fire
+ * from the plumber.
+ */
+export type EmergencyTone = 'danger' | 'warn' | 'info' | 'neutral';
+
+export const EMERGENCY_ROLE_TONES: Record<EmergencyRole, EmergencyTone> = {
+  medical: 'danger',
+  fire: 'danger',
+  maintenance: 'warn',
+  electricity: 'warn',
+  security: 'info',
+  water: 'info',
+  other: 'neutral',
 };
 
 export const ALL_EMERGENCY_ROLES: EmergencyRole[] = [

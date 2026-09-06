@@ -146,10 +146,17 @@ export default function SearchScreen() {
             <View className="items-center py-16">
               <Ionicons name="search-outline" size={40} color={c.faint} />
               <Text className="mt-3 font-display text-xl text-ink mb-1">No results</Text>
-              <Text className="font-sans text-[14px] text-muted text-center max-w-xs">Nothing matched “{debounced}”. Try a different word, or ask Saathi.</Text>
+              <Text className="font-sans text-[14px] text-muted text-center max-w-xs mb-4">Nothing matched “{debounced}”. Saathi can look harder, or ask the neighbours.</Text>
+              <AskSaathiRow query={debounced} c={c} onPress={() => router.push(`/ask?q=${encodeURIComponent(debounced)}` as never)} />
             </View>
           ) : (
             <View style={{ opacity: search.isPlaceholderData ? 0.6 : 1 }}>
+              {/* Search answers "what is called this". Saathi answers "which
+                  one, and is it any good" — so it sits at the top of the
+                  results rather than only in the empty state. */}
+              <View className="mb-4">
+                <AskSaathiRow query={debounced} c={c} onPress={() => router.push(`/ask?q=${encodeURIComponent(debounced)}` as never)} />
+              </View>
               {grouped.map((g) => (
                 <View key={g.kind} className="mb-5">
                   <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-faint">{KIND[g.kind].label} · {g.rows.length}</Text>
@@ -165,6 +172,25 @@ export default function SearchScreen() {
         </View>
       </ScrollView>
     </View>
+  );
+}
+
+function AskSaathiRow({ query, c, onPress }: { query: string; c: ReturnType<typeof useThemeColors>; onPress: () => void }) {
+  return (
+    <Touchable haptic={null} onPress={onPress} accessibilityRole="button" accessibilityLabel={`Ask Saathi about ${query}`}>
+      <View
+        pointerEvents="none"
+        className="flex-row items-center gap-3 rounded-2xl px-3.5 py-3"
+        style={{ backgroundColor: c.accentSoft, borderWidth: 1, borderColor: c.accentLine }}
+      >
+        <SaathiMark size={26} />
+        <View className="min-w-0 flex-1">
+          <Text className="font-sans-sb text-[13.5px]" style={{ color: c.accent }} numberOfLines={1}>Ask Saathi about “{query}”</Text>
+          <Text className="font-sans text-[11.5px] text-muted" numberOfLines={1}>It reads the posts and replies, not just the titles</Text>
+        </View>
+        <Ionicons name="arrow-forward" size={15} color={c.accent} />
+      </View>
+    </Touchable>
   );
 }
 

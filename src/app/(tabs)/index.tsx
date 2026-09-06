@@ -510,9 +510,9 @@ export default function HomeScreen() {
         <Animated.View style={compactStyle}>
           <Touchable
             haptic={null}
-            onPress={() => router.push('/ask' as any)}
-            accessibilityRole="button"
-            accessibilityLabel="Ask Saathi, or search"
+            onPress={() => router.push('/search' as any)}
+            accessibilityRole="search"
+            accessibilityLabel="Search your society"
           >
             <View
               style={{
@@ -527,15 +527,15 @@ export default function HomeScreen() {
                 boxShadow: c.shadowBar,
               } as any}
             >
-              <SaathiMark size={22} />
+              <Ionicons name="search" size={17} color={c.muted} />
               <Text
                 className="text-[14px] font-sans-md text-subtle"
                 style={{ flex: 1, minWidth: 0, marginLeft: 10 }}
                 numberOfLines={1}
               >
-                Ask Saathi, or search
+                Search your society
               </Text>
-              <Ionicons name="arrow-forward" size={16} color={c.accent} />
+              <SaathiMark size={22} />
             </View>
           </Touchable>
         </Animated.View>
@@ -579,18 +579,34 @@ export default function HomeScreen() {
             most common intent. A resident who needs a plumber is asking a
             question, not scanning thirty labels for the right one. */}
         <Rise index={0}>
-        <Touchable haptic={null} onPress={() => router.push('/ask' as any)} className="mt-5">
-          <View
-            className="flex-row items-center gap-3 rounded-full px-4"
-            style={{ height: 52, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, boxShadow: c.shadowCard } as any}
-          >
-            <SaathiMark size={24} />
-            <Text className="min-w-0 flex-1 text-[15px] font-sans-md text-subtle" numberOfLines={1}>
-              Ask Saathi, or search
-            </Text>
-            <Ionicons name="arrow-forward" size={17} color={c.accent} />
+        {/* Two doors, not one. This field said "Ask Saathi, or search" and
+            only ever opened the chat — search had no entry point on the
+            phone at all. The field is search; the mark beside it is Saathi. */}
+        <View className="mt-5 flex-row items-center gap-2">
+          <View className="min-w-0 flex-1">
+            <Touchable haptic={null} onPress={() => router.push('/search' as any)} accessibilityRole="search" accessibilityLabel="Search your society">
+              <View
+                pointerEvents="none"
+                className="flex-row items-center gap-3 rounded-full px-4"
+                style={{ height: 52, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, boxShadow: c.shadowCard } as any}
+              >
+                <Ionicons name="search" size={19} color={c.muted} />
+                <Text className="min-w-0 flex-1 text-[15px] font-sans-md text-subtle" numberOfLines={1}>
+                  Search your society
+                </Text>
+              </View>
+            </Touchable>
           </View>
-        </Touchable>
+          <Touchable haptic={null} onPress={() => router.push('/ask' as any)} accessibilityRole="button" accessibilityLabel="Ask Saathi">
+            <View
+              pointerEvents="none"
+              className="items-center justify-center rounded-full"
+              style={{ width: 52, height: 52, backgroundColor: c.accentSoft, borderWidth: 1, borderColor: c.accentLine }}
+            >
+              <SaathiMark size={26} />
+            </View>
+          </Touchable>
+        </View>
         </Rise>
 
         {/* ── 2. Needs you ────────────────────────────────────────────── */}
