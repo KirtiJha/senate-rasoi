@@ -152,8 +152,12 @@ function MyItemRow({
   // strip and the pink box go; status becomes a word next to the category,
   // where you read it as part of the sentence rather than as an alarm.
   return (
-    <Touchable haptic={null} onPress={onOpen} accessibilityRole="button" accessibilityLabel={title} style={{ marginBottom: 10 }}>
-      <View className="flex-row items-center gap-3 card px-3.5 py-3">
+    // The row opens the item; Sold and Delete sit beside it, not inside it —
+    // a button may not hold buttons, on the web or for a screen reader.
+    <View className="flex-row items-center gap-3 card px-3.5 py-3" style={{ marginBottom: 10 }}>
+      <View style={{ flex: 1, minWidth: 0 }}>
+      <Touchable haptic={null} onPress={onOpen} accessibilityRole="button" accessibilityLabel={title}>
+      <View className="flex-row items-center gap-3">
         <View
           style={{
             width: 40, height: 40, borderRadius: 14,
@@ -183,6 +187,9 @@ function MyItemRow({
             ) : null}
           </View>
         </View>
+      </View>
+      </Touchable>
+      </View>
 
         {onToggleSold ? (
           <Pressable
@@ -207,7 +214,6 @@ function MyItemRow({
         >
           <Ionicons name="trash-outline" size={17} color={c.subtle} />
         </Pressable>
-      </View>
-    </Touchable>
+    </View>
   );
 }
