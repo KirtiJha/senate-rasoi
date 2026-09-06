@@ -74,7 +74,7 @@ export interface PropertyReferralRow {
   note: string | null;
   status: ReferralStatus;
   created_at: string;
-  referrer?: { name: string; flat: string | null };
+  referrer?: { id?: string; name: string; flat: string | null };
 }
 
 // ── Form option sets ────────────────────────────────────────────────
@@ -92,7 +92,7 @@ export const PARKING_OPTIONS: { value: Parking; label: string }[] = [
 export const FACING_OPTIONS = ['East', 'West', 'North', 'South', 'North-East', 'North-West', 'South-East', 'South-West'];
 export const AMENITY_OPTIONS = ['Lift', 'Power backup', 'Security', '24x7 water', 'Gym', 'Swimming pool', 'Club house', 'Park', 'Play area', 'Gas pipeline', 'Modular kitchen', 'Pet friendly'];
 
-const SELECT = '*, owner:profiles!property_listings_owner_user_id_fkey(name,flat,whatsapp,phone)';
+const SELECT = '*, owner:profiles!property_listings_owner_user_id_fkey(id, name,flat,whatsapp,phone)';
 
 export interface PropertyFilters {
   type?: ListingType | 'all';
@@ -265,7 +265,7 @@ export function subscribeProperties(communityId: string, onChange: () => void): 
 }
 
 // ── Referrals (recommend a buyer / tenant) ──────────────────────────
-const REF_SELECT = '*, referrer:profiles!property_referrals_referrer_id_fkey(name,flat)';
+const REF_SELECT = '*, referrer:profiles!property_referrals_referrer_id_fkey(id, name,flat)';
 
 export async function createReferral(
   propertyId: string,

@@ -46,7 +46,7 @@ export interface FeedbackItem {
   platform: string | null;
   created_at: string;
   updated_at: string;
-  author?: { name: string; flat: string | null } | null;
+  author?: { id?: string; name: string; flat: string | null } | null;
 }
 
 export interface FeedbackComment {
@@ -56,10 +56,10 @@ export interface FeedbackComment {
   body: string;
   status_after: FeedbackStatus | null;
   created_at: string;
-  author?: { name: string } | null;
+  author?: { id?: string; name: string } | null;
 }
 
-const SELECT = '*, author:profiles!feedback_items_author_id_fkey(name,flat)';
+const SELECT = '*, author:profiles!feedback_items_author_id_fkey(id, name,flat)';
 
 /** What the reporter cannot be expected to know, gathered without asking. */
 function appContext(): { app_version: string | null; platform: string | null } {
@@ -158,7 +158,7 @@ export async function createFeedback(input: {
 export async function fetchFeedbackComments(itemId: string): Promise<FeedbackComment[]> {
   const { data, error } = await supabase
     .from('feedback_comments')
-    .select('*, author:profiles!feedback_comments_author_id_fkey(name)')
+    .select('*, author:profiles!feedback_comments_author_id_fkey(id, name)')
     .eq('item_id', itemId)
     .order('created_at');
   if (error) throw error;

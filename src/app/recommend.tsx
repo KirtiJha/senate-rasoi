@@ -102,7 +102,7 @@ export default function RecommendScreen() {
                     <T source="recommend" id={q.id} field="title" text={q.title} showToggle={false} className="font-sans-bold text-[15px] text-ink" />
                     {q.detail ? <T source="recommend" id={q.id} field="detail" text={q.detail} showToggle={false} className="mt-0.5 text-[13px] text-muted" numberOfLines={2} /> : null}
                     <View className="mt-2 flex-row items-center gap-2">
-                      <Avatar name={q.author?.name ?? '?'} size={20} />
+                      <Avatar name={q.author?.name ?? '?'} userId={q.author?.id} size={20} />
                       <Text className="font-sans text-[11px] text-faint">{q.author?.name ?? 'A neighbour'}{q.author?.flat ? ` · Flat ${q.author.flat}` : ''}</Text>
                     </View>
                   </Pressable>

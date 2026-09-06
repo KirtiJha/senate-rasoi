@@ -146,7 +146,7 @@ export default function PaymentsScreen() {
                 const route = routeFor(p);
                 return (
                   <View key={p.id} className={`flex-row items-center gap-3 px-3.5 py-3 ${i === 0 ? '' : 'border-t border-line'}`}>
-                    <Avatar name={other?.name ?? '?'} size={38} />
+                    <Avatar name={other?.name ?? '?'} userId={other?.id} size={38} />
                     <Pressable
                       className="flex-1"
                       style={{ minWidth: 0 }}

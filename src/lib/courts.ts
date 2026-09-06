@@ -46,7 +46,7 @@ export interface CourtSession {
 export interface SessionPlayer {
   user_id: string;
   status: 'confirmed' | 'declined';
-  profile?: { name: string | null; flat: string | null } | null;
+  profile?: { id?: string; name: string | null; flat: string | null } | null;
 }
 
 export type SettleStatus = 'due' | 'initiated' | 'paid' | 'cancelled';
@@ -327,7 +327,7 @@ export async function fetchGroupSessions(groupId: string, userId: string | null)
 
   const { data: sessions, error } = await supabase
     .from('court_sessions')
-    .select('*, booking:court_bookings!court_sessions_booking_id_fkey(booker_user_id, upi_id, title, location, min_players, booker:profiles!court_bookings_booker_user_id_fkey(name, upi))')
+    .select('*, booking:court_bookings!court_sessions_booking_id_fkey(booker_user_id, upi_id, title, location, min_players, booker:profiles!court_bookings_booker_user_id_fkey(id, name, upi))')
     .eq('group_id', groupId)
     .eq('status', 'scheduled')
     .gte('session_date', fromISO)
@@ -340,7 +340,7 @@ export async function fetchGroupSessions(groupId: string, userId: string | null)
   const ids = list.map((s) => s.id);
   const { data: players } = await supabase
     .from('court_session_players')
-    .select('session_id, user_id, status, profile:profiles!court_session_players_user_id_fkey(name, flat)')
+    .select('session_id, user_id, status, profile:profiles!court_session_players_user_id_fkey(id, name, flat)')
     .in('session_id', ids);
 
   const bySession = new Map<string, SessionPlayer[]>();
@@ -473,7 +473,7 @@ export async function fetchMyDues(userId: string): Promise<DueItem[]> {
 
   const { data: sessions } = await supabase
     .from('court_sessions')
-    .select('id, group_id, session_date, start_time, duration_min, charge, status, booking:court_bookings!court_sessions_booking_id_fkey(booker_user_id, upi_id, title, booker:profiles!court_bookings_booker_user_id_fkey(name, upi))')
+    .select('id, group_id, session_date, start_time, duration_min, charge, status, booking:court_bookings!court_sessions_booking_id_fkey(booker_user_id, upi_id, title, booker:profiles!court_bookings_booker_user_id_fkey(id, name, upi))')
     .in('id', sessionIds).eq('status', 'scheduled');
 
   // Dues are attendance-driven: as soon as you're confirmed for a paid session you
@@ -561,7 +561,7 @@ export async function fetchBookerCollections(userId: string): Promise<Collection
 
   const ids = billable.map((s: any) => s.id);
   const [{ data: players }, { data: pays }] = await Promise.all([
-    supabase.from('court_session_players').select('session_id, user_id, status, profile:profiles!court_session_players_user_id_fkey(name, flat)').in('session_id', ids).eq('status', 'confirmed'),
+    supabase.from('court_session_players').select('session_id, user_id, status, profile:profiles!court_session_players_user_id_fkey(id, name, flat)').in('session_id', ids).eq('status', 'confirmed'),
     supabase.from('court_payments').select('*').eq('payee_user_id', userId).in('session_id', ids),
   ]);
 

@@ -174,7 +174,7 @@ export default function FeedbackDetailScreen() {
               <Text className="mb-2 text-[11px] font-sans-sb uppercase tracking-wider text-muted">Updates</Text>
               {comments.map((cm) => (
                 <View key={cm.id} className="mb-2 flex-row gap-2.5">
-                  <Avatar name={cm.author?.name ?? '?'} size={30} />
+                  <Avatar name={cm.author?.name ?? '?'} userId={cm.author?.id} size={30} />
                   <View style={{ flex: 1 }} className="card p-3">
                     <View className="flex-row items-center gap-2">
                       <Text className="font-sans-sb text-[13px] text-ink">

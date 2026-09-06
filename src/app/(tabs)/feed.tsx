@@ -301,7 +301,7 @@ const PostCard = memo(function PostCard({ post, userId }: { post: PostRow; userI
 
         {/* Author row */}
         <View className="mt-3 flex-row items-center gap-2">
-          <Avatar name={post.author?.name ?? '?'} size={22} />
+          <Avatar name={post.author?.name ?? '?'} userId={post.author?.id} size={22} />
           <Text className="font-sans flex-1 text-[12px] text-faint">
             {isOwn ? 'You' : post.author?.name ?? 'Someone'}
             {post.author?.flat ? ` · Flat ${post.author.flat}` : ''}

@@ -710,7 +710,7 @@ function ResidentRow({
       onPress={onOpen}
       className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'} active:bg-inset`}
     >
-      <Avatar name={r.name} size={40} />
+      <Avatar name={r.name} size={40} userId={r.userId} />
       <View className="flex-1" style={{ minWidth: 0 }}>
         <Text className="font-sans-bold text-[14px] text-ink" numberOfLines={1}>{r.name}</Text>
         <View className="mt-0.5 flex-row items-center gap-1.5">

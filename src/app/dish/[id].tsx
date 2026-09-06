@@ -395,7 +395,7 @@ export default function DishDetailScreen() {
 
             {/* Chef card */}
             <View className="mb-4 flex-row items-center gap-3 card p-4">
-              <Avatar name={dish.chef_name} size={42} />
+              <Avatar name={dish.chef_name} size={42} userId={dish.chef_user_id} />
               <View className="flex-1">
                 <Text className="font-sans-bold text-[15px] text-ink">{dish.chef_name}</Text>
                 <Text className="font-sans text-[12px] text-muted">Flat {dish.flat}{dish.upi ? ` · UPI ${dish.upi}` : ''}</Text>

@@ -197,7 +197,7 @@ export default function PropertyDetailScreen() {
 
           {/* Owner */}
           <View className="mt-4 flex-row items-center gap-3 card p-3.5">
-            <Avatar name={ownerName} size={42} />
+            <Avatar name={ownerName} size={42} userId={p.owner_user_id} />
             <View className="flex-1">
               <Text className="font-sans-bold text-[14px] text-ink">{ownerName}</Text>
               <Text className="font-sans text-[12px] text-muted">{p.owner?.flat ? `Flat ${p.owner.flat} · Owner` : 'Owner'}</Text>

@@ -286,7 +286,7 @@ export function SportGroupBody({
               const showMakeCaptain = managing && !m.is_captain && canManage;
               return (
                 <View key={m.user_id} className="flex-row items-center gap-3">
-                  <Avatar name={m.profile?.name ?? '?'} size={36} />
+                  <Avatar name={m.profile?.name ?? '?'} userId={m.profile?.id} size={36} />
                   <View className="flex-1">
                     <View className="flex-row items-center gap-1.5">
                       <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{m.profile?.name ?? 'Member'}</Text>

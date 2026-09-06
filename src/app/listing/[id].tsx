@@ -312,7 +312,7 @@ export default function ListingDetailScreen() {
 
             {/* Owner card */}
             <View className="mb-4 flex-row items-center gap-3 card p-4">
-              <Avatar name={ownerName} size={42} />
+              <Avatar name={ownerName} size={42} userId={listing.is_referral ? null : listing.owner_user_id} />
               <View className="flex-1">
                 <Text className="font-sans-bold text-[15px] text-ink">{ownerName}</Text>
                 {listing.is_referral ? (

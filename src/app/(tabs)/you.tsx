@@ -49,7 +49,7 @@ export default function YouScreen() {
               makes you guess what tapping your own face does. */}
           <Rise index={0}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Avatar name={profile?.name ?? 'You'} size={60} />
+              <Avatar name={profile?.name ?? '?'} userId={profile?.id} size={60} />
               <View style={{ flex: 1, minWidth: 0, marginLeft: 14 }}>
                 <Text className="font-display-x text-[23px] leading-[28px] text-ink" numberOfLines={1}>
                   {profile?.name ?? 'You'}

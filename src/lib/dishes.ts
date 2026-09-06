@@ -192,7 +192,7 @@ export async function placeOrder(dishId: string, qty: number): Promise<string | 
 export async function listChefOrders(dishId: string): Promise<ChefOrder[]> {
   const { data, error } = await supabase
     .from('orders')
-    .select('*, orderer:profiles!orders_orderer_user_id_fkey(name,flat,whatsapp,phone)')
+    .select('*, orderer:profiles!orders_orderer_user_id_fkey(id, name,flat,whatsapp,phone)')
     .eq('dish_id', dishId)
     .order('created_at', { ascending: false });
   if (error) throw error;

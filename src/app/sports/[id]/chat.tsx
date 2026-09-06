@@ -131,7 +131,7 @@ export default function GroupChatScreen() {
             onPress={() => router.push(`/sports/${id}` as never)}
             className="min-w-0 flex-1 flex-row items-center gap-2.5 active:opacity-70"
           >
-            <Avatar name={group?.name ?? '?'} size={34} />
+            <Avatar name={group?.name ?? '?'} userId={group?.id} size={34} />
             <View className="min-w-0 flex-1">
               <Text className="font-sans-bold text-[15px] text-ink" numberOfLines={1}>
                 {group?.name ?? 'Group'}
@@ -257,7 +257,7 @@ function Bubble({
     <View className={`flex-row ${mine ? 'justify-end' : 'justify-start'}`}>
       {!mine ? (
         <View style={{ width: 28, marginRight: 8 }}>
-          {showAuthor ? <Avatar name={message.author?.name ?? '?'} size={28} /> : null}
+          {showAuthor ? <Avatar name={message.author?.name ?? '?'} userId={message.author?.id} size={28} /> : null}
         </View>
       ) : null}
 

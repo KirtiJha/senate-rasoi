@@ -155,7 +155,7 @@ export function MyTiffinsSection({ onBrowse, onPost }: { onBrowse?: () => void; 
                         <Text className="flex-1 font-display-sb text-[16px] text-ink" numberOfLines={1}>{plan?.title ?? 'Tiffin'}</Text>
                       </View>
                       <View className="mt-0.5 flex-row items-center gap-1.5">
-                        <Avatar name={plan?.chef?.name ?? '?'} size={16} />
+                        <Avatar name={plan?.chef?.name ?? '?'} userId={plan?.chef?.id} size={16} />
                         <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>
                           {plan?.chef?.name ?? 'Chef'} · {plan ? `${SLOT_EMOJI[plan.slot]} ${daysLabel(plan.days_of_week)}` : ''}
                         </Text>

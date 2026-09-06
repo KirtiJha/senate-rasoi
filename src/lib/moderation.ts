@@ -49,12 +49,12 @@ export interface ContentReport {
   reviewed_by: string | null;
   reviewed_at: string | null;
   created_at: string;
-  reporter?: { name: string; flat: string | null };
-  target_owner?: { name: string; flat: string | null };
+  reporter?: { id?: string; name: string; flat: string | null };
+  target_owner?: { id?: string; name: string; flat: string | null };
 }
 
 const REPORT_SELECT =
-  '*, reporter:profiles!content_reports_reporter_id_fkey(name,flat), target_owner:profiles!content_reports_target_owner_id_fkey(name,flat)';
+  '*, reporter:profiles!content_reports_reporter_id_fkey(id, name,flat), target_owner:profiles!content_reports_target_owner_id_fkey(id, name,flat)';
 
 /** File a report. Re-reporting the same item updates the existing row. */
 export async function reportContent(input: {
@@ -106,7 +106,7 @@ export async function setReportStatus(id: string, status: ReportStatus, reviewer
 export interface BlockedUser {
   blocked_id: string;
   created_at: string;
-  profile?: { name: string; flat: string | null };
+  profile?: { id?: string; name: string; flat: string | null };
 }
 
 /**
@@ -132,7 +132,7 @@ export async function fetchBlockedIds(userId: string): Promise<Set<string>> {
 export async function fetchMyBlocks(userId: string): Promise<BlockedUser[]> {
   const { data, error } = await supabase
     .from('user_blocks')
-    .select('blocked_id,created_at,profile:profiles!user_blocks_blocked_id_fkey(name,flat)')
+    .select('blocked_id,created_at,profile:profiles!user_blocks_blocked_id_fkey(id, name,flat)')
     .eq('blocker_id', userId)
     .order('created_at', { ascending: false });
   if (error) throw error;

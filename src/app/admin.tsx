@@ -285,7 +285,7 @@ export default function AdminScreen() {
               return (
                 <View key={m.id} className="mb-3 card p-4">
                   <View className="flex-row items-center gap-3">
-                    <Avatar name={m.name} size={44} />
+                    <Avatar name={m.name} size={44} userId={m.id} />
                     <View className="flex-1">
                       <View className="flex-row items-center gap-1.5 flex-wrap">
                         <Text className="font-sans-sb text-[15px] text-ink" numberOfLines={1}>{m.name || 'Unnamed'}</Text>

@@ -445,7 +445,7 @@ export function NavRail() {
             accessibilityLabel="Account menu"
           >
             <Animated.View style={{ marginLeft: iconMarginL, paddingLeft: 7 }}>
-              <Avatar name={profile?.name ?? 'You'} size={32} />
+              <Avatar name={profile?.name ?? '?'} userId={profile?.id} size={32} />
             </Animated.View>
             <Animated.View style={{ flex: 1, overflow: 'hidden', maxWidth: labelMaxW, opacity: labelOpacity, marginLeft: 10 }}>
               <Text numberOfLines={1} style={{ fontFamily: 'HankenGrotesk_600SemiBold', fontSize: 14, color: colors.ink }}>
@@ -482,7 +482,7 @@ function AccountMenu({
 }: {
   visible: boolean;
   onClose: () => void;
-  profile: { name: string; flat: string | null } | null;
+  profile: { id?: string; name: string; flat: string | null } | null;
   colors: ReturnType<typeof useThemeColors>;
   isDark: boolean;
   onToggleTheme: () => void;
@@ -512,7 +512,7 @@ function AccountMenu({
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 8 }}>
-            <Avatar name={profile?.name ?? 'You'} size={36} />
+            <Avatar name={profile?.name ?? '?'} userId={profile?.id} size={36} />
             <View style={{ flex: 1 }}>
               <Text numberOfLines={1} style={{ fontFamily: 'HankenGrotesk_700Bold', fontSize: 14, color: colors.ink }}>
                 {profile?.name ?? 'You'}

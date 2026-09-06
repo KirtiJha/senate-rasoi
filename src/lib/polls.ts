@@ -21,7 +21,7 @@ export interface PollRow {
   options: PollOption[];
   my_vote: string | null;
   total_votes: number;
-  author?: { name: string; flat: string | null };
+  author?: { id?: string; name: string; flat: string | null };
 }
 
 /**
@@ -41,7 +41,7 @@ export async function fetchPolls(communityId: string): Promise<PollRow[]> {
 
   const { data, error } = await supabase
     .from('polls')
-    .select('*, author:profiles!polls_author_id_fkey(name, flat), options:poll_options(id, text, position)')
+    .select('*, author:profiles!polls_author_id_fkey(id, name, flat), options:poll_options(id, text, position)')
     .eq('community_id', communityId)
     .order('created_at', { ascending: false })
     .limit(30);

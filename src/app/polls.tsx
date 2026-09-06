@@ -206,7 +206,7 @@ function PollCard({
       <View className="p-4">
         {/* Meta row */}
         <View className="flex-row items-center gap-2 mb-3">
-          <Avatar name={poll.author?.name ?? '?'} size={22} />
+          <Avatar name={poll.author?.name ?? '?'} userId={poll.author?.id} size={22} />
           <Text className="font-sans flex-1 text-[12px] text-faint">
             {poll.author?.name ?? 'Someone'}
             {poll.author?.flat ? ` · Flat ${poll.author.flat}` : ''}

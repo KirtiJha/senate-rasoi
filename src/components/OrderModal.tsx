@@ -82,7 +82,7 @@ export function OrderModal({ dish, onClose, onConfirm }: OrderModalProps) {
             <Text className="flex-1 font-display text-[17px] text-ink" numberOfLines={1}>{dish.dish_name}</Text>
           </View>
           <View className="mt-1 flex-row items-center gap-1.5">
-            <Avatar name={dish.chef_name} size={18} />
+            <Avatar name={dish.chef_name} size={18} userId={dish.chef_user_id} />
             <Text className="font-sans text-[12px] text-muted">{dish.chef_name} · Flat {dish.flat}</Text>
           </View>
         </View>

@@ -56,7 +56,7 @@ export interface GroupMember {
   user_id: string;
   is_captain: boolean;
   joined_at: string;
-  profile: { name: string | null; flat: string | null } | null;
+  profile: { id?: string; name: string | null; flat: string | null } | null;
 }
 export interface Tournament {
   id: string;
@@ -100,7 +100,7 @@ export async function fetchGroup(id: string): Promise<SportGroup | null> {
 export async function fetchGroupMembers(groupId: string): Promise<GroupMember[]> {
   const { data, error } = await supabase
     .from('sport_group_members')
-    .select('user_id, is_captain, joined_at, profile:profiles!sport_group_members_user_id_fkey(name, flat)')
+    .select('user_id, is_captain, joined_at, profile:profiles!sport_group_members_user_id_fkey(id, name, flat)')
     .eq('group_id', groupId)
     .order('is_captain', { ascending: false })
     .order('joined_at', { ascending: true });

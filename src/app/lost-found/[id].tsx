@@ -202,7 +202,7 @@ export default function LostFoundDetailScreen() {
 
           {/* Owner card */}
           <View className="mt-4 flex-row items-center gap-3 card p-3.5">
-            <Avatar name={ownerName} size={40} />
+            <Avatar name={ownerName} size={40} userId={item.owner_user_id} />
             <View className="flex-1">
               <Text className="font-sans-bold text-[14px] text-ink">{ownerName}</Text>
               <Text className="font-sans text-[12px] text-muted">{item.owner?.flat ? `Flat ${item.owner.flat}` : 'Neighbour'}</Text>

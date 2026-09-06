@@ -64,7 +64,7 @@ export interface EventTeamMember {
   user_id: string;
   role: TeamRole;
   added_at: string;
-  profile?: { name: string; flat: string | null; whatsapp: string | null; upi: string | null };
+  profile?: { id?: string; name: string; flat: string | null; whatsapp: string | null; upi: string | null };
 }
 
 export interface Contribution {
@@ -80,7 +80,7 @@ export interface Contribution {
   recorded_by: string | null;
   created_at: string;
   received_at: string | null;
-  contributor?: { name: string; flat: string | null };
+  contributor?: { id?: string; name: string; flat: string | null };
   // Added in 0082.
   opted_out?: boolean;
   head_count?: number | null;
@@ -109,7 +109,7 @@ export interface Expense {
   status: 'pending' | 'approved';
   created_by: string;
   created_at: string;
-  paid_by?: { name: string; flat: string | null };
+  paid_by?: { id?: string; name: string; flat: string | null };
 }
 
 // ─── Events ─────────────────────────────────────────────────────────
@@ -179,7 +179,7 @@ export async function deleteEvent(id: string): Promise<void> {
 export async function fetchTeam(eventId: string): Promise<EventTeamMember[]> {
   const { data, error } = await supabase
     .from('event_team')
-    .select('*, profile:profiles!event_team_user_id_fkey(name,flat,whatsapp,upi)')
+    .select('*, profile:profiles!event_team_user_id_fkey(id, name,flat,whatsapp,upi)')
     .eq('event_id', eventId);
   if (error) throw error;
   const rank: Record<TeamRole, number> = { lead: 0, treasurer: 1, member: 2 };
@@ -203,7 +203,7 @@ export async function removeTeamMember(eventId: string, userId: string): Promise
 export async function fetchContributions(eventId: string): Promise<Contribution[]> {
   const { data, error } = await supabase
     .from('event_contributions')
-    .select('*, contributor:profiles!event_contributions_contributor_user_id_fkey(name,flat)')
+    .select('*, contributor:profiles!event_contributions_contributor_user_id_fkey(id, name,flat)')
     .eq('event_id', eventId)
     .order('flat', { ascending: true });
   if (error) throw error;
@@ -288,7 +288,7 @@ export async function deleteContribution(id: string): Promise<void> {
 export async function fetchExpenses(eventId: string): Promise<Expense[]> {
   const { data, error } = await supabase
     .from('event_expenses')
-    .select('*, paid_by:profiles!event_expenses_paid_by_user_id_fkey(name,flat)')
+    .select('*, paid_by:profiles!event_expenses_paid_by_user_id_fkey(id, name,flat)')
     .eq('event_id', eventId)
     .order('spent_on', { ascending: false, nullsFirst: false });
   if (error) throw error;
@@ -443,7 +443,7 @@ export interface EventTask {
   title: string;
   detail: string | null;
   assignee_id: string | null;
-  assignee?: { name: string; flat: string | null } | null;
+  assignee?: { id?: string; name: string; flat: string | null } | null;
   due_date: string | null;
   status: TaskStatus;
   updated_at: string;
@@ -512,7 +512,7 @@ export async function deleteBudgetItem(id: string): Promise<void> {
 export async function fetchTasks(eventId: string): Promise<EventTask[]> {
   const { data, error } = await supabase
     .from('event_tasks')
-    .select('id, title, detail, assignee_id, due_date, status, updated_at, assignee:profiles!event_tasks_assignee_id_fkey(name, flat)')
+    .select('id, title, detail, assignee_id, due_date, status, updated_at, assignee:profiles!event_tasks_assignee_id_fkey(id, name, flat)')
     .eq('event_id', eventId)
     // Unfinished first, then by when it is due. A board that buries the overdue
     // thing under three completed ones is a board nobody reads.
@@ -554,7 +554,7 @@ export async function deleteTask(id: string): Promise<void> {
 export async function fetchTaskUpdates(taskId: string): Promise<TaskUpdate[]> {
   const { data, error } = await supabase
     .from('event_task_updates')
-    .select('id, task_id, author_id, note, photo_url, status_after, created_at, author:profiles!event_task_updates_author_id_fkey(name)')
+    .select('id, task_id, author_id, note, photo_url, status_after, created_at, author:profiles!event_task_updates_author_id_fkey(id, name)')
     .eq('task_id', taskId)
     .order('created_at');
   if (error) throw error;

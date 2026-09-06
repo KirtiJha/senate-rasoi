@@ -252,7 +252,7 @@ export default function LendItemDetailScreen() {
 
           {/* Owner card */}
           <View className="mt-4 flex-row items-center gap-3 card p-3.5">
-            <Avatar name={ownerName} size={40} />
+            <Avatar name={ownerName} size={40} userId={item.owner_user_id} />
             <View className="flex-1">
               <Text className="font-sans-bold text-[14px] text-ink">{ownerName}</Text>
               <Text className="font-sans text-[12px] text-muted">{item.owner?.flat ? `Flat ${item.owner.flat}` : 'Neighbour'}</Text>
@@ -321,7 +321,7 @@ export default function LendItemDetailScreen() {
                     {requests.map((r) => (
                       <View key={r.id} className="card p-3.5">
                         <View className="flex-row items-center gap-2">
-                          <Avatar name={r.requester?.name ?? '?'} size={26} />
+                          <Avatar name={r.requester?.name ?? '?'} userId={r.requester?.id} size={26} />
                           <View className="flex-1">
                             <Text className="font-sans-bold text-[13px] text-ink">{r.requester?.name ?? 'A neighbour'}</Text>
                             {r.requester?.flat ? <Text className="font-sans text-[11px] text-faint">Flat {r.requester.flat}</Text> : null}

@@ -141,7 +141,7 @@ export default function PlaceDetailScreen() {
 
           {/* Added by */}
           <View className="mt-5 flex-row items-center gap-2">
-            <Avatar name={place.creator?.name ?? 'Neighbour'} size={24} />
+            <Avatar name={place.creator?.name ?? '?'} userId={place.creator?.id} size={24} />
             <Text className="font-sans text-[12px] text-muted">Added by <Text className="font-sans-sb text-ink">{place.creator?.name ?? 'a neighbour'}</Text>{place.creator?.flat ? ` · Flat ${place.creator.flat}` : ''}</Text>
           </View>
 

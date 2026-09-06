@@ -154,7 +154,7 @@ export default function RecoDetailScreen() {
             </View>
           ) : null}
           <View className="mt-2 flex-row items-center gap-2">
-            <Avatar name={q.author?.name ?? '?'} size={22} />
+            <Avatar name={q.author?.name ?? '?'} userId={q.author?.id} size={22} />
             <Text className="font-sans text-[12px] text-faint">Asked by {q.author?.name ?? 'a neighbour'}{q.author?.flat ? ` · Flat ${q.author.flat}` : ''}</Text>
           </View>
 
@@ -236,7 +236,7 @@ export default function RecoDetailScreen() {
                     </>
                   )}
                   <View className="mt-2 flex-row items-center gap-1.5">
-                    <Avatar name={a.author?.name ?? '?'} size={18} />
+                    <Avatar name={a.author?.name ?? '?'} userId={a.author?.id} size={18} />
                     <Text className="font-sans text-[11px] text-faint">{a.author?.name ?? 'A neighbour'}{a.author?.flat ? ` · ${a.author.flat}` : ''}</Text>
                     {(a.author_id === userId || isAdmin) && editAnsId !== a.id ? (
                       <View className="ml-auto flex-row items-center gap-2.5">

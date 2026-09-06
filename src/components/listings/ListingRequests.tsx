@@ -87,7 +87,7 @@ export function ListingRequests({
       {rows.map((r) => (
         <View key={r.id} className="mb-2 card p-3.5">
           <View className="flex-row items-start gap-2.5">
-            {isOwner ? <Avatar name={r.from_user?.name ?? '?'} size={34} /> : null}
+            {isOwner ? <Avatar name={r.from_user?.name ?? '?'} userId={r.from_user?.id} size={34} /> : null}
 
             <View style={{ flex: 1 }}>
               {isOwner ? (

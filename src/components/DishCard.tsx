@@ -137,7 +137,7 @@ function DishCardBase({ dish, owned, hero, onOrder, onRemove, onShare, reputatio
         ) : null}
 
         <View className="mt-3 flex-row items-center gap-2">
-          <Avatar name={dish.chef_name} size={26} />
+          <Avatar name={dish.chef_name} size={26} userId={dish.chef_user_id} />
           <View className="min-w-0 flex-1">
             <Text className="font-sans text-[12px] text-muted" numberOfLines={1}>
               <Text className="font-sans-sb text-ink">{dish.chef_name}</Text> · Flat {dish.flat}

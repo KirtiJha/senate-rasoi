@@ -77,7 +77,7 @@ export interface MyOrder extends Order {
 
 /** Order joined with the orderer's contact — the chef's Kitchen view. */
 export interface ChefOrder extends Order {
-  orderer: { name: string; flat: string | null; whatsapp: string | null; phone: string } | null;
+  orderer: { id?: string; name: string; flat: string | null; whatsapp: string | null; phone: string } | null;
 }
 
 /** Legacy shape used across the post/order UI (chefName == profile name). */
@@ -108,6 +108,8 @@ export interface DbProfile {
   resident_type: 'owner' | 'tenant' | null;
   profession: string | null;
   vehicle_no: string | null;
+  /** Public URL of their photo in the avatars bucket, or null (0139). */
+  avatar_url?: string | null;
   show_in_directory: boolean;
   notifications_cleared_at: string | null;
   blood_group: string | null;
@@ -141,7 +143,7 @@ export interface TiffinPlan {
 
 /** A plan joined with the chef profile (for the Discover tiffin strip). */
 export interface TiffinPlanWithChef extends TiffinPlan {
-  chef: { name: string; flat: string | null; whatsapp: string | null; upi: string | null } | null;
+  chef: { id?: string; name: string; flat: string | null; whatsapp: string | null; upi: string | null } | null;
 }
 
 export interface Subscription {
@@ -234,7 +236,7 @@ export interface InquiryRow {
   message: string | null;
   status: 'open' | 'closed';
   created_at: string;
-  from_user?: { name: string; flat: string | null; whatsapp: string | null };
+  from_user?: { id?: string; name: string; flat: string | null; whatsapp: string | null };
   /** Joined when reading your own requests — see fetchMyInquiries. */
   listing?: { id: string; title: string; category: string; status: string; photos: string[] | null };
 }

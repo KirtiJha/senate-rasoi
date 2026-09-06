@@ -391,7 +391,7 @@ function ManageSheet({
             <View className="mb-3 gap-2">
               {shares.map((s) => (
                 <View key={s.user_id} className="flex-row items-center gap-3">
-                  <Avatar name={s.profile?.name ?? '?'} size={32} />
+                  <Avatar name={s.profile?.name ?? '?'} userId={s.profile?.id} size={32} />
                   <Text className="flex-1 font-sans-sb text-[14px] text-ink" numberOfLines={1}>{s.profile?.name ?? 'Member'}</Text>
                   <Pressable onPress={() => revoke(s.user_id)} hitSlop={6} className="rounded-full bg-inset px-2.5 py-1 active:opacity-70">
                     <Text className="text-[12px] font-sans-sb text-[#EF4444]">Revoke</Text>
@@ -410,7 +410,7 @@ function ManageSheet({
           <View className="gap-1">
             {filteredPeople.slice(0, 30).map((p) => (
               <Pressable accessibilityRole="button" accessibilityLabel="Add a document" key={p.id} onPress={() => addPerson(p.id)} className="flex-row items-center gap-3 rounded-xl px-2 py-2 active:bg-inset">
-                <Avatar name={p.name} size={32} />
+                <Avatar name={p.name} size={32} userId={p.id} />
                 <View className="flex-1">
                   <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>{p.name}</Text>
                   {p.flat ? <Text className="font-sans text-[12px] text-faint">Flat {p.flat}</Text> : null}

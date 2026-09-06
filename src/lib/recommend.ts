@@ -26,7 +26,7 @@ export interface RecoQuestion {
   answer_count: number;
   created_at: string;
   bump_at: string;
-  author?: { name: string; flat: string | null };
+  author?: { id?: string; name: string; flat: string | null };
 }
 
 export interface RecoAnswer {
@@ -39,12 +39,12 @@ export interface RecoAnswer {
   photo_url: string | null;
   vote_count: number;
   created_at: string;
-  author?: { name: string; flat: string | null };
+  author?: { id?: string; name: string; flat: string | null };
   voted?: boolean; // set client-side
 }
 
-const Q_SELECT = '*, author:profiles!reco_questions_author_id_fkey(name,flat)';
-const A_SELECT = '*, author:profiles!reco_answers_author_id_fkey(name,flat)';
+const Q_SELECT = '*, author:profiles!reco_questions_author_id_fkey(id, name,flat)';
+const A_SELECT = '*, author:profiles!reco_answers_author_id_fkey(id, name,flat)';
 
 export async function fetchQuestions(category?: string, communityId: string = COMMUNITY_ID): Promise<RecoQuestion[]> {
   let q = supabase.from('reco_questions').select(Q_SELECT).eq('community_id', communityId);

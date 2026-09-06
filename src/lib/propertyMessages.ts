@@ -7,10 +7,10 @@ export interface PropertyMessageRow {
   author_id: string;
   body: string;
   created_at: string;
-  author?: { name: string; flat: string | null };
+  author?: { id?: string; name: string; flat: string | null };
 }
 
-const SELECT = '*, author:profiles!property_messages_author_id_fkey(name, flat)';
+const SELECT = '*, author:profiles!property_messages_author_id_fkey(id, name, flat)';
 
 export async function fetchPropertyMessages(propertyId: string): Promise<PropertyMessageRow[]> {
   const { data, error } = await supabase

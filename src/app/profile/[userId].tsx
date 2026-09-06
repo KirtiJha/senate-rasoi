@@ -96,7 +96,7 @@ export default function PublicProfileScreen() {
         <Container narrow>
           {/* Profile card */}
           <View className="mx-4 mt-5 items-center card px-6 py-6">
-            <Avatar name={displayName} size={72} />
+            <Avatar name={displayName} size={88} userId={userId} />
             <Text className="mt-3 font-display-x text-[22px] text-ink">{displayName}</Text>
             {profile.flat ? (
               <Text className="font-sans mt-0.5 text-[13px] text-muted">Flat {profile.flat}</Text>

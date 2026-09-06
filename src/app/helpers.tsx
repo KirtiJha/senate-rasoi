@@ -348,7 +348,7 @@ function RequestCard({
                 const p = o.donor?.whatsapp ?? o.donor?.phone ?? null;
                 return (
                   <View key={o.id} className="flex-row items-center gap-2.5 rounded-xl bg-inset px-3 py-2">
-                    <Avatar name={o.donor?.name ?? '?'} size={28} />
+                    <Avatar name={o.donor?.name ?? '?'} userId={o.donor?.id} size={28} />
                     <View className="min-w-0 flex-1">
                       <Text className="font-sans-sb text-[13px] text-ink" numberOfLines={1}>{o.donor?.name ?? 'A neighbour'}</Text>
                       {o.donor?.flat ? <Text className="font-sans text-[11px] text-faint">Flat {o.donor.flat}</Text> : null}
@@ -499,7 +499,7 @@ function PersonRow({ p, badge, c, inline }: { p: RegistryPerson; badge?: string;
   const phone = p.whatsapp ?? p.phone;
   return (
     <View className={inline ? 'flex-row items-center gap-2.5' : 'flex-row items-center gap-2.5 card p-3'}>
-      <Avatar name={p.name} size={36} />
+      <Avatar name={p.name} size={36} userId={p.id} />
       <View className="flex-1">
         <View className="flex-row items-center gap-1.5">
           <Text className="font-sans-bold text-[14px] text-ink">{p.name}</Text>

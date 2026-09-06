@@ -64,7 +64,7 @@ export function SubscribeModal({ plan, onClose, onConfirm }: SubscribeModalProps
           <Text className="flex-1 font-display text-[17px] text-ink" numberOfLines={1}>{plan.title}</Text>
         </View>
         <View className="mt-1 flex-row items-center gap-1.5">
-          <Avatar name={plan.chef?.name ?? '?'} size={18} />
+          <Avatar name={plan.chef?.name ?? '?'} userId={plan.chef?.id} size={18} />
           <Text className="font-sans text-[12px] text-muted">{plan.chef?.name ?? 'Chef'} · {SLOT_EMOJI[plan.slot]} {plan.slot} · {daysLabel(plan.days_of_week)}</Text>
         </View>
         {plan.description ? <Text className="font-sans mt-2 text-[13px] leading-5 text-muted">{plan.description}</Text> : null}

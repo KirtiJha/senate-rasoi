@@ -44,7 +44,7 @@ export interface LendItem {
   contact_phone: string | null;
   created_at: string;
   bump_at: string;
-  owner?: { name: string; flat: string | null; whatsapp: string | null; phone: string | null };
+  owner?: { id?: string; name: string; flat: string | null; whatsapp: string | null; phone: string | null };
 }
 
 export interface BorrowRequest {
@@ -56,11 +56,11 @@ export interface BorrowRequest {
   /** The app closed this, not the owner — the item went elsewhere or was withdrawn. */
   auto_closed?: boolean;
   created_at: string;
-  requester?: { name: string; flat: string | null; whatsapp: string | null; phone: string | null };
+  requester?: { id?: string; name: string; flat: string | null; whatsapp: string | null; phone: string | null };
 }
 
-const SELECT = '*, owner:profiles!lend_items_owner_user_id_fkey(name,flat,whatsapp,phone)';
-const REQ_SELECT = '*, requester:profiles!borrow_requests_requester_id_fkey(name,flat,whatsapp,phone)';
+const SELECT = '*, owner:profiles!lend_items_owner_user_id_fkey(id, name,flat,whatsapp,phone)';
+const REQ_SELECT = '*, requester:profiles!borrow_requests_requester_id_fkey(id, name,flat,whatsapp,phone)';
 
 export async function fetchItems(
   opts: { category?: string; publicOnly?: boolean; mine?: string; kind?: LendKind; viewerId?: string | null } = {},

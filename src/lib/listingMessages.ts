@@ -7,10 +7,10 @@ export interface ListingMessageRow {
   author_id: string;
   body: string;
   created_at: string;
-  author?: { name: string; flat: string | null };
+  author?: { id?: string; name: string; flat: string | null };
 }
 
-const SELECT = '*, author:profiles!listing_messages_author_id_fkey(name, flat)';
+const SELECT = '*, author:profiles!listing_messages_author_id_fkey(id, name, flat)';
 
 /** All messages on a listing, oldest first. */
 export async function fetchListingMessages(listingId: string): Promise<ListingMessageRow[]> {

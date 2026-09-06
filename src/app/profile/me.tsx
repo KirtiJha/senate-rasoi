@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Field, SectionCard } from '../../components/forms';
-import { Avatar, Button, Container, KeyboardAvoider, ScreenHeader } from '../../components/ui';
+import { Button, Container, KeyboardAvoider, ScreenHeader } from '../../components/ui';
+import { ProfilePhoto } from '../../components/ProfilePhoto';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
 import { useConfirm } from '../../context/confirm';
@@ -151,7 +152,7 @@ export default function ProfileScreen() {
         <Container>
           {/* Who you are — the same row shape as the You screen. */}
           <View className="mb-6 flex-row items-center">
-            <Avatar name={profile?.name ?? 'Me'} size={60} />
+            <ProfilePhoto size={72} />
             <View className="min-w-0 flex-1" style={{ marginLeft: 14 }}>
               <Text className="font-display-x text-[23px] leading-[28px] text-ink" numberOfLines={1}>
                 {profile?.name ?? '—'}

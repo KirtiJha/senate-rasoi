@@ -256,7 +256,7 @@ function AddTask({
                 accessibilityLabel={m.profile?.name ?? 'Member'}>
                 <View pointerEvents="none" className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1.5"
                   style={{ backgroundColor: on ? c.accentSoft : c.inset, borderWidth: 1, borderColor: on ? c.accentLine : 'transparent' }}>
-                  <Avatar name={m.profile?.name ?? '?'} size={18} />
+                  <Avatar name={m.profile?.name ?? '?'} userId={m.profile?.id} size={18} />
                   <Text className="text-[12.5px] font-sans-md" style={{ color: on ? c.accent : c.muted }}>
                     {m.profile?.name ?? 'Member'}
                   </Text>

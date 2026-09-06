@@ -12,19 +12,19 @@ export interface DocRow {
   mime_type: string | null;
   is_public: boolean;
   created_at: string;
-  owner?: { name: string | null; flat: string | null } | null;
+  owner?: { id?: string; name: string | null; flat: string | null } | null;
 }
 
 export interface ShareUser {
   user_id: string;
-  profile: { name: string | null; flat: string | null } | null;
+  profile: { id?: string; name: string | null; flat: string | null } | null;
 }
 
 /** All documents the current user may access (RLS = public-in-community / owner / shared). */
 export async function fetchDocuments(communityId: string): Promise<DocRow[]> {
   const { data, error } = await supabase
     .from('documents')
-    .select('*, owner:profiles!documents_owner_id_fkey(name, flat)')
+    .select('*, owner:profiles!documents_owner_id_fkey(id, name, flat)')
     .eq('community_id', communityId)
     .order('created_at', { ascending: false })
     .limit(500);
@@ -102,7 +102,7 @@ export async function getDocumentUrl(storagePath: string, downloadAs?: string): 
 export async function fetchShares(docId: string): Promise<ShareUser[]> {
   const { data, error } = await supabase
     .from('document_shares')
-    .select('user_id, profile:profiles!document_shares_user_id_fkey(name, flat)')
+    .select('user_id, profile:profiles!document_shares_user_id_fkey(id, name, flat)')
     .eq('document_id', docId);
   if (error) throw error;
   return (data ?? []) as unknown as ShareUser[];

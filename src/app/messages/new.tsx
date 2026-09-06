@@ -98,7 +98,7 @@ export default function NewMessageScreen() {
                   disabled={!!opening}
                   className="flex-row items-center gap-3 rounded-2xl p-3 active:bg-inset"
                 >
-                  <Avatar name={m.name} size={42} />
+                  <Avatar name={m.name} size={42} userId={m.id} />
                   <View className="flex-1">
                     <Text className="font-sans-bold text-[15px] text-ink" numberOfLines={1}>{m.name}</Text>
                     {m.flat ? <Text className="font-sans text-[12px] text-muted">Flat {m.flat}</Text> : null}

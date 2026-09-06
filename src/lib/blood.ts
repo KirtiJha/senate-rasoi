@@ -29,7 +29,7 @@ export interface BloodRequest {
   status: BloodStatus;
   created_at: string;
   closed_at: string | null;
-  requester?: { name: string | null; flat: string | null; whatsapp: string | null; phone: string | null } | null;
+  requester?: { id?: string; name: string | null; flat: string | null; whatsapp: string | null; phone: string | null } | null;
 }
 
 export interface BloodOffer {
@@ -38,11 +38,11 @@ export interface BloodOffer {
   donor_id: string;
   note: string | null;
   created_at: string;
-  donor?: { name: string | null; flat: string | null; whatsapp: string | null; phone: string | null } | null;
+  donor?: { id?: string; name: string | null; flat: string | null; whatsapp: string | null; phone: string | null } | null;
 }
 
-const REQ = '*, requester:profiles!blood_requests_requester_id_fkey(name,flat,whatsapp,phone)';
-const OFF = '*, donor:profiles!blood_offers_donor_id_fkey(name,flat,whatsapp,phone)';
+const REQ = '*, requester:profiles!blood_requests_requester_id_fkey(id, name,flat,whatsapp,phone)';
+const OFF = '*, donor:profiles!blood_offers_donor_id_fkey(id, name,flat,whatsapp,phone)';
 
 /**
  * Who can give to whom — the same table the database uses to decide whose

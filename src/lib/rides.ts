@@ -29,7 +29,7 @@ export interface Ride {
   note: string | null;
   active: boolean;
   created_at: string;
-  driver?: { name: string; flat: string | null; whatsapp: string | null } | null;
+  driver?: { id?: string; name: string; flat: string | null; whatsapp: string | null } | null;
 }
 
 export interface RideRequest {
@@ -41,7 +41,7 @@ export interface RideRequest {
   status: RideRequestStatus;
   note: string | null;
   created_at: string;
-  rider?: { name: string; flat: string | null; whatsapp: string | null } | null;
+  rider?: { id?: string; name: string; flat: string | null; whatsapp: string | null } | null;
   ride?: Ride | null;
 }
 
@@ -51,7 +51,7 @@ export const PREFERENCE_LABELS: Record<RidePreference, string> = {
   men: 'Men only',
 };
 
-const RIDE_SELECT = '*, driver:profiles!rides_driver_user_id_fkey(name,flat,whatsapp)';
+const RIDE_SELECT = '*, driver:profiles!rides_driver_user_id_fkey(id, name,flat,whatsapp)';
 
 // ── Dates ───────────────────────────────────────────────────────────
 
@@ -154,7 +154,7 @@ export async function fetchRide(id: string): Promise<Ride | null> {
 export async function fetchRideRequests(rideId: string): Promise<RideRequest[]> {
   const { data, error } = await supabase
     .from('ride_requests')
-    .select('*, rider:profiles!ride_requests_rider_user_id_fkey(name,flat,whatsapp)')
+    .select('*, rider:profiles!ride_requests_rider_user_id_fkey(id, name,flat,whatsapp)')
     .eq('ride_id', rideId)
     .gte('ride_date', todayIso())
     .order('ride_date')
@@ -168,7 +168,7 @@ export async function fetchMyRideRequests(userId: string): Promise<RideRequest[]
   if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase
     .from('ride_requests')
-    .select(`*, ride:rides!ride_requests_ride_id_fkey(${'*, driver:profiles!rides_driver_user_id_fkey(name,flat,whatsapp)'})`)
+    .select(`*, ride:rides!ride_requests_ride_id_fkey(${'*, driver:profiles!rides_driver_user_id_fkey(id, name,flat,whatsapp)'})`)
     .eq('rider_user_id', userId)
     .gte('ride_date', todayIso())
     .order('ride_date');
@@ -331,7 +331,7 @@ export interface RideStanding {
   /** Last day the arrangement covers. Null is open-ended (0100). */
   ends_on: string | null;
   created_at: string;
-  rider?: { name: string; flat: string | null; whatsapp: string | null } | null;
+  rider?: { id?: string; name: string; flat: string | null; whatsapp: string | null } | null;
   ride?: Ride | null;
 }
 
@@ -339,7 +339,7 @@ export interface RideStanding {
 export async function fetchStanding(rideId: string): Promise<RideStanding[]> {
   const { data, error } = await supabase
     .from('ride_standing')
-    .select('*, rider:profiles!ride_standing_rider_user_id_fkey(name,flat,whatsapp)')
+    .select('*, rider:profiles!ride_standing_rider_user_id_fkey(id, name,flat,whatsapp)')
     .eq('ride_id', rideId)
     .order('created_at');
   if (error) throw error;
@@ -351,7 +351,7 @@ export async function fetchMyStanding(userId: string): Promise<RideStanding[]> {
   if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase
     .from('ride_standing')
-    .select(`*, ride:rides!ride_standing_ride_id_fkey(${'*, driver:profiles!rides_driver_user_id_fkey(name,flat,whatsapp)'})`)
+    .select(`*, ride:rides!ride_standing_ride_id_fkey(${'*, driver:profiles!rides_driver_user_id_fkey(id, name,flat,whatsapp)'})`)
     .eq('rider_user_id', userId)
     .in('status', ['pending', 'accepted'])
     .order('created_at');

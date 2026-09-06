@@ -30,7 +30,7 @@ export async function isListingSaved(userId: string, listingId: string): Promise
 export async function fetchSavedListings(userId: string): Promise<ListingRow[]> {
   const { data, error } = await supabase
     .from('saved_listings')
-    .select('listing:listings!saved_listings_listing_id_fkey(*, owner:profiles!listings_owner_user_id_fkey(name,flat,whatsapp,phone))')
+    .select('listing:listings!saved_listings_listing_id_fkey(*, owner:profiles!listings_owner_user_id_fkey(id, name,flat,whatsapp,phone))')
     .eq('user_id', userId)
     .order('saved_at', { ascending: false });
   if (error) throw error;

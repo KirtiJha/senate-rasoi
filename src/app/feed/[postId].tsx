@@ -321,7 +321,7 @@ export default function PostThreadScreen() {
 
             {/* Author */}
             <View className="mt-4 flex-row items-center gap-2.5">
-              <Avatar name={post.author?.name ?? '?'} size={32} />
+              <Avatar name={post.author?.name ?? '?'} userId={post.author?.id} size={32} />
               <View className="flex-1">
                 <Text className="font-sans-sb text-[13px] text-ink">
                   {post.author_id === userId ? 'You' : post.author?.name ?? 'Someone'}
@@ -382,7 +382,7 @@ export default function PostThreadScreen() {
         ) : null}
 
         <View className="flex-row items-end gap-2">
-          <Avatar name={profile?.name ?? '?'} size={32} />
+          <Avatar name={profile?.name ?? '?'} userId={profile?.id} size={32} />
           <View className="flex-1 rounded-2xl border border-line bg-inset px-3 py-2">
             <TextInput
               value={commentBody}
@@ -479,7 +479,7 @@ function CommentBubble({ comment, userId, isAdmin, onDelete, onChanged, reaction
 
   return (
     <View className="flex-row gap-2.5">
-      <Avatar name={comment.author?.name ?? '?'} size={28} />
+      <Avatar name={comment.author?.name ?? '?'} userId={comment.author?.id} size={28} />
       <View className="flex-1">
         <View className="flex-row items-center gap-2 mb-0.5">
           <Text className="font-sans-sb text-[12px] text-ink">{isOwn ? 'You' : comment.author?.name ?? 'Someone'}</Text>

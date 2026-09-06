@@ -46,10 +46,10 @@ export interface PlaceRow {
   photos: string[];
   created_at: string;
   bump_at: string;
-  creator?: { name: string; flat: string | null } | null;
+  creator?: { id?: string; name: string; flat: string | null } | null;
 }
 
-const SELECT = '*, creator:profiles!places_created_by_fkey(name,flat)';
+const SELECT = '*, creator:profiles!places_created_by_fkey(id, name,flat)';
 
 export async function fetchPlaces(
   opts: { type?: string } = {},

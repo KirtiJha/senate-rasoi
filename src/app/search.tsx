@@ -178,7 +178,7 @@ function ResultRow({ hit, first, c, onPress }: { hit: SearchHit; first: boolean;
       className={`flex-row items-center gap-3 px-3.5 py-3 ${first ? '' : 'border-t border-line'} active:bg-inset`}
     >
       {hit.kind === 'resident' ? (
-        <Avatar name={hit.title} size={36} />
+        <Avatar name={hit.title} size={36} userId={hit.id} />
       ) : (
         <View className="h-9 w-9 items-center justify-center rounded-xl flex-shrink-0" style={{ backgroundColor: c.accentSoft }}>
           <Ionicons name={KIND[hit.kind].icon as any} size={18} color={c.accent} />

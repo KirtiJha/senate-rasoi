@@ -15,8 +15,8 @@ export interface PaymentRow {
   status: PaymentStatus;
   created_at: string;
   received_at: string | null;
-  payer?: { name: string | null; flat: string | null } | null;
-  payee?: { name: string | null; flat: string | null } | null;
+  payer?: { id?: string; name: string | null; flat: string | null } | null;
+  payee?: { id?: string; name: string | null; flat: string | null } | null;
   source?: 'payment' | 'court'; // 'court' rows come from sports dues (managed there)
 }
 
@@ -110,11 +110,11 @@ export async function fetchMyPayments(): Promise<PaymentRow[]> {
   const [main, court] = await Promise.all([
     supabase
       .from('payments')
-      .select('*, payer:profiles!payments_payer_id_fkey(name, flat), payee:profiles!payments_payee_id_fkey(name, flat)')
+      .select('*, payer:profiles!payments_payer_id_fkey(id, name, flat), payee:profiles!payments_payee_id_fkey(id, name, flat)')
       .order('created_at', { ascending: false }),
     supabase
       .from('court_payments')
-      .select('*, payer:profiles!court_payments_payer_user_id_fkey(name, flat), payee:profiles!court_payments_payee_user_id_fkey(name, flat), session:court_sessions!court_payments_session_id_fkey(session_date, booking:court_bookings!court_sessions_booking_id_fkey(title))')
+      .select('*, payer:profiles!court_payments_payer_user_id_fkey(id, name, flat), payee:profiles!court_payments_payee_user_id_fkey(id, name, flat), session:court_sessions!court_payments_session_id_fkey(session_date, booking:court_bookings!court_sessions_booking_id_fkey(title))')
       .order('created_at', { ascending: false }),
   ]);
   if (main.error) throw main.error;

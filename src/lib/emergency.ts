@@ -55,7 +55,7 @@ export const ALL_EMERGENCY_ROLES: EmergencyRole[] = [
  * tile during an emergency and found "No contacts yet". These are national and
  * always present, above whatever the society adds.
  */
-export interface NationalNumber { name: string; phone: string; role: EmergencyRole; blurb: string }
+export interface NationalNumber { id?: string; name: string; phone: string; role: EmergencyRole; blurb: string }
 export const NATIONAL_NUMBERS: NationalNumber[] = [
   { name: 'Emergency', phone: '112', role: 'other', blurb: 'Police, fire and ambulance — one number' },
   { name: 'Ambulance', phone: '108', role: 'medical', blurb: 'Free emergency ambulance' },
@@ -136,7 +136,7 @@ export async function deleteEmergencyContact(id: string): Promise<void> {
  */
 export async function updateEmergencyContact(
   id: string,
-  patch: Partial<{ name: string; phone: string; role: EmergencyRole; category: string | null; order_pos: number }>,
+  patch: Partial<{ id?: string; name: string; phone: string; role: EmergencyRole; category: string | null; order_pos: number }>,
 ): Promise<void> {
   const clean: Record<string, unknown> = { ...patch };
   if (typeof clean.name === 'string') clean.name = (clean.name as string).trim();

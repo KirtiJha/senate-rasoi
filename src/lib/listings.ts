@@ -65,7 +65,7 @@ export async function fetchListings(
 ): Promise<ListingRow[]> {
   const { data, error } = await supabase
     .from('listings')
-    .select('*, owner:profiles!listings_owner_user_id_fkey(name,flat,whatsapp,phone,upi)')
+    .select('*, owner:profiles!listings_owner_user_id_fkey(id, name,flat,whatsapp,phone,upi)')
     .eq('community_id', communityId)
     .eq('category', category)
     .or(boardFilter())
@@ -78,7 +78,7 @@ export async function fetchListings(
   return rows;
 }
 
-const LISTING_SELECT = '*, owner:profiles!listings_owner_user_id_fkey(name,flat,whatsapp,phone,upi)';
+const LISTING_SELECT = '*, owner:profiles!listings_owner_user_id_fkey(id, name,flat,whatsapp,phone,upi)';
 
 /**
  * Search active listings in a community. Uses the full-text index (migration
@@ -174,7 +174,7 @@ export async function fetchAllListings(
 export async function fetchListingById(id: string): Promise<ListingRow | null> {
   const { data, error } = await supabase
     .from('listings')
-    .select('*, owner:profiles!listings_owner_user_id_fkey(name,flat,whatsapp,phone,upi)')
+    .select('*, owner:profiles!listings_owner_user_id_fkey(id, name,flat,whatsapp,phone,upi)')
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;

@@ -145,7 +145,7 @@ export default function DmThreadScreen() {
             accessibilityRole="button"
             accessibilityLabel={`Open ${thread?.other.name ?? 'neighbour'}'s profile`}
           >
-            <Avatar name={thread?.other.name ?? '?'} size={34} />
+            <Avatar name={thread?.other.name ?? '?'} userId={thread?.other.id} size={34} />
             <View>
               <Text className="font-sans-bold text-[15px] text-ink" numberOfLines={1}>{thread?.other.name ?? 'Neighbour'}</Text>
               {thread?.other.flat ? <Text className="font-sans text-[11px] text-faint">Flat {thread.other.flat}</Text> : null}

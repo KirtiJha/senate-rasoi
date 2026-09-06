@@ -93,7 +93,7 @@ export default function MessagesInboxScreen() {
               accessibilityRole="button"
               accessibilityLabel={`Conversation with ${t.other.name}`}
             >
-              <Avatar name={t.other.name} size={46} />
+              <Avatar name={t.other.name} userId={t.other.id} size={46} />
               <View className="flex-1">
                 <View className="flex-row items-center">
                   <Text className="flex-1 font-sans-bold text-[15px] text-ink" numberOfLines={1}>

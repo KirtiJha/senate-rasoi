@@ -24,10 +24,10 @@ export interface GroupMessage {
   body: string | null;
   photo_url: string | null;
   created_at: string;
-  author?: { name: string | null; flat: string | null } | null;
+  author?: { id?: string; name: string | null; flat: string | null } | null;
 }
 
-const SELECT = '*, author:profiles!group_messages_author_id_fkey(name,flat)';
+const SELECT = '*, author:profiles!group_messages_author_id_fkey(id, name,flat)';
 
 export async function fetchGroupMessages(groupId: string, limit = 200): Promise<GroupMessage[]> {
   if (!isSupabaseConfigured) return [];

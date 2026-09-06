@@ -320,7 +320,7 @@ export default function RideDetailScreen() {
             ) : null}
 
             <View className="mt-3 flex-row items-center gap-2.5 border-t border-line pt-3">
-              <Avatar name={ride.driver?.name ?? '?'} size={30} />
+              <Avatar name={ride.driver?.name ?? '?'} userId={ride.driver?.id} size={30} />
               <Text className="flex-1 font-sans text-[13px]" style={{ color: c.subtle }}>
                 {isDriver ? 'You are driving' : ride.driver?.name ?? 'A neighbour'}
                 {!isDriver && ride.driver?.flat ? ` · ${ride.driver.flat}` : ''}
@@ -531,7 +531,7 @@ export default function RideDetailScreen() {
                 return (
                   <View key={r.id} className="mb-2 card p-3.5">
                     <View className="flex-row items-center gap-2.5">
-                      <Avatar name={r.rider?.name ?? '?'} size={32} />
+                      <Avatar name={r.rider?.name ?? '?'} userId={r.rider?.id} size={32} />
                       <View style={{ flex: 1 }}>
                         <Text className="font-sans-sb text-[14px] text-ink">
                           {r.rider?.name ?? 'A neighbour'}
@@ -593,7 +593,7 @@ export default function RideDetailScreen() {
                   .map((r) => (
                     <View key={r.id} className="mb-2 card p-3.5">
                       <View className="flex-row items-center gap-2.5">
-                        <Avatar name={r.rider?.name ?? '?'} size={32} />
+                        <Avatar name={r.rider?.name ?? '?'} userId={r.rider?.id} size={32} />
                         <View style={{ flex: 1 }}>
                           <Text className="font-sans-sb text-[14px] text-ink">
                             {r.rider?.name ?? 'A neighbour'}

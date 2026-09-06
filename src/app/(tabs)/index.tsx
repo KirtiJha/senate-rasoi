@@ -559,7 +559,7 @@ export default function HomeScreen() {
             hardcoded above twenty screens. */}
         <Animated.View style={heroStyle}>
           <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 10, paddingBottom: 6 }}>
-            <Avatar name={profile?.name ?? 'You'} size={44} />
+            <Avatar name={profile?.name ?? '?'} userId={profile?.id} size={44} />
             <View style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
               <Text className="text-[12px] font-sans-md text-muted" numberOfLines={1}>
                 {greeting}

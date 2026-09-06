@@ -29,10 +29,10 @@ export interface LostFoundItem {
   status: LostFoundStatus;
   created_at: string;
   bump_at: string;
-  owner?: { name: string; flat: string | null; whatsapp: string | null; phone: string | null };
+  owner?: { id?: string; name: string; flat: string | null; whatsapp: string | null; phone: string | null };
 }
 
-const SELECT = '*, owner:profiles!lost_found_items_owner_user_id_fkey(name,flat,whatsapp,phone)';
+const SELECT = '*, owner:profiles!lost_found_items_owner_user_id_fkey(id, name,flat,whatsapp,phone)';
 
 export async function fetchLostFoundItems(
   opts: { kind?: LostFoundKind; openOnly?: boolean; mine?: string } = {},

@@ -307,7 +307,7 @@ export default function EventDetailScreen() {
               <View className="gap-2">
                 {team.map((t) => (
                   <View key={t.user_id} className="flex-row items-center gap-3 card p-3">
-                    <Avatar name={t.profile?.name ?? '?'} size={34} />
+                    <Avatar name={t.profile?.name ?? '?'} userId={t.profile?.id} size={34} />
                     <View className="min-w-0 flex-1">
                       <Text className="font-sans-sb text-[14px] text-ink" numberOfLines={1}>
                         {t.profile?.name ?? 'A neighbour'}
@@ -384,7 +384,7 @@ export default function EventDetailScreen() {
         {team.map((t) => (
           <View key={t.user_id} className="mb-2 card p-3">
             <View className="mb-2 flex-row items-center gap-2">
-              <Avatar name={t.profile?.name ?? '?'} size={28} />
+              <Avatar name={t.profile?.name ?? '?'} userId={t.profile?.id} size={28} />
               <Text className="flex-1 font-sans-sb text-[13px] text-ink" numberOfLines={1}>
                 {t.profile?.name ?? 'A neighbour'}
               </Text>

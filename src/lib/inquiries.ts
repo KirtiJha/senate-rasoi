@@ -58,7 +58,7 @@ export async function fetchInquiryCountsForOwner(
 export async function fetchListingInquiries(listingId: string): Promise<InquiryRow[]> {
   const { data, error } = await supabase
     .from('inquiries')
-    .select('*, from_user:profiles!inquiries_from_user_id_fkey(name,flat,whatsapp)')
+    .select('*, from_user:profiles!inquiries_from_user_id_fkey(id, name,flat,whatsapp)')
     .eq('listing_id', listingId)
     .order('created_at', { ascending: false });
   if (error) throw error;

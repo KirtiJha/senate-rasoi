@@ -26,6 +26,7 @@ import { SaathiFab } from '../components/SaathiFab';
 import { NavRail } from '../components/NavRail';
 import { useResponsive } from '../components/ui';
 import { AuthProvider } from '../context/auth';
+import { AvatarProvider } from '../context/avatars';
 import { ConfirmProvider } from '../context/confirm';
 import { TranslationProvider } from '../context/translations';
 import { NotificationsProvider } from '../context/notifications';
@@ -95,6 +96,7 @@ function AppShell() {
             refetch behind it; see lib/queryClient.ts. */}
         <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: PERSIST_MAX_AGE }}>
         <AuthProvider>
+          <AvatarProvider>
           <TranslationProvider>
             <UnreadDmsProvider>
               <BlocksProvider>
@@ -111,6 +113,7 @@ function AppShell() {
               </BlocksProvider>
             </UnreadDmsProvider>
           </TranslationProvider>
+          </AvatarProvider>
         </AuthProvider>
         </PersistQueryClientProvider>
       </SafeAreaProvider>

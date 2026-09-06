@@ -11,6 +11,7 @@ export type PostCategory =
   | 'lost_found';
 
 export interface PostAuthor {
+  id?: string;
   name: string;
   flat: string | null;
 }
@@ -83,7 +84,7 @@ export async function fetchPosts(
 ): Promise<PostRow[]> {
   let q = supabase
     .from('posts')
-    .select('*, author:profiles!posts_author_id_fkey(name, flat)')
+    .select('*, author:profiles!posts_author_id_fkey(id, name, flat)')
     .eq('community_id', communityId)
     .order('pinned', { ascending: false })
     .order('created_at', { ascending: false })
@@ -94,7 +95,7 @@ export async function fetchPosts(
   return (data ?? []) as PostRow[];
 }
 
-const POST_SELECT = '*, author:profiles!posts_author_id_fkey(name, flat)';
+const POST_SELECT = '*, author:profiles!posts_author_id_fkey(id, name, flat)';
 
 /**
  * Search community posts. Full-text first (migration 0022, stemmed + ranked),
@@ -151,7 +152,7 @@ export async function fetchLatestAnnouncement(communityId: string): Promise<Post
 export async function fetchPostById(id: string): Promise<PostRow | null> {
   const { data, error } = await supabase
     .from('posts')
-    .select('*, author:profiles!posts_author_id_fkey(name, flat)')
+    .select('*, author:profiles!posts_author_id_fkey(id, name, flat)')
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
@@ -190,7 +191,7 @@ export async function createPost(input: NewPostInput): Promise<PostRow> {
       title: input.title?.trim() || null,
       body: input.body.trim(),
     })
-    .select('*, author:profiles!posts_author_id_fkey(name, flat)')
+    .select('*, author:profiles!posts_author_id_fkey(id, name, flat)')
     .single();
   if (error) throw error;
   const post = data as PostRow;
@@ -250,7 +251,7 @@ export function subscribeToFeed(communityId: string, onChange: () => void): () =
 export async function fetchComments(postId: string): Promise<CommentRow[]> {
   const { data, error } = await supabase
     .from('post_comments')
-    .select('*, author:profiles!post_comments_author_id_fkey(name, flat)')
+    .select('*, author:profiles!post_comments_author_id_fkey(id, name, flat)')
     .eq('post_id', postId)
     .order('created_at', { ascending: true });
   if (error) throw error;
@@ -261,7 +262,7 @@ export async function createComment(postId: string, authorId: string, body: stri
   const { data, error } = await supabase
     .from('post_comments')
     .insert({ post_id: postId, author_id: authorId, body: body.trim() })
-    .select('*, author:profiles!post_comments_author_id_fkey(name, flat)')
+    .select('*, author:profiles!post_comments_author_id_fkey(id, name, flat)')
     .single();
   if (error) throw error;
   return data as CommentRow;

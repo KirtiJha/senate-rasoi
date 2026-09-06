@@ -188,7 +188,7 @@ function MessageBubble({ message, isMine, isOwner, canDelete, accent, onDelete, 
   }
   return (
     <View className="flex-row items-start gap-2">
-      <Avatar name={message.author?.name ?? '?'} size={28} />
+      <Avatar name={message.author?.name ?? '?'} userId={message.author?.id} size={28} />
       <View className="flex-1">
         <View className="mb-0.5 flex-row items-center gap-1.5">
           <Text className="font-sans-sb text-[12px] text-ink">{message.author?.name ?? 'Someone'}</Text>
