@@ -13,7 +13,7 @@ import {
 } from '@expo-google-fonts/hanken-grotesk';
 import { useFonts } from 'expo-font';
 import * as Notifications from 'expo-notifications';
-import { Stack, useRouter } from 'expo-router';
+import { usePathname, Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -22,7 +22,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { BottomBar } from '../components/BottomBar';
-import { SaathiFab } from '../components/SaathiFab';
 import { NavRail } from '../components/NavRail';
 import { useResponsive } from '../components/ui';
 import { AuthProvider } from '../context/auth';
@@ -32,6 +31,7 @@ import { TranslationProvider } from '../context/translations';
 import { NotificationsProvider } from '../context/notifications';
 import { ThemeProvider } from '../context/theme';
 import { ToastProvider, useToast } from '../context/toast';
+import { chromeFree } from '../lib/chrome';
 import { setPhotoErrorHandler } from '../lib/photo';
 import { UnreadDmsProvider } from '../context/unread';
 import { BlocksProvider } from '../context/blocks';
@@ -158,7 +158,10 @@ function DesktopShell() {
   const { ready, session } = useAuth();
   usePushTapNavigation();
   const showRail = isDesktop && ready && !!session;
-  const showBottomBar = !isDesktop && ready && !!session;
+  // The bar is for browsing. A screen that owns its own bottom edge — a
+  // composer, a sticky action, a form — gets it back; see lib/chrome.
+  const pathname = usePathname();
+  const showBottomBar = !isDesktop && ready && !!session && !chromeFree(pathname);
 
   return (
     <View
@@ -226,10 +229,11 @@ function DesktopShell() {
           <Stack.Screen name="messages/[threadId]" />
         </Stack>
       </View>
-      {/* Rendered beside BottomBar rather than inside any screen, so Saathi is
-          one tap from everywhere instead of two taps from Home. Same visibility
-          rule: signed in, on a phone. */}
-      {showBottomBar ? <SaathiFab /> : null}
+      {/* One floating element, not two. Saathi used to ride along here as a
+          second green circle that could be dragged anywhere and, by default,
+          parked on top of whatever primary action a screen had. It lives in
+          the top bar and the Home ask field now — both always reachable,
+          neither on top of anything. */}
       {showBottomBar ? <BottomBar /> : null}
     </View>
   );

@@ -4,17 +4,15 @@ import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/auth';
 import { useNotifications } from '../context/notifications';
-import { useThemePreference } from '../context/theme';
 import { useThemeColors } from '../theme';
 import { Wordmark } from './Brand';
+import { SaathiMark } from './SaathiMark';
 import { LiveDot } from './ui/Badge';
 
 // Slim brand bar used as the phone header.
 export function TopBar({ live = false }: { live?: boolean }) {
   const insets = useSafeAreaInsets();
   const c = useThemeColors();
-  const { resolved, toggle } = useThemePreference();
-  const isDark = resolved === 'dark';
   const { unreadCount, open } = useNotifications();
   const { community } = useAuth();
 
@@ -42,14 +40,22 @@ export function TopBar({ live = false }: { live?: boolean }) {
               <Text className="font-sans-sb text-[11px] text-muted">Live</Text>
             </View>
           ) : null}
-          <Pressable
-            onPress={toggle}
-            hitSlop={8}
-            className="h-9 w-9 items-center justify-center rounded-full bg-inset active:opacity-70"
-            accessibilityRole="button" accessibilityLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            <Ionicons name={isDark ? 'sunny' : 'moon'} size={17} color={isDark ? c.accent : c.muted} />
-          </Pressable>
+          {/* Saathi, where the light/dark switch used to be.
+              Two of the app's scarcest slots were spent on a preference people
+              set once — and which Settings already owns — while the assistant
+              was a second floating green circle that sat on top of whatever
+              primary action each screen had. This is the trade: theme goes
+              back to Settings, Saathi becomes reachable from every tab. */}
+          <Link href="/ask" asChild>
+            <Pressable
+              hitSlop={8}
+              className="h-9 w-9 items-center justify-center rounded-full active:opacity-70"
+              style={{ backgroundColor: c.accentSoft }}
+              accessibilityRole="button" accessibilityLabel="Ask Saathi"
+            >
+              <SaathiMark size={19} />
+            </Pressable>
+          </Link>
           <Pressable
             onPress={open}
             hitSlop={8}
