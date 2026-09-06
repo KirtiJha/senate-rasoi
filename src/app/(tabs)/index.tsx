@@ -42,6 +42,7 @@ import { fetchBorrowCounts, fetchItems as fetchBorrowItems, LendItem, BORROW_CAT
 import { fetchLostFoundItems, LostFoundItem, fetchLostFoundCounts, LOST_FOUND_CATEGORIES } from '../../lib/lostFound';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { AppVersion, fetchLatestVersion, isNewer } from '../../lib/appVersion';
+import { noteTileOpened, useQuickTiles } from '../../lib/quickTiles';
 import { useThemeColors } from '../../theme';
 
 const DISMISSED_ANNOUNCEMENT_KEY = 'aangan:dismissed-announcement';
@@ -56,6 +57,29 @@ function currentWeekId(): string {
 }
 
 type CommunityTile = { key: string; label: string; blurb: string; icon: string; color: string; href: string };
+
+/** The quick row is four across on a 390px phone; these fit. */
+const SHORT_LABEL: Record<string, string> = {
+  directory: 'Residents', emergency: 'Emergency', documents: 'Documents', payments: 'Payments',
+  recommend: 'Ask', lost_found: 'Lost', properties: 'Flats', events: 'Events', helpers: 'Blood',
+  messages: 'Messages', rides: 'Carpool', feedback: 'Feedback', borrow: 'Borrow', polls: 'Polls',
+  sports: 'Sports', feed: 'Feed',
+};
+
+/**
+ * Home's index used to be one flat grid of thirty-one tiles in a fixed
+ * order, with fourteen marketplace categories ahead of Residents and
+ * Documents, and Emergency at tile twenty-nine — a full screen below the
+ * fold on the screen somebody opens in a hurry.
+ *
+ * Three zones, in the order a resident thinks: the building itself, the
+ * people in it, then the things being bought, sold and lent.
+ */
+const ZONES: { title: string; keys: string[] }[] = [
+  { title: 'Your society', keys: ['directory', 'emergency', 'documents', 'payments', 'polls', 'events', 'helpers'] },
+  { title: 'Your neighbours', keys: ['feed', 'messages', 'sports', 'rides', 'recommend', 'feedback'] },
+  { title: 'Buy, sell & borrow', keys: ['properties', 'borrow', 'lost_found'] },
+];
 
 const COMMUNITY_TILES: CommunityTile[] = [
   {
@@ -373,6 +397,18 @@ export default function HomeScreen() {
 
   const greeting = getGreeting();
 
+  // Which four sit in the quick row, and the counter behind it.
+  const quickKeys = useQuickTiles(ZONES.flatMap((z) => z.keys));
+  const quickTiles = quickKeys
+    .map((k) => COMMUNITY_TILES.find((t) => t.key === k))
+    .filter(Boolean)
+    .map((t) => ({ ...(t as CommunityTile), short: SHORT_LABEL[(t as CommunityTile).key] ?? (t as CommunityTile).label }));
+
+  const openTile = (key: string, href: string) => {
+    noteTileOpened(key);
+    router.push(href as any);
+  };
+
   const handleCategoryPress = (cat: ServiceCategory) => {
     if (cat.key === 'food') {
       router.push('/food' as any);
@@ -675,6 +711,27 @@ export default function HomeScreen() {
             Onboarding ends with a founder alone in an app whose every tile is
             about neighbours. Nothing told them the first job, and there was no
             invite anywhere to do it with. */}
+        {/* Four doors, before anything else. Which four is learned from
+            this device alone — see lib/quickTiles. */}
+        <View className="mt-3 flex-row" style={{ marginHorizontal: -4 }}>
+          {quickTiles.map((t) => (
+            <View key={t.key} style={{ flex: 1, paddingHorizontal: 4 }}>
+              <Touchable haptic={null} onPress={() => openTile(t.key, t.href)} accessibilityRole="button" accessibilityLabel={t.label}>
+                <View
+                  pointerEvents="none"
+                  className="items-center rounded-2xl px-1 py-3"
+                  style={{ backgroundColor: c.surface, borderWidth: 1, borderColor: c.line }}
+                >
+                  <View className="items-center justify-center rounded-xl" style={{ width: 34, height: 34, backgroundColor: c.accentSoft }}>
+                    <Ionicons name={t.icon as any} size={17} color={c.accent} />
+                  </View>
+                  <Text className="mt-1.5 text-[11px] font-sans-sb text-ink" numberOfLines={1}>{t.short}</Text>
+                </View>
+              </Touchable>
+            </View>
+          ))}
+        </View>
+
         {isAdmin && communityId ? (
           /* The founder's list: five things that make an empty society a live
              one, ticked from the data, gone when they are done. Renders
@@ -721,39 +778,60 @@ export default function HomeScreen() {
           </Rise>
         ) : null}
 
-        {/* ── 5. All of Aangan ────────────────────────────────────────── */}
-        <SectionHead label="All of Aangan" c={c} />
-        <View className="flex-row flex-wrap" style={{ marginHorizontal: -5 }}>
-          {SERVICES.map((cat) => (
-            <View key={cat.key} style={{ width: isDesktop ? '33.333%' : '50%', padding: 5 }}>
-              <ModuleTile
-                icon={cat.icon as any}
-                label={cat.label}
-                blurb={cat.blurb}
-                count={counts[cat.key] ?? 0}
-                onPress={() => handleCategoryPress(cat)}
+        {/* ── 5. Everything else, in zones ────────────────────────────
+            Not an alphabet. The building, then the people, then the
+            marketplace — and the categories that actually have something in
+            them, rather than fourteen empty ones ahead of Residents. */}
+        {ZONES.map((zone, zi) => {
+          const tiles = zone.keys
+            .map((k) => COMMUNITY_TILES.find((t) => t.key === k))
+            .filter(Boolean) as CommunityTile[];
+          const extras = zone.title === 'Buy, sell & borrow'
+            ? SERVICES.filter((cat) => (counts[cat.key] ?? 0) > 0)
+            : [];
+          if (!tiles.length && !extras.length) return null;
+          return (
+            <View key={zone.title}>
+              <SectionHead
+                label={zone.title}
+                actionLabel={zone.title === 'Buy, sell & borrow' ? 'All categories' : undefined}
+                onAction={zone.title === 'Buy, sell & borrow' ? () => router.push('/listings' as any) : undefined}
+                c={c}
               />
+              <View className="flex-row flex-wrap" style={{ marginHorizontal: -5, marginBottom: zi === ZONES.length - 1 ? 0 : 4 }}>
+                {tiles.map((tile) => (
+                  <View key={tile.key} style={{ width: isDesktop ? '33.333%' : '50%', padding: 5 }}>
+                    <ModuleTile
+                      icon={tile.icon as any}
+                      label={tile.label}
+                      blurb={tile.blurb}
+                      // A badge is "somebody is waiting on you". Group chat
+                      // earns one for the same reason a DM does.
+                      badge={tile.key === 'messages' ? unread : tile.key === 'sports' ? groupUnread : 0}
+                      count={
+                        tile.key === 'borrow' ? borrowCount
+                          : tile.key === 'lost_found' ? lostFoundCount
+                            : (tileCounts[tile.key] ?? 0)
+                      }
+                      onPress={() => openTile(tile.key, tile.href)}
+                    />
+                  </View>
+                ))}
+                {extras.map((cat) => (
+                  <View key={cat.key} style={{ width: isDesktop ? '33.333%' : '50%', padding: 5 }}>
+                    <ModuleTile
+                      icon={cat.icon as any}
+                      label={cat.label}
+                      blurb={cat.blurb}
+                      count={counts[cat.key] ?? 0}
+                      onPress={() => { noteTileOpened(cat.key); handleCategoryPress(cat); }}
+                    />
+                  </View>
+                ))}
+              </View>
             </View>
-          ))}
-          {COMMUNITY_TILES.map((tile) => (
-            <View key={tile.key} style={{ width: isDesktop ? '33.333%' : '50%', padding: 5 }}>
-              <ModuleTile
-                icon={tile.icon as any}
-                label={tile.label}
-                blurb={tile.blurb}
-                // A badge is "somebody is waiting on you". Group chat earns
-                // one for the same reason a DM does.
-                badge={tile.key === 'messages' ? unread : tile.key === 'sports' ? groupUnread : 0}
-                count={
-                  tile.key === 'borrow' ? borrowCount
-                    : tile.key === 'lost_found' ? lostFoundCount
-                      : (tileCounts[tile.key] ?? 0)
-                }
-                onPress={() => router.push(tile.href as any)}
-              />
-            </View>
-          ))}
-        </View>
+          );
+        })}
       </Container>
     </AScrollView>
     </View>
