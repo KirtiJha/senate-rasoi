@@ -1,6 +1,7 @@
 import { AskResultItem, AIError, invokeAi, readInvokeError } from './ai';
 import { supabase } from './supabase';
 import { getOrCreateThread, sendMessage } from './dm';
+import { askQuestion } from './recommend';
 import { createWatch } from './watches';
 
 /**
@@ -72,6 +73,18 @@ export async function askAgent(
 export type ProposalMeta = { title: string; icon: string; verb: string; lines: [string, string][] };
 
 const str = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String(v));
+
+/** "Tomorrow, 6:00 am" — the moment a reminder will fire, in the resident's words. */
+function whenLabel(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const day = new Date(); const tomorrow = new Date(); tomorrow.setDate(day.getDate() + 1);
+  const same = (x: Date, y: Date) => x.toDateString() === y.toDateString();
+  const time = d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+  if (same(d, day)) return `Today, ${time}`;
+  if (same(d, tomorrow)) return `Tomorrow, ${time}`;
+  return `${d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}, ${time}`;
+}
 
 /**
  * Human-readable description of a proposal. Deliberately built from the
@@ -152,6 +165,27 @@ export function describeProposal(p: AgentProposal): ProposalMeta {
         icon: 'search-outline',
         verb: 'Post it',
         lines: [['Item', str(a.title)], ['Details', str(a.description)]],
+      };
+    case 'propose_reminder':
+      return {
+        title: 'Set a reminder',
+        icon: 'alarm-outline',
+        verb: 'Remind me',
+        lines: [['Reminder', str(a.text)], ['When', whenLabel(str(a.at))]],
+      };
+    case 'propose_borrow_request':
+      return {
+        title: 'Ask to borrow',
+        icon: 'hand-left-outline',
+        verb: 'Post the request',
+        lines: [['Need', str(a.title)], ['Details', str(a.description)]],
+      };
+    case 'propose_ask_neighbours':
+      return {
+        title: 'Ask your neighbours',
+        icon: 'people-outline',
+        verb: 'Ask them',
+        lines: [['Question', str(a.title)], ...(a.detail ? ([['Details', str(a.detail)]] as [string, string][]) : []), ['Where', 'Ask & Recommend — everyone can reply']],
       };
     default:
       return { title: 'Confirm', icon: 'help-circle-outline', verb: 'Do it', lines: [] };
@@ -283,6 +317,45 @@ export async function executeProposal(
       .single();
     if (error) throw error;
     return { route: `/lost-found/${(data as { id: string }).id}` };
+  }
+
+  if (p.type === 'propose_reminder') {
+    const at = new Date(str(a.at));
+    if (Number.isNaN(at.getTime())) throw new AIError('That time did not make sense — ask again with a clear time.');
+    if (at.getTime() < Date.now() - 60_000) throw new AIError('That time has already passed.');
+    const { error } = await supabase.from('saathi_reminders').insert({
+      user_id: ctx.userId, community_id: ctx.communityId, text: str(a.text).slice(0, 200), remind_at: at.toISOString(),
+    });
+    if (error) throw error;
+    // A reminder has no page of its own; the chat is where it was made.
+    return { route: '' };
+  }
+
+  if (p.type === 'propose_borrow_request') {
+    const { data, error } = await supabase
+      .from('lend_items')
+      .insert({
+        community_id: ctx.communityId,
+        owner_user_id: ctx.userId,
+        kind: 'request',
+        title: str(a.title).slice(0, 120),
+        description: str(a.description),
+        status: 'available',
+      })
+      .select('id')
+      .single();
+    if (error) throw error;
+    return { route: `/borrow/${(data as { id: string }).id}` };
+  }
+
+  if (p.type === 'propose_ask_neighbours') {
+    const allowed = ['health', 'repairs', 'schools', 'home', 'shopping', 'travel', 'other'];
+    const category = allowed.includes(str(a.category)) ? str(a.category) : 'other';
+    const q = await askQuestion({
+      communityId: ctx.communityId, authorId: ctx.userId, category,
+      title: str(a.title).slice(0, 140), detail: str(a.detail) || null,
+    });
+    return { route: `/recommend/${q.id}` };
   }
 
   throw new AIError('That action is not supported yet.');

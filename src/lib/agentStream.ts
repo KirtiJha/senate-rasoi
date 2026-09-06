@@ -36,6 +36,8 @@ export async function streamAgent(
   question: string,
   history: { role: 'user' | 'assistant'; text: string }[],
   handlers: StreamHandlers,
+  /** Let the resident stop a long answer; whatever streamed so far is kept. */
+  stop?: AbortSignal,
 ): Promise<AgentReply> {
   const q = question.trim();
   if (!q) throw new AIError('Type a question first.');
@@ -48,6 +50,8 @@ export async function streamAgent(
   // stuck on a half-finished sentence with no way back.
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), STREAM_TIMEOUT_MS);
+  let stopped = false;
+  stop?.addEventListener('abort', () => { stopped = true; abort.abort(); });
 
   let answer = '';
   const steps: AgentStep[] = [];
@@ -121,6 +125,7 @@ export async function streamAgent(
       }
     }
   } catch (e) {
+    if (stopped) return { answer: answer.trim(), results, proposal, steps, suggestions };
     if (abort.signal.aborted) throw new AIError('Saathi took too long — try again.');
     throw e instanceof AIError ? e : new AIError('Saathi is unavailable right now.');
   } finally {

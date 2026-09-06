@@ -181,7 +181,7 @@ export type AskSource =
   | 'post' | 'document' | 'sport' | 'emergency'
   // Added with migration 0076, which brought the rest of the app into the
   // semantic index.
-  | 'event' | 'place' | 'lostfound' | 'poll' | 'comment' | 'recoanswer';
+  | 'event' | 'place' | 'lostfound' | 'poll' | 'comment' | 'recoanswer' | 'ride';
 
 export interface AskResultItem {
   source: AskSource;
@@ -244,6 +244,8 @@ export function askResultRoute(item: AskResultItem): string {
       return `/events/${item.id}`;
     case 'place':
       return `/place/${item.id}`;
+    case 'ride':
+      return `/rides/${item.id}`;
     case 'lostfound':
       return `/lost-found/${item.id}`;
     case 'poll':
@@ -273,6 +275,7 @@ const SOURCE_META: Record<AskSource, { label: string; icon: string; color: strin
   emergency: { label: 'Contact', icon: 'call', color: '#DC2626' },
   event: { label: 'Function', icon: 'sparkles', color: '#DB2777' },
   place: { label: 'Nearby', icon: 'location', color: '#0D9488' },
+  ride: { label: 'Carpool', icon: 'car-outline', color: '#0EA5E9' },
   lostfound: { label: 'Lost & found', icon: 'search', color: '#9333EA' },
   poll: { label: 'Poll', icon: 'stats-chart', color: '#6366F1' },
   comment: { label: 'Comment', icon: 'chatbubble-ellipses', color: '#2563EB' },

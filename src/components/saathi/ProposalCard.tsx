@@ -52,7 +52,7 @@ export function ProposalCard({
       onDone('done');
       // Land on the thing that was just made. Saying "posted!" and leaving
       // someone in the chat makes them go and check whether it really was.
-      router.push(route as never);
+      if (route) router.push(route as never);
     } catch {
       toast.show('Could not do that — try again');
     } finally {

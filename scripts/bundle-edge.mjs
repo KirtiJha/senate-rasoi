@@ -64,8 +64,8 @@ const out =
 // reached the dashboard.
 const required = [
   'Deno.serve',
-  'runAgent',
-  "action === 'agent'",
+  'runAgentStream',
+  "action === 'agent-stream'",
   'api.openai.com/v1/chat/completions',
   'api.openai.com/v1/embeddings',
   'OPENAI_MODEL',

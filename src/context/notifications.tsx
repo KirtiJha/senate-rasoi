@@ -41,6 +41,7 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   // A watch firing is Saathi speaking, so it wears Saathi's green rather
   // than the colour of whatever kind of thing it happened to find.
   saathi_watch: { icon: 'notifications', color: '#0E6B4E' },
+  reminder: { icon: 'alarm', color: '#0E6B4E' },
   food_daily: { icon: 'restaurant', color: '#E8650A' },
   feedback: { icon: 'chatbox-ellipses', color: '#6366F1' },
   pin_reset: { icon: 'key', color: '#B45309' },
@@ -295,7 +296,7 @@ const TYPE_PLURAL: Partial<Record<NotificationType, string>> = {
   dish: 'dishes', tiffin: 'tiffin updates', sport: 'sports updates', document: 'documents', payment: 'payments',
   property: 'flat listings', recommend: 'recommendations', borrow: 'borrow updates', court: 'court bookings',
   order: 'orders', place: 'places', lost_found: 'lost & found notices', report: 'reports', event: 'event updates',
-  saathi_watch: 'Saathi alerts', food_daily: 'food digests', feedback: 'feedback updates', pin_reset: 'PIN resets',
+  saathi_watch: 'Saathi alerts', reminder: 'reminders', food_daily: 'food digests', feedback: 'feedback updates', pin_reset: 'PIN resets',
   carpool: 'carpool updates', group_chat: 'group messages', member: 'new neighbours',
 };
 

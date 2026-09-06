@@ -27,8 +27,10 @@ import { useThemeColors } from '../theme';
  * notice or watch for the flat — so the second group is doing the real work
  * here, and the labels are what make the two modes legible at a glance.
  */
+const mealNow = () => { const h = new Date().getHours(); return h < 11 ? 'breakfast' : h < 16 ? 'lunch' : 'dinner'; };
+
 const ASK_EXAMPLES = [
-  'Any veg tiffin for lunch?',
+  `What's for ${mealNow()}?`,
   'Is there a plumber?',
   'Any 2 BHK for rent?',
   'What did people recommend for tuitions?',
@@ -38,6 +40,7 @@ const DO_EXAMPLES = [
   'Post a notice about the water tanker',
   'Start a poll about gate timings',
   'Tell me when a 2 BHK is listed',
+  'Remind me at 6 tomorrow about the tanker',
 ];
 
 export default function AskScreen() {
@@ -52,7 +55,12 @@ export default function AskScreen() {
   const [input, setInput] = useState('');
   const [historyOpen, setHistoryOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { userId, communityId } = useAuth();
+  const { userId, communityId, profile } = useAuth();
+  const firstName = (profile?.name ?? '').trim().split(/\s+/)[0] || null;
+  // Stops the current answer; what has streamed so far stays on screen.
+  const stopRef = useRef<AbortController | null>(null);
+  // The last question that failed, so one tap can ask it again.
+  const [failed, setFailed] = useState<string | null>(null);
 
   // The conversation's row on the server. Created lazily on the first message,
   // so opening Saathi and changing your mind does not litter the history with
@@ -74,14 +82,15 @@ export default function AskScreen() {
 
   const scrollDown = () => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 60);
 
-  const send = async (raw: string) => {
+  const send = async (raw: string, base: AskMessage[] = messages) => {
     const q = raw.trim();
     if (!q || loading) return;
     haptics.tap();
+    setFailed(null);
 
-    const history = messages.map((m) => ({ role: m.role, text: m.text }));
+    const history = base.map((m) => ({ role: m.role, text: m.text }));
     const userMsg: AskMessage = { role: 'user', text: q };
-    const withUser: AskMessage[] = [...messages, userMsg];
+    const withUser: AskMessage[] = [...base, userMsg];
 
     // An empty assistant turn goes in immediately and fills as the stream
     // arrives. Waiting until the first token means the screen sits unchanged
@@ -106,10 +115,11 @@ export default function AskScreen() {
     const paint = () => setMessages([...withUser, { role: 'assistant', text, steps: [...steps] }]);
 
     try {
+      stopRef.current = new AbortController();
       const r = await streamAgent(q, history, {
         onDelta: (chunk) => { text += chunk; paint(); },
         onStep: (step) => { steps.push(step); paint(); scrollDown(); },
-      });
+      }, stopRef.current.signal);
 
       const reply: AskMessage = {
         role: 'assistant',
@@ -131,7 +141,9 @@ export default function AskScreen() {
         text: text || why || 'Saathi is unavailable right now.',
         steps,
       }]);
+      if (!text) setFailed(q);
     } finally {
+      stopRef.current = null;
       setLoading(false);
       scrollDown();
     }
@@ -150,6 +162,13 @@ export default function AskScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const retry = () => {
+    if (!failed) return;
+    const base = messages.slice(0, -2);
+    persist(base);
+    send(failed, base);
   };
 
   const newChat = () => { clearAskConversation(); setMessages([]); setInput(''); sessionId.current = null; };
@@ -198,6 +217,9 @@ export default function AskScreen() {
       >
         {empty ? (
           <View className="mt-2">
+            <Text className="font-display-x mb-2 text-[24px] leading-[28px] text-ink">
+              Namaste{firstName ? `, ${firstName}` : ''} 👋
+            </Text>
             <Text className="font-sans-md mb-1.5 text-[14.5px] leading-[21px] text-ink">
               Saathi knows your society — the food, the flats, the notices and every reply under
               them. Ask in plain words, follow-ups and all.
@@ -315,7 +337,17 @@ export default function AskScreen() {
                   answered the next time. An affordance that appears
                   unpredictably is worse than one that is always there and
                   usually ignored. */}
-              {!loading && i === messages.length - 1 && lastQuestion ? (
+              {!loading && i === messages.length - 1 && failed ? (
+                <View className="ml-8 mt-2.5">
+                  <Touchable haptic={null} onPress={retry} accessibilityRole="button" accessibilityLabel="Try again">
+                    <View pointerEvents="none" className="flex-row items-center gap-2 self-start rounded-full px-3.5 py-2" style={{ backgroundColor: c.accentSoft, borderWidth: 1, borderColor: c.accentLine }}>
+                      <Ionicons name="refresh" size={14} color={c.accent} />
+                      <Text className="text-[12.5px] font-sans-sb" style={{ color: c.accent }}>Try again</Text>
+                    </View>
+                  </Touchable>
+                </View>
+              ) : null}
+              {!loading && i === messages.length - 1 && lastQuestion && !failed ? (
                 <View className="ml-8 mt-2.5">
                   <Touchable
                     haptic={null}
@@ -387,14 +419,24 @@ export default function AskScreen() {
               style={{ paddingVertical: 11, outline: 'none', minWidth: 0 } as any}
             />
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Send question"
-            onPress={() => send(input)}
-            disabled={loading || !input.trim()}
-            className="h-11 w-11 items-center justify-center rounded-full"
-            style={{ backgroundColor: input.trim() && !loading ? ACCENT : c.inset }}
-          >
-            <Ionicons name="arrow-up" size={20} color={input.trim() && !loading ? '#fff' : c.faint} />
-          </Pressable>
+          {loading ? (
+            <Pressable accessibilityRole="button" accessibilityLabel="Stop answering"
+              onPress={() => stopRef.current?.abort()}
+              className="h-11 w-11 items-center justify-center rounded-full"
+              style={{ backgroundColor: c.ink }}
+            >
+              <Ionicons name="stop" size={18} color={c.bg} />
+            </Pressable>
+          ) : (
+            <Pressable accessibilityRole="button" accessibilityLabel="Send question"
+              onPress={() => send(input)}
+              disabled={!input.trim()}
+              className="h-11 w-11 items-center justify-center rounded-full"
+              style={{ backgroundColor: input.trim() ? ACCENT : c.inset }}
+            >
+              <Ionicons name="arrow-up" size={20} color={input.trim() ? c.onAccent : c.faint} />
+            </Pressable>
+          )}
         </View>
       </View>
       <HistorySheet

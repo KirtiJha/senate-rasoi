@@ -16,7 +16,7 @@
 // (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are injected automatically.)
 // ════════════════════════════════════════════════════════════════════
 
-import { runAgent, runAgentStream } from './agent.ts';
+import { runAgentStream } from './agent.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const OPENAI_KEY = Deno.env.get('OPENAI_API_KEY') ?? '';
@@ -242,6 +242,13 @@ async function embedTexts(
 
 const toVec = (v: number[]) => `[${v.join(',')}]`;
 
+/** "Sunday, 6 September 2026, 4:35 pm" — what the model needs to resolve "tonight". */
+function indiaNow(): string {
+  return new Date().toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true,
+  });
+}
+
 // ── Photo → form fields (Phase 1) ──
 function callAutofill(
   instruction: string,
@@ -375,6 +382,20 @@ const SOURCES: Record<string, SourceDef> = {
     cols: 'id,kind,title,description,category,status,created_at',
     map: (r) => ({ title: String(r.title), info: `${r.kind === 'found' ? 'Found' : 'Lost'}${r.category ? ` · ${r.category}` : ''}${r.description ? ` · ${r.description}` : ''}` }),
     fresh: (q) => q.eq('status', 'open'),
+  },
+  ride: {
+    table: 'rides',
+    cols: 'id,from_text,to_text,depart_time,days_of_week,one_off_date,seats_total,price_per_seat,vehicle,active,created_at',
+    map: (r) => {
+      const days = Array.isArray(r.days_of_week) && r.days_of_week.length
+        ? (r.days_of_week as number[]).map((d) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')
+        : r.one_off_date ? String(r.one_off_date) : '';
+      return {
+        title: `${r.from_text} → ${r.to_text}`,
+        info: `Carpool · leaves ${String(r.depart_time ?? '').slice(0, 5)}${days ? ` · ${days}` : ''} · ${r.seats_total} seats${r.price_per_seat ? ` · ₹${r.price_per_seat}/seat` : ''}`,
+      };
+    },
+    fresh: (q) => q.eq('active', true),
   },
   poll: {
     table: 'polls',
@@ -749,7 +770,7 @@ Deno.serve(async (req) => {
   } catch {
     return json({ error: 'Bad request' }, 400);
   }
-  if (body.action !== 'autofill' && body.action !== 'ask' && body.action !== 'agent'
+  if (body.action !== 'autofill' && body.action !== 'ask'
       && body.action !== 'translate' && body.action !== 'digest' && body.action !== 'reembed'
       && body.action !== 'agent-stream') {
     return json({ error: 'Unknown action' }, 400);
@@ -863,19 +884,21 @@ Deno.serve(async (req) => {
   }
 
   // ── 4b. Ask Aangan: conversational answer over the society's catalog ──
-  const question = (body.question ?? '').toString().trim().slice(0, 300);
+  const question = (body.question ?? '').toString().trim().slice(0, 600);
   if (!question) return json({ error: 'Ask a question first' }, 400);
 
   // Prior turns (for follow-up resolution); cap to the last few.
   const history: ChatTurn[] = (Array.isArray(body.history) ? body.history : [])
     .slice(-8)
-    .map((h: { role?: string; text?: string }) => ({ role: h.role === 'assistant' ? 'assistant' : 'user', text: String(h.text ?? '').slice(0, 1000) }))
+    .map((h: { role?: string; text?: string }) => ({ role: (h.role === 'assistant' ? 'assistant' : 'user') as ChatTurn['role'], text: String(h.text ?? '').slice(0, 1000) }))
     .filter((h: ChatTurn) => h.text);
 
   // Scope strictly to the caller's own society (service role bypasses RLS).
-  const { data: prof } = await admin.from('profiles').select('community_id').eq('id', userId).single();
+  const { data: prof } = await admin.from('profiles')
+    .select('community_id, name, flat, block, preferred_lang, roles').eq('id', userId).single();
   const communityId = prof?.community_id as string | undefined;
-  if (!communityId) return json({ result: { answer: 'Join a society to use Ask Aangan.', results: [] } });
+  if (!communityId) return json({ result: { answer: 'Join a society to use Saathi.', results: [] } });
+  const { data: society } = await admin.from('communities').select('name, city').eq('id', communityId).maybeSingle();
 
   // For retrieval, blend the previous user turn so short follow-ups still match.
   const prevUser = [...history].reverse().find((h) => h.role === 'user')?.text;
@@ -907,6 +930,15 @@ Deno.serve(async (req) => {
               toVec,
               hydrate: (idsBySource) => fetchByIds(admin, idsBySource),
               handle: () => '',
+              resident: {
+                name: String(prof?.name ?? 'Neighbour'),
+                flat: prof?.flat ?? null,
+                block: prof?.block ?? null,
+                lang: prof?.preferred_lang ?? null,
+                isAdmin: Array.isArray(prof?.roles) && prof.roles.includes('admin'),
+              },
+              society: { name: String(society?.name ?? 'your society'), city: society?.city ?? null },
+              now: indiaNow(),
             },
             question,
             history,
@@ -934,34 +966,6 @@ Deno.serve(async (req) => {
         Connection: 'keep-alive',
       },
     });
-  }
-
-  if (body.action === 'agent') {
-    try {
-      // Before searching anything, catch the index up. The agent returns early
-      // here, so without this it never reaches the backfill the ask path runs —
-      // which is exactly how the whole index sat at 0 embedded / 505 pending.
-      await backfillEmbeddings(admin, communityId);
-
-      const out = await runAgent(
-        {
-          admin,
-          communityId,
-          userId,
-          embedQuery: async (text: string) => (await embedTexts([text], 'RETRIEVAL_QUERY'))[0],
-          toVec,
-          hydrate: (idsBySource) => fetchByIds(admin, idsBySource),
-        },
-        question,
-        history,
-        OPENAI_KEY,
-        OPENAI_MODEL,
-      );
-      return json({ result: out });
-    } catch (e) {
-      console.error('ai-proxy agent error:', e);
-      return json({ error: 'Aangan could not finish that — try again in a moment.' }, 502);
-    }
   }
 
   try {
