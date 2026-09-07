@@ -63,6 +63,17 @@ const ITEMS: Item[] = [
  */
 const KEYBOARD_MIN_PX = 140;
 
+/** Element types whose focus raises a software keyboard. */
+function isTextField(el: Element | null): boolean {
+  if (!el) return false;
+  if (el.tagName === 'TEXTAREA') return true;
+  if (el.tagName === 'INPUT') {
+    const type = ((el as HTMLInputElement).type || 'text').toLowerCase();
+    return !['button', 'submit', 'reset', 'checkbox', 'radio', 'file', 'range', 'color', 'image'].includes(type);
+  }
+  return (el as HTMLElement).isContentEditable === true;
+}
+
 /**
  * True while the software keyboard is on screen.
  *
@@ -71,20 +82,26 @@ const KEYBOARD_MIN_PX = 140;
  *
  * WEB. There are no events to listen to: react-native-web's Keyboard module
  * is a stub whose `addListener` returns a remover and never fires anything.
- * So on the web build this hook was permanently false and the bar stayed on
- * screen through every keyboard, which is where the drifting comes from. The
- * browser scrolls the page to keep the focused input above the keyboard, and
- * on iOS it does that by panning the visible window around inside a layout
- * viewport that has not changed size. The bar is anchored to the bottom of
- * that layout viewport, so it rides up and down with the pan instead of
- * holding still.
+ * So the bar stayed on screen through every keyboard, and because the browser
+ * scrolls the page to keep the focused input visible, a bar anchored to the
+ * bottom of the document rides up and down with it.
  *
- * visualViewport is the only thing that knows. The keyboard is the difference
- * between the layout viewport and the part of it you can actually see:
- * window.innerHeight does not shrink for a keyboard on iOS, visualViewport
- * does. Browser chrome collapsing shrinks both together, so it never reads as
- * a keyboard. Android Chrome shrinks both as well, and there the shell simply
- * gets shorter and the bar sits above the keyboard on its own.
+ * TWO SIGNALS, because neither is enough on its own.
+ *
+ * The measurement — window.innerHeight minus visualViewport.height — is the
+ * one everybody reaches for, and it did not work on iOS Safari. It rests on
+ * innerHeight holding still while the visible window shrinks, and that is not
+ * reliably what WebKit does: whether either number moves, and by how much,
+ * depends on the browser, the version, and whether the page auto-zoomed on
+ * focus. It is kept because it is the only thing that catches a keyboard
+ * raised without a focus we can see, and because it is right on Android.
+ *
+ * The focus is the signal that actually holds. A software keyboard exists to
+ * type into something, so on a touch device a focused text field means a
+ * keyboard, whatever the viewport reports. maxTouchPoints gates it, so a
+ * narrow desktop window with a real keyboard keeps its bar. focusout fires
+ * before the next element takes focus, so that read is deferred a tick —
+ * otherwise moving between two fields flashes the bar back on.
  */
 function useKeyboardVisible() {
   const [up, setUp] = useState(false);
@@ -98,19 +115,29 @@ function useKeyboardVisible() {
 
     if (typeof window === 'undefined') return;
     const vv = window.visualViewport;
-    if (!vv) return;
+    const touch = (navigator.maxTouchPoints ?? 0) > 0;
 
+    const read = () => {
+      const shrunk = !!vv && window.innerHeight - vv.height > KEYBOARD_MIN_PX;
+      const typing = touch && isTextField(document.activeElement);
+      setUp(shrunk || typing);
+    };
+    const readSoon = () => setTimeout(read, 0);
+
+    read();
+    document.addEventListener('focusin', read);
+    document.addEventListener('focusout', readSoon);
+    window.addEventListener('resize', read);
     // `scroll` as well as `resize`: iOS pans the visible window without
     // resizing it once the keyboard is already up.
-    const read = () => setUp(window.innerHeight - vv.height > KEYBOARD_MIN_PX);
-    read();
-    vv.addEventListener('resize', read);
-    vv.addEventListener('scroll', read);
-    window.addEventListener('resize', read);
+    vv?.addEventListener('resize', read);
+    vv?.addEventListener('scroll', read);
     return () => {
-      vv.removeEventListener('resize', read);
-      vv.removeEventListener('scroll', read);
+      document.removeEventListener('focusin', read);
+      document.removeEventListener('focusout', readSoon);
       window.removeEventListener('resize', read);
+      vv?.removeEventListener('resize', read);
+      vv?.removeEventListener('scroll', read);
     };
   }, []);
 
