@@ -22,6 +22,8 @@ export const CHROME_STRINGS = [
   // The quick row and tiles
   'Residents', 'Emergency', 'Documents', 'Payments', 'Polls', 'Events', 'Blood',
   'Messages', 'Carpool', 'Feedback', 'Borrow', 'Sports', 'Flats', 'Ask',
+  // The weekly digest
+  'This week', 'Open the feed', 'Hide until next week',
   // The create sheet
   'What would you like to add?',
   'Post to the feed', 'Report an issue', 'Cook something', 'Sell or offer a service',

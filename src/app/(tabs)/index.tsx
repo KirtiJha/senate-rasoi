@@ -14,7 +14,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SaathiMark } from '../../components/SaathiMark';
 import { T } from '../../components/T';
-import { Avatar, Container, ErrorRow, ModuleTile, Rise, Touchable, useResponsive, VegMark } from '../../components/ui';
+import { Avatar, Button, Container, ErrorRow, ModuleTile, Rise, Sheet, Touchable, useResponsive, VegMark } from '../../components/ui';
 import { InviteNeighbours } from '../../components/InviteNeighbours';
 import { FounderChecklist } from '../../components/FounderChecklist';
 import { fetchMemberCount } from '../../lib/admin';
@@ -49,12 +49,35 @@ import { useThemeColors } from '../../theme';
 const DISMISSED_ANNOUNCEMENT_KEY = 'aangan:dismissed-announcement';
 const DISMISSED_DIGEST_KEY = 'aangan:dismissed-digest';
 
-/** Monday (local) of the current week — used to dismiss the digest for the week. */
+/**
+ * The Monday this week's digest is filed under.
+ *
+ * UTC, because that is what the server keys `society_digests` on. Computing
+ * it locally instead put India a day ahead of the key between midnight and
+ * half past five every Monday morning: the dismissal was recorded against a
+ * week the digest did not belong to, so the new week's digest could arrive
+ * already hidden.
+ */
 function currentWeekId(): string {
   const d = new Date();
-  const day = (d.getDay() + 6) % 7; // 0 = Monday
-  d.setDate(d.getDate() - day);
-  return d.toLocaleDateString('en-CA');
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * "1 – 7 September", or "31 August – 6 September" when the week straddles two
+ * months. Read in UTC off the same Monday the digest is filed under, so the
+ * dates shown are always the dates that were summarised.
+ */
+function currentWeekLabel(): string {
+  const mon = new Date(currentWeekId() + 'T00:00:00Z');
+  const sun = new Date(mon);
+  sun.setUTCDate(sun.getUTCDate() + 6);
+  const day = (d: Date) => d.toLocaleDateString('en-IN', { timeZone: 'UTC', day: 'numeric' });
+  const month = (d: Date) => d.toLocaleDateString('en-IN', { timeZone: 'UTC', month: 'long' });
+  return mon.getUTCMonth() === sun.getUTCMonth()
+    ? `${day(mon)} – ${day(sun)} ${month(sun)}`
+    : `${day(mon)} ${month(mon)} – ${day(sun)} ${month(sun)}`;
 }
 
 type CommunityTile = { key: string; label: string; blurb: string; icon: string; color: string; href: string };
@@ -238,6 +261,7 @@ export default function HomeScreen() {
   const [updating, setUpdating] = useState(false);
   const [announcement, setAnnouncement] = useState<PostRow | null>(null);
   const [digest, setDigest] = useState<SocietyDigest | null>(null);
+  const [digestOpen, setDigestOpen] = useState(false);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [tileCounts, setTileCounts] = useState<Record<string, number>>({});
   const [recent, setRecent] = useState<ListingRow[]>([]);
@@ -359,6 +383,7 @@ export default function HomeScreen() {
 
   const dismissDigest = () => {
     AsyncStorage.setItem(DISMISSED_DIGEST_KEY, currentWeekId()).catch(() => {});
+    setDigestOpen(false);
     setDigest(null);
   };
 
@@ -491,11 +516,16 @@ export default function HomeScreen() {
     });
   }
   if (digest?.summary) {
+    // The card shows two lines of a summary that is longer than two lines,
+    // and the four highlights underneath it were never rendered anywhere at
+    // all. Tapping it used to land on the whole feed, which is not the thing
+    // that was being summarised. It opens the digest now.
     needsYou.push({
       key: 'digest',
       eyebrow: 'This week',
       title: digest.summary,
-      onPress: () => router.push('/feed' as any),
+      onPress: () => setDigestOpen(true),
+      onDismiss: dismissDigest,
     });
   }
 
@@ -837,7 +867,82 @@ export default function HomeScreen() {
         })}
       </Container>
     </AScrollView>
+
+    <DigestSheet
+      visible={digestOpen}
+      digest={digest}
+      onClose={() => setDigestOpen(false)}
+      onDismiss={dismissDigest}
+      onOpenFeed={() => { setDigestOpen(false); router.push('/feed' as any); }}
+    />
     </View>
+  );
+}
+
+/**
+ * The week, in full.
+ *
+ * `fetchSocietyDigest` has always returned a summary AND up to four
+ * highlights naming real dishes, listings and polls. Only the summary was
+ * ever used, clipped to two lines inside an 88px card, and the highlights
+ * were generated, paid for and thrown away every week. This is where they
+ * are read.
+ */
+function DigestSheet({
+  visible, digest, onClose, onDismiss, onOpenFeed,
+}: {
+  visible: boolean;
+  digest: SocietyDigest | null;
+  onClose: () => void;
+  onDismiss: () => void;
+  onOpenFeed: () => void;
+}) {
+  const c = useThemeColors();
+  const t = useT();
+  if (!digest?.summary) return null;
+
+  return (
+    <Sheet
+      visible={visible}
+      onClose={onClose}
+      title={t('This week')}
+      footer={
+        <View style={{ gap: 10 }}>
+          <Button label={t('Open the feed')} fullWidth onPress={onOpenFeed} />
+          {/* The complaint was that it could not be sent away. It can be sent
+              away from the card and from here; either way it stays gone until
+              next week's digest replaces it. */}
+          <Touchable
+            haptic={null}
+            onPress={onDismiss}
+            accessibilityRole="button"
+            accessibilityLabel={t('Hide until next week')}
+          >
+            <View pointerEvents="none" className="items-center py-1">
+              <Text className="font-sans-sb text-[13px]" style={{ color: c.muted }}>
+                {t('Hide until next week')}
+              </Text>
+            </View>
+          </Touchable>
+        </View>
+      }
+    >
+      <Text className="font-sans-sb text-[11px] uppercase tracking-[0.06em]" style={{ color: c.highlightInk }}>
+        {currentWeekLabel()}
+      </Text>
+      <Text className="mt-2 font-sans text-[15px] leading-[23px] text-ink">{digest.summary}</Text>
+
+      {digest.highlights.length ? (
+        <View className="mt-5" style={{ gap: 12 }}>
+          {digest.highlights.map((h, i) => (
+            <View key={i} className="flex-row" style={{ gap: 10 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, marginTop: 7, backgroundColor: c.highlight }} />
+              <Text className="flex-1 font-sans text-[14px] leading-[21px] text-ink">{h}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+    </Sheet>
   );
 }
 
