@@ -57,18 +57,63 @@ const ITEMS: Item[] = [
  * running into it.
  */
 /**
+ * A keyboard is on screen when it takes this much of the viewport. Real
+ * phone keyboards are 250–350px tall; nothing else that resizes the visual
+ * viewport comes close.
+ */
+const KEYBOARD_MIN_PX = 140;
+
+/**
  * True while the software keyboard is on screen.
  *
- * Android only ever fires the "did" events, so both platforms use those — the
- * iOS "will" events would desync the two.
+ * NATIVE. Android only ever fires the "did" events, so both platforms use
+ * those — the iOS "will" events would desync the two.
+ *
+ * WEB. There are no events to listen to: react-native-web's Keyboard module
+ * is a stub whose `addListener` returns a remover and never fires anything.
+ * So on the web build this hook was permanently false and the bar stayed on
+ * screen through every keyboard, which is where the drifting comes from. The
+ * browser scrolls the page to keep the focused input above the keyboard, and
+ * on iOS it does that by panning the visible window around inside a layout
+ * viewport that has not changed size. The bar is anchored to the bottom of
+ * that layout viewport, so it rides up and down with the pan instead of
+ * holding still.
+ *
+ * visualViewport is the only thing that knows. The keyboard is the difference
+ * between the layout viewport and the part of it you can actually see:
+ * window.innerHeight does not shrink for a keyboard on iOS, visualViewport
+ * does. Browser chrome collapsing shrinks both together, so it never reads as
+ * a keyboard. Android Chrome shrinks both as well, and there the shell simply
+ * gets shorter and the bar sits above the keyboard on its own.
  */
 function useKeyboardVisible() {
   const [up, setUp] = useState(false);
+
   useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', () => setUp(true));
-    const hide = Keyboard.addListener('keyboardDidHide', () => setUp(false));
-    return () => { show.remove(); hide.remove(); };
+    if (Platform.OS !== 'web') {
+      const show = Keyboard.addListener('keyboardDidShow', () => setUp(true));
+      const hide = Keyboard.addListener('keyboardDidHide', () => setUp(false));
+      return () => { show.remove(); hide.remove(); };
+    }
+
+    if (typeof window === 'undefined') return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    // `scroll` as well as `resize`: iOS pans the visible window without
+    // resizing it once the keyboard is already up.
+    const read = () => setUp(window.innerHeight - vv.height > KEYBOARD_MIN_PX);
+    read();
+    vv.addEventListener('resize', read);
+    vv.addEventListener('scroll', read);
+    window.addEventListener('resize', read);
+    return () => {
+      vv.removeEventListener('resize', read);
+      vv.removeEventListener('scroll', read);
+      window.removeEventListener('resize', read);
+    };
   }, []);
+
   return up;
 }
 
