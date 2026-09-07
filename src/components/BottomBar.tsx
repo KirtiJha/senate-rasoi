@@ -89,7 +89,12 @@ export function BottomBar() {
   if (keyboardUp) return null;
 
   const isWeb = Platform.OS === 'web';
-  const liftBottom = (isWeb ? 8 : insets.bottom) + 12;
+  // Web threw the safe-area inset away and used a flat 8. In a browser tab
+  // that is right — the browser's own toolbar occupies the bottom and the
+  // inset reads 0 — but installed to the home screen there is no toolbar,
+  // and the bar landed on top of the home indicator. Take whichever is
+  // larger and both cases are covered.
+  const liftBottom = (isWeb ? Math.max(insets.bottom, 8) : insets.bottom) + 12;
 
   const activeFor = (route: string) =>
     route === '/' ? pathname === '/' : pathname.startsWith(route);

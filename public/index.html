@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <!--
+      The real root HTML for Aangan on the web.
+
+      This content used to live in src/app/+html.tsx and none of it ever
+      shipped. That file is read only when Expo Router renders pages on a
+      server. This app is a plain single-page app, and for that the CLI takes
+      the project's own public/index.html when there is one and falls back to
+      its stock template when there is not. There was no such file, so every
+      build went out with the stock template: no manifest, no PWA metadata, no
+      viewport-fit, no service worker, and none of the viewport-height
+      handling below.
+
+      Two things the CLI does to this file on export, which is why some of it
+      looks the way it does. It substitutes the language and title tokens, and
+      it appends the stylesheet links and the bundle script just before the
+      closing head and body tags. Those substitutions each replace the FIRST
+      match in the file, so the tokens and those closing tags must appear
+      exactly once, in their proper places — never in a comment. Getting that
+      wrong puts the app's own script inside a comment and nothing loads.
+    -->
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <!-- viewport-fit=cover so env(safe-area-inset-*) reports real values on
+         notched phones; the bottom bar reads the bottom one. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
+    />
+    <title>%WEB_TITLE%</title>
+
+    <!-- PWA / installability -->
+    <meta name="application-name" content="Aangan" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Aangan" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#FBF8F3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0D0F0E" media="(prefers-color-scheme: dark)" />
+    <meta
+      name="description"
+      content="Your society's community hub — home food, services, and more from your neighbours."
+    />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icon-512.png" />
+
+    <!-- Warm up the Supabase connection before the bundle asks for anything. -->
+    <link rel="preconnect" href="https://ydpqdvglkizrfwmqqysq.supabase.co" crossorigin="anonymous" />
+    <link rel="dns-prefetch" href="https://ydpqdvglkizrfwmqqysq.supabase.co" />
+
+    <!-- The react-native-web root reset: full-height shell, no page scrolling,
+         so ScrollViews behave the way they do on a phone. -->
+    <style id="expo-reset">
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        overflow: hidden;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+
+    <!--
+      The shell must be exactly as tall as what the browser is showing.
+
+      Everything the app draws, the floating tab bar included, is laid out
+      inside this box. Get the height wrong and the bar sits in mid-air with a
+      dead strip of background beneath it, which is what iOS was doing.
+
+      A dynamic viewport height does not fix it. WebKit resolves that unit
+      lazily: until the page has been interacted with it uses the *small*
+      viewport — the height you would have with the address bar and toolbar
+      drawn — even when the toolbars are already out of the way and the visible
+      page is taller. That is the reported symptom exactly: the bar floats
+      until you drag, the drag makes WebKit re-resolve the unit, and only then
+      does it snap to the bottom.
+
+      So the height is measured rather than declared. window.innerHeight is the
+      area actually on screen right now, and it is re-read on every event that
+      can change it plus a few times just after load, because iOS reports a
+      stale value for the first frames. The CSS here is only what applies
+      before the script runs, and if scripting is off.
+    -->
+    <style>
+      :root { --app-vh: 100%; }
+      @supports (height: 100dvh) { :root { --app-vh: 100dvh; } }
+      html, body, #root { height: var(--app-vh); }
+    </style>
+    <script>
+      (function () {
+        var d = document.documentElement;
+        var last = -1;
+        function set() {
+          var h = window.innerHeight;
+          var v = window.visualViewport;
+          // visualViewport may never shrink the shell: the software keyboard
+          // shrinks it and not innerHeight, and the app must not collapse to a
+          // strip while somebody is typing.
+          if (v && v.height > h) h = v.height;
+          if (!h || Math.abs(h - last) < 1) return;
+          last = h;
+          d.style.setProperty('--app-vh', h + 'px');
+        }
+        function bump() {
+          set();
+          if (window.requestAnimationFrame) requestAnimationFrame(set);
+        }
+        set();
+        ['resize', 'orientationchange', 'pageshow', 'load', 'focus'].forEach(function (e) {
+          window.addEventListener(e, bump, { passive: true });
+        });
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', bump, { passive: true });
+          window.visualViewport.addEventListener('scroll', bump, { passive: true });
+        }
+        document.addEventListener('visibilitychange', bump);
+        [0, 50, 150, 400, 1000, 2000].forEach(function (ms) { setTimeout(bump, ms); });
+      })();
+    </script>
+
+    <!-- Apply the saved theme before React mounts, so there is no flash of the
+         wrong one. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('senate_theme');
+          if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function () {});
+        });
+      }
+    </script>
+  </body>
+</html>
