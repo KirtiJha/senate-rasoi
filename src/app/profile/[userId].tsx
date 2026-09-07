@@ -213,14 +213,23 @@ export default function PublicProfileScreen() {
 function ContactAction({ icon, label, onPress, primary, disabled, c }: {
   icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void; primary?: boolean; disabled?: boolean; c: ReturnType<typeof useThemeColors>;
 }) {
+  // The `flex-1` used to sit on the inner View. That is one level too deep to
+  // do anything: the Touchable is what the row lays out, and it had no flex,
+  // so all three buttons shrank to the width of their own labels — 47px, 24px
+  // and 59px inside a 568px row on desktop — while the flex-1 underneath
+  // stretched a box that was already as tall as its parent. The row's flex
+  // children are plain Views now, which is the only shape that behaves the
+  // same on both platforms; see the note in scripts/check-ui.mjs about layout
+  // on an animated press target.
   return (
-    <Touchable feel="card" haptic={null} onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={label}>
-      <View pointerEvents="none" className="flex-1 items-center rounded-2xl py-3" style={{ backgroundColor: primary ? c.accent : c.surface, borderWidth: primary ? 0 : 1, borderColor: c.line, opacity: disabled ? 0.7 : 1 }}>
-      <Ionicons name={icon} size={20} color={primary ? c.onAccent : c.accent} />
-      <Text className="mt-1 text-[12px] font-sans-sb" style={{ color: primary ? c.onAccent : c.ink }}>{label}</Text>
-    
-      </View>
-    </Touchable>
+    <View className="flex-1">
+      <Touchable feel="card" haptic={null} onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={label}>
+        <View pointerEvents="none" className="items-center rounded-2xl py-3" style={{ backgroundColor: primary ? c.accent : c.surface, borderWidth: primary ? 0 : 1, borderColor: c.line, opacity: disabled ? 0.7 : 1 }}>
+          <Ionicons name={icon} size={20} color={primary ? c.onAccent : c.accent} />
+          <Text className="mt-1 text-[12px] font-sans-sb" numberOfLines={1} style={{ color: primary ? c.onAccent : c.ink }}>{label}</Text>
+        </View>
+      </Touchable>
+    </View>
   );
 }
 

@@ -160,81 +160,84 @@ export function BottomBar() {
           // middle lands on the icons' middle whatever the label height is.
           if (it.fab) {
             return (
-              <Touchable
-                key={it.route}
-                feel="icon"
-                onPress={() => { haptics.tap(); setCreateOpen(true); }}
-                className="flex-1 items-center justify-center"
-                accessibilityRole="button"
-                accessibilityLabel={t('Add something')}
-              >
-                <View
-                  style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: 23,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: c.accent,
-                    boxShadow: c.shadowFab,
-                  } as any}
+              <View key={it.route} className="flex-1 items-center justify-center">
+                <Touchable
+                  feel="icon"
+                  onPress={() => { haptics.tap(); setCreateOpen(true); }}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('Add something')}
                 >
-                  <Ionicons name="add" size={26} color={c.onAccent} />
-                </View>
-              </Touchable>
+                  <View
+                    style={{
+                      width: 46,
+                      height: 46,
+                      borderRadius: 23,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: c.accent,
+                      boxShadow: c.shadowFab,
+                    } as any}
+                  >
+                    <Ionicons name="add" size={26} color={c.onAccent} />
+                  </View>
+                </Touchable>
+              </View>
             );
           }
 
           return (
-            <Touchable
-              key={it.route}
-              feel="icon"
-              haptic={null}
-              onPress={() => {
-                if (!active) haptics.select();
-                router.navigate(it.route as any);
-              }}
-              hitSlop={6}
-              className="flex-1 items-center"
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-              accessibilityLabel={it.unread && unread > 0 ? `${t(it.label)}, ${unread} unread` : t(it.label)}
-            >
-              {/* A 26x3 bar pinned to the item's top edge — the colonnade note. */}
-              <View
-                style={{
-                  width: 26,
-                  height: 3,
-                  borderRadius: 2,
-                  marginBottom: 5,
-                  backgroundColor: active ? c.accent : 'transparent',
+            <View key={it.route} className="flex-1">
+              <Touchable
+                feel="icon"
+                haptic={null}
+                onPress={() => {
+                  if (!active) haptics.select();
+                  router.navigate(it.route as any);
                 }}
-              />
-              <View>
-                <TabIcon
-                  active={active}
-                  icon={active ? it.activeIcon : it.icon}
-                  color={active ? c.accent : c.muted}
-                />
-                {it.unread && unread > 0 ? (
+                hitSlop={6}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={it.unread && unread > 0 ? `${t(it.label)}, ${unread} unread` : t(it.label)}
+              >
+                <View pointerEvents="none" className="items-center">
+                  {/* A 26x3 bar pinned to the item's top edge — the colonnade note. */}
                   <View
                     style={{
-                      position: 'absolute', top: -2, right: -3,
-                      width: 8, height: 8, borderRadius: 4,
-                      backgroundColor: c.highlight,
-                      borderWidth: 1.5, borderColor: c.surface,
+                      width: 26,
+                      height: 3,
+                      borderRadius: 2,
+                      marginBottom: 5,
+                      backgroundColor: active ? c.accent : 'transparent',
                     }}
                   />
-                ) : null}
-              </View>
-              <Text
-                className="mt-1 font-sans-sb"
-                style={{ fontSize: 11, lineHeight: 14, color: active ? c.accent : c.muted }}
-                numberOfLines={1}
-              >
-                {t(it.label)}
-              </Text>
-            </Touchable>
+                  <View>
+                    <TabIcon
+                      active={active}
+                      icon={active ? it.activeIcon : it.icon}
+                      color={active ? c.accent : c.muted}
+                    />
+                    {it.unread && unread > 0 ? (
+                      <View
+                        style={{
+                          position: 'absolute', top: -2, right: -3,
+                          width: 8, height: 8, borderRadius: 4,
+                          backgroundColor: c.highlight,
+                          borderWidth: 1.5, borderColor: c.surface,
+                        }}
+                      />
+                    ) : null}
+                  </View>
+                  <Text
+                    className="mt-1 font-sans-sb"
+                    style={{ fontSize: 11, lineHeight: 14, color: active ? c.accent : c.muted }}
+                    numberOfLines={1}
+                  >
+                    {t(it.label)}
+                  </Text>
+                </View>
+              </Touchable>
+            </View>
           );
         })}
       </View>

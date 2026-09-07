@@ -1105,10 +1105,10 @@ function FreshFoodStrip({ items, isDesktop }: { items: DishRow[]; isDesktop: boo
         feel="card"
         haptic={null}
         onPress={() => router.push(`/dish/${d.id}` as any)}
-        style={{ width: 196 }}
       >
         <View
           style={{
+            width: 196,
             overflow: 'hidden',
             borderTopLeftRadius: 22,
             borderTopRightRadius: 22,

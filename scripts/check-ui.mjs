@@ -47,22 +47,67 @@ function stripComments(text) {
     .replace(/^([^\n]*?)\/\/[^\n]*$/gm, (s, keep) => keep + ' '.repeat(s.length - keep.length));
 }
 
+const BACKSLASH = String.fromCharCode(92);
+
+/**
+ * Where a JSX opening tag actually ends.
+ *
+ * Every rule below used to find this with `[\s\S]*?>`, which stops at the
+ * FIRST `>` in the props — and an arrow function hands it one. So a tag
+ * written `<Touchable onPress={() => go()} className="flex-1">` was only ever
+ * read as far as the `=>`, and every prop after it was invisible to the guard.
+ * That is not a corner case: it is how most press targets in this app are
+ * written, and it is why three contact buttons on the neighbour profile could
+ * collapse to the width of their own labels with the guard reporting a clean
+ * run.
+ *
+ * So: walk forward, count braces, skip string literals, and stop at the first
+ * `>` that is at depth zero and is not the tail of an arrow.
+ */
+function tagEnd(code, from) {
+  let depth = 0;
+  for (let i = from; i < code.length; i++) {
+    const ch = code[i];
+    if (ch === '"' || ch === "'" || ch === '`') {
+      const quote = ch;
+      i++;
+      while (i < code.length && code[i] !== quote) {
+        if (code[i] === BACKSLASH) i++;
+        i++;
+      }
+      continue;
+    }
+    if (ch === '{') depth++;
+    else if (ch === '}') depth--;
+    else if (ch === '>' && depth === 0 && code[i - 1] !== '=') return i;
+  }
+  return -1;
+}
+
+/** Every opening tag of the named components, with its full prop text. */
+function* openTags(code, nameRe) {
+  const re = new RegExp('<(' + nameRe + ')\\b', 'g');
+  let m;
+  while ((m = re.exec(code)) !== null) {
+    const from = m.index + m[0].length;
+    const end = tagEnd(code, from);
+    if (end === -1) continue;
+    yield { tag: m[1], props: code.slice(from, end), index: m.index, end };
+  }
+}
+
 const problems = [];
 
 for (const file of files) {
   const code = stripComments(readFileSync(file, 'utf8'));
 
-  // Match an opening tag across lines so multi-line JSX props are seen.
-  const tagRe = /<(Animated\.\w+|Touchable)\b([\s\S]*?)>/g;
-  let m;
-  while ((m = tagRe.exec(code)) !== null) {
-    const [, tag, props] = m;
+  for (const { tag, props, index } of openTags(code, 'Animated\\.\\w+|Touchable')) {
     const cls = props.match(/className=(?:"([^"]*)"|\{`([^`]*)`\})/);
     if (!cls) continue;
     const value = cls[1] ?? cls[2] ?? '';
     if (!PAINT.test(value)) continue;
 
-    const line = code.slice(0, m.index).split('\n').length;
+    const line = code.slice(0, index).split('\n').length;
     problems.push({
       file: relative(SRC, file).split('\\').join('/'),
       line,
@@ -84,14 +129,12 @@ const LAYOUT_KEY = /\b(flex|width|position)\s*:/;
 
 for (const file of files) {
   const code = stripComments(readFileSync(file, 'utf8'));
-  const re = /<Touchable\b([\s\S]*?)>/g;
-  let t;
-  while ((t = re.exec(code)) !== null) {
-    const style = t[1].match(/style=\{\{([^}]*)\}\}/);
+  for (const { props, index } of openTags(code, 'Touchable')) {
+    const style = props.match(/style=\{\{([^}]*)\}\}/);
     if (!style || !LAYOUT_KEY.test(style[1])) continue;
     problems.push({
       file: relative(SRC, file).split('\\').join('/'),
-      line: code.slice(0, t.index).split('\n').length,
+      line: code.slice(0, index).split('\n').length,
       tag: 'Touchable',
       prop: 'style',
       value: style[1].trim().slice(0, 60),
@@ -116,12 +159,11 @@ for (const file of files) {
 // as well as harmful.
 for (const file of files) {
   const code = stripComments(readFileSync(file, 'utf8'));
-  const open = /<Touchable\b[\s\S]*?>/g;
-  let t;
-  while ((t = open.exec(code)) !== null) {
-    const close = code.indexOf('</Touchable>', open.lastIndex);
+  for (const { end } of openTags(code, 'Touchable')) {
+    const bodyStart = end + 1;
+    const close = code.indexOf('</Touchable>', bodyStart);
     if (close === -1) continue;
-    const body = code.slice(open.lastIndex, close);
+    const body = code.slice(bodyStart, close);
     // Only inert children matter. An `active:` on a nested Pressable is that
     // element styling its own press, which is fine. The bug is `active:` on
     // something that is NOT a press target, because NativeWind turns it into
@@ -139,7 +181,7 @@ for (const file of files) {
     if (!hit) continue;
     problems.push({
       file: relative(SRC, file).split('\\').join('/'),
-      line: code.slice(0, open.lastIndex + hit.index).split('\n').length,
+      line: code.slice(0, bodyStart + hit.index).split('\n').length,
       tag: 'child of Touchable',
       prop: 'active',
       value: hit[0],
