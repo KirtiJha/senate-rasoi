@@ -10,7 +10,8 @@ import { Field } from '../../components/forms';
 import { Button, Container, Dialog, KeyboardAvoider, PinInput, Segmented, Touchable } from '../../components/ui';
 import { useAuth } from '../../context/auth';
 import { useToast } from '../../context/toast';
-import { requestPinReset, signIn, signUp } from '../../lib/auth';
+import { signIn, signUp } from '../../lib/auth';
+import { PinResetError, askAdminToReset, confirmResetCode, sendResetCode } from '../../lib/pinReset';
 import { Community, fetchCommunities, fetchCommunityBlocks, fetchCommunityById, searchCommunities } from '../../lib/communities';
 import { DirectoryEntry, PhoneDirectoryMatch, findDirectoryByPhone, findRosterMatch, reconcileDirectoryEntry } from '../../lib/directory';
 import { isSupabaseConfigured } from '../../lib/supabase';
@@ -65,6 +66,10 @@ export default function SignInScreen() {
   const [resetPhone, setResetPhone] = useState('');
   const [resetBusy, setResetBusy] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+  /** phone → code → done. The middle step is new: a code proves the number. */
+  const [resetStep, setResetStep] = useState<'phone' | 'code'>('phone');
+  const [resetCode, setResetCode] = useState('');
+  const [resetNewPin, setResetNewPin] = useState('');
 
   // Society picker
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -156,17 +161,50 @@ export default function SignInScreen() {
   const openForgotPin = () => {
     setResetPhone(phone);
     setResetDone(false);
+    setResetStep('phone');
+    setResetCode('');
+    setResetNewPin('');
     setShowForgotPin(true);
   };
 
-  const submitReset = async () => {
+  const sendCode = async () => {
     if (resetPhone.replace(/\D/g, '').length < 10) { toast.show('Enter a valid phone number'); return; }
     setResetBusy(true);
     try {
-      await requestPinReset(resetPhone);
-      // Always the same answer, whether or not that number has an account:
-      // anything else is a way to find out who is on Aangan.
+      await sendResetCode(resetPhone);
+      // The same answer either way: whether a code went out is not something
+      // a stranger gets to learn from this screen.
+      setResetStep('code');
+    } catch (e) {
+      toast.show(e instanceof PinResetError ? e.message : 'Could not send that — try again');
+    } finally {
+      setResetBusy(false);
+    }
+  };
+
+  const submitReset = async () => {
+    const pinIssue = pinProblem(resetNewPin);
+    if (pinIssue) { toast.show(pinIssue); return; }
+    setResetBusy(true);
+    try {
+      await confirmResetCode(resetPhone, resetCode, resetNewPin);
       setResetDone(true);
+      // They just chose it; carry it into the sign-in field.
+      setCode(resetNewPin);
+    } catch (e) {
+      toast.show(e instanceof PinResetError ? e.message : 'Could not reset — try again');
+    } finally {
+      setResetBusy(false);
+    }
+  };
+
+  /** A number that has changed hands cannot receive its own code. */
+  const askAdmin = async () => {
+    setResetBusy(true);
+    try {
+      await askAdminToReset(resetPhone);
+      toast.show('Your society admins have been asked to help');
+      setShowForgotPin(false);
     } catch {
       toast.show('Could not send that — try again');
     } finally {
@@ -607,25 +645,54 @@ export default function SignInScreen() {
               <>
                 <View className="mb-4 items-center">
                   <View className="h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: c.accentSoft }}>
-                    <Ionicons name="paper-plane" size={30} color={c.accent} />
+                    <Ionicons name="checkmark-circle" size={32} color={c.accent} />
                   </View>
                 </View>
-                <Text className="text-center font-display-x text-[19px] text-ink">Your admins have been told</Text>
+                <Text className="text-center font-display-x text-[19px] text-ink">PIN changed</Text>
                 <Text className="font-sans mt-2 text-center text-[14px] leading-5 text-muted">
-                  If that number belongs to a society on Aangan, its admins can now set you a
-                  temporary PIN. They will pass it on the way they normally reach you.
+                  Sign in with your new PIN. It is already filled in for you.
                 </Text>
                 <View className="mt-5">
-                  <Button label="Back to sign in" fullWidth onPress={() => { setShowForgotPin(false); setMode('in'); }} />
+                  <Button label="Sign in now" fullWidth onPress={() => { setShowForgotPin(false); setMode('in'); }} />
                 </View>
+              </>
+            ) : resetStep === 'code' ? (
+              <>
+                <Text className="font-display-x text-[19px] text-ink">Check your messages</Text>
+                <Text className="font-sans mt-1.5 mb-4 text-[13px] leading-5 text-muted">
+                  If that number has an account, a 6-digit code is on its way by SMS. Enter it and
+                  choose your new PIN.
+                </Text>
+                <View className="mb-4">
+                  <Text className="mb-2 text-[13px] font-sans-sb text-ink">Code from the SMS</Text>
+                  <PinInput value={resetCode} onChange={setResetCode} accessibilityLabel="Code from the SMS" />
+                </View>
+                <View className="mb-4">
+                  <Text className="mb-2 text-[13px] font-sans-sb text-ink">
+                    New PIN <Text style={{ color: c.danger }}>*</Text>
+                  </Text>
+                  <PinInput value={resetNewPin} onChange={setResetNewPin} accessibilityLabel="New PIN" />
+                </View>
+                <View className="mb-3 flex-row gap-2">
+                  <View className="flex-1">
+                    <Button label="Back" variant="outline" onPress={() => setResetStep('phone')} />
+                  </View>
+                  <View className="flex-1">
+                    <Button label={resetBusy ? 'Checking…' : 'Set new PIN'} loading={resetBusy} onPress={submitReset} />
+                  </View>
+                </View>
+                <Touchable haptic={null} onPress={sendCode} accessibilityRole="button" accessibilityLabel="Send the code again">
+                  <View pointerEvents="none" className="items-center py-1">
+                    <Text className="text-[13px] font-sans-sb" style={{ color: c.accent }}>Send it again</Text>
+                  </View>
+                </Touchable>
               </>
             ) : (
               <>
                 <Text className="font-display-x text-[19px] text-ink">Forgotten your PIN?</Text>
                 <Text className="font-sans mt-1.5 mb-4 text-[13px] leading-5 text-muted">
-                  A PIN used to be resettable from a phone number alone — and every number is in
-                  the resident directory. So an admin of your society confirms it instead. Tell us
-                  the number you signed up with and they will be asked to set you a temporary one.
+                  We will text a 6-digit code to the number you signed up with, to check the phone
+                  is yours. Signing in never needs one — this is the only time.
                 </Text>
                 <Field
                   label="Phone number"
@@ -635,14 +702,23 @@ export default function SignInScreen() {
                   value={resetPhone}
                   onChangeText={setResetPhone}
                 />
-                <View className="flex-row gap-2">
+                <View className="mb-3 flex-row gap-2">
                   <View className="flex-1">
                     <Button label="Cancel" variant="outline" onPress={() => setShowForgotPin(false)} />
                   </View>
                   <View className="flex-1">
-                    <Button label={resetBusy ? 'Sending…' : 'Ask an admin'} loading={resetBusy} onPress={submitReset} />
+                    <Button label={resetBusy ? 'Sending…' : 'Text me a code'} loading={resetBusy} onPress={sendCode} />
                   </View>
                 </View>
+                {/* The number on the account is the one that gets the code. If
+                    it has changed hands, only a human can vouch for you. */}
+                <Touchable haptic={null} onPress={askAdmin} accessibilityRole="button" accessibilityLabel="Ask a society admin instead">
+                  <View pointerEvents="none" className="items-center py-1">
+                    <Text className="text-[12px] font-sans-sb text-muted">
+                      No longer have that number? Ask a society admin
+                    </Text>
+                  </View>
+                </Touchable>
               </>
             )}
       </Dialog>

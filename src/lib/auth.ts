@@ -202,26 +202,6 @@ export async function deleteAccount(): Promise<void> {
  * Safe for unauthenticated callers (forgotten PIN). Returns false if the phone
  * is not registered.
  */
-/**
- * Ask the society's admins to reset a PIN.
- *
- * WHAT THIS REPLACED
- * `self_reset_pin(phone, new_pin)` set a resident's password from their
- * phone number and nothing else — no code, no second factor — and every
- * phone number in the society is printed in the resident directory. Any
- * member could have taken any neighbour's account.
- *
- * There is no SMS or OTP here to lean on, so the reset became a request a
- * human approves: every admin of that society is notified and can set a
- * temporary PIN from Admin → Members (0141).
- *
- * Always resolves true. A call that answered "no such number" would be a
- * way to discover who is on Aangan, one guess at a time.
- */
-export async function requestPinReset(phone: string): Promise<void> {
-  const { error } = await supabase.rpc('request_pin_reset', { p_phone: phone });
-  if (error) throw new Error(error.message);
-}
 
 /** Admin: set a community member's PIN to a new 6-digit value. */
 export async function adminResetUserPin(targetId: string, newPin: string): Promise<boolean> {
