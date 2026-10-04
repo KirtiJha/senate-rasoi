@@ -1,0 +1,372 @@
+{
+ "long": {
+  "dur": 272,
+  "scenes": [
+   {
+    "id": "intro",
+    "type": "intro",
+    "start": 0,
+    "dur": 9,
+    "ov": 0,
+    "tin": null,
+    "music": "intro",
+    "short": false
+   },
+   {
+    "id": "problem",
+    "type": "problem",
+    "start": 8,
+    "dur": 14,
+    "ov": 1,
+    "tin": "zoom",
+    "music": "tension",
+    "short": false
+   },
+   {
+    "id": "reveal",
+    "type": "reveal",
+    "start": 21,
+    "dur": 9,
+    "ov": 1,
+    "tin": "flash",
+    "music": "drop",
+    "short": false
+   },
+   {
+    "id": "find",
+    "type": "phone",
+    "start": 29,
+    "dur": 16,
+    "ov": 1,
+    "tin": "petals",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "founder",
+    "type": "phone",
+    "start": 44,
+    "dur": 13,
+    "ov": 1,
+    "tin": "push",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "signin",
+    "type": "phone",
+    "start": 56,
+    "dur": 10,
+    "ov": 1,
+    "tin": "push",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "home",
+    "type": "phone",
+    "start": 65,
+    "dur": 18,
+    "ov": 1,
+    "tin": "iris",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "food",
+    "type": "phone",
+    "start": 82,
+    "dur": 14,
+    "ov": 1,
+    "tin": "petals",
+    "music": "groove2",
+    "short": false
+   },
+   {
+    "id": "kitchen",
+    "type": "phone",
+    "start": 95,
+    "dur": 13,
+    "ov": 1,
+    "tin": "push",
+    "music": "groove2",
+    "short": false
+   },
+   {
+    "id": "saathi",
+    "type": "phone",
+    "start": 107,
+    "dur": 18,
+    "ov": 1,
+    "tin": "iris",
+    "music": "float",
+    "short": false
+   },
+   {
+    "id": "saathi_do",
+    "type": "phone",
+    "start": 124,
+    "dur": 15,
+    "ov": 1,
+    "tin": "push",
+    "music": "float",
+    "short": false
+   },
+   {
+    "id": "saathi_watch",
+    "type": "phone",
+    "start": 138,
+    "dur": 14,
+    "ov": 1,
+    "tin": "push",
+    "music": "float",
+    "short": false
+   },
+   {
+    "id": "feed",
+    "type": "phone",
+    "start": 151,
+    "dur": 14,
+    "ov": 1,
+    "tin": "petals",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "celebrate",
+    "type": "phone",
+    "start": 164,
+    "dur": 15,
+    "ov": 1,
+    "tin": "push",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "sports",
+    "type": "phone",
+    "start": 178,
+    "dur": 10,
+    "ov": 1,
+    "tin": "push",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "cats",
+    "type": "categories",
+    "start": 187,
+    "dur": 12,
+    "ov": 1,
+    "tin": "petals",
+    "music": "groove2",
+    "short": false
+   },
+   {
+    "id": "market",
+    "type": "carousel",
+    "start": 198,
+    "dur": 12,
+    "ov": 1,
+    "tin": "push",
+    "music": "groove2",
+    "short": false
+   },
+   {
+    "id": "safety",
+    "type": "trio",
+    "start": 209,
+    "dur": 14,
+    "ov": 1,
+    "tin": "iris",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "money",
+    "type": "phone",
+    "start": 222,
+    "dur": 12,
+    "ov": 1,
+    "tin": "push",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "dark",
+    "type": "dark",
+    "start": 233,
+    "dur": 9,
+    "ov": 1,
+    "tin": "petals",
+    "music": "groove2",
+    "short": false
+   },
+   {
+    "id": "trust",
+    "type": "trust",
+    "start": 241,
+    "dur": 10,
+    "ov": 1,
+    "tin": "zoom",
+    "music": "groove2",
+    "short": false
+   },
+   {
+    "id": "wall",
+    "type": "wall",
+    "start": 250,
+    "dur": 10,
+    "ov": 1,
+    "tin": "flash",
+    "music": "peak",
+    "short": false
+   },
+   {
+    "id": "cta",
+    "type": "cta",
+    "start": 259,
+    "dur": 13,
+    "ov": 1,
+    "tin": "iris",
+    "music": "outro",
+    "short": false
+   }
+  ]
+ },
+ "short": {
+  "dur": 105,
+  "scenes": [
+   {
+    "id": "intro",
+    "type": "intro",
+    "start": 0,
+    "dur": 6,
+    "ov": 0,
+    "tin": null,
+    "music": "intro",
+    "short": false
+   },
+   {
+    "id": "problem",
+    "type": "problem",
+    "start": 5,
+    "dur": 8,
+    "ov": 1,
+    "tin": "zoom",
+    "music": "tension",
+    "short": true
+   },
+   {
+    "id": "reveal",
+    "type": "reveal",
+    "start": 12,
+    "dur": 7,
+    "ov": 1,
+    "tin": "flash",
+    "music": "drop",
+    "short": false
+   },
+   {
+    "id": "find",
+    "type": "phone",
+    "start": 18,
+    "dur": 10,
+    "ov": 1,
+    "tin": "petals",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "home",
+    "type": "phone",
+    "start": 27,
+    "dur": 9,
+    "ov": 1,
+    "tin": "push",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "food",
+    "type": "phone",
+    "start": 35,
+    "dur": 11,
+    "ov": 1,
+    "tin": "petals",
+    "music": "groove2",
+    "short": false
+   },
+   {
+    "id": "saathi",
+    "type": "phone",
+    "start": 45,
+    "dur": 11,
+    "ov": 1,
+    "tin": "iris",
+    "music": "float",
+    "short": false
+   },
+   {
+    "id": "saathi_do",
+    "type": "phone",
+    "start": 55,
+    "dur": 11,
+    "ov": 1,
+    "tin": "push",
+    "music": "float",
+    "short": false
+   },
+   {
+    "id": "community",
+    "type": "trio",
+    "start": 65,
+    "dur": 10,
+    "ov": 1,
+    "tin": "petals",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "cats",
+    "type": "categories",
+    "start": 74,
+    "dur": 8,
+    "ov": 1,
+    "tin": "push",
+    "music": "groove2",
+    "short": true
+   },
+   {
+    "id": "safety",
+    "type": "trio",
+    "start": 81,
+    "dur": 9,
+    "ov": 1,
+    "tin": "iris",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "wall",
+    "type": "wall",
+    "start": 89,
+    "dur": 7,
+    "ov": 1,
+    "tin": "flash",
+    "music": "peak",
+    "short": true
+   },
+   {
+    "id": "cta",
+    "type": "cta",
+    "start": 95,
+    "dur": 10,
+    "ov": 1,
+    "tin": "iris",
+    "music": "outro",
+    "short": false
+   }
+  ]
+ }
+}

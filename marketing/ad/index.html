@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aangan Launch Film</title>
+<meta name="description" content="Aangan — everything neighbours do for each other, in one private app. An interactive launch film.">
+<link rel="stylesheet" href="ad.css">
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+
+<div id="start">
+  <div class="wrap">
+    <h1>Aangan</h1>
+    <p>Your society, finally in one place — a launch film made from the real app.<br>Turn your sound on.</p>
+    <div class="choices">
+      <button class="choice primary" data-go="long"><b>▶ The full film</b><span>4:32 · every feature, every flow</span></button>
+      <button class="choice" data-go="short"><b>▶ The short cut</b><span>1:45 · for socials &amp; launch posts</span></button>
+    </div>
+  </div>
+</div>
+
+<div id="ui">
+  <div id="chapters"></div>
+  <div class="bar-row">
+    <button class="btn" id="play" aria-label="Play or pause"></button>
+    <div id="scrub"><div class="track"><div class="fill" id="fill"></div></div><div class="knob" id="knob"></div><div class="tip"></div></div>
+    <span id="time">0:00</span>
+    <div class="seg">
+      <button class="btn" data-cut="long">Full<span class="hide-sm">&nbsp;4:32</span></button>
+      <button class="btn" data-cut="short">Short<span class="hide-sm">&nbsp;1:45</span></button>
+    </div>
+    <button class="btn" id="mute" aria-label="Mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg></button>
+    <button class="btn" id="fs" aria-label="Fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  </div>
+</div>
+
+<script src="cuts.js"></script>
+<script src="ad.js"></script>
+</body>
+</html>

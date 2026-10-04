@@ -1,0 +1,4 @@
+# Local-only: raw frame folders, test encodes, uncompressed audio
+frames
+test_webm
+music/*.wav
