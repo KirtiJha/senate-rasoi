@@ -1,0 +1,187 @@
+{
+ "film2": {
+  "dur": 290.5,
+  "scenes": [
+   {
+    "id": "ping",
+    "start": 0,
+    "dur": 11,
+    "ov": 0,
+    "tin": "fade",
+    "music": "tension",
+    "short": false
+   },
+   {
+    "id": "spark",
+    "start": 10.5,
+    "dur": 7,
+    "ov": 0.5,
+    "tin": "zoomthru",
+    "music": "intro",
+    "short": false
+   },
+   {
+    "id": "hero",
+    "start": 17,
+    "dur": 13,
+    "ov": 0.5,
+    "tin": "flash",
+    "music": "drop",
+    "short": false
+   },
+   {
+    "id": "find",
+    "start": 29.5,
+    "dur": 22,
+    "ov": 0.5,
+    "tin": "zoomthru",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "home",
+    "start": 51,
+    "dur": 17,
+    "ov": 0.5,
+    "tin": "whip",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "food",
+    "start": 67.5,
+    "dur": 27,
+    "ov": 0.5,
+    "tin": "petal",
+    "music": "groove2",
+    "short": false
+   },
+   {
+    "id": "ask",
+    "start": 94,
+    "dur": 18,
+    "ov": 0.5,
+    "tin": "iris",
+    "music": "float",
+    "short": false
+   },
+   {
+    "id": "doit",
+    "start": 111.5,
+    "dur": 16,
+    "ov": 0.5,
+    "tin": "whip",
+    "music": "float",
+    "short": false
+   },
+   {
+    "id": "watch",
+    "start": 127,
+    "dur": 13,
+    "ov": 0.5,
+    "tin": "slice",
+    "music": "float",
+    "short": false
+   },
+   {
+    "id": "translate",
+    "start": 139.5,
+    "dur": 13,
+    "ov": 0.5,
+    "tin": "zoomthru",
+    "music": "float",
+    "short": false
+   },
+   {
+    "id": "feed",
+    "start": 152,
+    "dur": 17,
+    "ov": 0.5,
+    "tin": "petal",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "celebrate",
+    "start": 168.5,
+    "dur": 18,
+    "ov": 0.5,
+    "tin": "whip",
+    "music": "groove2",
+    "short": false
+   },
+   {
+    "id": "sports",
+    "start": 186,
+    "dur": 10,
+    "ov": 0.5,
+    "tin": "slice",
+    "music": "groove2",
+    "short": false
+   },
+   {
+    "id": "market",
+    "start": 195.5,
+    "dur": 20,
+    "ov": 0.5,
+    "tin": "petal",
+    "music": "groove2",
+    "short": false
+   },
+   {
+    "id": "safety",
+    "start": 215,
+    "dur": 18,
+    "ov": 0.5,
+    "tin": "colorwipe",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "money",
+    "start": 232.5,
+    "dur": 14,
+    "ov": 0.5,
+    "tin": "whip",
+    "music": "groove",
+    "short": false
+   },
+   {
+    "id": "trust",
+    "start": 246,
+    "dur": 13,
+    "ov": 0.5,
+    "tin": "zoomthru",
+    "music": "float",
+    "short": false
+   },
+   {
+    "id": "dark",
+    "start": 258.5,
+    "dur": 7,
+    "ov": 0.5,
+    "tin": "slice",
+    "music": "groove2",
+    "short": false
+   },
+   {
+    "id": "montage",
+    "start": 265,
+    "dur": 12,
+    "ov": 0.5,
+    "tin": "flash",
+    "music": "peak",
+    "short": false
+   },
+   {
+    "id": "cta",
+    "start": 276.5,
+    "dur": 14,
+    "ov": 0.5,
+    "tin": "petal",
+    "music": "outro",
+    "short": false
+   }
+  ]
+ }
+}
