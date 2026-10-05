@@ -813,7 +813,7 @@
     const note = abs(root, 'lede', 'Free for residents · Set up in minutes · Phone + PIN, no OTP', { left: 0, width: '1920px', top: '880px', textAlign: 'center', color: '#5d6a63', fontSize: '26px', fontWeight: 600 });
     const bars = PET.map((c, i) => abs(root, '', '', { left: 820 + i * 36 + 'px', top: '950px', width: '30px', height: '6px', borderRadius: '3px', background: c, transformOrigin: 'left' }));
     const tag = abs(root, '', 'every home. every language. one courtyard.', { left: 0, width: '1920px', top: '985px', textAlign: 'center', font: "500 22px Hanken", letterSpacing: '.16em', color: '#8a948e' });
-    const credit = abs(root, '', 'Music: “Inspired” by Kevin MacLeod (incompetech.com) · Licensed under CC BY 4.0', { left: 0, width: '1920px', top: '1036px', textAlign: 'center', font: "500 17px Hanken", color: '#9aa39e', letterSpacing: '.02em' });
+    const credit = abs(root, '', 'Music: “Presenterator” by Kevin MacLeod (incompetech.com) · Licensed under CC BY 4.0', { left: 0, width: '1920px', top: '1036px', textAlign: 'center', font: "500 17px Hanken", color: '#9aa39e', letterSpacing: '.02em' });
     const end = abs(root, 'fill', '', { background: '#03120d' });
     return { update(t, T) {
       blobs(T); tf(hold, `rotate(${t * 6}deg)`); L.update(t - 0.3);
