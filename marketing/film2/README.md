@@ -27,7 +27,8 @@ separate from the first films in `../ad`.
 - `film.js`, `film.css` — the engine and all scenes
 - `media/ui` — real UI cards cropped from the app at 3× (`index.json` has sizes and positions)
 - `media/screens` — full screens at 3× for the phones
-- `music/compose.py` — the score; `music/timing.json` is exported from `story.js`
+- `music/fit_music.py` — the soundtrack: “Inspired” by Kevin MacLeod (incompetech.com, CC BY 4.0), fitted and mixed to the film. The credit is on the end card; keep it in any post description too.
+- `music/compose.py` — the earlier synthesised score (no longer used)
 - `render.mjs`, `build_video.sh` — frame-accurate 1080p30 render
 - `video/` — the rendered film (1080p and 720p)
 
@@ -36,7 +37,7 @@ separate from the first films in `../ad`.
 ```sh
 cd marketing && python3 -m http.server 8766
 # in marketing/film2:
-python3 music/compose.py film2      # then normalise to -14 LUFS (see the first film's README)
+python3 music/fit_music.py Inspired.mp3 music/music_film2.wav   # then normalise to -14 LUFS
 ./build_video.sh out 3
 ```
 

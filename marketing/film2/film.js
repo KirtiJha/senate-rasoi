@@ -813,13 +813,14 @@
     const note = abs(root, 'lede', 'Free for residents · Set up in minutes · Phone + PIN, no OTP', { left: 0, width: '1920px', top: '880px', textAlign: 'center', color: '#5d6a63', fontSize: '26px', fontWeight: 600 });
     const bars = PET.map((c, i) => abs(root, '', '', { left: 820 + i * 36 + 'px', top: '950px', width: '30px', height: '6px', borderRadius: '3px', background: c, transformOrigin: 'left' }));
     const tag = abs(root, '', 'every home. every language. one courtyard.', { left: 0, width: '1920px', top: '985px', textAlign: 'center', font: "500 22px Hanken", letterSpacing: '.16em', color: '#8a948e' });
+    const credit = abs(root, '', 'Music: “Inspired” by Kevin MacLeod (incompetech.com) · Licensed under CC BY 4.0', { left: 0, width: '1920px', top: '1036px', textAlign: 'center', font: "500 17px Hanken", color: '#9aa39e', letterSpacing: '.02em' });
     const end = abs(root, 'fill', '', { background: '#03120d' });
     return { update(t, T) {
       blobs(T); tf(hold, `rotate(${t * 6}deg)`); L.update(t - 0.3);
       wm.up(t, 1.1, { st: 0.07 }); ln.up(t, 1.9);
       const q1 = sp(t, 2.9, 3.5, E.back), q2 = sp(t, 3.1, 3.7, E.back);
       put(b1, 470, 96, 960 - 270, 790, { s: 0.7 + 0.3 * q1, o: Math.min(1, q1) }); put(b2, 520, 96, 960 + 270, 790, { s: 0.7 + 0.3 * q2, o: Math.min(1, q2) });
-      fadeIn(note, t, 3.8); bars.forEach((b, i) => tf(b, `scaleX(${sp(t, 4.2 + i * 0.06, 4.8 + i * 0.06)})`)); fadeIn(tag, t, 4.6);
+      fadeIn(credit, t, 5.0, 0.8, 0); fadeIn(note, t, 3.8); bars.forEach((b, i) => tf(b, `scaleX(${sp(t, 4.2 + i * 0.06, 4.8 + i * 0.06)})`)); fadeIn(tag, t, 4.6);
       op(end, sp(t, S.dur - 1.5, S.dur, E.in3));
     } };
   };
