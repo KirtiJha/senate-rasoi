@@ -14,7 +14,7 @@ fs.mkdirSync(out, { recursive: true });
 async function chunk(id, f0, f1) {
   const b = await chromium.launch({ executablePath: exe, args: ['--disable-gpu-vsync', '--force-device-scale-factor=1'] });
   const p = await b.newPage({ viewport: { width: 1920, height: 1080 } });
-  await p.goto(`http://127.0.0.1:8766/film2/index.html?render=1`);
+  await p.goto(`http://127.0.0.1:8766/film2/index.html?render=1&cut=${cut}`);
   await p.evaluate(() => window.__ready);
   const file = path.join(out, `part${String(id).padStart(2, '0')}.mp4`);
   const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'mjpeg', '-i', '-',
@@ -34,7 +34,7 @@ async function chunk(id, f0, f1) {
 
 const probe = await chromium.launch({ executablePath: exe });
 const pp = await probe.newPage({ viewport: { width: 1920, height: 1080 } });
-await pp.goto(`http://127.0.0.1:8766/film2/index.html?render=1`);
+await pp.goto(`http://127.0.0.1:8766/film2/index.html?render=1&cut=${cut}`);
 const { dur } = await pp.evaluate(() => window.__ready);
 await probe.close();
 const total = Math.round(dur * fps);

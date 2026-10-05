@@ -572,7 +572,7 @@
     const stackW = abs(root, '', '', { left: '480px', top: '540px', width: 0, height: 0, perspective: '1600px' });
     const posts = ['post_tanker', 'post_security', 'post_welcome', 'post_tanker', 'post_security'].map((n) => UI(stackW, n, 1.45, 16));
     const h1 = new Words(abs(root, '', '', { left: '1000px', top: '220px', width: '820px' }), 'Talk it out.', 'big', 'hl-orange');
-    const h2 = new Words(abs(root, '', '', { left: '1000px', top: '320px', width: '820px' }), 'Then *decide together*.', 'big', 'hl-orange');
+    const h2 = new Words(abs(root, '', '', { left: '1000px', top: '196px', width: '880px', whiteSpace: 'nowrap' }), 'Then *decide together*.', 'mid', 'hl-orange');
     const plus = [0, 1, 2].map((i) => abs(root, 'bubble-a', '+1', { fontSize: '44px', padding: '18px 30px', background: '#E7EAE8' }));
     const strike = abs(root, 'lede', 'No more forty “+1”s.', { left: '1000px', top: '470px', color: '#9a6a1c', fontWeight: 700 });
     const opts = [['Open 24/7', 33], ['Close at 10:00 PM', 0], ['Close at 11:00 PM', 67], ['Close at 12:00 midnight', 0]];
@@ -590,7 +590,7 @@
       plus.forEach((p, i) => { const q = sp(t, 1.8 + i * 0.35, 2.2 + i * 0.35, E.back), x = sp(t, 4.4, 5.2, E.in3);
         put(p, 110, 90, 1060 + i * 150, 600, { s: (0.6 + 0.4 * q) * (1 - x), o: Math.min(1, q) * (1 - x), rz: (i - 1) * 6 }); });
       fadeIn(strike, t, 3.2, 0.6, 20, 5.4);
-      const pq = sp(t, 6.4, 7.2, E.out5); put(poll, 820, 680, 1410, 640, { o: pq, s: 0.9 + 0.1 * pq });
+      const pq = sp(t, 6.4, 7.2, E.out5); put(poll, 820, 680, 1410, 655, { o: pq, s: 0.9 + 0.1 * pq });
       const fillP = sp(t, 7.6, 10.4, E.io3);
       bars.forEach((b, i) => { const v = opts[i][1] * fillP; b.style.width = v + '%'; txt(pcts[i], Math.round(v) + '%' + (i === 2 && fillP > 0.98 ? '  ✓' : '')); });
     } };
@@ -877,7 +877,7 @@
         if (cfg.tin === 'slice' || cfg.tin === 'colorwipe') { wipeK = cfg.tin; wipeP = p; } }
       if (next && t > next.cfg.start) { const p = (t - next.cfg.start) / next.cfg.ov; const [a, b, c, d] = tStyle(next.cfg.tin, p, false); T1 = (T1 + ' ' + a).trim(); O *= b; CP = CP || c; F = F || d; }
       tf(wrap, T1); wrap.style.opacity = O; if (wrap._cp !== CP) { wrap.style.clipPath = CP; wrap._cp = CP; } fl(wrap, F || 'none');
-      inst.update(lt, t);
+      inst.update(lt + (cfg.from || 0), t);
       if (CHAP[cfg.id] && lt > 0.4) { chap = CHAP[cfg.id]; chapDark = DARK.has(cfg.id); chapA = Math.min(sp(lt, 0.4, 1.0), 1 - sp(lt, cfg.dur - 0.6, cfg.dur - 0.2)); }
     });
     flash.style.opacity = flashA;
@@ -907,7 +907,7 @@
 
   function player() {
     const $ = (id) => document.getElementById(id);
-    const audio = new Audio('media/music.mp3'); audio.preload = 'auto';
+    const audio = new Audio(window.STORY_CUT === 'short' ? 'media/music_short.mp3' : 'media/music.mp3'); audio.preload = 'auto';
     const D = window.STORY.dur; let t = 0, playing = false, last = 0;
     const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
     const PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>', PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>';

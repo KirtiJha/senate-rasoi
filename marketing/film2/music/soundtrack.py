@@ -11,7 +11,7 @@ phrase grid:
   final section drops on the montage flash (4:25.25), extended to carry the end card
 
     ffmpeg -i Presenterator.mp3 -af "rubberband=tempo=0.923077:transients=crisp:detector=compound:window=standard:pitchq=quality:channels=together,aresample=44100" -ac 2 pres120.wav
-    python3 soundtrack.py pres120.wav soundtrack.wav
+    python3 soundtrack.py pres120.wav soundtrack.wav [--cut long|short]
 Then normalise to -14 LUFS (see README).
 """
 import sys
@@ -20,8 +20,17 @@ import wave
 import numpy as np
 from scipy.signal import butter, fftconvolve, istft, sosfilt, sosfiltfilt, stft
 
+import json
+import os
+import subprocess
+
 SR = 44100
-D = 290.5
+CUT = sys.argv[sys.argv.index('--cut') + 1] if '--cut' in sys.argv else 'long'
+ARGS = [a for i, a in enumerate(sys.argv) if a != '--cut' and (i == 0 or sys.argv[i - 1] != '--cut')]
+_story = json.loads(subprocess.run(['node', '-e', "console.log(JSON.stringify(require(process.argv[1])))",
+                                   os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'story.js')], capture_output=True, text=True).stdout)[CUT]
+INST = _story['scenes']
+D = _story['dur']
 N = int(D * SR)
 rng = np.random.default_rng(2026)
 
@@ -254,6 +263,7 @@ sfx = np.zeros((2, N)); duck = np.zeros(N); send = np.zeros((2, N))
 
 
 def put(sig, at, gain=1.0, pan=0.0, rev=0.15, duckw=0.0, width=0.3, sweep=None):
+    if at is None: return
     if sig.ndim == 1:
         st = pan_sweep(sig, *sweep) if sweep else stereo(sig, pan, width)
     else:
@@ -267,6 +277,7 @@ def put(sig, at, gain=1.0, pan=0.0, rev=0.15, duckw=0.0, width=0.3, sweep=None):
 
 
 def ending_at(sig, at, **k):  # place so the sound ENDS at `at`
+    if at is None: return
     put(sig, at - len(sig) / SR if sig.ndim == 1 else at - sig.shape[1] / SR, **k)
 
 
@@ -274,7 +285,12 @@ def ending_at(sig, at, **k):  # place so the sound ENDS at `at`
 def build_bed(src):
     x = read_wav(src)
     P = lambda k: 0.05 + 16 * k - 0.015            # phrase starts in the 120 BPM file, just before the kick
-    segs = [(0.0, P(14)), (P(13), P(14)), (P(14), P(15)), (P(15) + 8, P(16)), (P(16), P(17)), (P(17) - 8, P(17)), (P(17), x.shape[1] / SR)]
+    end = x.shape[1] / SR
+    if CUT == 'short':
+        # intro · 18 bars main (hero → Saathi) · breakdown under Saathi · 18 bars main · final on the montage · ending on the end card
+        segs = [(0.0, P(1)), (P(1), P(1) + 36), (P(8), P(9)), (P(9), P(9) + 36), (P(16), P(17)), (P(17), end)]
+    else:
+        segs = [(0.0, P(14)), (P(13), P(14)), (P(14), P(15)), (P(15) + 8, P(16)), (P(16), P(17)), (P(17) - 8, P(17)), (P(17), end)]
     xf = int(0.006 * SR); out = []
     for a, b in segs:
         s = x[:, int(a * SR):int(b * SR)].copy()
@@ -291,18 +307,20 @@ def build_bed(src):
     env = lambda k: np.interp(t, np.array(k)[:, 0], np.array(k)[:, 1])
     lpd = np.stack([sosfiltfilt(butter(4, 600 / (SR / 2), 'low', output='sos'), c) for c in y])
     muff = env([[0, 1], [12.0, 1], [15.0, 0.8], [16.7, 0.55], [17.25, 0], [D, 0]])
-    g = env([[0, -8], [10.5, -7], [15.0, -4], [16.70, -4], [16.74, -60], [17.24, -60], [17.25, 0],
-             [94, 0], [94.6, -2.5], [111.2, -2.5], [111.8, -1.5], [126.8, -1.5], [127.2, 0],
-             [D - 0.6, 0], [D, -60]])
+    dip = [[94, 0], [94.6, -2.5], [111.2, -2.5], [111.8, -1.5], [126.8, -1.5], [127.2, 0]] if CUT == 'long' else []
+    g = env([[0, -8], [10.5, -7], [15.0, -4], [16.70, -4], [16.74, -60], [17.24, -60], [17.25, 0]] + dip + [[D - 0.6, 0], [D, -60]])
     return (muff * lpd + (1 - muff) * y) * 10 ** (g / 20)
 
 
 # ---------------------------------------------------------------- cue sheet
-S = dict(ping=0, spark=10.5, hero=17, find=29.5, home=51, food=67.5, ask=94, doit=111.5, watch=127, translate=139.5, feed=152,
-         celebrate=168.5, sports=186, market=195.5, safety=215, money=232.5, trust=246, dark=258.5, montage=265, cta=276.5)
-
-
-def at(scene, lt): return S[scene] + lt
+def at(scene, lt):
+    """Film time of a scene's local moment, or None if that moment is trimmed out of this cut."""
+    for s in INST:
+        if s['id'] != scene: continue
+        lo = s['from'] - 0.3 if s['from'] == 0 else s['from'] + 0.2  # a trimmed entry is covered by its transition
+        if lo <= lt <= s['from'] + s['dur'] + 0.1:
+            return s['start'] + lt - s['from']
+    return None
 
 
 def typing(scene, start, nchars, cps, gain=0.5, pan=0.4):
@@ -311,42 +329,45 @@ def typing(scene, start, nchars, cps, gain=0.5, pan=0.4):
 
 
 def ticks(t0, t1, r0, r1, gain=0.25, pan=0.0):
+    if t0 is None or t1 is None: return
     t = t0
     while t < t1:
         p = (t - t0) / (t1 - t0); put(sfx_tick(), t, gain * (0.8 + 0.2 * rng.random()), pan, rev=0.04); t += 1 / (r0 + (r1 - r0) * p)
 
 
 def cues():
-    # ---- transitions (cut moment = start + 0.25)
-    for sc in ('spark', 'translate', 'trust'):
-        c = S[sc] + 0.25
-        ending_at(sfx_riser(1.6, 0.55), c, gain=1.0, rev=0.25, duckw=0.4)
-        put(sfx_whoosh(0.9, 250, 4000), c - 0.45, 0.8, sweep=(-0.4, 0.4), rev=0.25, duckw=0.4)
-        put(sfx_softhit(1.0), c, 0.8, rev=0.3)
-    # find: the hero push-in rides one long riser into the search bar
-    ending_at(sfx_riser(2.6, 0.7), S['find'] + 0.25, rev=0.25, duckw=0.5)
-    put(sfx_impact(0.55, 1.6), S['find'] + 0.25, 1.0, rev=0.3, duckw=0.8)
-    # flashes: the big drops
-    for sc, rl in (('hero', 2.0), ('montage', 1.6)):
-        c = S[sc] + 0.25
-        ending_at(sfx_riser(rl, 0.9), c, rev=0.3, duckw=0.6)
-        put(sfx_impact(1.0), c, 1.0, rev=0.35, duckw=1.0)
-    for sc in ('home', 'doit', 'celebrate', 'money'):            # whips: content flies right → left
-        put(sfx_whoosh(0.75, 280, 3600), S[sc] + 0.25 - 0.375, 0.95, sweep=(0.7, -0.7), rev=0.2, duckw=0.5)
-    for sc in ('food', 'feed', 'market'):                        # petals: bloom
-        put(sfx_whoosh(0.8, 400, 5000), S[sc] - 0.15, 0.7, sweep=(-0.3, 0.3), rev=0.3, duckw=0.4)
-        put(sfx_shimmer([77, 81, 84, 89], 0.05, 0.35), S[sc] + 0.2, 1.0, rev=0.5)
-    put(sfx_swell(1.4, 0.5), S['ask'] - 1.15, 1.0, rev=0.4, duckw=0.3)  # iris into Saathi
-    put(sfx_shimmer([84, 88, 91, 96], 0.06, 0.4, bell), S['ask'] + 0.25, 1.0, rev=0.6)
-    for sc in ('watch', 'sports', 'dark'):                       # slices: three bands
-        for k, p in enumerate((-0.6, 0.6, -0.6)):
-            put(sfx_swish(0.7, 0.26), S[sc] + 0.05 + k * 0.08, 1.0, sweep=(p, -p), rev=0.15, duckw=0.3)
-    put(sfx_whoosh(0.9, 200, 2500), S['safety'] - 0.2, 1.0, sweep=(-0.8, 0.8), rev=0.25, duckw=0.6)  # colour wipe
-    put(sfx_softhit(1.0), S['safety'] + 0.25, 0.9, rev=0.3)
-    # end card petal: impact + bloom
-    put(sfx_whoosh(0.9, 300, 5000), S['cta'] - 0.2, 0.8, sweep=(-0.3, 0.3), rev=0.3, duckw=0.5)
-    ending_at(sfx_riser(1.4, 0.6), S['cta'] + 0.25, rev=0.3, duckw=0.5)
-    put(sfx_impact(0.7), S['cta'] + 0.25, 1.0, rev=0.4, duckw=0.8)
+    # ---- transitions (cut moment = start + 0.25), by type
+    for k, inst in enumerate(INST):
+        if k == 0: continue
+        sid, tin, st = inst['id'], inst['tin'], inst['start']; c = st + 0.25
+        if tin == 'flash':                                        # the big drops
+            ending_at(sfx_riser(2.0 if sid == 'hero' else 1.6, 0.9), c, rev=0.3, duckw=0.6)
+            put(sfx_impact(1.0), c, 1.0, rev=0.35, duckw=1.0)
+        elif tin == 'zoomthru' and sid == 'find':                 # the hero push-in rides one long riser
+            ending_at(sfx_riser(2.6, 0.7), c, rev=0.25, duckw=0.5)
+            put(sfx_impact(0.55, 1.6), c, 1.0, rev=0.3, duckw=0.8)
+        elif tin == 'zoomthru':
+            ending_at(sfx_riser(1.6, 0.55), c, gain=1.0, rev=0.25, duckw=0.4)
+            put(sfx_whoosh(0.9, 250, 4000), c - 0.45, 0.8, sweep=(-0.4, 0.4), rev=0.25, duckw=0.4)
+            put(sfx_softhit(1.0), c, 0.8, rev=0.3)
+        elif tin == 'whip':                                       # content flies right → left
+            put(sfx_whoosh(0.75, 280, 3600), c - 0.375, 0.95, sweep=(0.7, -0.7), rev=0.2, duckw=0.5)
+        elif tin == 'petal' and sid == 'cta':                     # end card: impact + bloom
+            put(sfx_whoosh(0.9, 300, 5000), st - 0.2, 0.8, sweep=(-0.3, 0.3), rev=0.3, duckw=0.5)
+            ending_at(sfx_riser(1.4, 0.6), c, rev=0.3, duckw=0.5)
+            put(sfx_impact(0.7), c, 1.0, rev=0.4, duckw=0.8)
+        elif tin == 'petal':
+            put(sfx_whoosh(0.8, 400, 5000), st - 0.15, 0.7, sweep=(-0.3, 0.3), rev=0.3, duckw=0.4)
+            put(sfx_shimmer([77, 81, 84, 89], 0.05, 0.35), st + 0.2, 1.0, rev=0.5)
+        elif tin == 'iris':                                       # into Saathi
+            put(sfx_swell(1.4, 0.5), st - 1.15, 1.0, rev=0.4, duckw=0.3)
+            put(sfx_shimmer([84, 88, 91, 96], 0.06, 0.4, bell), c, 1.0, rev=0.6)
+        elif tin == 'slice':                                      # three bands
+            for j, p in enumerate((-0.6, 0.6, -0.6)):
+                put(sfx_swish(0.7, 0.26), st + 0.05 + j * 0.08, 1.0, sweep=(p, -p), rev=0.15, duckw=0.3)
+        elif tin == 'colorwipe':
+            put(sfx_whoosh(0.9, 200, 2500), st - 0.2, 1.0, sweep=(-0.8, 0.8), rev=0.25, duckw=0.6)
+            put(sfx_softhit(1.0), c, 0.9, rev=0.3)
 
     # ---- ping: the opening
     put(sfx_ping(0.9), at('ping', 0.2), 1.0, 0.1, rev=0.35)
@@ -498,6 +519,7 @@ def cues():
     # ---- montage: a hit on every word, a light swish on every other cut
     for b in range(1, 23):
         t = at('montage', 0.25 + b * 0.5)
+        if t is None: continue
         if b % 3 == 2: put(sfx_softhit(0.7), t, 1.0, rev=0.25); put(sfx_whoosh(0.35, 800, 6000, 0.35), t - 0.18, 1.0, sweep=(0.5, -0.5))
         elif b % 2 == 0: put(sfx_swish(0.18, 0.2), t - 0.1, 1.0, sweep=(-0.5, 0.5))
     # ---- end card
@@ -509,7 +531,7 @@ def cues():
 
 # ---------------------------------------------------------------- render
 if __name__ == '__main__':
-    src, dst = sys.argv[1], sys.argv[2]
+    src, dst = ARGS[1], ARGS[2]
     bed = build_bed(src)
     cues()
     ir = make_ir()
@@ -524,9 +546,9 @@ if __name__ == '__main__':
     env = np.interp(np.arange(N), np.arange(len(ev)) * 32, ev)
     gain = 10 ** (-np.clip(env * 9, 0, 6) / 20)
     mix = bed * gain * 0.9 + fx * 0.55
-    if len(sys.argv) > 3:  # stems for checking the balance
+    if len(ARGS) > 3:  # stems for checking the balance
         for name, sig in (('bed', bed * gain * 0.9), ('fx', fx * 0.55)):
-            w = wave.open(f'{sys.argv[3]}_{name}.wav', 'wb'); w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR)
+            w = wave.open(f'{ARGS[3]}_{name}.wav', 'wb'); w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR)
             w.writeframes((np.clip(sig.T, -1, 1) * 32767).astype(np.int16).tobytes()); w.close()
     mix = hp(mix, 25)
     peak = np.max(np.abs(mix)); mix = mix / peak * 0.95

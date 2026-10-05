@@ -1,5 +1,7 @@
 # Aangan — "One Courtyard" (film 2)
 
+Two cuts: the full 4:50 film and a 2:06 launch cut (`?cut=short`, `video/aangan_one_courtyard_2min_1080p.mp4`).
+
 A 4:50 long-form launch film in a product-ad style. Instead of watching whole
 phone screens, real UI is lifted out of the app (captured at 3×) and the key
 moments are rebuilt large, with camera moves and modern transitions. It is
@@ -23,7 +25,7 @@ separate from the first films in `../ad`.
 
 ## Files
 
-- `story.js` — scene order, durations, transitions, music sections
+- `story.js` — both cuts: scene order, durations, transitions. A scene can play a trimmed window of its timeline (`from`), so the short cut reuses the same scenes
 - `film.js`, `film.css` — the engine and all scenes
 - `media/ui` — real UI cards cropped from the app at 3× (`index.json` has sizes and positions)
 - `media/screens` — full screens at 3× for the phones
@@ -43,6 +45,9 @@ cd marketing && python3 -m http.server 8766
 ffmpeg -i Presenterator.mp3 -af "rubberband=tempo=0.923077:transients=crisp:detector=compound:window=standard:pitchq=quality:channels=together,aresample=44100" -ac 2 pres120.wav
 python3 music/soundtrack.py pres120.wav sound.wav && python3 music/master.py sound.wav music/music_film2_master.wav
 ./build_video.sh out 3
+# 2-minute cut
+python3 music/soundtrack.py pres120.wav short.wav --cut short && python3 music/master.py short.wav short_master.wav
+./build_video.sh out 3 short short_master.wav
 ```
 
-Open `http://127.0.0.1:8766/film2/` to play it live with the score.
+Open `http://127.0.0.1:8766/film2/` (or `?cut=short`) to play it live with the score.
