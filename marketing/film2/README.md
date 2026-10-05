@@ -27,7 +27,9 @@ separate from the first films in `../ad`.
 - `film.js`, `film.css` — the engine and all scenes
 - `media/ui` — real UI cards cropped from the app at 3× (`index.json` has sizes and positions)
 - `media/screens` — full screens at 3× for the phones
-- `music/fit_presenterator.py` — the soundtrack: “Presenterator” by Kevin MacLeod (incompetech.com, CC BY 4.0), fitted and mixed to the film. The credit is on the end card; keep it in any post description too.
+- `music/soundtrack.py` — the soundtrack: “Presenterator” by Kevin MacLeod (incompetech.com, CC BY 4.0) stretched to the film's 120 BPM so beats land on the cuts, rearranged on its 8-bar phrases (hero drop at 0:17.25, breakdowns under Saathi and trust, final section dropping on the montage), plus a sound-design layer of ~300 cues synced to every transition and on-screen action, tuned to F major. The credit is on the end card; keep it in any post description too.
+- `music/master.py` — loudness (-14 LUFS) and true-peak limiting
+- `music/fit_presenterator.py` — the plain music-only Presenterator fit
 - `music/fit_music.py` — the earlier “Inspired” version (`video/aangan_one_courtyard_inspired_720p.mp4`)
 - `music/compose.py` — the earlier synthesised score (no longer used)
 - `render.mjs`, `build_video.sh` — frame-accurate 1080p30 render
@@ -38,7 +40,8 @@ separate from the first films in `../ad`.
 ```sh
 cd marketing && python3 -m http.server 8766
 # in marketing/film2:
-python3 music/fit_presenterator.py Presenterator.mp3 music/music_film2.wav   # then normalise to -14 LUFS
+ffmpeg -i Presenterator.mp3 -af "rubberband=tempo=0.923077:transients=crisp:detector=compound:window=standard:pitchq=quality:channels=together,aresample=44100" -ac 2 pres120.wav
+python3 music/soundtrack.py pres120.wav sound.wav && python3 music/master.py sound.wav music/music_film2_master.wav
 ./build_video.sh out 3
 ```
 

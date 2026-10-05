@@ -790,7 +790,8 @@
     const words = ['Food.', 'Saathi.', 'Polls.', 'Festivals.', 'Flats.', 'Help.', 'Money.', 'Neighbours.'].map((w, i) => abs(root, 'mega', w, { left: 0, top: '420px', width: '1920px', textAlign: 'center', color: '#fff', fontSize: '200px' }));
     const cols = ['#0E6B4E', '#E8650A', '#534AB7', '#D4537E', '#185FA5', '#BA7517', '#1D9E75', '#D85A30'];
     return { update(t, T) {
-      const beat = Math.floor(t / 0.5); const bp = (t % 0.5) / 0.5;
+      // cuts land on the music's beats, which sit on the transition midpoints (x.25 / x.75)
+      const tb = Math.max(0, t - 0.25); const beat = Math.floor(tb / 0.5); const bp = (tb % 0.5) / 0.5;
       css(bg, { background: cols[beat % cols.length] });
       const isWord = beat % 3 === 2 && beat < 22;
       const wi = Math.floor(beat / 3) % words.length;
