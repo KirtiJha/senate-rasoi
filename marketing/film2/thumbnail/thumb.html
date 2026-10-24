@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Aangan Thumbnail</title>
+<link rel="stylesheet" href="../film.css">
+<style>
+  html, body { margin: 0; background: #000; overflow: hidden; }
+  #t { position: relative; width: 1280px; height: 720px; overflow: hidden; font-family: Hanken, sans-serif; }
+  .abs { position: absolute; }
+  .bgA { inset: 0; background: radial-gradient(ellipse at 28% 35%, #12704f 0%, #0a4a36 38%, #03160f 80%); }
+  .glow { border-radius: 50%; }
+  .phone { position: absolute; width: 318px; height: 680px; border-radius: 46px; padding: 11px; background: linear-gradient(145deg,#2a2f2d,#0c0f0e 40%,#1d2220 70%,#3a403d);
+           box-shadow: 0 0 0 1.5px #4b524e inset, 0 0 0 3px #0b0d0c, 0 50px 90px -20px rgba(0,0,0,.75); }
+  .phone .scr { width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: #F1F3EE; }
+  .phone .scr img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: top; }
+  .phone .cam { position: absolute; left: 50%; top: 18px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #070908; }
+  .ui { position: absolute; background-size: 100% 100%; box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 30px 60px -18px rgba(0,0,0,.6); }
+  .h1 { font: 800 112px/0.94 Bricolage, sans-serif; letter-spacing: -.04em; color: #fff; }
+  .grad { background: linear-gradient(95deg, #ffb35c, #F08A2C 45%, #ff6b3d); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .chip { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 999px; background: rgba(255,255,255,.12); color: #fff;
+          font: 700 24px Hanken, sans-serif; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.18); }
+  .chip i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .bubble { position: absolute; padding: 16px 22px; border-radius: 26px 26px 26px 6px; background: #fff; font: 600 25px/1.3 Hanken, sans-serif; color: #0F1A15;
+            box-shadow: 0 24px 50px -16px rgba(0,0,0,.6); }
+  .ub { border-radius: 26px 26px 6px 26px; background: #0E6B4E; color: #fff; }
+  .wa { position: absolute; padding: 12px 18px 9px; border-radius: 18px 18px 18px 5px; background: #1d2522; color: rgba(255,255,255,.88); font: 500 21px/1.25 Hanken, sans-serif;
+        box-shadow: 0 16px 30px -14px rgba(0,0,0,.8); white-space: nowrap; }
+  .wa b { display: block; font: 700 15px Hanken, sans-serif; margin-bottom: 3px; }
+</style>
+</head>
+<body>
+<div id="t"></div>
+<script>
+const v = new URLSearchParams(location.search).get('v') || 'a';
+const t = document.getElementById('t');
+const PET = ['#E8650A', '#D4537E', '#1D9E75', '#534AB7', '#BA7517', '#D85A30', '#185FA5', '#3B6D11'];
+const el = (html, css) => { const d = document.createElement('div'); d.className = 'abs'; d.innerHTML = html; Object.assign(d.style, css || {}); t.appendChild(d); return d; };
+const logo = (size) => {
+  let s = `<svg viewBox="-130 -130 260 260" width="${size}" height="${size}">`;
+  PET.forEach((c, i) => s += `<g transform="rotate(${i * 45})"><ellipse cx="0" cy="-58" rx="22" ry="58" fill="${c}" opacity=".95"/></g>`);
+  s += `<circle r="54" fill="#fff"/>`; PET.forEach((c, i) => s += `<g transform="rotate(${i * 45})"><ellipse cx="0" cy="-33" rx="13" ry="19" fill="${c}" opacity=".28"/></g>`);
+  s += `<circle r="22" fill="#1a1a1a"/><circle r="14" fill="#E8650A"/><circle r="6" fill="#fff"/><circle r="2.5" fill="#E8650A"/></svg>`;
+  return s;
+};
+const ui = (name, w, h, css) => el('', Object.assign({ width: w + 'px', height: h + 'px', backgroundImage: `url(../media/ui/${name}.png)`, backgroundSize: '100% 100%', borderRadius: '18px', boxShadow: '0 0 0 1px rgba(0,0,0,.06), 0 30px 60px -18px rgba(0,0,0,.6)' }, css));
+const phone = (src, css) => el(`<div class="phone"><div class="scr"><img src="${src}"></div><div class="cam"></div></div>`, Object.assign({ width: '318px', height: '680px' }, css));
+
+if (v === 'a') {
+  el('', { inset: 0, background: 'radial-gradient(ellipse at 28% 35%, #12704f 0%, #0a4a36 38%, #03160f 80%)' });
+  el('', { left: '760px', top: '260px', width: '760px', height: '760px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(232,101,10,.55), rgba(232,101,10,0) 65%)' });
+  el('', { left: '-200px', top: '-260px', width: '700px', height: '700px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(63,185,139,.35), rgba(63,185,139,0) 65%)' });
+  // brand
+  el(logo(66), { left: '64px', top: '58px' });
+  el('Aangan', { left: '146px', top: '64px', font: "800 52px/1 Bricolage", color: '#fff', letterSpacing: '-.02em' });
+  el('आँगन · YOUR SOCIETY APP', { left: '148px', top: '120px', font: "700 15px Indic, Hanken", color: '#7fd6b0', letterSpacing: '.18em' });
+  // headline
+  el('Your society.<br><span class="grad">One app.</span>', { left: '60px', top: '200px', className: 'abs h1' }).className = 'abs h1';
+  // chips
+  const chips = el(['Home food', 'AI assistant', 'Polls', 'Emergency help'].map((s, i) => `<span class="chip"><i style="background:${PET[[0, 3, 1, 2][i]]}"></i>${s}</span>`).join(' '), { left: '62px', top: '470px', width: '640px', display: 'flex', flexWrap: 'wrap', gap: '12px' });
+  el('FREE · ANDROID & WEB', { left: '66px', top: '628px', font: "800 22px Hanken", color: '#fff', letterSpacing: '.16em', background: '#E8650A', padding: '12px 18px', borderRadius: '12px' });
+  // phone + floating real UI
+  phone('../media/screens/home.jpg', { left: '842px', top: '40px', transform: 'perspective(1600px) rotateY(-16deg) rotateZ(4deg)' });
+  ui('dish_card', 230, 259, { left: '690px', top: '330px', transform: 'rotate(-5deg)', backgroundImage: 'url(dish_card_safe.png)' });
+  el('<div class="bubble ub" style="white-space:nowrap">Is there a plumber?</div>', { left: '1010px', top: '440px' });
+  el('<div class="bubble" style="width:270px">Yes — DS Max Plumber Manager is in your directory.</div>', { left: '960px', top: '518px' });
+  el(`<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:18px;background:#fff;box-shadow:0 24px 50px -16px rgba(0,0,0,.6)"><div style="width:42px;height:42px;border-radius:50%;background:conic-gradient(#3FB98B,#534AB7,#185FA5,#3FB98B)"></div><div style="font:800 22px Bricolage;color:#0F1A15">Saathi AI</div></div>`, { left: '1078px', top: '70px', transform: 'rotate(3deg)' });
+} else {
+  // B: problem → solution
+  el('', { inset: 0, background: 'linear-gradient(90deg,#0b100e 0%,#141c19 46%,#0d5a42 54%,#063526 100%)' });
+  el('', { left: '640px', top: '0', width: '8px', height: '720px', transform: 'skewX(-8deg)', background: 'linear-gradient(#ff8a3d,#E8650A)', boxShadow: '0 0 40px 10px rgba(232,101,10,.55)' });
+  el('', { left: '700px', top: '200px', width: '760px', height: '760px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(232,101,10,.45), rgba(232,101,10,0) 65%)' });
+  const msgs = [['B-204', 'Water tanker coming today??', 62, 170, -3], ['A-101', 'Anyone has a plumber’s number?', 40, 250, 2], ['Flat 149', '+1', 380, 236, -6], ['C-707', 'Who is collecting for Diwali?', 70, 330, -2],
+    ['D-310', 'Lost: keys with elephant keychain', 30, 410, 3], ['B-46', '+1', 420, 420, 5], ['Flat 31', 'Plz check above msg', 90, 490, -4], ['A-1102', 'Veg tiffin anyone?', 330, 520, 2]];
+  msgs.forEach(([f, m, x, y, r], i) => el(`<div class="wa" style="position:relative"><b style="color:${PET[i % 8]}">${f}</b>${m}</div>`, { left: x + 'px', top: y + 'px', transform: `rotate(${r}deg)`, opacity: 0.92 }));
+  el('3,248', { left: '62px', top: '44px', font: "800 92px/1 Bricolage", color: '#ff6b5a', letterSpacing: '-.03em' });
+  el('unread', { left: '330px', top: '78px', font: "800 50px/1 Bricolage", color: '#fff' });
+  el('', { left: '520px', top: '58px', width: '76px', height: '76px', borderRadius: '50%', background: '#ff3b30', boxShadow: '0 0 0 6px rgba(255,59,48,.25)' });
+  el('99+', { left: '520px', top: '82px', width: '76px', textAlign: 'center', font: "800 24px Hanken", color: '#fff' });
+  el('<span style="font:800 64px/1 Bricolage;color:#fff;letter-spacing:-.03em">Try </span><span class="grad" style="font:800 64px/1 Bricolage;letter-spacing:-.03em">Aangan.</span>', { left: '60px', top: '612px' });
+  phone('../media/screens/home.jpg', { left: '820px', top: '24px', transform: 'perspective(1600px) rotateY(-14deg) rotateZ(3deg)' });
+  el(logo(110), { left: '690px', top: '46px' });
+  ui('poll_gate', 300, 250, { left: '700px', top: '440px', transform: 'rotate(-4deg)' });
+}
+</script>
+</body>
+</html>
